@@ -1,7 +1,12 @@
-export default function DeskOfficerPage() {
+import React from 'react';
+import UserForm from './UserForm';
+
+const SocialWorkerPage = () => {
   return (
     <div>
-      <h1>SOCIAL WORKER Officer Page</h1>
+      <UserForm />
     </div>
   );
-}
+};
+
+export default SocialWorkerPage;
