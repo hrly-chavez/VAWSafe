@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'social_worker',
     'victim',
     'dswd',
+    'shared_model',
 ]
 
 MIDDLEWARE = [

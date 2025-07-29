@@ -1,11 +1,13 @@
 import React, { useRef, useState } from 'react';
 import Webcam from 'react-webcam';
+import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
   const webcamRef = useRef(null);
   const [message, setMessage] = useState('');
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const base64ToBlob = (base64) => {
     const byteString = atob(base64.split(',')[1]);
@@ -41,9 +43,23 @@ const LoginPage = () => {
       const data = await response.json();
       setLoading(false);
 
-      if (response.ok) {
+      if (response.ok && data.match) {
         setUser(data);
-        setMessage(`Welcome, ${data.name}!`);
+        setMessage(`✅ Welcome, ${data.fname} ${data.lname} (${data.role})`);
+
+       // Role-based redirect
+        const role = data.role.toLowerCase();
+
+        if (role === 'social worker') {
+          navigate('/social_worker/dashboard');
+        } else if (data.role === 'VAWDesk') {
+          navigate('/desk_officer');
+        } else if (role === 'admin' || role === 'dswd') {
+          navigate('/dswd');
+        } else {
+          setMessage('Unrecognized role. Cannot redirect.');
+        }
+
       } else {
         setUser(null);
         setMessage(data.message || 'Face not recognized.');
@@ -58,6 +74,7 @@ const LoginPage = () => {
   return (
     <div style={{ padding: '2rem' }}>
       <h2>Login via Face Recognition</h2>
+
       <Webcam
         audio={false}
         height={240}
@@ -70,11 +87,35 @@ const LoginPage = () => {
           facingMode: 'user'
         }}
       />
+
       <button onClick={handleLogin} style={{ marginTop: '1rem' }} disabled={loading}>
         {loading ? 'Logging in...' : 'Login with Face'}
       </button>
-      <p>{message}</p>
-      {user && <p>User ID: {user.user_id}</p>}
+
+      <button
+        onClick={() => navigate('/login/manual')}
+        style={{ marginLeft: '1rem', marginTop: '1rem' }}
+      >
+        Use Other Login
+      </button>
+
+      <button
+        onClick={() => navigate('/register')}
+        style={{ marginLeft: '1rem', marginTop: '1rem' }}
+      >
+        Register New User
+      </button>
+
+      <p style={{ marginTop: '1rem' }}>{message}</p>
+
+      {user && (
+        <div style={{ marginTop: '1rem' }}>
+          <p><strong>Official ID:</strong> {user.official_id}</p>
+          <p><strong>Name:</strong> {user.fname} {user.lname}</p>
+          <p><strong>Username:</strong> {user.username}</p>
+          <p><strong>Role:</strong> {user.role}</p>
+        </div>
+      )}
     </div>
   );
 };
