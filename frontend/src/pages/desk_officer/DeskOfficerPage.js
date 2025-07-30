@@ -1,7 +1,13 @@
+import Sidebar from './SideBar';
+import Navbar from './NavBar';
+
 export default function DeskOfficerPage() {
   return (
     <div>
-      <h1>Desk Officer Page</h1>
+      <Navbar />
+      {/* content goes here */}
+      
+      <Sidebar />
     </div>
   );
 }
