@@ -4,7 +4,6 @@ import DeskOfficerPage from './pages/desk_officer/DeskOfficerPage';
 import RegisterUser from './pages/RegisterUser';
 
 //DSWD
-import DSWDPage from './pages/dswd/DSWDPage';
 import DSWDDashboard from './pages/dswd/DSWDDashboard';
 import DSWDVAWCVictims from './pages/dswd/DSWDVAWCVictims';
 import DSWDSocialWorkers from './pages/dswd/DSWDSocialWorkers';
@@ -13,7 +12,7 @@ import DSWDServices from './pages/dswd/DSWDServices';
 import DSWDNotification from './pages/dswd/DSWDNotification';
 import DSWDFileMaintenance from './pages/dswd/DSWDFileMaintenance';
 
-import UserForm from './pages/social_worker/UserForm';
+
 import ManualLoginPage from './pages/ManualLoginPage';
 import SidebarLayout from './pages/social_worker/SidebarLayout';
 import DashboardPage from './pages/social_worker/DashboardPage';
@@ -48,7 +47,7 @@ export default function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="cases" element={<CasesPage />} />
-          <Route path="user" element={<UserForm />} />
+          
         </Route>
         
          
