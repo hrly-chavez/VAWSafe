@@ -9,8 +9,8 @@ html, body {
 
 /* Your sidebar is already correctly styled */
 .sidebar {
-  background-color: #48486E;
-  width: 250px;               /* changed from max-width */
+  background-color: #48486E !important;
+  width: 200px !important;               /* changed from max-width */
   height: 100vh;              /* full screen height */
   color: #fff;
   font-family: 'Poppins', sans-serif;
@@ -65,7 +65,7 @@ html, body {
 .row {
   display: flex;
   align-items: center;       /* vertically center icon and label */
-  padding: 5px 40px;        /* top/bottom + left/right padding */
+  padding: 5px 20px;        /* top/bottom + left/right padding */
   gap: 15px;                 /* space between icon and label */
   cursor: pointer;
 }

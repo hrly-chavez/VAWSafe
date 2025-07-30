@@ -2,8 +2,16 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DeskOfficerPage from './pages/desk_officer/DeskOfficerPage';
 import RegisterUser from './pages/RegisterUser';
+
+//DSWD
 import DSWDPage from './pages/dswd/DSWDPage';
-import DSWDProfile from './pages/dswd/DSWDProfile';
+import DSWDDashboard from './pages/dswd/DSWDDashboard';
+import DSWDVAWCVictims from './pages/dswd/DSWDVAWCVictims';
+import DSWDSocialWorkers from './pages/dswd/DSWDSocialWorkers';
+import DSWDCaseRecord from './pages/dswd/DSWDCaseRecord';
+import DSWDServices from './pages/dswd/DSWDServices';
+import DSWDNotification from './pages/dswd/DSWDNotification';
+import DSWDFileMaintenance from './pages/dswd/DSWDFileMaintenance';
 
 import UserForm from './pages/social_worker/UserForm';
 import ManualLoginPage from './pages/ManualLoginPage';
@@ -22,9 +30,18 @@ export default function App() {
         <Route path="/register" element={<RegisterUser />} />
 
         <Route path="/desk_officer" element={<DeskOfficerPage />} />
-        <Route path="/dswd" element={<DSWDPage />} />
 
-        <Route path="/Dswd_profile" element={<DSWDProfile />} />
+        {/* DSWD Page */}
+        {/* <Route path="/dswd" element={<DSWDPage />} /> */}
+        <Route path="/dswd" element={<DSWDDashboard />} />
+        <Route path="/Dswd_vawc_victims" element={<DSWDVAWCVictims />} />
+        <Route path="/Dswd_social_workers" element={<DSWDSocialWorkers />} />
+        <Route path="/Dswd_case_records" element={<DSWDCaseRecord />} />
+        <Route path="/Dswd_services" element={<DSWDServices />} />
+        <Route path="/Dswd_notification" element={<DSWDNotification />} />
+        <Route path="/Dswd_file_maintenance" element={<DSWDFileMaintenance />} />
+
+
           {/* SOCIAL WORKER PAGES */}
          <Route path="/social_worker" element={<SidebarLayout />}>
           <Route index element={<DashboardPage />} />

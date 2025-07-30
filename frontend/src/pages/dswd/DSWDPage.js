@@ -6,7 +6,7 @@ export default function DeskOfficerPage() {
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    navigate('/Dswd_profile');
+    navigate('/Dswd_Dashboard');
   }
   return (
     <div className="background-img">
