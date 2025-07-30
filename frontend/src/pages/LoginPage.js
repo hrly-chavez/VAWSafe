@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react';
 import Webcam from 'react-webcam';
 import { useNavigate } from 'react-router-dom';
+import './dswd/DSWDPageCSS.css';
+import Navbar from './dswd/Navbar';
 
 const LoginPage = () => {
   const webcamRef = useRef(null);
@@ -19,7 +21,7 @@ const LoginPage = () => {
     return new Blob([ab], { type: 'image/jpeg' });
   };
 
-  const handleLogin = async () => {
+  const handleFaceLogin = async () => {
     const screenshot = webcamRef.current.getScreenshot();
 
     if (!screenshot) {
@@ -45,14 +47,14 @@ const LoginPage = () => {
 
       if (response.ok && data.match) {
         setUser(data);
-        setMessage(`✅ Welcome, ${data.fname} ${data.lname} (${data.role})`);
+        const welcomeMsg = `✅ Welcome, ${data.fname} ${data.lname} (${data.role})`;
+        alert(welcomeMsg);
 
-       // Role-based redirect
+
         const role = data.role.toLowerCase();
-
         if (role === 'social worker') {
           navigate('/social_worker/dashboard');
-        } else if (data.role === 'VAWDesk') {
+        } else if (role === 'vawdesk') {
           navigate('/desk_officer');
         } else if (role === 'admin' || role === 'dswd') {
           navigate('/dswd');
@@ -71,51 +73,61 @@ const LoginPage = () => {
     }
   };
 
+  const handleManualLogin = () => {
+    navigate('/login/manual'); // Adjust if needed
+  };
+
   return (
-    <div style={{ padding: '2rem' }}>
-      <h2>Login via Face Recognition</h2>
+    <div className="background-img">
+      <Navbar />
+      <div className="content-wrapper">
+        <p className="intro">WELCOME TO VAWSAFE</p>
 
-      <Webcam
-        audio={false}
-        height={240}
-        ref={webcamRef}
-        screenshotFormat="image/jpeg"
-        width={320}
-        videoConstraints={{
-          width: 640,
-          height: 480,
-          facingMode: 'user'
-        }}
-      />
+        <div className="login-container">
+          <p className='login-instruction'>Face Recognition Login</p>
 
-      <button onClick={handleLogin} style={{ marginTop: '1rem' }} disabled={loading}>
-        {loading ? 'Logging in...' : 'Login with Face'}
-      </button>
+          <Webcam
+            audio={false}
+            height={240}
+            ref={webcamRef}
+            screenshotFormat="image/jpeg"
+            width={320}
+            videoConstraints={{
+              width: 640,
+              height: 480,
+              facingMode: 'user'
+            }}
+          />
 
-      <button
-        onClick={() => navigate('/login/manual')}
-        style={{ marginLeft: '1rem', marginTop: '1rem' }}
-      >
-        Use Other Login
-      </button>
+          <button
+            onClick={handleFaceLogin}
+            className="login-btn"
+            style={{ marginTop: '1rem', backgroundColor: '#6C63FF' }}
+            disabled={loading}
+          >
+            {loading ? 'Logging in...' : 'Login with Face'}
+          </button>
 
-      <button
-        onClick={() => navigate('/register')}
-        style={{ marginLeft: '1rem', marginTop: '1rem' }}
-      >
-        Register New User
-      </button>
+          <button className="login-btn" onClick={handleManualLogin}>Use Other Login</button>
 
-      <p style={{ marginTop: '1rem' }}>{message}</p>
+          <div className="opt-act">
+            <p onClick={() => navigate('/register')} style={{ cursor: 'pointer' }}>
+              Register New User
+            </p>
+          </div>
 
-      {user && (
-        <div style={{ marginTop: '1rem' }}>
-          <p><strong>Official ID:</strong> {user.official_id}</p>
-          <p><strong>Name:</strong> {user.fname} {user.lname}</p>
-          <p><strong>Username:</strong> {user.username}</p>
-          <p><strong>Role:</strong> {user.role}</p>
+          {message && <p style={{ marginTop: '1rem' }}>{message}</p>}
+
+          {user && (
+            <div style={{ marginTop: '1rem', fontSize: '14px' }}>
+              <p><strong>Official ID:</strong> {user.official_id}</p>
+              <p><strong>Name:</strong> {user.fname} {user.lname}</p>
+              <p><strong>Username:</strong> {user.username}</p>
+              <p><strong>Role:</strong> {user.role}</p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

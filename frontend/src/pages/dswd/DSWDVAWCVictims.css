@@ -1,0 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Imbue:wght@400;600;700&family=Poppins:wght@300;400;600&display=swap');
+.main-container {
+    display: flex;
+    gap: 30px;
+}
+
+.VAWC {
+    font-family: 'Poppins', sans-serif;
+    color: #292D96;
+    font-weight: 500;
+    font-size: 30px;
+    margin-left: 50px;
+}
