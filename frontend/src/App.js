@@ -5,7 +5,7 @@ import RegisterUser from './pages/RegisterUser';
 import DSWDPage from './pages/dswd/DSWDPage';
 import DSWDProfile from './pages/dswd/DSWDProfile';
 
-import UserForm from './pages/social_worker/UserForm';
+
 import ManualLoginPage from './pages/ManualLoginPage';
 import SidebarLayout from './pages/social_worker/SidebarLayout';
 import DashboardPage from './pages/social_worker/DashboardPage';
@@ -22,16 +22,18 @@ export default function App() {
         <Route path="/register" element={<RegisterUser />} />
 
         <Route path="/desk_officer" element={<DeskOfficerPage />} />
-        <Route path="/dswd" element={<DSWDPage />} />
 
+        {/* DSWD  PAGES */}
+        <Route path="/dswd" element={<DSWDPage />} />
         <Route path="/Dswd_profile" element={<DSWDProfile />} />
+
           {/* SOCIAL WORKER PAGES */}
          <Route path="/social_worker" element={<SidebarLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="cases" element={<CasesPage />} />
-          <Route path="user" element={<UserForm />} />
+          
         </Route>
         
          
