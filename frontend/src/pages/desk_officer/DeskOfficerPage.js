@@ -5,9 +5,12 @@ export default function DeskOfficerPage() {
   return (
     <div>
       <Navbar />
-      {/* content goes here */}
-      
-      <Sidebar />
+      <div>
+        <Sidebar />
+        <div>
+
+        </div>
+      </div>
     </div>
   );
 }
