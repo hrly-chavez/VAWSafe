@@ -84,11 +84,12 @@
 
 .login-container {
   width: 400px;
-  margin: -40px auto 0; /* ↓ reduce from 30px to 10px */
+  margin: -100px auto 0; /* ↓ reduce from 30px to 10px */
   padding: 30px;
   background-color: rgba(255, 255, 255, 0.9);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   font-family: 'Poppins', sans-serif;
+  border-radius: 10px;
 }
 
 
