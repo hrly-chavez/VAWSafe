@@ -98,6 +98,64 @@ export default function DeskOfficerPage() {
 
   return (
     <div>
+      <div className="login-container">
+        <p className="login-instruction">Face Recognition Login</p>
+
+        {/* <Webcam
+          audio={false}
+          height={240}
+          ref={webcamRef}
+          screenshotFormat="image/jpeg"
+          width={320}
+          videoConstraints={{
+            width: 640,
+            height: 480,
+            facingMode: "user",
+          }}
+        /> */}
+
+        <button
+          // onClick={handleFaceLogin}
+          className="login-btn"
+          style={{ marginTop: "1rem", backgroundColor: "#6C63FF" }}
+          // disabled={loading}
+        >
+          {/* {loading ? "Logging in..." : "Login with Face"} */}
+        </button>
+
+        {/* <button className="login-btn" onClick={handleManualLogin}> */}
+        <button className="login-btn">Use Other Login</button>
+
+        <div className="opt-act">
+          <p
+            // onClick={() => navigate("/register")}
+            style={{ cursor: "pointer" }}
+          >
+            Register New User
+          </p>
+        </div>
+
+        {/* {message && <p style={{ marginTop: "1rem" }}>{message}</p>} */}
+
+        {/* {user && (
+          <div style={{ marginTop: "1rem", fontSize: "14px" }}>
+            <p>
+              <strong>Official ID:</strong> {user.official_id}
+            </p>
+            <p>
+              <strong>Name:</strong> {user.fname} {user.lname}
+            </p>
+            <p>
+              <strong>Username:</strong> {user.username}
+            </p>
+            <p>
+              <strong>Role:</strong> {user.role}
+            </p>
+          </div>
+        )} */}
+      </div>
+
+      {/* victim survivor information registration starts here */}
       <input
         type="text"
         placeholder="First Name"
@@ -161,6 +219,7 @@ export default function DeskOfficerPage() {
         }}
       />
 
+      {/* pop up input field if victim is minor */}
       {isMinorVictim && (
         <>
           <input
@@ -181,8 +240,10 @@ export default function DeskOfficerPage() {
         </>
       )}
 
+      {/* submit form button */}
       <button onClick={registerVictimSurvivor}>Register Victim</button>
 
+      {/* for debugging, show contents inside database */}
       {victimSurvivors.map((victim_survivor) => (
         <div>
           <p>First Name: {victim_survivor.first_name}</p>
