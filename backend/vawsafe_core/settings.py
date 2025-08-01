@@ -80,7 +80,7 @@ REST_FRAMEWORK = {
      'DEFAULT_THROTTLE_RATES': {
         'anon': '10/minute',
         'user': '30/minute',
-        'face_login': '5/minute',  # Custom throttle for face login
+        'face_login': '10/minute',  # Custom throttle for face login
     }
 }
 
