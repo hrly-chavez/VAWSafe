@@ -31,6 +31,9 @@ export default function DeskOfficerPage() {
   const [guardianMiddleName, setGuardianMiddleName] = useState("");
   const [guardianLastName, setGuardianLastName] = useState("");
   const [guardianContact, setGuardianContact] = useState("");
+  const [childCategory, setChildCategory] = useState("");
+  const [civilStatus, setCivilStatus] = useState("");
+  const [educationalAttainment, setEducationalAttainment] = useState("");
 
   useEffect(() => {
     fetchVictimSurvivors();
@@ -76,6 +79,9 @@ export default function DeskOfficerPage() {
       guardian_middle_name: isMinorVictim ? guardianMiddleName : "",
       guardian_last_name: isMinorVictim ? guardianLastName : "",
       guardian_contact: isMinorVictim ? guardianContact : "",
+      child_category: isMinorVictim ? childCategory : null,
+      civil_status: isMinorVictim ? "Not Applicable" : civilStatus,
+      educational_attainment: educationalAttainment,
     };
 
     try {
@@ -181,8 +187,62 @@ export default function DeskOfficerPage() {
             placeholder="Guardian Last Name"
             onChange={(e) => setGuardianLastName(e.target.value)}
           />
+
+          <input
+            type="text"
+            placeholder="Guardian Contact"
+            onChange={(e) => setGuardianContact(e.target.value)}
+          />
+
+          <select
+            value={childCategory}
+            onChange={(e) => setChildCategory(e.target.value)}
+          >
+            <option value="">Select Child Category (optional)</option>
+            <option value="Orphan">Orphan</option>
+            <option value="Unaccompanied">Unaccompanied</option>
+            <option value="Separated">Separated</option>
+            <option value="Vulnerable">Vulnerable</option>
+          </select>
         </>
       )}
+
+      <select
+        value={civilStatus}
+        onChange={(e) => setCivilStatus(e.target.value)}
+      >
+        <option value="">Select Civil Status</option>
+        <option value="Single">Single</option>
+        <option value="Legally Married">Legally Married</option>
+        <option value="Consensual/Common Law/Live-in Partner">
+          Consensual/Common Law/Live-in Partner
+        </option>
+        <option value="Legally Separated">Legally Separated</option>
+        <option value="Separated in fact">Separated in fact</option>
+        <option value="Widowed">Widowed</option>
+        <option value="Annuled">Annuled</option>
+        {/* <option value="Not Applicable">Not Applicable</option> */}
+      </select>
+
+      <select
+        value={educationalAttainment}
+        onChange={(e) => setEducationalAttainment(e.target.value)}
+      >
+        <option value="">Educational Attainment</option>
+        <option value="No formal education">No formal education</option>
+        <option value="Elementary level/graduate">
+          Elementary level/graduate
+        </option>
+        <option value="Junior high school level/graduate">
+          Junior high school level/graduate
+        </option>
+        <option value="Senior high school level/graduate">
+          Senior high school level/graduate
+        </option>
+        <option value="Technical/Vocational">Technical/Vocational</option>
+        <option value="College level/graduate">College level/graduate</option>
+        <option value="Post graduate">Post graduate</option>
+      </select>
 
       {/* submit form button */}
       <button onClick={registerVictimSurvivor}>Register Victim</button>
@@ -206,6 +266,8 @@ export default function DeskOfficerPage() {
             {victim_survivor.guardian_last_name}
           </p>
           <p>Guardian Contact: {victim_survivor.guardian_contact}</p>
+          <p>Category: {victim_survivor.child_category}</p>
+          <p>civil status: {victim_survivor.civil_status}</p>
         </div>
       ))}
     </div>
