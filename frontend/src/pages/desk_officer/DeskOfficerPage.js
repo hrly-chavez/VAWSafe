@@ -1,6 +1,7 @@
 import Sidebar from "./SideBar";
 import Navbar from "./NavBar";
 import { useState, useEffect } from "react";
+import Webcam from "react-webcam";
 
 function isMinor(birthDate) {
   const today = new Date();
@@ -101,10 +102,10 @@ export default function DeskOfficerPage() {
       <div className="login-container">
         <p className="login-instruction">Face Recognition Login</p>
 
-        {/* <Webcam
+        <Webcam
           audio={false}
           height={240}
-          ref={webcamRef}
+          // ref={webcamRef}
           screenshotFormat="image/jpeg"
           width={320}
           videoConstraints={{
@@ -112,7 +113,7 @@ export default function DeskOfficerPage() {
             height: 480,
             facingMode: "user",
           }}
-        /> */}
+        />
 
         <button
           // onClick={handleFaceLogin}
