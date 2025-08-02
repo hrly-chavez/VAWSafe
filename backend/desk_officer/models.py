@@ -11,7 +11,11 @@ class VictimSurvivor(models.Model):
     specific_sogie = models.CharField(max_length=50, blank=True)
     birth_date = models.DateField()
     birth_place = models.CharField(max_length=100)
-    
+    civil_status = models.CharField(max_length=100)
+    educational_attainment = models.CharField(max_length=100)
+    nationality = models.CharField(max_length=50)
+    specific_nationality = models.CharField(max_length=50)
+
     # if victim survivor is minor, guardian name and contact info should be recorded
     is_minor = models.BooleanField(editable=False)
     guardian_first_name = models.CharField(max_length=100)
@@ -19,8 +23,6 @@ class VictimSurvivor(models.Model):
     guardian_last_name = models.CharField(max_length=100)
     guardian_contact = models.CharField(max_length=20)
     child_category = models.CharField(max_length=100, blank=True, null=True)
-    civil_status = models.CharField(max_length=100)
-    educational_attainment = models.CharField(max_length=100)
 
     def save(self, *args, **kwargs):
         today = date.today()

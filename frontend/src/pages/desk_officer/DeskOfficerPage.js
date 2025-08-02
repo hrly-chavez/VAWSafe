@@ -34,6 +34,8 @@ export default function DeskOfficerPage() {
   const [childCategory, setChildCategory] = useState("");
   const [civilStatus, setCivilStatus] = useState("");
   const [educationalAttainment, setEducationalAttainment] = useState("");
+  const [nationality, setNationality] = useState("");
+  const [specificNationality, setSpecificNationality] = useState("");
 
   useEffect(() => {
     fetchVictimSurvivors();
@@ -82,6 +84,8 @@ export default function DeskOfficerPage() {
       child_category: isMinorVictim ? childCategory : null,
       civil_status: isMinorVictim ? "Not Applicable" : civilStatus,
       educational_attainment: educationalAttainment,
+      nationality: nationality,
+      specific_nationality: specificNationality,
     };
 
     try {
@@ -106,6 +110,8 @@ export default function DeskOfficerPage() {
   return (
     <div>
       {/* victim survivor information registration starts here */}
+
+      {/* first name */}
       <input
         type="text"
         placeholder="First Name"
@@ -114,6 +120,7 @@ export default function DeskOfficerPage() {
         }}
       />
 
+      {/* middle name */}
       <input
         type="text"
         placeholder="Middle Name"
@@ -122,6 +129,7 @@ export default function DeskOfficerPage() {
         }}
       />
 
+      {/* last name */}
       <input
         type="text"
         placeholder="Last Name"
@@ -130,12 +138,14 @@ export default function DeskOfficerPage() {
         }}
       />
 
+      {/* sex */}
       <select value={sex} onChange={(e) => setSex(e.target.value)}>
         <option value="">Select Sex</option>
         <option value="Male">Male</option>
         <option value="Female">Female</option>
       </select>
 
+      {/* is sogie question */}
       <label>SOGIE?</label>
       <select value={isSogie} onChange={(e) => setIsSogie(e.target.value)}>
         <option value="">Select</option>
@@ -146,6 +156,7 @@ export default function DeskOfficerPage() {
         </option>
       </select>
 
+      {/* only show input fields when victim is part of sogie */}
       {isSogie === "Yes" && (
         <input
           type="text"
@@ -155,12 +166,14 @@ export default function DeskOfficerPage() {
         />
       )}
 
+      {/* birth date */}
       <input
         type="date"
         value={birthDate}
         onChange={(e) => setBirthDate(e.target.value)}
       />
 
+      {/* birth place */}
       <input
         type="text"
         placeholder="Birth Place"
@@ -169,7 +182,7 @@ export default function DeskOfficerPage() {
         }}
       />
 
-      {/* pop up input field if victim is minor */}
+      {/* only show input fields when victim is minor */}
       {isMinorVictim && (
         <>
           <input
@@ -207,6 +220,7 @@ export default function DeskOfficerPage() {
         </>
       )}
 
+      {/* civil status */}
       <select
         value={civilStatus}
         onChange={(e) => setCivilStatus(e.target.value)}
@@ -224,6 +238,7 @@ export default function DeskOfficerPage() {
         {/* <option value="Not Applicable">Not Applicable</option> */}
       </select>
 
+      {/* educational attainment */}
       <select
         value={educationalAttainment}
         onChange={(e) => setEducationalAttainment(e.target.value)}
@@ -243,6 +258,26 @@ export default function DeskOfficerPage() {
         <option value="College level/graduate">College level/graduate</option>
         <option value="Post graduate">Post graduate</option>
       </select>
+
+      {/* nationality */}
+      <select
+        value={nationality}
+        onChange={(e) => setNationality(e.target.value)}
+      >
+        <option value="">Nationality</option>
+        <option value="Filipino">Filipino</option>
+        <option value="Non-Filipino">Non-Filipino</option>
+      </select>
+
+      {/* show input field if nationality is not filipino */}
+      {nationality === "Non-Filipino" && (
+        <input
+          type="text"
+          placeholder="Please specify"
+          value={specificNationality}
+          onChange={(e) => setSpecificNationality(e.target.value)}
+        />
+      )}
 
       {/* submit form button */}
       <button onClick={registerVictimSurvivor}>Register Victim</button>
@@ -268,6 +303,8 @@ export default function DeskOfficerPage() {
           <p>Guardian Contact: {victim_survivor.guardian_contact}</p>
           <p>Category: {victim_survivor.child_category}</p>
           <p>civil status: {victim_survivor.civil_status}</p>
+          <p>Nationality: {victim_survivor.nationality}</p>
+          <p>specific nationality: {victim_survivor.specific_nationality}</p>
         </div>
       ))}
     </div>
