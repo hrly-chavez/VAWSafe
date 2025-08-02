@@ -1,30 +1,125 @@
-.layout {
+@import url('https://fonts.googleapis.com/css2?family=Imbue:wght@400;600;700&family=Poppins:wght@300;400;600&display=swap');
+
+.sw-layout {
   display: flex;
   height: 100vh;
+  overflow: hidden;
 }
 
-.sidebar {
+.sw-sidebar {
+  background-color: #48486E;
   width: 250px;
-  background-color: #333;
-  color: white;
-  padding: 20px;
+  height: 100vh;
+  color: #fff;
+  font-family: 'Poppins', sans-serif;
+  flex-shrink: 0;
+  overflow: hidden;
 }
 
-.sidebar ul {
-  list-style: none;
-  padding: 0;
+.sw-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding:15px;
+  text-align: center;
+  border-bottom: 1px solid #2C2C46;
+  margin-left: 10px;
+  margin-right: 10px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
 }
 
-.sidebar li {
-  margin: 10px 0;
+.sw-pfp {
+  height: 100px;
+  width: 100px;
 }
 
-.sidebar a {
-  color: white;
+.sw-profile-title-container {
+  margin: 10px;
+  padding: 3px 15px;
+  background-color: rgba(244, 58, 250, 0.7);
+  border-radius: 25px;
+}
+
+.sw-profile-title {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.sw-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-size: 16px;
+  font-weight: 500;
+  margin-top: 20px;
+  padding: 0 20px;
+}
+
+.sw-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  gap: 10px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  background-color: transparent;
+}
+
+.sw-row:hover {
+  background-color: #3F3F64;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.sw-dashboard-icons {
+  width: 25px;
+  height: 25px;
+}
+
+.sw-row a {
   text-decoration: none;
+  color: white;
+  font-weight: 500;
+  display: inline-block;
 }
 
-.content {
-  flex-grow: 1;
-  padding: 20px;
+/* Toggle button (hamburger) for small screens only */
+.sw-sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 15px;
+  left: 15px;
+  z-index: 1100;
+  background-color: #48486E;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  font-size: 20px;
+  border-radius: 5px;
+}
+
+/* Responsive sidebar behavior */
+@media (max-width: 768px) {
+  .sw-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100%;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    z-index: 1000;
+  }
+
+  .sw-layout.sidebar-open .sw-sidebar {
+    transform: translateX(0);
+  }
+
+  .sw-sidebar-toggle {
+    display: block;
+  }
+
+  .sw-content {
+    padding-top: 60px; /* space for navbar and toggle button */
+  }
 }

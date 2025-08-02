@@ -15,9 +15,11 @@ import DSWDFileMaintenance from './pages/dswd/DSWDFileMaintenance';
 
 import ManualLoginPage from './pages/ManualLoginPage';
 import SidebarLayout from './pages/social_worker/SidebarLayout';
-import DashboardPage from './pages/social_worker/DashboardPage';
-import ProfilePage from './pages/social_worker/ProfilePage';
-import CasesPage from './pages/social_worker/CasesPage';
+import DashboardPage from './pages/social_worker/Dashboard/Dashboard';
+import CaseRecords from './pages/social_worker/CaseRecords/CaseRecords';
+import Sessions from './pages/social_worker/Sessions/Sessions';
+import Services from './pages/social_worker/Services/Services';
+import Victims from './pages/social_worker/Victims/Victims';
 
 export default function App() {
   return (
@@ -43,11 +45,11 @@ export default function App() {
 
           {/* SOCIAL WORKER PAGES */}
          <Route path="/social_worker" element={<SidebarLayout />}>
-          <Route index element={<DashboardPage />} />
           <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="cases" element={<CasesPage />} />
-          
+          <Route path="case-records" element={<CaseRecords />} />
+          <Route path="sessions" element={<Sessions />} />
+          <Route path="services" element={<Services />} />
+          <Route path="victims" element={<Victims />} />
         </Route>
         
          
