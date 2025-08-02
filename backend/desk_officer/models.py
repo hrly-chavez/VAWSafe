@@ -14,7 +14,17 @@ class VictimSurvivor(models.Model):
     civil_status = models.CharField(max_length=100)
     educational_attainment = models.CharField(max_length=100)
     nationality = models.CharField(max_length=50)
-    specific_nationality = models.CharField(max_length=50)
+    specific_nationality = models.CharField(max_length=50, blank=True, null=True)
+    ethnicity = models.CharField(max_length=100, blank=True, null=True)
+    main_occupation = models.CharField(max_length=100, blank=True, null=True)
+    monthly_income = models.DecimalField(max_digits=10, decimal_places=2)
+    migratory_status = models.CharField(max_length=100)
+    religion = models.CharField(max_length=100)
+    specific_religion = models.CharField(max_length=100, blank=True, null=True)
+    # address
+    is_displaced = models.BooleanField(default=False)
+    pwd = models.CharField(max_length=10)
+    contact = models.CharField(max_length=20)
 
     # if victim survivor is minor, guardian name and contact info should be recorded
     is_minor = models.BooleanField(editable=False)
@@ -23,6 +33,12 @@ class VictimSurvivor(models.Model):
     guardian_last_name = models.CharField(max_length=100)
     guardian_contact = models.CharField(max_length=20)
     child_category = models.CharField(max_length=100, blank=True, null=True)
+
+    employment_status = models.CharField(max_length=50)
+    # if employment status is "employed"
+    employed_type = models.CharField(max_length=100, blank=True, null=True)
+    employer_name = models.CharField(max_length=100, blank=True, null=True)
+    employer_address = models.CharField(max_length=100, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         today = date.today()

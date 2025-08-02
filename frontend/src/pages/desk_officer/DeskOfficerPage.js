@@ -1,7 +1,6 @@
+import { useState, useEffect } from "react";
 import Sidebar from "./SideBar";
 import Navbar from "./NavBar";
-import { useState, useEffect } from "react";
-import Webcam from "react-webcam";
 
 function isMinor(birthDate) {
   const today = new Date();
@@ -26,16 +25,33 @@ export default function DeskOfficerPage() {
   const [specificSogie, setSpecificSogie] = useState(""); // user input if "Yes"
   const [birthDate, setBirthDate] = useState("");
   const [birthPlace, setBirthPlace] = useState("");
+
   const [isMinorVictim, setIsMinorVictim] = useState(false);
   const [guardianFirstName, setGuardianFirstName] = useState("");
   const [guardianMiddleName, setGuardianMiddleName] = useState("");
   const [guardianLastName, setGuardianLastName] = useState("");
   const [guardianContact, setGuardianContact] = useState("");
   const [childCategory, setChildCategory] = useState("");
+
   const [civilStatus, setCivilStatus] = useState("");
   const [educationalAttainment, setEducationalAttainment] = useState("");
   const [nationality, setNationality] = useState("");
   const [specificNationality, setSpecificNationality] = useState("");
+  const [ethnicity, setEthnicity] = useState("");
+  const [mainOccupation, setMainOccupation] = useState("");
+  const [monthlyIncome, setMonthlyIncome] = useState("");
+
+  const [employmentStatus, setEmploymentStatus] = useState("");
+  const [employmentType, setEmploymentType] = useState("");
+  const [employerName, setEmployerName] = useState("");
+  const [employerAddress, setEmployerAddress] = useState("");
+
+  const [migratoryStatus, setMigratoryStatus] = useState("");
+  const [religion, setReligion] = useState("");
+  const [specificReligion, setSpecificReligion] = useState("");
+  const [isDisplaced, setIsDisplaced] = useState("");
+  const [pwd, setPwd] = useState("");
+  const [contact, setContact] = useState("");
 
   useEffect(() => {
     fetchVictimSurvivors();
@@ -74,18 +90,33 @@ export default function DeskOfficerPage() {
       specific_sogie: isSogie === "Yes" ? specificSogie : "",
       birth_date: birthDate,
       birth_place: birthPlace,
-      is_minor: isMinorVictim,
 
-      // only send guardian info if victim is minor
+      is_minor: isMinorVictim,
       guardian_first_name: isMinorVictim ? guardianFirstName : "",
       guardian_middle_name: isMinorVictim ? guardianMiddleName : "",
       guardian_last_name: isMinorVictim ? guardianLastName : "",
       guardian_contact: isMinorVictim ? guardianContact : "",
       child_category: isMinorVictim ? childCategory : null,
+
       civil_status: isMinorVictim ? "Not Applicable" : civilStatus,
       educational_attainment: educationalAttainment,
       nationality: nationality,
       specific_nationality: specificNationality,
+      ethnicity: ethnicity,
+      main_occupation: mainOccupation,
+      monthly_income: monthlyIncome,
+
+      employment_status: employmentStatus,
+      employment_type: employmentType,
+      employer_name: employerName,
+      employer_address: employerAddress,
+
+      migratory_status: migratoryStatus,
+      religion: religion,
+      specific_religion: specificReligion,
+      is_displaced: isDisplaced,
+      pwd: pwd,
+      contact: contact,
     };
 
     try {
@@ -110,7 +141,6 @@ export default function DeskOfficerPage() {
   return (
     <div>
       {/* victim survivor information registration starts here */}
-
       {/* first name */}
       <input
         type="text"
@@ -119,7 +149,6 @@ export default function DeskOfficerPage() {
           setFirstName(e.target.value);
         }}
       />
-
       {/* middle name */}
       <input
         type="text"
@@ -128,7 +157,6 @@ export default function DeskOfficerPage() {
           setMiddleName(e.target.value);
         }}
       />
-
       {/* last name */}
       <input
         type="text"
@@ -137,14 +165,12 @@ export default function DeskOfficerPage() {
           setLastName(e.target.value);
         }}
       />
-
       {/* sex */}
       <select value={sex} onChange={(e) => setSex(e.target.value)}>
         <option value="">Select Sex</option>
         <option value="Male">Male</option>
         <option value="Female">Female</option>
       </select>
-
       {/* is sogie question */}
       <label>SOGIE?</label>
       <select value={isSogie} onChange={(e) => setIsSogie(e.target.value)}>
@@ -155,7 +181,6 @@ export default function DeskOfficerPage() {
           Does not want to identify
         </option>
       </select>
-
       {/* only show input fields when victim is part of sogie */}
       {isSogie === "Yes" && (
         <input
@@ -165,14 +190,12 @@ export default function DeskOfficerPage() {
           onChange={(e) => setSpecificSogie(e.target.value)}
         />
       )}
-
       {/* birth date */}
       <input
         type="date"
         value={birthDate}
         onChange={(e) => setBirthDate(e.target.value)}
       />
-
       {/* birth place */}
       <input
         type="text"
@@ -181,7 +204,6 @@ export default function DeskOfficerPage() {
           setBirthPlace(e.target.value);
         }}
       />
-
       {/* only show input fields when victim is minor */}
       {isMinorVictim && (
         <>
@@ -219,7 +241,6 @@ export default function DeskOfficerPage() {
           </select>
         </>
       )}
-
       {/* civil status */}
       <select
         value={civilStatus}
@@ -237,7 +258,6 @@ export default function DeskOfficerPage() {
         <option value="Annuled">Annuled</option>
         {/* <option value="Not Applicable">Not Applicable</option> */}
       </select>
-
       {/* educational attainment */}
       <select
         value={educationalAttainment}
@@ -258,7 +278,6 @@ export default function DeskOfficerPage() {
         <option value="College level/graduate">College level/graduate</option>
         <option value="Post graduate">Post graduate</option>
       </select>
-
       {/* nationality */}
       <select
         value={nationality}
@@ -268,7 +287,6 @@ export default function DeskOfficerPage() {
         <option value="Filipino">Filipino</option>
         <option value="Non-Filipino">Non-Filipino</option>
       </select>
-
       {/* show input field if nationality is not filipino */}
       {nationality === "Non-Filipino" && (
         <input
@@ -278,10 +296,145 @@ export default function DeskOfficerPage() {
           onChange={(e) => setSpecificNationality(e.target.value)}
         />
       )}
+      {/* ethnicity */}
+      <input
+        type="text"
+        placeholder="Ethnicity"
+        onChange={(e) => {
+          setEthnicity(e.target.value);
+        }}
+      />
+      {/* main occupation */}
+      <input
+        type="text"
+        placeholder="Main Occupation"
+        onChange={(e) => {
+          setMainOccupation(e.target.value);
+        }}
+      />
+      {/* monthly income */}
+      <input
+        type="number"
+        placeholder="Monthly Income"
+        onChange={(e) => {
+          setMonthlyIncome(e.target.value);
+        }}
+      />
+      {/* employment status */}
+      <select
+        value={employmentStatus}
+        onChange={(e) => setEmploymentStatus(e.target.value)}
+      >
+        <option value="">Employement Status</option>
+        <option value="Employed">Employed</option>
+        <option value="Self-employed">Self-employed</option>
+        <option value="Informal Sector">Informal Sector</option>
+        <option value="Unemployed">Unemployed</option>
+        <option value="Not applicable">Not applicable</option>
+      </select>
+      {/* employment type */}
+      {employmentStatus === "Employed" && (
+        <>
+          <select
+            value={employmentType}
+            onChange={(e) => setEmploymentType(e.target.value)}
+          >
+            <option value="">Employment Type</option>
+            <option value="Public">Public</option>
+            <option value="Private">Private</option>
+          </select>
 
+          {/* employer name */}
+          <input
+            type="text"
+            placeholder="Employer Name"
+            onChange={(e) => {
+              setEmployerName(e.target.value);
+            }}
+          />
+
+          {/* employer address */}
+          <input
+            type="text"
+            placeholder="Employer Address"
+            onChange={(e) => {
+              setEmployerAddress(e.target.value);
+            }}
+          />
+        </>
+      )}
+      {/* migratory status */}
+      <select
+        value={migratoryStatus}
+        onChange={(e) => setMigratoryStatus(e.target.value)}
+      >
+        <option value="">Migratory Status</option>
+        <option value="Current OFW">Current OFW</option>
+        <option value="Former/Returning OFW">Former/Returning OFW</option>
+        <option value="Seeking employment abroad">
+          Seeking employment abroad
+        </option>
+        <option value="Not applicable">Not applicable</option>
+      </select>
+      {/* religion */}
+      <select value={religion} onChange={(e) => setReligion(e.target.value)}>
+        <option value="">Religion</option>
+        <option value="Roman Catholic">Roman Catholic</option>
+        <option value="Islam">Islam</option>
+        <option value="Evangelicals">Evangelicals</option>
+        <option value="Protestants">Protestants</option>
+        <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
+        <option value="Others">Others</option>
+      </select>
+      {/* specific religion */}
+      {religion === "Others" && (
+        <>
+          <input
+            type="text"
+            placeholder="Specific Religion"
+            onChange={(e) => {
+              setSpecificReligion(e.target.value);
+            }}
+          />
+        </>
+      )}
+      {/* displaced or not */}
+      <label>
+        Is the client internally displaced?
+        <input
+          type="checkbox"
+          checked={isDisplaced}
+          onChange={(e) => setIsDisplaced(e.target.checked)}
+        />{" "}
+      </label>
+      {/* pwd or not */}
+      Is the client a person with disability (PWD)?
+      <select value={pwd} onChange={(e) => setPwd(e.target.value)}>
+        <option value="None">None</option>
+        <option value="Deaf or Hard of Hearing">Deaf or Hard of Hearing</option>
+        <option value="Intellectual Disability">Intellectual Disability</option>
+        <option value="Learning Disability">Learning Disability</option>
+        <option value="Mental Disability">Mental Disability</option>
+        <option value="Orthopedic Disability">Orthopedic Disability</option>
+        <option value="Physical Disability">Physical Disability</option>
+        <option value="Pyschological Disability">
+          Pyschological Disability
+        </option>
+        <option value="Speech and Language Disability">
+          Speech and Language Disability
+        </option>
+        <option value="Visual Disability">Visual Disability</option>
+      </select>
+      {/* contact information */}
+      <input
+        type="text"
+        placeholder="Contact Information"
+        onChange={(e) => {
+          setContact(e.target.value);
+        }}
+      ></input>
       {/* submit form button */}
       <button onClick={registerVictimSurvivor}>Register Victim</button>
-
       {/* for debugging, show contents inside database */}
       {victimSurvivors.map((victim_survivor) => (
         <div>
@@ -304,7 +457,16 @@ export default function DeskOfficerPage() {
           <p>Category: {victim_survivor.child_category}</p>
           <p>civil status: {victim_survivor.civil_status}</p>
           <p>Nationality: {victim_survivor.nationality}</p>
-          <p>specific nationality: {victim_survivor.specific_nationality}</p>
+          <p>ethnicity: {victim_survivor.ethnicity}</p>
+          <p>main occupation: {victim_survivor.main_occupation}</p>
+          <p>monthly_income: {victim_survivor.monthly_income}</p>
+          <p>migratory_status: {victim_survivor.migratory_status}</p>
+          <p>religion: {victim_survivor.religion}</p>
+          <p>specific_religion: {victim_survivor.specific_religion}</p>
+          <p>is_displaced: {victim_survivor.is_displaced}</p>
+          <p>pwd: {victim_survivor.pwd}</p>
+          <p>is_displaced: {victim_survivor.is_displaced}</p>
+          <p>contact: {victim_survivor.contact}</p>
         </div>
       ))}
     </div>
