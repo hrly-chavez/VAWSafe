@@ -141,300 +141,344 @@ export default function DeskOfficerPage() {
   return (
     <div>
       {/* victim survivor information registration starts here */}
-      {/* first name */}
-      <input
-        type="text"
-        placeholder="First Name"
-        onChange={(e) => {
-          setFirstName(e.target.value);
-        }}
-      />
-      {/* middle name */}
-      <input
-        type="text"
-        placeholder="Middle Name"
-        onChange={(e) => {
-          setMiddleName(e.target.value);
-        }}
-      />
-      {/* last name */}
-      <input
-        type="text"
-        placeholder="Last Name"
-        onChange={(e) => {
-          setLastName(e.target.value);
-        }}
-      />
-      {/* sex */}
-      <select value={sex} onChange={(e) => setSex(e.target.value)}>
-        <option value="">Select Sex</option>
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-      </select>
-      {/* is sogie question */}
-      <label>SOGIE?</label>
-      <select value={isSogie} onChange={(e) => setIsSogie(e.target.value)}>
-        <option value="">Select</option>
-        <option value="Yes">Yes</option>
-        <option value="No">No</option>
-        <option value="Does not want to identify">
-          Does not want to identify
-        </option>
-      </select>
-      {/* only show input fields when victim is part of sogie */}
-      {isSogie === "Yes" && (
-        <input
-          type="text"
-          placeholder="Please specify"
-          value={specificSogie}
-          onChange={(e) => setSpecificSogie(e.target.value)}
-        />
-      )}
-      {/* birth date */}
-      <input
-        type="date"
-        value={birthDate}
-        onChange={(e) => setBirthDate(e.target.value)}
-      />
-      {/* birth place */}
-      <input
-        type="text"
-        placeholder="Birth Place"
-        onChange={(e) => {
-          setBirthPlace(e.target.value);
-        }}
-      />
-      {/* only show input fields when victim is minor */}
-      {isMinorVictim && (
-        <>
-          <input
-            type="text"
-            placeholder="Guardian First Name"
-            onChange={(e) => setGuardianFirstName(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Guardian Middle Name"
-            onChange={(e) => setGuardianMiddleName(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Guardian Last Name"
-            onChange={(e) => setGuardianLastName(e.target.value)}
-          />
+      <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
+        <h2 className="text-2xl font-semibold text-gray-800">
+          Victim/Survivor Registration
+        </h2>
 
+        {/* Name */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input
+            className="input"
             type="text"
-            placeholder="Guardian Contact"
-            onChange={(e) => setGuardianContact(e.target.value)}
+            placeholder="First Name"
+            onChange={(e) => setFirstName(e.target.value)}
           />
+          <input
+            className="input"
+            type="text"
+            placeholder="Middle Name"
+            onChange={(e) => setMiddleName(e.target.value)}
+          />
+          <input
+            className="input"
+            type="text"
+            placeholder="Last Name"
+            onChange={(e) => setLastName(e.target.value)}
+          />
+        </div>
 
+        {/* Sex + SOGIE */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <select
-            value={childCategory}
-            onChange={(e) => setChildCategory(e.target.value)}
+            className="input"
+            value={sex}
+            onChange={(e) => setSex(e.target.value)}
           >
-            <option value="">Select Child Category (optional)</option>
-            <option value="Orphan">Orphan</option>
-            <option value="Unaccompanied">Unaccompanied</option>
-            <option value="Separated">Separated</option>
-            <option value="Vulnerable">Vulnerable</option>
-          </select>
-        </>
-      )}
-      {/* civil status */}
-      <select
-        value={civilStatus}
-        onChange={(e) => setCivilStatus(e.target.value)}
-      >
-        <option value="">Select Civil Status</option>
-        <option value="Single">Single</option>
-        <option value="Legally Married">Legally Married</option>
-        <option value="Consensual/Common Law/Live-in Partner">
-          Consensual/Common Law/Live-in Partner
-        </option>
-        <option value="Legally Separated">Legally Separated</option>
-        <option value="Separated in fact">Separated in fact</option>
-        <option value="Widowed">Widowed</option>
-        <option value="Annuled">Annuled</option>
-        {/* <option value="Not Applicable">Not Applicable</option> */}
-      </select>
-      {/* educational attainment */}
-      <select
-        value={educationalAttainment}
-        onChange={(e) => setEducationalAttainment(e.target.value)}
-      >
-        <option value="">Educational Attainment</option>
-        <option value="No formal education">No formal education</option>
-        <option value="Elementary level/graduate">
-          Elementary level/graduate
-        </option>
-        <option value="Junior high school level/graduate">
-          Junior high school level/graduate
-        </option>
-        <option value="Senior high school level/graduate">
-          Senior high school level/graduate
-        </option>
-        <option value="Technical/Vocational">Technical/Vocational</option>
-        <option value="College level/graduate">College level/graduate</option>
-        <option value="Post graduate">Post graduate</option>
-      </select>
-      {/* nationality */}
-      <select
-        value={nationality}
-        onChange={(e) => setNationality(e.target.value)}
-      >
-        <option value="">Nationality</option>
-        <option value="Filipino">Filipino</option>
-        <option value="Non-Filipino">Non-Filipino</option>
-      </select>
-      {/* show input field if nationality is not filipino */}
-      {nationality === "Non-Filipino" && (
-        <input
-          type="text"
-          placeholder="Please specify"
-          value={specificNationality}
-          onChange={(e) => setSpecificNationality(e.target.value)}
-        />
-      )}
-      {/* ethnicity */}
-      <input
-        type="text"
-        placeholder="Ethnicity"
-        onChange={(e) => {
-          setEthnicity(e.target.value);
-        }}
-      />
-      {/* main occupation */}
-      <input
-        type="text"
-        placeholder="Main Occupation"
-        onChange={(e) => {
-          setMainOccupation(e.target.value);
-        }}
-      />
-      {/* monthly income */}
-      <input
-        type="number"
-        placeholder="Monthly Income"
-        onChange={(e) => {
-          setMonthlyIncome(e.target.value);
-        }}
-      />
-      {/* employment status */}
-      <select
-        value={employmentStatus}
-        onChange={(e) => setEmploymentStatus(e.target.value)}
-      >
-        <option value="">Employement Status</option>
-        <option value="Employed">Employed</option>
-        <option value="Self-employed">Self-employed</option>
-        <option value="Informal Sector">Informal Sector</option>
-        <option value="Unemployed">Unemployed</option>
-        <option value="Not applicable">Not applicable</option>
-      </select>
-      {/* employment type */}
-      {employmentStatus === "Employed" && (
-        <>
-          <select
-            value={employmentType}
-            onChange={(e) => setEmploymentType(e.target.value)}
-          >
-            <option value="">Employment Type</option>
-            <option value="Public">Public</option>
-            <option value="Private">Private</option>
+            <option value="">Select Sex</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
           </select>
 
-          {/* employer name */}
-          <input
-            type="text"
-            placeholder="Employer Name"
-            onChange={(e) => {
-              setEmployerName(e.target.value);
-            }}
-          />
+          <select
+            className="input"
+            value={isSogie}
+            onChange={(e) => setIsSogie(e.target.value)}
+          >
+            <option value="">SOGIE?</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+            <option value="Does not want to identify">
+              Does not want to identify
+            </option>
+          </select>
 
-          {/* employer address */}
+          {isSogie === "Yes" && (
+            <input
+              className="input"
+              type="text"
+              placeholder="Please specify"
+              value={specificSogie}
+              onChange={(e) => setSpecificSogie(e.target.value)}
+            />
+          )}
+        </div>
+
+        {/* Birth details */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
-            type="text"
-            placeholder="Employer Address"
-            onChange={(e) => {
-              setEmployerAddress(e.target.value);
-            }}
+            className="input"
+            type="date"
+            value={birthDate}
+            onChange={(e) => setBirthDate(e.target.value)}
           />
-        </>
-      )}
-      {/* migratory status */}
-      <select
-        value={migratoryStatus}
-        onChange={(e) => setMigratoryStatus(e.target.value)}
-      >
-        <option value="">Migratory Status</option>
-        <option value="Current OFW">Current OFW</option>
-        <option value="Former/Returning OFW">Former/Returning OFW</option>
-        <option value="Seeking employment abroad">
-          Seeking employment abroad
-        </option>
-        <option value="Not applicable">Not applicable</option>
-      </select>
-      {/* religion */}
-      <select value={religion} onChange={(e) => setReligion(e.target.value)}>
-        <option value="">Religion</option>
-        <option value="Roman Catholic">Roman Catholic</option>
-        <option value="Islam">Islam</option>
-        <option value="Evangelicals">Evangelicals</option>
-        <option value="Protestants">Protestants</option>
-        <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
-        <option value="Others">Others</option>
-      </select>
-      {/* specific religion */}
-      {religion === "Others" && (
-        <>
           <input
+            className="input"
             type="text"
-            placeholder="Specific Religion"
-            onChange={(e) => {
-              setSpecificReligion(e.target.value);
-            }}
+            placeholder="Birth Place"
+            onChange={(e) => setBirthPlace(e.target.value)}
           />
-        </>
-      )}
-      {/* displaced or not */}
-      <label>
-        Is the client internally displaced?
-        <input
-          type="checkbox"
-          checked={isDisplaced}
-          onChange={(e) => setIsDisplaced(e.target.checked)}
-        />{" "}
-      </label>
-      {/* pwd or not */}
-      Is the client a person with disability (PWD)?
-      <select value={pwd} onChange={(e) => setPwd(e.target.value)}>
-        <option value="None">None</option>
-        <option value="Deaf or Hard of Hearing">Deaf or Hard of Hearing</option>
-        <option value="Intellectual Disability">Intellectual Disability</option>
-        <option value="Learning Disability">Learning Disability</option>
-        <option value="Mental Disability">Mental Disability</option>
-        <option value="Orthopedic Disability">Orthopedic Disability</option>
-        <option value="Physical Disability">Physical Disability</option>
-        <option value="Pyschological Disability">
-          Pyschological Disability
-        </option>
-        <option value="Speech and Language Disability">
-          Speech and Language Disability
-        </option>
-        <option value="Visual Disability">Visual Disability</option>
-      </select>
-      {/* contact information */}
-      <input
-        type="text"
-        placeholder="Contact Information"
-        onChange={(e) => {
-          setContact(e.target.value);
-        }}
-      ></input>
-      {/* submit form button */}
-      <button onClick={registerVictimSurvivor}>Register Victim</button>
+        </div>
+
+        {/* Minor guardian details */}
+        {isMinorVictim && (
+          <>
+            <h3 className="text-lg font-medium text-gray-700">
+              Guardian Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                className="input"
+                type="text"
+                placeholder="Guardian First Name"
+                onChange={(e) => setGuardianFirstName(e.target.value)}
+              />
+              <input
+                className="input"
+                type="text"
+                placeholder="Guardian Middle Name"
+                onChange={(e) => setGuardianMiddleName(e.target.value)}
+              />
+              <input
+                className="input"
+                type="text"
+                placeholder="Guardian Last Name"
+                onChange={(e) => setGuardianLastName(e.target.value)}
+              />
+              <input
+                className="input"
+                type="text"
+                placeholder="Guardian Contact"
+                onChange={(e) => setGuardianContact(e.target.value)}
+              />
+              <select
+                className="input"
+                value={childCategory}
+                onChange={(e) => setChildCategory(e.target.value)}
+              >
+                <option value="">Select Child Category</option>
+                <option value="Orphan">Orphan</option>
+                <option value="Unaccompanied">Unaccompanied</option>
+                <option value="Separated">Separated</option>
+                <option value="Vulnerable">Vulnerable</option>
+              </select>
+            </div>
+          </>
+        )}
+
+        {/* Civil status, education, nationality */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <select
+            className="input"
+            value={civilStatus}
+            onChange={(e) => setCivilStatus(e.target.value)}
+          >
+            <option value="">Civil Status</option>
+            <option value="Single">Single</option>
+            <option value="Legally Married">Legally Married</option>
+            <option value="Consensual/Common Law/Live-in Partner">
+              Live-in Partner
+            </option>
+            <option value="Legally Separated">Legally Separated</option>
+            <option value="Separated in fact">Separated in fact</option>
+            <option value="Widowed">Widowed</option>
+            <option value="Annuled">Annuled</option>
+          </select>
+
+          <select
+            className="input"
+            value={educationalAttainment}
+            onChange={(e) => setEducationalAttainment(e.target.value)}
+          >
+            <option value="">Educational Attainment</option>
+            <option value="No formal education">No formal education</option>
+            <option value="Elementary level/graduate">Elementary</option>
+            <option value="Junior high school level/graduate">
+              Junior High
+            </option>
+            <option value="Senior high school level/graduate">
+              Senior High
+            </option>
+            <option value="Technical/Vocational">Technical/Vocational</option>
+            <option value="College level/graduate">College</option>
+            <option value="Post graduate">Post graduate</option>
+          </select>
+        </div>
+
+        {/* Nationality + Ethnicity */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <select
+            className="input"
+            value={nationality}
+            onChange={(e) => setNationality(e.target.value)}
+          >
+            <option value="">Nationality</option>
+            <option value="Filipino">Filipino</option>
+            <option value="Non-Filipino">Non-Filipino</option>
+          </select>
+
+          {nationality === "Non-Filipino" && (
+            <input
+              className="input"
+              type="text"
+              placeholder="Please specify"
+              value={specificNationality}
+              onChange={(e) => setSpecificNationality(e.target.value)}
+            />
+          )}
+
+          <input
+            className="input"
+            type="text"
+            placeholder="Ethnicity"
+            onChange={(e) => setEthnicity(e.target.value)}
+          />
+        </div>
+
+        {/* Occupation, income, employment */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
+            className="input"
+            type="text"
+            placeholder="Main Occupation"
+            onChange={(e) => setMainOccupation(e.target.value)}
+          />
+          <input
+            className="input"
+            type="number"
+            placeholder="Monthly Income"
+            onChange={(e) => setMonthlyIncome(e.target.value)}
+          />
+          <select
+            className="input"
+            value={employmentStatus}
+            onChange={(e) => setEmploymentStatus(e.target.value)}
+          >
+            <option value="">Employment Status</option>
+            <option value="Employed">Employed</option>
+            <option value="Self-employed">Self-employed</option>
+            <option value="Informal Sector">Informal Sector</option>
+            <option value="Unemployed">Unemployed</option>
+            <option value="Not applicable">Not applicable</option>
+          </select>
+        </div>
+
+        {employmentStatus === "Employed" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <select
+              className="input"
+              value={employmentType}
+              onChange={(e) => setEmploymentType(e.target.value)}
+            >
+              <option value="">Employment Type</option>
+              <option value="Public">Public</option>
+              <option value="Private">Private</option>
+            </select>
+            <input
+              className="input"
+              type="text"
+              placeholder="Employer Name"
+              onChange={(e) => setEmployerName(e.target.value)}
+            />
+            <input
+              className="input"
+              type="text"
+              placeholder="Employer Address"
+              onChange={(e) => setEmployerAddress(e.target.value)}
+            />
+          </div>
+        )}
+
+        {/* Migratory, Religion, Displaced, PWD */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <select
+            className="input"
+            value={migratoryStatus}
+            onChange={(e) => setMigratoryStatus(e.target.value)}
+          >
+            <option value="">Migratory Status</option>
+            <option value="Current OFW">Current OFW</option>
+            <option value="Former/Returning OFW">Former/Returning OFW</option>
+            <option value="Seeking employment abroad">Seeking abroad</option>
+            <option value="Not applicable">Not applicable</option>
+          </select>
+
+          <select
+            className="input"
+            value={religion}
+            onChange={(e) => setReligion(e.target.value)}
+          >
+            <option value="">Religion</option>
+            <option value="Roman Catholic">Roman Catholic</option>
+            <option value="Islam">Islam</option>
+            <option value="Evangelicals">Evangelicals</option>
+            <option value="Protestants">Protestants</option>
+            <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
+            <option value="Others">Others</option>
+          </select>
+
+          {religion === "Others" && (
+            <input
+              className="input"
+              type="text"
+              placeholder="Specific Religion"
+              onChange={(e) => setSpecificReligion(e.target.value)}
+            />
+          )}
+
+          <label className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              checked={isDisplaced}
+              onChange={(e) => setIsDisplaced(e.target.checked)}
+            />
+            <span>Is the client internally displaced?</span>
+          </label>
+
+          <select
+            className="input"
+            value={pwd}
+            onChange={(e) => setPwd(e.target.value)}
+          >
+            <option value="">PWD Status</option>
+            <option value="None">None</option>
+            <option value="Deaf or Hard of Hearing">
+              Deaf or Hard of Hearing
+            </option>
+            <option value="Intellectual Disability">
+              Intellectual Disability
+            </option>
+            <option value="Learning Disability">Learning Disability</option>
+            <option value="Mental Disability">Mental Disability</option>
+            <option value="Orthopedic Disability">Orthopedic Disability</option>
+            <option value="Physical Disability">Physical Disability</option>
+            <option value="Pyschological Disability">
+              Psychological Disability
+            </option>
+            <option value="Speech and Language Disability">
+              Speech and Language Disability
+            </option>
+            <option value="Visual Disability">Visual Disability</option>
+          </select>
+        </div>
+
+        {/* Contact + Submit */}
+        <div className="space-y-4">
+          <input
+            className="input w-full"
+            type="text"
+            placeholder="Contact Information"
+            onChange={(e) => setContact(e.target.value)}
+          />
+          <button
+            className="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition"
+            onClick={registerVictimSurvivor}
+          >
+            Register Victim
+          </button>
+        </div>
+      </div>
+
       {/* for debugging, show contents inside database */}
       {victimSurvivors.map((victim_survivor) => (
         <div>
