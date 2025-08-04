@@ -2,8 +2,12 @@ import React, { useRef, useState } from 'react';
 import Webcam from 'react-webcam';
 import axios from 'axios';
 
+const MAX_PHOTOS = 3;
+
 const RegisterUser = () => {
   const webcamRef = useRef(null);
+  const [photos, setPhotos] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [of_fname, setFname] = useState('');
   const [of_lname, setLname] = useState('');
   const [of_role, setRole] = useState('DSWD');
@@ -11,23 +15,45 @@ const RegisterUser = () => {
   const [loading, setLoading] = useState(false);
   const [credentials, setCredentials] = useState(null);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const capturePhoto = () => {
     const screenshot = webcamRef.current.getScreenshot();
     if (!screenshot) {
-      setStatus('Unable to capture photo from webcam.');
+      setStatus('Unable to capture photo. Please try again.');
       return;
     }
 
-    const blob = await fetch(screenshot).then(res => res.blob());
-    const photoFile = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+    const updatedPhotos = [...photos];
+    updatedPhotos[currentIndex] = screenshot;
+    setPhotos(updatedPhotos);
+
+    if (currentIndex < MAX_PHOTOS - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const retakePhoto = (index) => {
+    setCurrentIndex(index);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (photos.length < MAX_PHOTOS || photos.some(p => !p)) {
+      setStatus(`Please capture all ${MAX_PHOTOS} face photos before submitting.`);
+      return;
+    }
 
     const formData = new FormData();
     formData.append('of_fname', of_fname);
     formData.append('of_lname', of_lname);
     formData.append('of_role', of_role);
-    formData.append('of_photo', photoFile);
+
+    // Convert all photos to File objects and append as of_photos[]
+    for (let i = 0; i < photos.length; i++) {
+      const blob = await fetch(photos[i]).then(res => res.blob());
+      const photoFile = new File([blob], `photo_${i + 1}.jpg`, { type: 'image/jpeg' });
+      formData.append('of_photos', photoFile);  // 
+    }
 
     setLoading(true);
     setStatus('');
@@ -43,24 +69,26 @@ const RegisterUser = () => {
       setStatus('✅ Registration successful!');
       setCredentials({
         username: response.data.username,
-        password: response.data.password, // Make sure backend returns this
+        password: response.data.password,
         role: response.data.role
       });
 
+      setPhotos([]);
       setFname('');
       setLname('');
       setRole('DSWD');
+      setCurrentIndex(0);
     } catch (err) {
       console.error(err);
-      setStatus('❌ Registration failed. Please check the data or camera.');
+      setStatus('❌ Registration failed. Please check the input or camera.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '500px', margin: 'auto' }}>
-      <h2>Register Official (Facial Recognition)</h2>
+    <div style={{ maxWidth: '600px', margin: 'auto' }}>
+      <h2>Register Official (Multi-Face Sample)</h2>
       <form onSubmit={handleSubmit}>
         <div>
           <label>First Name:</label>
@@ -79,22 +107,46 @@ const RegisterUser = () => {
           </select>
         </div>
 
-        <div style={{ marginTop: '10px' }}>
+        <div style={{ marginTop: '15px' }}>
           <Webcam
             audio={false}
             ref={webcamRef}
             screenshotFormat="image/jpeg"
             width="100%"
-            videoConstraints={{
-              width: 640,
-              height: 480,
-              facingMode: 'user'
-            }}
+            videoConstraints={{ width: 640, height: 480, facingMode: 'user' }}
           />
         </div>
 
-        <button type="submit" disabled={loading} style={{ marginTop: '15px' }}>
-          {loading ? 'Registering...' : 'Register'}
+        <button
+          type="button"
+          onClick={capturePhoto}
+          disabled={loading}
+          style={{ marginTop: '10px' }}
+        >
+          Capture Photo {currentIndex + 1}/{MAX_PHOTOS}
+        </button>
+
+        <div style={{ display: 'flex', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
+          {photos.map((photo, index) => (
+            <div key={index} style={{ position: 'relative' }}>
+              <img src={photo} alt={`Face ${index + 1}`} width="150" style={{ border: '1px solid #ccc' }} />
+              <button
+                type="button"
+                onClick={() => retakePhoto(index)}
+                style={{ display: 'block', width: '100%' }}
+              >
+                Retake #{index + 1}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading || photos.length < MAX_PHOTOS}
+          style={{ marginTop: '20px' }}
+        >
+          {loading ? 'Registering...' : `Submit ${MAX_PHOTOS} Face Photos`}
         </button>
       </form>
 

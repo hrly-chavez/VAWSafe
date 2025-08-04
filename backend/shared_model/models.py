@@ -9,12 +9,12 @@ class Account(models.Model):
         return self.username
 
 class Official(models.Model):
-
-    ROLE_CHOICES ={
-    ('DSWD','DSWD'),
-    ('VAWDesk','VAWDesk'),
-    ('Social Worker','Social Woker'),
+    ROLE_CHOICES = {
+        ('DSWD', 'DSWD'),
+        ('VAWDesk', 'VAWDesk'),
+        ('Social Worker', 'Social Worker'),
     }
+
     of_id = models.AutoField(primary_key=True)
     account = models.OneToOneField(Account, on_delete=models.CASCADE)
     of_fname = models.CharField(max_length=50)
@@ -22,21 +22,29 @@ class Official(models.Model):
     of_m_initial = models.CharField(max_length=50, null=True, blank=True)
     of_suffix = models.CharField(max_length=50, null=True, blank=True)
     of_sex = models.CharField(max_length=1, null=True, blank=True)
-    of_dob = models.DateField( null=True, blank=True)
+    of_dob = models.DateField(null=True, blank=True)
     of_pob = models.CharField(max_length=255, null=True, blank=True)
-    of_address = models.TextField( null=True, blank=True)
+    of_address = models.TextField(null=True, blank=True)
     of_contact = models.CharField(max_length=20, null=True, blank=True)
     of_role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='DSWD')
     of_brgy_assigned = models.CharField(max_length=100, null=True, blank=True)
     of_specialization = models.CharField(max_length=100, null=True, blank=True)
-    of_photo = models.ImageField(upload_to='photos/')
-    of_embedding = ArrayField(models.FloatField(), null=True, blank=True)
+    of_photo = models.ImageField(upload_to='photos/')  # Profile image only
 
     def __str__(self):
         return f"{self.of_fname}, {self.of_lname}"
+
     @property
     def full_name(self):
-        return f"{self.of_fname} {self.of_m_initial}. {self.of_lname} {self.of_suffix}".strip()
+        return f"{self.of_fname} {self.of_m_initial or ''}. {self.of_lname} {self.of_suffix or ''}".strip()
+
+class OfficialFaceSample(models.Model):
+    official = models.ForeignKey(Official, on_delete=models.CASCADE, related_name='face_samples')
+    photo = models.ImageField(upload_to='face_samples/')
+    embedding = ArrayField(models.FloatField(), null=True, blank=True)
+
+    def __str__(self):
+        return f"FaceSample for {self.official.full_name}"
     
 
 
