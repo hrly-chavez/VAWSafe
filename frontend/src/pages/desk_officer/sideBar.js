@@ -1,38 +1,50 @@
-import './side-bar.css';
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
 
-export default function Sidebar () {
-    const sidebarItems = [
-        { icon: '/images/dashboard.png', label: 'Dashboard', path: '/dswd' },
-        { icon: '/images/hands.png', label: 'VAWC Victims', path: '/Dswd_vawc_victims' },
-        { icon: '/images/user.png', label: 'Social Workers', path: '/Dswd_social_workers' },
-        { icon: '/images/edit.png', label: 'Case Records', path: '/Dswd_case_records' },
-        { icon: '/images/high-value.png', label: 'Services', path: '/Dswd_services' },
-        { icon: '/images/bell.png', label: 'Notification', path: '/Dswd_notification' },
-        { icon: '/images/tools.png', label: 'File Maintenance', path: '/Dswd_file_maintenance' },
-    ];
+export default function Sidebar() {
+  const sidebarItems = [
+    {
+      icon: "/images/dashboard.png",
+      label: "Dashboard",
+      path: "/desk_officer",
+    },
+    {
+      icon: "/images/tools.png",
+      label: "Register Victim",
+      path: "/desk_officer/register_victim",
+    },
+  ];
 
-    return (
-        <div className='sidebar'>
-            <div className='profile'>
-                <img src='/images/bussiness-man.png' className='pfp'></img>
-                <div className='profile-title-container'>
-                    <h1 className='profile-title'>DSWD OFFICER</h1>
-                </div>
-                
-            </div>
-
-            <div className='choices'>
-                {sidebarItems.map((item, index) => (
-                    <Link to={item.path} key={index} style={{ textDecoration: 'none', color: 'inherit' }}>
-                        <div className='row'>
-                            <img src={item.icon} className='dashboard-icons' alt={item.label} />
-                            <p>{item.label}</p>
-                        </div>
-                    </Link>
-                ))}
-            </div>
-            
+  return (
+    <div className="bg-[#48486e] w-[200px] h-screen text-white font-[Poppins] shrink-0 overflow-hidden">
+      <div className="flex flex-col items-center justify-center px-2 py-4 text-center border-b border-[#2c2c46] shadow-sm">
+        <img
+          src="/images/bussiness-man.png"
+          alt="Profile"
+          className="h-[100px] w-[100px]"
+        />
+        <div className="mt-2 p-[3px] px-4 bg-[rgba(244,58,250,0.7)] rounded-full">
+          <h1 className="text-[15px]">Desk Officer</h1>
         </div>
-    );
+      </div>
+
+      <div className="mt-4 text-[16px] font-medium">
+        {sidebarItems.map((item, index) => (
+          <Link
+            to={item.path}
+            key={index}
+            className="no-underline text-inherit"
+          >
+            <div className="flex items-center gap-[15px] px-5 py-2 cursor-pointer hover:bg-[#3f3f64] hover:shadow-lg transition">
+              <img
+                src={item.icon}
+                alt={item.label}
+                className="w-[25px] h-[25px]"
+              />
+              <p>{item.label}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
 }
