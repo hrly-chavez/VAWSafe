@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import Sidebar from "./SideBar";
-import Navbar from "./NavBar";
+import Sidebar from "./sideBar";
+import Navbar from "./navBar";
 import AdministrativeInfo from "./AdministrativeInfo";
 
 function isMinor(birthDate) {
