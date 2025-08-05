@@ -3,20 +3,21 @@ import Sidebar from "./sideBar";
 import Navbar from "./navBar";
 import AdministrativeInfo from "./AdministrativeInfo";
 
-function isMinor(birthDate) {
-  const today = new Date();
-  const birth = new Date(birthDate);
-  const age =
-    today.getFullYear() -
-    birth.getFullYear() -
-    (today.getMonth() < birth.getMonth() ||
-    (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())
-      ? 1
-      : 0);
-  return age < 18;
-}
-
 export default function RegisterVictim() {
+  function isMinor(birthDate) {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    const age =
+      today.getFullYear() -
+      birth.getFullYear() -
+      (today.getMonth() < birth.getMonth() ||
+      (today.getMonth() === birth.getMonth() &&
+        today.getDate() < birth.getDate())
+        ? 1
+        : 0);
+    return age < 18;
+  }
+
   const [victimSurvivors, setVictimSurvivors] = useState([]);
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
@@ -149,6 +150,7 @@ export default function RegisterVictim() {
         {/* victim survivor information registration starts here */}
         <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
           <AdministrativeInfo></AdministrativeInfo>
+          <hr></hr>
 
           <h2 className="text-2xl font-semibold text-gray-800">
             Victim Survivor Information

@@ -49,7 +49,28 @@ const AdministrativeInfo = () => {
           </option>
         </select>
 
-        <div></div>
+        {reportType !== "Reported by the victim-survivor" && (
+          <div>
+            <input
+              className="input"
+              type="text"
+              placeholder="Name of Informant"
+              //   onChange={(e) => setFirstName(e.target.value)}
+            ></input>
+            <input
+              className="input"
+              type="text"
+              placeholder="Relationship to victim-survivor"
+              //   onChange={(e) => setFirstName(e.target.value)}
+            ></input>
+            <input
+              className="input"
+              type="text"
+              placeholder="Contact Information"
+              //   onChange={(e) => setFirstName(e.target.value)}
+            ></input>
+          </div>
+        )}
       </div>
     </div>
   );
