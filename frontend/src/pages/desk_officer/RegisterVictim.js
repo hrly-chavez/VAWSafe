@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./SideBar";
 import Navbar from "./NavBar";
+import AdministrativeInfo from "./AdministrativeInfo";
 
 function isMinor(birthDate) {
   const today = new Date();
@@ -147,6 +148,8 @@ export default function RegisterVictim() {
 
         {/* victim survivor information registration starts here */}
         <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
+          <AdministrativeInfo></AdministrativeInfo>
+
           <h2 className="text-2xl font-semibold text-gray-800">
             Victim Survivor Information
           </h2>
