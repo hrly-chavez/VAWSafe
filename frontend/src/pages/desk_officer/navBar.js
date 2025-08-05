@@ -1,7 +1,8 @@
-import './css/DSWDPageCSS.css'
-import { useEffect, useState } from 'react';
-export default function Navbar () {
-    const [dateTime, setDateTime] = useState(new Date());
+import "./nav-bar.css";
+import { useEffect, useState } from "react";
+
+export default function Navbar() {
+  const [dateTime, setDateTime] = useState(new Date());
 
   useEffect(() => {
     const interval = setInterval(() => {

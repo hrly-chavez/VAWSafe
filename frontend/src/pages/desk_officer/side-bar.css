@@ -1,0 +1,74 @@
+@import url("https://fonts.googleapis.com/css2?family=Imbue:wght@400;600;700&family=Poppins:wght@300;400;600&display=swap");
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden; /* prevents any scrolling */
+}
+
+/* Your sidebar is already correctly styled */
+.sidebar {
+  background-color: #48486e !important;
+  width: 200px !important; /* changed from max-width */
+  height: 100vh; /* full screen height */
+  color: #fff;
+  font-family: "Poppins", sans-serif;
+  flex-shrink: 0; /* prevents it from shrinking */
+  overflow: hidden; /* avoids scrollbars if internal content spills */
+}
+
+.pfp {
+  height: 100px;
+  width: 100px;
+}
+
+.profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  text-align: center;
+  border-bottom: 1px solid #2c2c46;
+  margin-left: 10px;
+  margin-right: 10px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+.profile-title {
+  font-size: 15px;
+}
+
+.profile-title-container {
+  margin: 10px;
+  padding: 3px 15px;
+  background-color: rgba(244, 58, 250, 0.7); /* 0.7 = 70% opacity */
+
+  border-radius: 25px;
+}
+
+.dashboard-icons {
+  width: 25px;
+  height: 25px;
+}
+
+.choices {
+  font-size: 16px;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+.row {
+  display: flex;
+  align-items: center; /* vertically center icon and label */
+  padding: 5px 20px; /* top/bottom + left/right padding */
+  gap: 15px; /* space between icon and label */
+  cursor: pointer;
+}
+
+.row:hover {
+  background-color: #3f3f64;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
