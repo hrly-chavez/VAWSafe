@@ -1,4 +1,4 @@
-import './DSWDPageCSS.css';
+import './css/DSWDPageCSS.css'
 import { useEffect, useState } from 'react';
 export default function Navbar () {
     const [dateTime, setDateTime] = useState(new Date());

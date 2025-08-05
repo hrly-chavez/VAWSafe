@@ -1,7 +1,6 @@
 import Navbar from "./Navbar";
 import Sidebar from "./sidebar";
-import './DSWDVAWCVictims.css';
-
+import './css/DSWDVAWCVictims.css'
 export default function DSWDVAWCVictims () {
     return (
         <>

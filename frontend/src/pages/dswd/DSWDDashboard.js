@@ -8,6 +8,5 @@ export default function DeskOfficerProfile () {
             <Navbar />
             <Sidebar />
         </>
-        
     );
 }

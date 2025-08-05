@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import Webcam from 'react-webcam';
 import { useNavigate } from 'react-router-dom';
-import './dswd/DSWDPageCSS.css';
+import './dswd/css/DSWDPageCSS.css';
 import Navbar from './dswd/Navbar';
 
 const LoginPage = () => {
