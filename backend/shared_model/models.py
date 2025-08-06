@@ -26,7 +26,7 @@ class Official(models.Model):
     of_pob = models.CharField(max_length=255, null=True, blank=True)
     of_address = models.TextField(null=True, blank=True)
     of_contact = models.CharField(max_length=20, null=True, blank=True)
-    of_role = models.CharField(max_length=50, choices=ROLE_CHOICES, default='DSWD')
+    of_role = models.CharField(max_length=50, choices=ROLE_CHOICES, default=False)
     of_brgy_assigned = models.CharField(max_length=100, null=True, blank=True)
     of_specialization = models.CharField(max_length=100, null=True, blank=True)
     of_photo = models.ImageField(upload_to='photos/')  # Profile image only
@@ -46,8 +46,6 @@ class OfficialFaceSample(models.Model):
     def __str__(self):
         return f"FaceSample for {self.official.full_name}"
     
-
-
 SEX_CHOICES = [
         ('Male', 'Male'),
         ('Female', 'Female'),
@@ -151,41 +149,9 @@ class Victim(models.Model):
     def __str__(self):
         return self.vic_last_name
 
-class IncidentInformation(models.Model):
-    TYPE_OF_PLACE = [
-        ('Conjugal Home', 'Conjugal Home'),
-        ('Evacutaion Area', 'Evacutaion Area'),
-        ('Malls/Hotels', 'Malls/Hotels'),
-        ('Perpetrator\'s Home', 'Perpetrator\'s Home'),
-        ('Public Utility Vehicle', 'Public Utility Vehicle'),
-        ('Victim\'s Home', 'Victim\'s Home'),
-        ('Workplace', 'Workplace'),
-    ]
-
-    CONFLICT_AREA_CHOICES = [
-        ('Insurgency', 'Insurgency'),
-        ('Violent Extremism', 'Violent Extremism'),
-        ('Tribal Violence', 'Tribal Violence'),
-        ('Political Violence', 'Political Violence'),
-        ('Rido', 'Rido'),
-        ('Others', 'Others'),
-    ]
-
-    vic_id = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name='incidents')
-    # violenceType = models.CharField(max_length=100)
-    incident_description = models.TextField()
-    incident_date = models.DateField()
-    incident_time = models.TimeField()
-    incident_location = models.CharField(max_length=255, blank=True, null=True)
-    type_of_place = models.CharField(max_length=50, choices=TYPE_OF_PLACE)
-    is_via_electronic_means = models.BooleanField(default=False)
-    electronic_means = models.CharField(max_length=50, blank=True, null=True)
-    # isResultOfHarmfulPractice = models.BooleanField(default=False)
-    is_conflict_area = models.BooleanField(default=False)
-    conflict_area = models.CharField(max_length=50, choices=CONFLICT_AREA_CHOICES, blank=True, null=True)
-    is_calamity_area = models.BooleanField(default=False)
-
 class Perpetrator(models.Model):
+
+    perp_id = models.AutoField(primary_key=True)
     vic_id = models.ForeignKey(Victim, on_delete=models.CASCADE)
     per_last_name = models.CharField(max_length=100)
     per_first_name = models.CharField(max_length=100)
@@ -205,3 +171,76 @@ class Perpetrator(models.Model):
 
     def __str__(self):
         return self.per_last_name
+    
+class IncidentInformation(models.Model):  #CASE NI SA DB DESIGN
+    TYPE_OF_PLACE = [
+        ('Conjugal Home', 'Conjugal Home'),
+        ('Evacutaion Area', 'Evacutaion Area'),
+        ('Malls/Hotels', 'Malls/Hotels'),
+        ('Perpetrator\'s Home', 'Perpetrator\'s Home'),
+        ('Public Utility Vehicle', 'Public Utility Vehicle'),
+        ('Victim\'s Home', 'Victim\'s Home'),
+        ('Workplace', 'Workplace'),
+    ]
+
+    CONFLICT_AREA_CHOICES = [
+        ('Insurgency', 'Insurgency'),
+        ('Violent Extremism', 'Violent Extremism'),
+        ('Tribal Violence', 'Tribal Violence'),
+        ('Political Violence', 'Political Violence'),
+        ('Rido', 'Rido'),
+        ('Others', 'Others'),
+    ]
+    incident_id = models.AutoField(primary_key=True)
+    
+    # violenceType = models.CharField(max_length=100)
+    incident_description = models.TextField()
+    incident_date = models.DateField()
+    incident_time = models.TimeField()
+    incident_location = models.CharField(max_length=255, blank=True, null=True)
+    type_of_place = models.CharField(max_length=50, choices=TYPE_OF_PLACE)
+    is_via_electronic_means = models.BooleanField(default=False)
+    electronic_means = models.CharField(max_length=50, blank=True, null=True)
+    # isResultOfHarmfulPractice = models.BooleanField(default=False)
+    is_conflict_area = models.BooleanField(default=False)
+    conflict_area = models.CharField(max_length=50, choices=CONFLICT_AREA_CHOICES, blank=True, null=True)
+    is_calamity_area = models.BooleanField(default=False)
+    vic_id = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name='incidents')
+    of_id = models.ForeignKey(Official, on_delete=models.CASCADE, related_name='handled_incidents',null=True, blank=True)
+    perp_id = models.ForeignKey(Perpetrator, on_delete=models.CASCADE,to_field='perp_id', related_name='related_incidents',null=True, blank=True)
+
+    def __str__(self):
+        return self.incident_id
+    
+class Session(models.Model):
+
+    SESSION_STAT =(
+        ('Pending', 'Pending'),
+        ('Ongoing', 'Ongoing'),
+        ('Done', 'Done'),
+    )
+    sess_id = models.AutoField(primary_key=True)
+    sess_date_today = models.DateField(null=True, blank=True)
+    sess_type = models.TextField(null=True, blank=True)
+    sess_notes = models.TextField(null=True, blank=True)
+    sess_created_at = models.DateField(null=True, blank=True)
+    sess_updated_at = models.DateField(null=True, blank=True)
+    sess_next_sched = models.DateField(null=True, blank=True)
+    sess_description = models.TextField(null=True, blank=True)
+    sess_status = models.CharField(choices=SESSION_STAT, default='Pending')
+    incident_id = models.ForeignKey(IncidentInformation,to_field='incident_id', on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
+    of_id = models.ForeignKey(Official, on_delete=models.CASCADE,to_field='of_id', related_name='sessions_handled',null=True, blank=True)
+
+    def __str__(self):
+        return self.sess_id
+
+class Session_Changelog(models.Model):
+    sc_changed_timestamp = models.DateTimeField()
+    sc_field_changed = models.CharField(max_length=100)
+    sc_old_value = models.TextField()
+    sc_new_value = models.TextField()
+    sc_reason_for_update = models.TextField()
+    sess_id = models.ForeignKey(Session,on_delete=models.CASCADE, to_field='sess_id', related_name='changelogs')
+    
+    def __str__(self):
+        return f"Change in {self.sc_field_changed} on {self.sc_changed_timestamp}"
