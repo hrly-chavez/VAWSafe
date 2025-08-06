@@ -4,6 +4,142 @@ import Navbar from "./components/navBar";
 import AdministrativeInfo from "./components/AdministrativeInfo";
 
 export default function RegisterVictim() {
+  function isMinor(birthDate) {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    const age =
+      today.getFullYear() -
+      birth.getFullYear() -
+      (today.getMonth() < birth.getMonth() ||
+      (today.getMonth() === birth.getMonth() &&
+        today.getDate() < birth.getDate())
+        ? 1
+        : 0);
+    return age < 18;
+  }
+
+  const [victimSurvivors, setVictimSurvivors] = useState([]);
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [sex, setSex] = useState("");
+  const [isSogie, setIsSogie] = useState(""); // dropdown value: "Yes", "No", etc.
+  const [specificSogie, setSpecificSogie] = useState(""); // user input if "Yes"
+  const [birthDate, setBirthDate] = useState("");
+  const [birthPlace, setBirthPlace] = useState("");
+
+  const [isMinorVictim, setIsMinorVictim] = useState(false);
+  const [guardianFirstName, setGuardianFirstName] = useState("");
+  const [guardianMiddleName, setGuardianMiddleName] = useState("");
+  const [guardianLastName, setGuardianLastName] = useState("");
+  const [guardianContact, setGuardianContact] = useState("");
+  const [childCategory, setChildCategory] = useState("");
+
+  const [civilStatus, setCivilStatus] = useState("");
+  const [educationalAttainment, setEducationalAttainment] = useState("");
+  const [nationality, setNationality] = useState("");
+  const [specificNationality, setSpecificNationality] = useState("");
+  const [ethnicity, setEthnicity] = useState("");
+  const [mainOccupation, setMainOccupation] = useState("");
+  const [monthlyIncome, setMonthlyIncome] = useState("");
+
+  const [employmentStatus, setEmploymentStatus] = useState("");
+  const [employmentType, setEmploymentType] = useState("");
+  const [employerName, setEmployerName] = useState("");
+  const [employerAddress, setEmployerAddress] = useState("");
+
+  const [migratoryStatus, setMigratoryStatus] = useState("");
+  const [religion, setReligion] = useState("");
+  const [specificReligion, setSpecificReligion] = useState("");
+  const [isDisplaced, setIsDisplaced] = useState("");
+  const [pwd, setPwd] = useState("");
+  const [contact, setContact] = useState("");
+
+  useEffect(() => {
+    fetchVictimSurvivors();
+  }, []);
+
+  useEffect(() => {
+    setIsMinorVictim(isMinor(birthDate));
+  }, [birthDate]);
+
+  const fetchVictimSurvivors = async () => {
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:8000/desk_officer/victim_survivors/"
+      );
+      const data = await response.json();
+      setVictimSurvivors(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const registerVictimSurvivor = async () => {
+    if (!firstName || !lastName || !sex) {
+      alert(
+        "Please fill out all required fields: First Name, Last Name, and Sex."
+      );
+      return;
+    }
+
+    const victimSurvivorData = {
+      first_name: firstName,
+      middle_name: middleName,
+      last_name: lastName,
+      sex: sex,
+      is_sogie: isSogie,
+      specific_sogie: isSogie === "Yes" ? specificSogie : "",
+      birth_date: birthDate,
+      birth_place: birthPlace,
+
+      is_minor: isMinorVictim,
+      guardian_first_name: isMinorVictim ? guardianFirstName : "",
+      guardian_middle_name: isMinorVictim ? guardianMiddleName : "",
+      guardian_last_name: isMinorVictim ? guardianLastName : "",
+      guardian_contact: isMinorVictim ? guardianContact : "",
+      child_category: isMinorVictim ? childCategory : null,
+
+      civil_status: isMinorVictim ? "Not Applicable" : civilStatus,
+      educational_attainment: educationalAttainment,
+      nationality: nationality,
+      specific_nationality: specificNationality,
+      ethnicity: ethnicity,
+      main_occupation: mainOccupation,
+      monthly_income: monthlyIncome,
+
+      employment_status: employmentStatus,
+      employment_type: employmentType,
+      employer_name: employerName,
+      employer_address: employerAddress,
+
+      migratory_status: migratoryStatus,
+      religion: religion,
+      specific_religion: specificReligion,
+      is_displaced: isDisplaced,
+      pwd: pwd,
+      contact: contact,
+    };
+
+    try {
+      const response = await fetch(
+        "http://127.0.0.1:8000/desk_officer/victim_survivors/register/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(victimSurvivorData),
+        }
+      );
+
+      const data = await response.json();
+      setVictimSurvivors((prev) => [...prev, data]);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   return (
     <div className="outline-2">
       <Navbar></Navbar>
@@ -347,7 +483,12 @@ export default function RegisterVictim() {
               placeholder="Contact Information"
               onChange={(e) => setContact(e.target.value)}
             />
-            
+            <button
+              className="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition"
+              onClick={registerVictimSurvivor}
+            >
+              Register Victim
+            </button>
           </div>
 
           {/* for debugging, show contents inside database */}
