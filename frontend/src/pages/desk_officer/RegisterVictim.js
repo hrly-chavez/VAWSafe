@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import Sidebar from "./sideBar";
-import Navbar from "./navBar";
+import Sidebar from "./components/sideBar";
+import Navbar from "./components/navBar";
 import AdministrativeInfo from "./components/AdministrativeInfo";
 
 export default function RegisterVictim() {
