@@ -3,7 +3,7 @@ import Sidebar from "./sideBar";
 import Navbar from "./navBar";
 import AdministrativeInfo from "./AdministrativeInfo";
 
-export default function RegisterVictim() {
+export default function VictimInfo() {
   function isMinor(birthDate) {
     const today = new Date();
     const birth = new Date(birthDate);
