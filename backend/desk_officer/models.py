@@ -50,3 +50,7 @@ class VictimSurvivor(models.Model):
 
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
+
+class IncidentDetail(models.Model):
+    victim = models.ForeignKey(VictimSurvivor, on_delete=models.CASCADE, related_name='incidents')
+    informantName = models.CharField(max_length=100, blank=True, null=True)
