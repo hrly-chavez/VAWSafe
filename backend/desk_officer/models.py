@@ -54,3 +54,5 @@ class VictimSurvivor(models.Model):
 class IncidentDetail(models.Model):
     victim = models.ForeignKey(VictimSurvivor, on_delete=models.CASCADE, related_name='incidents')
     informantName = models.CharField(max_length=100, blank=True, null=True)
+    informantRelationship = models.CharField(max_length=100, blank=True, null=True)
+    informantContact = models.CharField(max_length=100, blank=True, null=True)
