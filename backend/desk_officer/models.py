@@ -56,3 +56,7 @@ class IncidentDetail(models.Model):
     informantName = models.CharField(max_length=100, blank=True, null=True)
     informantRelationship = models.CharField(max_length=100, blank=True, null=True)
     informantContact = models.CharField(max_length=100, blank=True, null=True)
+
+class Perpetrator(models.Model):
+    victim = models.ForeignKey(VictimSurvivor, on_delete=models.CASCADE, related_name='perpetrators')
+    name = models.CharField(max_length=100, blank=True, null=True)
