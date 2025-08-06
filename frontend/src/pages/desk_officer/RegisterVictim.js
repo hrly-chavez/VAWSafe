@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./sideBar";
 import Navbar from "./navBar";
-import AdministrativeInfo from "./AdministrativeInfo";
+import AdministrativeInfo from "./components/AdministrativeInfo";
 
 export default function RegisterVictim() {
   function isMinor(birthDate) {
