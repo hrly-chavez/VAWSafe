@@ -149,19 +149,19 @@ export default function VictimInfo() {
           className="input"
           type="text"
           placeholder="First Name"
-          // onChange={(e) => setFirstName(e.target.value)}
+          onChange={(e) => setFirstName(e.target.value)}
         />
         <input
           className="input"
           type="text"
           placeholder="Middle Name"
-          // onChange={(e) => setMiddleName(e.target.value)}
+          onChange={(e) => setMiddleName(e.target.value)}
         />
         <input
           className="input"
           type="text"
           placeholder="Last Name"
-          // onChange={(e) => setLastName(e.target.value)}
+          onChange={(e) => setLastName(e.target.value)}
         />
       </div>
 
@@ -169,8 +169,8 @@ export default function VictimInfo() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <select
           className="input"
-          // value={sex}
-          // onChange={(e) => setSex(e.target.value)}
+          value={sex}
+          onChange={(e) => setSex(e.target.value)}
         >
           <option value="">Select Sex</option>
           <option value="Male">Male</option>
@@ -179,8 +179,8 @@ export default function VictimInfo() {
 
         <select
           className="input"
-          // value={isSogie}
-          // onChange={(e) => setIsSogie(e.target.value)}
+          value={isSogie}
+          onChange={(e) => setIsSogie(e.target.value)}
         >
           <option value="">SOGIE?</option>
           <option value="Yes">Yes</option>
@@ -195,8 +195,8 @@ export default function VictimInfo() {
             className="input"
             type="text"
             placeholder="Please specify"
-            // value={specificSogie}
-            // onChange={(e) => setSpecificSogie(e.target.value)}
+            value={specificSogie}
+            onChange={(e) => setSpecificSogie(e.target.value)}
           />
         )}
       </div>
@@ -206,14 +206,14 @@ export default function VictimInfo() {
         <input
           className="input"
           type="date"
-          // value={birthDate}
-          // onChange={(e) => setBirthDate(e.target.value)}
+          value={birthDate}
+          onChange={(e) => setBirthDate(e.target.value)}
         />
         <input
           className="input"
           type="text"
           placeholder="Birth Place"
-          // onChange={(e) => setBirthPlace(e.target.value)}
+          onChange={(e) => setBirthPlace(e.target.value)}
         />
       </div>
 
@@ -228,30 +228,30 @@ export default function VictimInfo() {
               className="input"
               type="text"
               placeholder="Guardian First Name"
-              // onChange={(e) => setGuardianFirstName(e.target.value)}
+              onChange={(e) => setGuardianFirstName(e.target.value)}
             />
             <input
               className="input"
               type="text"
               placeholder="Guardian Middle Name"
-              // onChange={(e) => setGuardianMiddleName(e.target.value)}
+              onChange={(e) => setGuardianMiddleName(e.target.value)}
             />
             <input
               className="input"
               type="text"
               placeholder="Guardian Last Name"
-              // onChange={(e) => setGuardianLastName(e.target.value)}
+              onChange={(e) => setGuardianLastName(e.target.value)}
             />
             <input
               className="input"
               type="text"
               placeholder="Guardian Contact"
-              // onChange={(e) => setGuardianContact(e.target.value)}
+              onChange={(e) => setGuardianContact(e.target.value)}
             />
             <select
               className="input"
-              // value={childCategory}
-              // onChange={(e) => setChildCategory(e.target.value)}
+              value={childCategory}
+              onChange={(e) => setChildCategory(e.target.value)}
             >
               <option value="">Select Child Category</option>
               <option value="Orphan">Orphan</option>
@@ -267,8 +267,8 @@ export default function VictimInfo() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <select
           className="input"
-          // value={civilStatus}
-          // onChange={(e) => setCivilStatus(e.target.value)}
+          value={civilStatus}
+          onChange={(e) => setCivilStatus(e.target.value)}
         >
           <option value="">Civil Status</option>
           <option value="Single">Single</option>
@@ -284,8 +284,8 @@ export default function VictimInfo() {
 
         <select
           className="input"
-          // value={educationalAttainment}
-          // onChange={(e) => setEducationalAttainment(e.target.value)}
+          value={educationalAttainment}
+          onChange={(e) => setEducationalAttainment(e.target.value)}
         >
           <option value="">Educational Attainment</option>
           <option value="No formal education">No formal education</option>
@@ -302,8 +302,8 @@ export default function VictimInfo() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <select
           className="input"
-          // value={nationality}
-          // onChange={(e) => setNationality(e.target.value)}
+          value={nationality}
+          onChange={(e) => setNationality(e.target.value)}
         >
           <option value="">Nationality</option>
           <option value="Filipino">Filipino</option>
@@ -315,8 +315,8 @@ export default function VictimInfo() {
             className="input"
             type="text"
             placeholder="Please specify"
-            // value={specificNationality}
-            // onChange={(e) => setSpecificNationality(e.target.value)}
+            value={specificNationality}
+            onChange={(e) => setSpecificNationality(e.target.value)}
           />
         )}
 
@@ -324,7 +324,7 @@ export default function VictimInfo() {
           className="input"
           type="text"
           placeholder="Ethnicity"
-          // onChange={(e) => setEthnicity(e.target.value)}
+          onChange={(e) => setEthnicity(e.target.value)}
         />
       </div>
       <hr></hr>
@@ -334,20 +334,20 @@ export default function VictimInfo() {
           className="input"
           type="text"
           placeholder="Main Occupation"
-          // onChange={(e) => setMainOccupation(e.target.value)}
+          onChange={(e) => setMainOccupation(e.target.value)}
         />
         <input
           className="input"
           type="number"
           placeholder="Monthly Income"
-          // onChange={(e) => setMonthlyIncome(e.target.value)}
+          onChange={(e) => setMonthlyIncome(e.target.value)}
         />
       </div>
       <hr></hr>
       <select
         className="input"
-        // value={employmentStatus}
-        // onChange={(e) => setEmploymentStatus(e.target.value)}
+        value={employmentStatus}
+        onChange={(e) => setEmploymentStatus(e.target.value)}
       >
         <option value="">Employment Status</option>
         <option value="Employed">Employed</option>
@@ -361,8 +361,8 @@ export default function VictimInfo() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <select
             className="input"
-            // value={employmentType}
-            // onChange={(e) => setEmploymentType(e.target.value)}
+            value={employmentType}
+            onChange={(e) => setEmploymentType(e.target.value)}
           >
             <option value="">Employment Type</option>
             <option value="Public">Public</option>
@@ -372,13 +372,13 @@ export default function VictimInfo() {
             className="input"
             type="text"
             placeholder="Employer Name"
-            // onChange={(e) => setEmployerName(e.target.value)}
+            onChange={(e) => setEmployerName(e.target.value)}
           />
           <input
             className="input"
             type="text"
             placeholder="Employer Address"
-            // onChange={(e) => setEmployerAddress(e.target.value)}
+            onChange={(e) => setEmployerAddress(e.target.value)}
           />
         </div>
       )}
@@ -387,8 +387,8 @@ export default function VictimInfo() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <select
           className="input"
-          // value={migratoryStatus}
-          // onChange={(e) => setMigratoryStatus(e.target.value)}
+          value={migratoryStatus}
+          onChange={(e) => setMigratoryStatus(e.target.value)}
         >
           <option value="">Migratory Status</option>
           <option value="Current OFW">Current OFW</option>
@@ -399,8 +399,8 @@ export default function VictimInfo() {
 
         <select
           className="input"
-          // value={religion}
-          // onChange={(e) => setReligion(e.target.value)}
+          value={religion}
+          onChange={(e) => setReligion(e.target.value)}
         >
           <option value="">Religion</option>
           <option value="Roman Catholic">Roman Catholic</option>
@@ -416,23 +416,23 @@ export default function VictimInfo() {
             className="input"
             type="text"
             placeholder="Specific Religion"
-            // onChange={(e) => setSpecificReligion(e.target.value)}
+            onChange={(e) => setSpecificReligion(e.target.value)}
           />
         )}
 
         <label className="flex items-center space-x-2">
+          <span>Is the client internally displaced?</span>
           <input
             type="checkbox"
             checked={isDisplaced}
-            // onChange={(e) => setIsDisplaced(e.target.checked)}
+            onChange={(e) => setIsDisplaced(e.target.checked)}
           />
-          <span>Is the client internally displaced?</span>
         </label>
 
         <select
           className="input"
-          // value={pwd}
-          // onChange={(e) => setPwd(e.target.value)}
+          value={pwd}
+          onChange={(e) => setPwd(e.target.value)}
         >
           <option value="">PWD Status</option>
           <option value="None">None</option>
@@ -462,7 +462,7 @@ export default function VictimInfo() {
           className="input w-full"
           type="text"
           placeholder="Contact Information"
-          // onChange={(e) => setContact(e.target.value)}
+          onChange={(e) => setContact(e.target.value)}
         />
       </div>
 
