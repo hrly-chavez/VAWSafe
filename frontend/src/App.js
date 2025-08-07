@@ -32,6 +32,7 @@ export default function App() {
         <Route path="/login/manual" element={<ManualLoginPage />} />
         <Route path="/register" element={<RegisterUser />} />
 
+        {/* desk officer */}
         <Route path="/desk_officer" element={<DeskOfficerPage />} />
         <Route
           path="/desk_officer/register_victim"
