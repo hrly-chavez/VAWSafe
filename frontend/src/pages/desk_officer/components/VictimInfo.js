@@ -465,41 +465,6 @@ export default function VictimInfo() {
           onChange={(e) => setContact(e.target.value)}
         />
       </div>
-
-      {/* for debugging, show contents inside database */}
-      {victimSurvivors.map((victim_survivor) => (
-        <div>
-          <p>First Name: {victim_survivor.first_name}</p>
-          <p>Middle Name: {victim_survivor.middle_name}</p>
-          <p>Last Name: {victim_survivor.last_name}</p>
-          <p>Sex: {victim_survivor.sex}</p>
-          <p>SOGIE: {victim_survivor.is_sogie}</p>
-          <p>Specific SOGIE: {victim_survivor.specific_sogie}</p>
-          <p>birth date: {victim_survivor.birth_date}</p>
-          <p>birth place: {victim_survivor.birth_place}</p>
-          <p>Minor: {victim_survivor.is_minor}</p>
-          <p>
-            Guardian:
-            {victim_survivor.guardian_first_name}{" "}
-            {victim_survivor.guardian_middle_name}{" "}
-            {victim_survivor.guardian_last_name}
-          </p>
-          <p>Guardian Contact: {victim_survivor.guardian_contact}</p>
-          <p>Category: {victim_survivor.child_category}</p>
-          <p>civil status: {victim_survivor.civil_status}</p>
-          <p>Nationality: {victim_survivor.nationality}</p>
-          <p>ethnicity: {victim_survivor.ethnicity}</p>
-          <p>main occupation: {victim_survivor.main_occupation}</p>
-          <p>monthly_income: {victim_survivor.monthly_income}</p>
-          <p>migratory_status: {victim_survivor.migratory_status}</p>
-          <p>religion: {victim_survivor.religion}</p>
-          <p>specific_religion: {victim_survivor.specific_religion}</p>
-          <p>is_displaced: {victim_survivor.is_displaced}</p>
-          <p>pwd: {victim_survivor.pwd}</p>
-          <p>is_displaced: {victim_survivor.is_displaced}</p>
-          <p>contact: {victim_survivor.contact}</p>
-        </div>
-      ))}
     </div>
   );
 }
