@@ -12,6 +12,11 @@ export default function Sidebar() {
       label: "Register Victim",
       path: "/desk_officer/register_victim",
     },
+    {
+      icon: "/images/tools.png",
+      label: "Log Out",
+      path: "/login",
+    },
   ];
 
   return (
