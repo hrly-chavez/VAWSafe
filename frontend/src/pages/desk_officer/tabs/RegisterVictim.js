@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import Sidebar from "./components/sideBar";
-import Navbar from "./components/navBar";
-import AdministrativeInfo from "./components/AdministrativeInfo";
-import VictimInfo from "./components/VictimInfo";
-import IncidentInfo from "./components/IncidentInfo";
-import PerpetratorInfo from "./components/PerpetratorInfo";
+import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
+import AdministrativeInfo from "../components/AdministrativeInfo";
+import VictimInfo from "../components/VictimInfo";
+import IncidentInfo from "../components/IncidentInfo";
+import PerpetratorInfo from "../components/PerpetratorInfo";
 
 export default function RegisterVictim() {
   return (
