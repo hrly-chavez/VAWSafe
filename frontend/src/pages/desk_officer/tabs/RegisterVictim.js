@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
+import Sidebar from "../components/sideBar";
+import Navbar from "../components/navBar";
 import AdministrativeInfo from "../components/AdministrativeInfo";
 import VictimInfo from "../components/VictimInfo";
 import IncidentInfo from "../components/IncidentInfo";
@@ -9,14 +9,14 @@ import PerpetratorInfo from "../components/PerpetratorInfo";
 export default function RegisterVictim() {
   return (
     <div className="outline-2">
-      <Navbar></Navbar>
+      <Navbar />
 
       <div className="flex flex-row">
-        <Sidebar></Sidebar>
+        <Sidebar />
 
         {/* main content */}
         <div className="h-[80vh] overflow-y-auto w-full">
-          <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6 ">
+          <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
             <AdministrativeInfo />
             <VictimInfo />
             <IncidentInfo />
