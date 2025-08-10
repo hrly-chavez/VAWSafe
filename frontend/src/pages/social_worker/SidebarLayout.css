@@ -6,6 +6,7 @@
   overflow: hidden;
 }
 
+/* Sidebar */
 .sw-sidebar {
   background-color: #48486E;
   width: 250px;
@@ -16,37 +17,46 @@
   overflow: hidden;
 }
 
+/* Main content container (next to sidebar) */
+.sw-content {
+  flex: 1; /* take up remaining space */
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  background: #f8fafc;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* Profile */
 .sw-profile {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding:15px;
+  padding: 15px;
   text-align: center;
   border-bottom: 1px solid #2C2C46;
-  margin-left: 10px;
-  margin-right: 10px;
+  margin: 0 10px;
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
 }
-
 .sw-pfp {
   height: 100px;
   width: 100px;
 }
-
 .sw-profile-title-container {
   margin: 10px;
   padding: 3px 15px;
   background-color: rgba(244, 58, 250, 0.7);
   border-radius: 25px;
 }
-
 .sw-profile-title {
   font-size: 15px;
   font-weight: 500;
   margin: 0;
 }
 
+/* Sidebar menu */
 .sw-choices {
   display: flex;
   flex-direction: column;
@@ -56,7 +66,6 @@
   margin-top: 20px;
   padding: 0 20px;
 }
-
 .sw-row {
   display: flex;
   align-items: center;
@@ -66,17 +75,14 @@
   border-radius: 8px;
   background-color: transparent;
 }
-
 .sw-row:hover {
   background-color: #3F3F64;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
-
 .sw-dashboard-icons {
   width: 25px;
   height: 25px;
 }
-
 .sw-row a {
   text-decoration: none;
   color: white;
@@ -84,7 +90,7 @@
   display: inline-block;
 }
 
-/* Toggle button (hamburger) for small screens only */
+/* Toggle button (hamburger) */
 .sw-sidebar-toggle {
   display: none;
   position: fixed;
@@ -99,7 +105,7 @@
   border-radius: 5px;
 }
 
-/* Responsive sidebar behavior */
+/* Responsive */
 @media (max-width: 768px) {
   .sw-sidebar {
     position: fixed;
@@ -110,16 +116,13 @@
     transition: transform 0.3s ease-in-out;
     z-index: 1000;
   }
-
   .sw-layout.sidebar-open .sw-sidebar {
     transform: translateX(0);
   }
-
   .sw-sidebar-toggle {
     display: block;
   }
-
   .sw-content {
-    padding-top: 60px; /* space for navbar and toggle button */
+    padding-top: 60px; /* space for navbar/toggle */
   }
 }
