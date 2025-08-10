@@ -244,3 +244,4 @@ class Session_Changelog(models.Model):
     
     def __str__(self):
         return f"Change in {self.sc_field_changed} on {self.sc_changed_timestamp}"
+
