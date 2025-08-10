@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import Navbar from "../components/Navbar";
-import Sidebar from "../components/Sidebar";
+import Navbar from "../components/navBar";
+import Sidebar from "../components/sideBar";
 
 export default function DeskOfficerPage() {
   return (

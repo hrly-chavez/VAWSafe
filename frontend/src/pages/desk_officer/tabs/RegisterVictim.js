@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
+import Sidebar from "../components/sideBar";
+import Navbar from "../components/navBar";
 import AdministrativeInfo from "../components/AdministrativeInfo";
 import VictimInfo from "../components/VictimInfo";
 import IncidentInfo from "../components/IncidentInfo";
