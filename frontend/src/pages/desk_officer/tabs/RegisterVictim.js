@@ -9,14 +9,14 @@ import PerpetratorInfo from "../components/PerpetratorInfo";
 export default function RegisterVictim() {
   return (
     <div className="outline-2">
-      <Navbar></Navbar>
+      <Navbar />
 
       <div className="flex flex-row">
-        <Sidebar></Sidebar>
+        <Sidebar />
 
         {/* main content */}
         <div className="h-[80vh] overflow-y-auto w-full">
-          <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6 ">
+          <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
             <AdministrativeInfo />
             <VictimInfo />
             <IncidentInfo />

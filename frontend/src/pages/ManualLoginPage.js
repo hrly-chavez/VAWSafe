@@ -13,26 +13,24 @@ const ManualLoginPage = () => {
     try {
       const response = await fetch('http://localhost:8000/api/social_worker/manual-login/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
 
       const data = await response.json();
 
+      // inside the success branch after `const data = await response.json();`
       if (response.ok && data.match) {
-        setMessage(`Welcome, ${data.name} (${data.role})`);
+        // Migrate old key (just in case)
+        localStorage.removeItem("loggedInUser");
+        // Save with the unified key the sidebar uses
+        localStorage.setItem("vawsafeUser", JSON.stringify(data));
 
-        if (data.role === 'Social Worker') {
-          navigate('/social_worker/dashboard');
-        } else if (data.role === 'VAWDesk') {
-          navigate('/desk_officer');
-        } else if (data.role === 'DSWD') {
-          navigate('/dswd');
-        } else {
-          setMessage('Unrecognized role. Cannot redirect.');
-        }
+        setMessage(`Welcome, ${(data.name ?? `${data.fname || ''} ${data.lname || ''}`).trim()} (${data.role})`);
+
+        if (data.role === 'Social Worker') navigate('/social_worker/dashboard');
+        else if (data.role === 'VAWDesk') navigate('/desk_officer');
+        else if (data.role === 'DSWD') navigate('/dswd');
       } else {
         setMessage(data.message || 'Invalid credentials');
       }
@@ -48,24 +46,15 @@ const ManualLoginPage = () => {
 
       <div style={{ marginBottom: '1rem' }}>
         <label>Username:</label><br />
-        <input
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-        />
+        <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} />
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
         <label>Password:</label><br />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
       </div>
 
       <button onClick={handleManualLogin}>Login</button>
-
       <p style={{ marginTop: '1rem' }}>{message}</p>
     </div>
   );

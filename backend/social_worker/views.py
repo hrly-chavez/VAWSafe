@@ -14,7 +14,6 @@ from scipy.spatial.distance import euclidean
 from django.utils.crypto import get_random_string
 from vawsafe_core.blink_model.blink_utils import detect_blink
 
-
 class UserCreateView(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
@@ -22,7 +21,7 @@ class UserCreateView(APIView):
         serializer = OfficialSerializer(data=request.data)
         if not serializer.is_valid():
             print("[ERROR] Invalid data for Official creation")
-            print(serializer.errors) 
+            print(serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # Step 1: Create account + official
@@ -34,7 +33,7 @@ class UserCreateView(APIView):
         account = Account.objects.create(username=generated_username, password=generated_password)
         official = Official.objects.create(account=account, **serializer.validated_data)
 
-        # Step 2: Load face images (support: of_photo or of_photos[])
+        # Step 2: Load photos
         photo_files = request.FILES.getlist("of_photos")
         if not photo_files:
             single_photo = request.FILES.get("of_photo")
@@ -45,9 +44,12 @@ class UserCreateView(APIView):
             print("[WARN] No photo(s) provided for face samples")
             return Response({"error": "At least one face photo is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Step 3: Process and save embeddings
-        created_count = 0
+        # Save first photo as profile image
+        official.of_photo = photo_files[0]  
+        official.save()
 
+        # Step 3: Process embeddings
+        created_count = 0
         for index, file in enumerate(photo_files):
             temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
             try:
@@ -62,7 +64,6 @@ class UserCreateView(APIView):
                     enforce_detection=True
                 )
 
-                #  Safe extraction logic
                 if isinstance(embeddings, list):
                     if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
                         embedding_vector = embeddings[0]["embedding"]
@@ -75,7 +76,6 @@ class UserCreateView(APIView):
                 else:
                     raise ValueError("Unexpected format from DeepFace.represent()")
 
-                # Save as official face sample
                 OfficialFaceSample.objects.create(
                     official=official,
                     photo=file,
@@ -92,18 +92,17 @@ class UserCreateView(APIView):
                     os.remove(temp_image.name)
 
         if created_count == 0:
-            print("[ERROR] No valid face samples saved")
             return Response({"error": "Face registration failed. Please upload clearer photos."}, status=status.HTTP_400_BAD_REQUEST)
 
-        print(f"[SUCCESS] {created_count} face sample(s) saved for {official.full_name}")
         return Response({
             "message": f"✅ Registration successful. {created_count} face sample(s) saved.",
             "official_id": official.of_id,
             "username": generated_username,
             "password": generated_password,
-            "role": official.of_role
+            "role": official.of_role,
+            "photo_url": official.of_photo.url if official.of_photo else None
         }, status=status.HTTP_201_CREATED)
-    
+
 
 class FaceLoginView(APIView):
     parser_classes = [MultiPartParser, FormParser]
@@ -122,6 +121,7 @@ class FaceLoginView(APIView):
         blink_detected = False
         chosen_frame = None
 
+        # Step 1: Detect blink
         for i, file in enumerate(uploaded_frames):
             try:
                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
@@ -152,9 +152,10 @@ class FaceLoginView(APIView):
                 "suggestion": "Please blink clearly in front of the camera."
             }, status=status.HTTP_403_FORBIDDEN)
 
-        # Run DeepFace match using the frame where blink was detected
+        # Step 2: Match face
         print("[INFO] Verifying blink-confirmed image against all samples")
         best_match = None
+        best_sample = None
         lowest_distance = float("inf")
 
         try:
@@ -173,6 +174,7 @@ class FaceLoginView(APIView):
                     if result["verified"] and result["distance"] < lowest_distance:
                         lowest_distance = result["distance"]
                         best_match = official
+                        best_sample = sample
 
                 except Exception as ve:
                     print(f"[WARN] Skipping {sample.official.full_name} due to error: {str(ve)}")
@@ -180,13 +182,26 @@ class FaceLoginView(APIView):
 
             if best_match:
                 print(f"[MATCH] Found: {best_match.full_name} (Distance: {lowest_distance:.4f})")
+
+                # Prefer official's profile photo, else fallback to matched sample photo
+                if getattr(best_match, "of_photo", None) and best_match.of_photo:
+                    rel_url = best_match.of_photo.url
+                elif best_sample and best_sample.photo:
+                    rel_url = best_sample.photo.url
+                else:
+                    rel_url = None
+
+                profile_photo_url = request.build_absolute_uri(rel_url) if rel_url else None
+
                 return Response({
                     "match": True,
                     "official_id": best_match.of_id,
+                    "name": best_match.full_name,  # Full name for quick display
                     "fname": best_match.of_fname,
                     "lname": best_match.of_lname,
                     "username": best_match.account.username,
-                    "role": best_match.of_role
+                    "role": best_match.of_role,
+                    "profile_photo_url": profile_photo_url
                 }, status=status.HTTP_200_OK)
 
             print("[INFO] No matching face found")
@@ -207,6 +222,7 @@ class FaceLoginView(APIView):
             if chosen_frame and os.path.exists(chosen_frame):
                 os.remove(chosen_frame)
 
+
 class ManualLoginView(APIView):
     def post(self, request):
         username = request.data.get("username")
@@ -217,103 +233,15 @@ class ManualLoginView(APIView):
             official = Official.objects.get(account=account)
 
             return Response({
-                "match": True,
-                "official_id": official.of_id,
-                "name": official.full_name,
-                "username": account.username,
-                "role": official.of_role
-            }, status=status.HTTP_200_OK)
+            "match": True,
+            "official_id": official.of_id,
+            "name": official.full_name,
+            "username": account.username,
+            "role": official.of_role,
+            "profile_photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
+        }, status=200)
         except Account.DoesNotExist:
             return Response({"match": False, "message": "Invalid username or password"}, status=status.HTTP_404_NOT_FOUND)
         except Official.DoesNotExist:
             return Response({"match": False, "message": "Linked official not found"}, status=status.HTTP_404_NOT_FOUND)
-                       
-# class FaceLoginView(APIView):
-#     parser_classes = [MultiPartParser, FormParser]
-#     throttle_classes = [ScopedRateThrottle]
-#     throttle_scope = 'face_login'
-
-#     def post(self, request):
-#         uploaded_file = request.FILES.get('photo', None)
-#         if not uploaded_file:
-#             return Response({"error": "No photo uploaded."}, status=status.HTTP_400_BAD_REQUEST)
-
-#         temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
-#         try:
-#             image = Image.open(uploaded_file).convert("RGB")
-#             image.save(temp_image, format="JPEG")
-#             temp_image.flush()
-#             temp_image.close()
-
-#             print(f"[INFO] Analyzing uploaded image for login")
-#             embedding_result = DeepFace.represent(
-#                 img_path=temp_image.name,
-#                 model_name="ArcFace",
-#                 enforce_detection=True
-#             )
-
-#             if isinstance(embedding_result, list) and isinstance(embedding_result[0], dict):
-#                 uploaded_embedding = embedding_result[0]["embedding"]
-#             elif isinstance(embedding_result, dict) and "embedding" in embedding_result:
-#                 uploaded_embedding = embedding_result["embedding"]
-#             elif isinstance(embedding_result, list) and all(isinstance(x, float) for x in embedding_result):
-#                 uploaded_embedding = embedding_result
-#             else:
-#                 raise ValueError("Unexpected embedding format from DeepFace.")
-
-#             os.remove(temp_image.name)
-
-#             # Compare with all registered officials
-#             closest_official = None
-#             closest_distance = float("inf")
-
-#             for official in Official.objects.exclude(of_embedding=None):
-#                 stored_embedding = [float(x) for x in official.of_embedding]
-#                 distance = euclidean(uploaded_embedding, stored_embedding)
-#                 print(f"[DEBUG] Distance to {official.of_fname} {official.of_lname}: {distance:.4f}")
-
-#                 if distance < closest_distance:
-#                     closest_distance = distance
-#                     closest_official = official
-
-#             if closest_official and closest_distance < 10.0:
-#                 print(f"[MATCH] Found: {closest_official.of_fname} {closest_official.of_lname}")
-#                 return Response({
-#                     "match": True,
-#                     "official_id": closest_official.of_id,
-#                     "fname": closest_official.of_fname,
-#                     "lname": closest_official.of_lname,
-#                     "username": closest_official.account.username,
-#                     "role": closest_official.of_role
-#                 }, status=status.HTTP_200_OK)
-
-#             print("[INFO] No matching face found")
-#             return Response({
-#                 "match": False,
-#                 "message": "No matching face found. Try again or use alternative login."
-#             }, status=status.HTTP_404_NOT_FOUND)
-
-#         except Exception as e:
-#             error_msg = str(e)
-#             traceback.print_exc()
-
-#             suggestion = "Face not detected. Please make sure your face is visible and well-lit."
-#             if "image too small" in error_msg.lower():
-#                 suggestion = "Move closer to the camera."
-#             elif "no face detected" in error_msg.lower():
-#                 suggestion = "Ensure your face is centered and clearly visible."
-#             elif "multiple faces" in error_msg.lower():
-#                 suggestion = "Only one face should be in the frame."
-
-#             return Response({
-#                 "match": False,
-#                 "error": error_msg,
-#                 "suggestion": suggestion
-#             }, status=status.HTTP_400_BAD_REQUEST)
-
-#         finally:
-#             if os.path.exists(temp_image.name):
-#                 os.remove(temp_image.name)
-
-
-
+ 
