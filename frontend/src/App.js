@@ -3,8 +3,8 @@ import LoginPage from "./pages/LoginPage";
 import RegisterUser from "./pages/RegisterUser";
 
 // desk officer
-import DeskOfficerPage from "./pages/desk_officer/DeskOfficerPage";
-import RegisterVictim from "./pages/desk_officer/RegisterVictim";
+import DeskOfficerPage from "./pages/desk_officer/tabs/DeskOfficerPage";
+import RegisterVictim from "./pages/desk_officer/tabs/RegisterVictim";
 
 //DSWD
 import DSWDDashboard from "./pages/dswd/DSWDDashboard";
@@ -32,6 +32,7 @@ export default function App() {
         <Route path="/login/manual" element={<ManualLoginPage />} />
         <Route path="/register" element={<RegisterUser />} />
 
+        {/* desk officer */}
         <Route path="/desk_officer" element={<DeskOfficerPage />} />
         <Route
           path="/desk_officer/register_victim"
