@@ -65,7 +65,7 @@ const RegisterUser = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/social_worker/add-user/",
+        "http://localhost:8000/api/auth/add-user/",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

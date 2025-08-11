@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from shared_model.models import *
 
-    
 class AccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account

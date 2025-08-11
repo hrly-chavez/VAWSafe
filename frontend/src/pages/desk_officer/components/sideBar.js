@@ -60,7 +60,7 @@ export default function Sidebar() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("loggedInUser");
+     const storedUser = localStorage.getItem("vawsafeUser");
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
