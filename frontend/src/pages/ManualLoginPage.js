@@ -11,7 +11,7 @@ const ManualLoginPage = () => {
     setMessage('Logging in...');
 
     try {
-      const response = await fetch('http://localhost:8000/api/social_worker/manual-login/', {
+      const response = await fetch('http://localhost:8000/api/auth/manual-login/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
