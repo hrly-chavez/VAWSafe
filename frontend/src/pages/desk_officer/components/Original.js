@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Sidebar from "./Sidebar";
+import Sidebar from "./sideBar";
 import Navbar from "./Navbar";
 import AdministrativeInfo from "./AdministrativeInfo";
 
@@ -66,7 +66,7 @@ export default function VictimInfo() {
   const fetchVictimSurvivors = async () => {
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/desk_officer/victim_survivors/"
+        "http://127.0.0.1:8000/api/desk_officer/victim_survivors/"
       );
       const data = await response.json();
       setVictimSurvivors(data);
@@ -123,7 +123,7 @@ export default function VictimInfo() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/desk_officer/victim_survivors/register/",
+        "http://127.0.0.1:8000/api/desk_officer/victim_survivors/register/",
         {
           method: "POST",
           headers: {
