@@ -5,7 +5,7 @@ export default function Sidebar() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-     const storedUser = localStorage.getItem("vawsafeUser");
+    const storedUser = localStorage.getItem("vawsafeUser");
     if (storedUser) {
       try {
         setUser(JSON.parse(storedUser));
@@ -23,8 +23,13 @@ export default function Sidebar() {
     },
     {
       icon: "/images/tools.png",
-      label: "Register Victim",
+      label: "Facial Recognition",
       path: "/desk_officer/victim_facial",
+    },
+    {
+      icon: "/images/tools.png",
+      label: "Register Victim",
+      path: "/desk_officer/register_victim",
     },
     {
       icon: "/images/tools.png",
@@ -34,7 +39,8 @@ export default function Sidebar() {
   ];
 
   // Safe name fallback
-  const displayName = user?.name || `${user?.fname || ""} ${user?.lname || ""}`.trim();
+  const displayName =
+    user?.name || `${user?.fname || ""} ${user?.lname || ""}`.trim();
 
   // Safe profile photo fallback
   const profilePhoto = user?.profile_photo_url || "/images/bussiness-man.png";
@@ -42,11 +48,7 @@ export default function Sidebar() {
   return (
     <div className="bg-[#48486e] w-[200px] h-screen text-white font-[Poppins] shrink-0 overflow-hidden">
       <div className="flex flex-col items-center justify-center px-2 py-4 text-center border-b border-[#2c2c46] shadow-sm">
-        <img
-          src={profilePhoto}
-          alt="Profile"
-          className="h-[100px] w-[100px]"
-        />
+        <img src={profilePhoto} alt="Profile" className="h-[100px] w-[100px]" />
         <div className="mt-2 p-[3px] px-4 bg-[rgba(244,58,250,0.7)] rounded-full">
           <h1 className="text-[15px]">{displayName || "Desk Officer"}</h1>
         </div>
