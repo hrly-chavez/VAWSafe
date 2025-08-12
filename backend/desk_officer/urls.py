@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import get_victim_survivors, register_victim_survivor
+from .views import *
 
 urlpatterns = [
-    path('victim_survivors/', get_victim_survivors, name='get_victim_survivors'),
-    path('victim_survivors/register/', register_victim_survivor, name='register_victim_survivor'),
+    path('victims/', get_victims, name='get_victims'),
+    path('victims/register/', register_victim, name='register_victim'),
 ]

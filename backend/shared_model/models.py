@@ -60,7 +60,6 @@ RELIGION_CHOICES = [
         ('Others', 'Others'),
     ]
 
-# Create your models here.
 class Victim(models.Model):
     CIVIL_STATUS_CHOICES = [
         ('SINGLE', 'Single'),
@@ -145,9 +144,18 @@ class Victim(models.Model):
     vic_PWD_type = models.CharField(max_length=50, choices=PWD_CHOICES, default='None')
     vic_contact_number = models.CharField(max_length=15, blank=True, null=True)
     vic_account = models.OneToOneField(Account, on_delete=models.CASCADE, null=True, blank=True)
-    
+     # Profile photo (first photo uploaded)
+    vic_photo = models.ImageField(upload_to='victim_photos/', null=True, blank=True)
+
     def __str__(self):
         return self.vic_last_name
+class VictimFaceSample(models.Model):
+    victim = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name="face_samples")
+    photo = models.ImageField(upload_to='victim_face_samples/')
+    embedding = ArrayField(models.FloatField(), null=True, blank=True)
+
+    def __str__(self):
+        return f"FaceSample for {self.victim.vic_first_name} {self.victim.vic_last_name}"
 
 class Perpetrator(models.Model):
 
