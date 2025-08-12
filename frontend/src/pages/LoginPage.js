@@ -64,7 +64,7 @@ const LoginPage = () => {
     });
 
     try {
-      const response = await fetch('http://localhost:8000/api/social_worker/face-login/', {
+      const response = await fetch('http://localhost:8000/api/auth/face-login/', {
         method: 'POST',
         body: formData,
       });
@@ -81,9 +81,9 @@ const LoginPage = () => {
       alert(`✅ Welcome, ${data.fname ?? data.name ?? ''} ${data.lname ?? ''} (${data.role})`);
 
       const role = (data.role || '').toLowerCase();
-      if (role === 'social worker') navigate('/social_worker/dashboard');
-      else if (role === 'vawdesk') navigate('/desk_officer');
-      else if (role === 'admin' || role === 'dswd') navigate('/dswd');
+      if (role === "social worker") navigate("/social_worker/dashboard");
+      else if (role === "vawdesk") navigate("/desk_officer");
+      else if (role === "dswd") navigate("/dswd");
     } else {
       setMessage(data.message || data.suggestion || '❌ Face or liveness check failed.');
     }
