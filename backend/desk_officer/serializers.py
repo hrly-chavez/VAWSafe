@@ -1,9 +1,6 @@
 from rest_framework import serializers
 from shared_model.models import *
 
-
-
-
 class VictimFaceSampleSerializer(serializers.ModelSerializer):
     class Meta:
         model = VictimFaceSample
