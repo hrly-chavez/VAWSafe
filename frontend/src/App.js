@@ -41,7 +41,7 @@ export default function App() {
           element={<RegisterVictim />}
         />
         <Route path="/desk_officer/victim_facial" element={<VictimFacial />} />
-        <Route path="/desk_officer/test" element={<TestPage />} />
+        <Route path="/test" element={<TestPage />} />
 
         {/* DSWD Page */}
         {/* <Route path="/dswd" element={<DSWDPage />} /> */}

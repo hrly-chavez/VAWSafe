@@ -75,7 +75,8 @@ export default function VictimInfo() {
   const registerVictimSurvivor = async () => {
     if (!firstName || !lastName || !sex) {
       alert(
-        "Please fill out all required fields: First Name, Last Name, and Sex.");
+        "Please fill out all required fields: First Name, Last Name, and Sex."
+      );
       return;
     }
 
