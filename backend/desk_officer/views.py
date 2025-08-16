@@ -10,6 +10,7 @@ from PIL import Image
 
 from shared_model.models import *
 from .serializers import *
+
 @api_view(['GET'])
 def get_victims(request):
     victims = Victim.objects.all()
