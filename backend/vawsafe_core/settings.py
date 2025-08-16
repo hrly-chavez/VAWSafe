@@ -111,7 +111,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'vawsafe',
         'USER': 'postgres',
-        'PASSWORD': 'postgres', # my pgadmin password, mata
+        'PASSWORD': 'Caratao123', # my pgadmin password, mata
         'HOST': 'localhost',
         'PORT': '5432',
     }
