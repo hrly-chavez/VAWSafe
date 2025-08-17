@@ -2,8 +2,8 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Webcam from "react-webcam";
-import Navbar from "../components/navBar";
-import Sidebar from "../components/sideBar";
+import Navbar from "./navBar";
+import Sidebar from "./sideBar";
 
 const MAX_PHOTOS = 3;
 
@@ -14,20 +14,21 @@ export default function VictimFacial() {
   const navigate = useNavigate();
 
   const capturePhoto = async () => {
-    const screenshot = webcamRef.current.getScreenshot();
+    const screenshot = webcamRef.current?.getScreenshot();
     if (!screenshot) {
       alert("Unable to capture photo. Please try again.");
       return;
     }
 
+    // FIX: res.blob(), not =ares.blob()
     const blob = await fetch(screenshot).then((res) => res.blob());
     const photoFile = new File([blob], `victim_photo_${currentIndex + 1}.jpg`, {
       type: "image/jpeg",
     });
 
-    const updatedPhotos = [...photos];
-    updatedPhotos[currentIndex] = photoFile;
-    setPhotos(updatedPhotos);
+    const updated = [...photos];
+    updated[currentIndex] = photoFile;
+    setPhotos(updated);
 
     if (currentIndex < MAX_PHOTOS - 1) {
       setCurrentIndex(currentIndex + 1);
