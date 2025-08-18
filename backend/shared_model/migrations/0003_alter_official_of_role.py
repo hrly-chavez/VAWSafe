@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('shared_model', '0002_alter_official_of_role'),
+        ('shared_model', '0002_alter_casereport_handling_org_and_more'),
     ]
 
     operations = [

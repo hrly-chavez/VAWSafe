@@ -7,7 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('shared_model', '0003_alter_official_of_role'),
-        ('shared_model', '0003_victim_vic_photo_alter_official_of_role_and_more'),
+        # ('shared_model', '0003_victim_vic_photo_alter_official_of_role_and_more'),
     ]
 
     operations = [
