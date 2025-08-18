@@ -250,6 +250,7 @@ class Session(models.Model):
         ('Ongoing', 'Ongoing'),
         ('Done', 'Done'),
     )
+    
     sess_id = models.AutoField(primary_key=True)
     sess_date_today = models.DateField(null=True, blank=True)
     sess_type = models.TextField(null=True, blank=True)
