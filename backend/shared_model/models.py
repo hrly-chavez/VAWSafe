@@ -16,8 +16,8 @@ class Official(models.Model):
         ('Social Worker', 'Social Worker'),
     }
 
-    of_id = models.AutoField(primary_key=True)
     account = models.OneToOneField(Account, on_delete=models.CASCADE)
+    of_id = models.AutoField(primary_key=True)
     of_fname = models.CharField(max_length=50)
     of_lname = models.CharField(max_length=50)
     of_m_initial = models.CharField(max_length=50, null=True, blank=True)
