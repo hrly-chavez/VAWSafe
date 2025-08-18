@@ -150,6 +150,8 @@ const LoginPage = () => {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(3);
+  const [showCounter, setShowCounter] = useState(false);
+
 
   const MAX_FRAMES = 10;
   const INTERVAL = 200;
@@ -175,6 +177,7 @@ const LoginPage = () => {
   };
 
   const handleFaceLogin = async () => {
+    setShowCounter(true); 
     setLoading(true);
     setMessage("🧠 Preparing to detect blink... Look straight and be ready to blink.");
     for (let i = 3; i > 0; i--) {
@@ -226,93 +229,76 @@ const LoginPage = () => {
 
   const statusClass =
     loading
-      ? "text-[#007bff] animate-[blink_1s_infinite]"
+      ? "text-[#ffffff] animate-[blink_1s_infinite]"
       : message.includes("✅")
-      ? "text-[#28a745] animate-[pulseSuccess_1s_ease-in-out]"
+      ? "text-[#ffffff] animate-[pulseSuccess_1s_ease-in-out]"
       : message.includes("❌")
-      ? "text-[#dc3545] animate-[shake_.5s_ease-in-out]"
+      ? "text-[#ffffff] animate-[shake_.5s_ease-in-out]"
       : "text-neutral-800";
 
   return (
-      <div
-        className="min-h-screen bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url(/assets/images/16Days-Action-banner.webp)" }}
-      >
+    <div className="min-h-screen bg-[#eae7e6] bg-cover bg-center bg-no-repeat" name='background' style={{ backgroundImage: "url(/assets/images/istockphoto-1017190202-612x612.jpg)" }}>
 
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
+      
+        <div className="relative">
+          <Navbar />
 
-      {/* keyframes for custom animations */}
-      <style>{`
-        @keyframes blink { 50% { opacity: 0.3; } }
-        @keyframes pulseSuccess {
-          0% { transform: scale(0.95); opacity: 0.7; }
-          70% { transform: scale(1.05); opacity: 1; }
-          100% { transform: scale(1); }
-        }
-        @keyframes shake {
-          0% { transform: translateX(0); }
-          20% { transform: translateX(-4px); }
-          40% { transform: translateX(4px); }
-          60% { transform: translateX(-2px); }
-          80% { transform: translateX(2px); }
-          100% { transform: translateX(0); }
-        }
-      `}</style>
+          <div className="flex items-center justify-center min-h-[calc(100vh-80px)]" name='outside-login-container'>
+            <div className=" w-[70%]" name='login-container'>
 
-      <Navbar />
+              <div className="grid grid-cols-2 h-[550px]" name='inside-login-container'>
+                <div className="flex justify-center items-center h-full" name='left-side'>
+                    <Webcam 
+                      ref={webcamRef}
+                      screenshotFormat="image/jpeg"
+                      className="h-[600px] w-[600px] rounded-[50px] object-cover"
+                    />
+                </div>
+                <div className="flex flex-col justify-center items-center px-3 py-10" name='right-side'>
+                  <h1 className="font-[Imbue] font-bold text-white text-6xl drop-shadow-xl">WELCOME TO VAWSAFE</h1>
 
-      <div className="flex flex-col items-center gap-5 p-4 mt-2">
-        <p className="font-[Imbue] text-[clamp(40px,10vw,120px)] leading-none font-semibold text-[#3A2B1E] text-center m-0 opacity-70 drop-shadow">
-          WELCOME TO VAWSAFE
-        </p>
+                  {showCounter && countdown !== null && (
+                    <h3 className="text-xl font-[Poppins] mt-10 text-white" name="counter">Capturing in... {countdown}</h3>
+                  )}
 
-        <div className="w-[400px] p-8 rounded-[10px] font-[Poppins] bg-white/90 shadow-[0_4px_12px_rgba(0,0,0,0.2)]">
-          <p className="m-0 mb-3 text-left font-medium text-[16px] text-[#333] border-b border-[#333] shadow-[0_5px_5px_rgba(0,0,0,0.1)]">
-            Face Recognition with Blink Detection
-          </p>
+                  <button
+                    onClick={handleFaceLogin}
+                    disabled={loading}
+                    className="mt-10 bg-white/20 rounded-[10px] py-[10px] px-[60px] shadow-lg text-white font-[Poppins] text-2xl font-bold
+                    transform transition-transform duration-200 hover:-translate-y-1 hover:scale-105 hover:shadow-xl"
+                  >
+                    {loading ? "Checking liveness..." : "Login with Face"}
+                  </button>
 
-          <div className="flex justify-center">
-            <Webcam
-              audio={false}
-              height={240}
-              ref={webcamRef}
-              screenshotFormat="image/jpeg"
-              width={320}
-              videoConstraints={{ width: 640, height: 480, facingMode: "user" }}
-              className="rounded-md shadow"
-            />
+                  <button
+                    onClick={() => navigate('/login/manual')}
+                    className="mt-10 bg-white/20 rounded-[10px] py-[10px] px-[60px] shadow-lg text-white font-[Poppins] text-2xl font-bold
+                    transform transition-transform duration-200 hover:-translate-y-1 hover:scale-105 hover:shadow-xl"
+                  >
+                    Use Other Login
+                  </button>
+
+                  <div className="mt-3 flex justify-center">
+                    <p onClick={() => navigate('/register')} className="mt-4 text-white font-medium shadow-lg text-md cursor-pointer hover:underline">
+                      Register New User
+                    </p>
+                  </div>
+
+                  {message && <p className={`mt-4 text-center text-lg font-bold ${statusClass}`}>{message}</p>}
+                </div>
+              </div>
+
+            </div>
+
           </div>
-
-          {countdown !== null && (
-            <h3 className="text-[#ff5050] mt-4 text-center">Capturing in... {countdown}</h3>
-          )}
-
-          <button
-            onClick={handleFaceLogin}
-            disabled={loading}
-            className="mt-4 w-full h-[50px] rounded-[10px] border border-white bg-gradient-to-r from-[#9c9ef1] to-[#7B6BF4] text-white font-bold cursor-pointer transition hover:from-[#7B6BF4] hover:to-[#9c9ef1] disabled:opacity-60"
-          >
-            {loading ? "Checking liveness..." : "Login with Face"}
-          </button>
-
-          <button
-            onClick={() => navigate('/login/manual')}
-            className="mt-3 w-full h-[50px] rounded-[10px] border border-white bg-gradient-to-r from-[#9c9ef1] to-[#7B6BF4] text-white font-bold cursor-pointer transition hover:from-[#7B6BF4] hover:to-[#9c9ef1]"
-          >
-            Use Other Login
-          </button>
-
-          <div className="mt-3 flex justify-center">
-            <p onClick={() => navigate('/register')} className="text-[#2793FF] text-xs cursor-pointer hover:underline">
-              Register New User
-            </p>
-          </div>
-
-          {message && <p className={`mt-4 text-center text-sm font-bold ${statusClass}`}>{message}</p>}
         </div>
-      </div>
+    
     </div>
+
   );
 };
 
 export default LoginPage;
+
 
