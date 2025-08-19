@@ -5,7 +5,7 @@ import RegisterUser from "./pages/RegisterUser";
 // desk officer
 import DeskOfficerPage from "./pages/desk_officer/tabs/DeskOfficerPage";
 import RegisterVictim from "./pages/desk_officer/RegisterVictim/RegisterVictim";
-import Session from "./pages/desk_officer/Session/Session";
+import Session from "./pages/desk_officer/Session/Form2";
 import VictimFacial from "./pages/desk_officer/RegisterVictim/VictimFacial";
 
 //DSWD
