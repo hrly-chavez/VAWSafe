@@ -1,12 +1,13 @@
 // src/pages/desk_officer/tabs/RegisterVictim.js
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
-import Sidebar from "../components/sideBar";
+
 import Navbar from "../components/navBar";
-import AdministrativeInfo from "../components/AdministrativeInfo";
-import VictimInfo from "../components/VictimInfo";
-import IncidentInfo from "../components/IncidentInfo";
-import PerpetratorInfo from "../components/PerpetratorInfo";
+import Sidebar from "../components/sideBar";
+import AdministrativeInfo from "./AdministrativeInfo";
+import VictimInfo from "./VictimInfo";
+import IncidentInfo from "./IncidentInfo";
+import PerpetratorInfo from "./PerpetratorInfo";
 
 // Point to your Django dev server
 const API_BASE = "http://127.0.0.1:8000";
