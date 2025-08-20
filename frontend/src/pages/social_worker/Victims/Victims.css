@@ -127,3 +127,148 @@
   background-color: #e74c3c;
   color: white;
 }
+/* Header row for list + button */
+.victim-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.btn-search-facial {
+  background-color: #10b981; /* green */
+  color: white;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-search-facial:hover {
+  background-color: #059669;
+}
+/* === Facial Search Modal === */
+.facial-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.facial-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 500px;
+  max-width: 95%;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  position: relative;
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+.facial-modal h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  text-align: center;
+  color: #1f2937;
+}
+
+.facial-modal .close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+
+.facial-modal .close-btn:hover {
+  color: #111827;
+}
+
+.facial-modal button {
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px;
+  font-size: 15px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: #2563eb;
+  color: #fff;
+  transition: background 0.2s ease-in-out;
+}
+
+.facial-modal button:hover:not(:disabled) {
+  background: #1e4fc3;
+}
+
+.facial-modal p {
+  margin-top: 12px;
+  font-size: 14px;
+  text-align: center;
+  color: #dc2626; /* red for errors */
+}
+
+/* Webcam preview */
+.facial-modal .webcam-preview {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+
+
+/* Modal header row (title + close button) */
+.facial-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.facial-modal .modal-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: #1f2937;
+}
+
+.facial-modal .modal-header .close-btn {
+  all: unset;
+  font-size: 20px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.facial-modal .modal-header .close-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+/* Animation */
+@keyframes modalFadeIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
