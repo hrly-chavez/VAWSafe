@@ -7,8 +7,14 @@ import Sidebar from "../components/sideBar";
 export default function Start() {
   return (
     <div className="outline-2">
-      <Form2></Form2>
-      <Form3></Form3>
+      <Navbar />
+      <div className="flex flex-row">
+        <Sidebar />
+        <div className="h-[80vh] overflow-y-auto w-full">
+          {/* Main content */}
+          <Form2 />
+        </div>
+      </div>
     </div>
   );
 }
