@@ -3,7 +3,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterUser from "./pages/RegisterUser";
 
 // desk officer
-import DeskOfficerPage from "./pages/desk_officer/tabs/DeskOfficerPage";
+import DeskOfficerPage from "./pages/desk_officer/DeskOfficer/DeskOfficerPage";
 import RegisterVictim from "./pages/desk_officer/RegisterVictim/RegisterVictim";
 import Start from "./pages/desk_officer/Session/Start";
 import VictimFacial from "./pages/desk_officer/RegisterVictim/VictimFacial";
