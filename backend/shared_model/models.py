@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
-from django.utils import timezone
+
 
 class Account(models.Model):
     username = models.CharField(max_length=150, unique=True)
@@ -10,11 +10,12 @@ class Account(models.Model):
         return self.username
 
 class Official(models.Model):
-    ROLE_CHOICES = {
-        ('DSWD', 'DSWD'),
-        ('VAWDesk', 'VAWDesk'),
-        ('Social Worker', 'Social Worker'),
-    }
+    ROLE_CHOICES = [
+    ('DSWD', 'DSWD'),
+    ('VAWDesk', 'VAWDesk'),
+    ('Social Worker', 'Social Worker'),
+    ]
+
 
     of_id = models.AutoField(primary_key=True)
     account = models.OneToOneField(Account, on_delete=models.CASCADE)
@@ -225,7 +226,7 @@ class IncidentInformation(models.Model):
     perp_id = models.ForeignKey(Perpetrator, on_delete=models.CASCADE,to_field='perp_id', related_name='related_incidents',null=True, blank=True)
 
     def __str__(self):
-        return self.incident_id
+        return f"Incident {self.incident_id}"
     
 class CaseReport(models.Model):
     victim = models.OneToOneField(Victim, on_delete=models.CASCADE, related_name="case_report")
@@ -245,11 +246,11 @@ class CaseReport(models.Model):
     
 class Session(models.Model):
 
-    SESSION_STAT =(
+    SESSION_STAT =[
         ('Pending', 'Pending'),
         ('Ongoing', 'Ongoing'),
         ('Done', 'Done'),
-    )
+    ]
     sess_id = models.AutoField(primary_key=True)
     sess_date_today = models.DateField(null=True, blank=True)
     sess_type = models.TextField(null=True, blank=True)
@@ -263,7 +264,7 @@ class Session(models.Model):
     of_id = models.ForeignKey(Official, on_delete=models.CASCADE,to_field='of_id', related_name='sessions_handled',null=True, blank=True)
 
     def __str__(self):
-        return self.sess_id
+        return f"Session {self.sess_id}"
 
 class Session_Changelog(models.Model):
     sc_changed_timestamp = models.DateTimeField()

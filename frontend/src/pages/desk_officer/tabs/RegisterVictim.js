@@ -98,17 +98,25 @@ export default function RegisterVictim() {
     vic_sex: "",
   });
 
+  const [statusMessage, setStatusMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const handleSubmit = async () => {
     try {
+      setLoading(true);
+      setStatusMessage("⏳ Processing registration... please wait while we process photos and save information.");
+
       // Required fields
       for (const k of REQUIRED_VICTIM_KEYS) {
         if (!formDataState[k]) {
-          alert(`Missing required victim field: ${k}`);
+          setStatusMessage(`❌ Missing required victim field: ${k}`);
+          setLoading(false);
           return;
         }
       }
       if (victimPhotos.length !== 3 || victimPhotos.some((p) => !p)) {
-        alert("Please capture exactly 3 victim photos.");
+        setStatusMessage("❌ Please capture exactly 3 victim photos.");
+        setLoading(false);
         return;
       }
 
@@ -162,25 +170,26 @@ export default function RegisterVictim() {
       }
 
       if (!res.ok || payload?.success === false) {
-        // Present DRF field errors nicely when available
         const errors = payload?.errors;
-        let msg = payload?.error || "Registration failed.";
+        let msg = payload?.error || "❌ Registration failed.";
         if (errors && typeof errors === "object") {
           const lines = Object.entries(errors).map(([k, v]) =>
             `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`
           );
-          msg = `Registration failed:\n${lines.join("\n")}`;
+          msg = `❌ Registration failed:\n${lines.join("\n")}`;
         }
         console.error("Register error payload:", payload);
-        alert(msg);
+        setStatusMessage(msg);
+        setLoading(false);
         return;
       }
 
-      alert("Victim registered successfully!");
-      // TODO: optionally reset state or navigate elsewhere
+      setStatusMessage("✅ Victim registered successfully!");
+      setLoading(false);
     } catch (err) {
       console.error("Register victim exception:", err);
-      alert("Something went wrong.");
+      setStatusMessage("❌ Something went wrong.");
+      setLoading(false);
     }
   };
 
@@ -207,11 +216,28 @@ export default function RegisterVictim() {
               formDataState={formDataState}
               setFormDataState={setFormDataState}
             />
+
+            {/* Status banner */}
+            {statusMessage && (
+              <div
+                className={`p-3 rounded ${
+                  statusMessage.startsWith("✅")
+                    ? "bg-green-100 text-green-800"
+                    : statusMessage.startsWith("⏳")
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-red-100 text-red-800"
+                }`}
+              >
+                {statusMessage}
+              </div>
+            )}
+
             <button
               onClick={handleSubmit}
-              className="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition"
+              disabled={loading}
+              className="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition disabled:opacity-50"
             >
-              Submit
+              {loading ? "Submitting..." : "Submit"}
             </button>
           </div>
         </div>
@@ -219,3 +245,4 @@ export default function RegisterVictim() {
     </div>
   );
 }
+

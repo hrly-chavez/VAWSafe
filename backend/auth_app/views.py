@@ -15,7 +15,7 @@ from django.utils.crypto import get_random_string
 from vawsafe_core.blink_model.blink_utils import detect_blink
 
 class UserCreateView(APIView):
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser]  # Para mo dawat og file uploads or plain text
 
     def post(self, request):
         serializer = OfficialSerializer(data=request.data)
@@ -34,11 +34,11 @@ class UserCreateView(APIView):
         official = Official.objects.create(account=account, **serializer.validated_data)
 
         # Step 2: Load photos
-        photo_files = request.FILES.getlist("of_photos")
+        photo_files = request.FILES.getlist("of_photos")  #kuhaon ang uploaded files from multipart request.
         if not photo_files:
             single_photo = request.FILES.get("of_photo")
-            if single_photo:
-                photo_files = [single_photo]
+            if single_photo:                                
+                photo_files = [single_photo]   #I array 
 
         if not photo_files:
             print("[WARN] No photo(s) provided for face samples")
@@ -49,16 +49,16 @@ class UserCreateView(APIView):
         official.save()
 
         # Step 3: Process embeddings
-        created_count = 0
+        created_count = 0   
         for index, file in enumerate(photo_files):
-            temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+            temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") # temp file
             try:
-                image = Image.open(file).convert("RGB")
+                image = Image.open(file).convert("RGB")   # used pillow to opem the file
                 image.save(temp_image, format="JPEG")
                 temp_image.flush()
                 temp_image.close()
 
-                embeddings = DeepFace.represent(
+                embeddings = DeepFace.represent(  
                     img_path=temp_image.name,
                     model_name="ArcFace",
                     enforce_detection=True
@@ -76,12 +76,12 @@ class UserCreateView(APIView):
                 else:
                     raise ValueError("Unexpected format from DeepFace.represent()")
 
-                OfficialFaceSample.objects.create(
+                OfficialFaceSample.objects.create(   
                     official=official,
                     photo=file,
                     embedding=embedding_vector
                 )
-                created_count += 1
+                created_count += 1  #1 row per photo in postgre
                 print(f"[INFO] Face sample #{index + 1} saved for {official.full_name}")
 
             except Exception as e:
@@ -111,10 +111,10 @@ class FaceLoginView(APIView):
 
     def post(self, request):
         # Accept multiple uploaded frames (frame1, frame2, ..., frame10)
-        uploaded_frames = [file for name, file in request.FILES.items() if name.startswith("frame")]
+        uploaded_frames = [file for name, file in request.FILES.items() if name.startswith("frame")]  
 
         if not uploaded_frames:
-            return Response({"error": "No webcam frames received."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "No webcam frames receied."}, status=status.HTTP_400_BAD_REQUEST)
 
         print(f"[INFO] {len(uploaded_frames)} frames received for blink detection")
 
@@ -130,7 +130,7 @@ class FaceLoginView(APIView):
                 temp_image.flush()
                 temp_image.close()
 
-                with open(temp_image.name, "rb") as f:
+                with open(temp_image.name, "rb") as f:  #Raw Bites 
                     image_bytes = f.read()
 
                 if detect_blink(image_bytes):
@@ -245,3 +245,127 @@ class ManualLoginView(APIView):
         except Official.DoesNotExist:
             return Response({"match": False, "message": "Linked official not found"}, status=status.HTTP_404_NOT_FOUND)
  
+# # FASTER VERSION?
+# pip install scikit-learn
+# from sklearn.metrics.pairwise import cosine_similarity
+# import numpy as np
+# from deepface import DeepFace
+
+# class FaceLoginView(APIView):
+#     parser_classes = [MultiPartParser, FormParser]
+#     throttle_classes = [ScopedRateThrottle]
+#     throttle_scope = 'face_login'
+
+#     def post(self, request):
+#         # === STEP 1: GET UPLOADED FRAMES ===
+#         uploaded_frames = [file for name, file in request.FILES.items() if name.startswith("frame")]
+#         if not uploaded_frames:
+#             return Response({"error": "No webcam frames received."}, status=status.HTTP_400_BAD_REQUEST)
+
+#         print(f"[INFO] {len(uploaded_frames)} frames received for blink detection")
+
+#         blink_detected = False
+#         chosen_frame = None
+
+#         # === STEP 2: BLINK DETECTION ===
+#         for i, file in enumerate(uploaded_frames):
+#             try:
+#                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+#                 image = Image.open(file).convert("RGB")
+#                 image.save(temp_image, format="JPEG")
+#                 temp_image.flush()
+#                 temp_image.close()
+
+#                 with open(temp_image.name, "rb") as f:
+#                     image_bytes = f.read()
+
+#                 if detect_blink(image_bytes):
+#                     blink_detected = True
+#                     chosen_frame = temp_image.name
+#                     print(f"[LIVENESS] Blink detected in frame {i + 1}")
+#                     break
+#                 else:
+#                     os.remove(temp_image.name)
+
+#             except Exception as e:
+#                 print(f"[WARN] Failed to process frame {i + 1}: {e}")
+#                 continue
+
+#         if not blink_detected:
+#             return Response({
+#                 "match": False,
+#                 "error": "No blink detected in any frame.",
+#                 "suggestion": "Please blink clearly in front of the camera."
+#             }, status=status.HTTP_403_FORBIDDEN)
+
+#         # === STEP 3: FACE MATCHING USING EMBEDDINGS ===
+#         print("[INFO] Computing embedding for blink-confirmed frame")
+#         try:
+#             # Compute embedding ONCE for chosen frame
+#             embedding_result = DeepFace.represent(
+#                 img_path=chosen_frame,
+#                 model_name="ArcFace",
+#                 enforce_detection=True
+#             )
+#             query_embedding = np.array(embedding_result[0]["embedding"])
+
+#             best_match = None
+#             best_sample = None
+#             highest_similarity = -1  # cosine similarity ranges [-1, 1]
+
+#             for sample in OfficialFaceSample.objects.select_related("official"):
+#                 if not sample.embedding:
+#                     continue  # skip if no embedding stored
+
+#                 db_embedding = np.array(sample.embedding).reshape(1, -1)
+#                 similarity = cosine_similarity([query_embedding], db_embedding)[0][0]
+
+#                 official = sample.official
+#                 print(f"[DEBUG] Compared with {official.full_name}, similarity: {similarity:.4f}")
+
+#                 if similarity > highest_similarity:
+#                     highest_similarity = similarity
+#                     best_match = official
+#                     best_sample = sample
+
+#             # Define a threshold (tune this, e.g., 0.7 = good match)
+#             if best_match and highest_similarity > 0.7:
+#                 print(f"[MATCH] Found: {best_match.full_name} (Similarity: {highest_similarity:.4f})")
+
+#                 if getattr(best_match, "of_photo", None) and best_match.of_photo:
+#                     rel_url = best_match.of_photo.url
+#                 elif best_sample and best_sample.photo:
+#                     rel_url = best_sample.photo.url
+#                 else:
+#                     rel_url = None
+
+#                 profile_photo_url = request.build_absolute_uri(rel_url) if rel_url else None
+
+#                 return Response({
+#                     "match": True,
+#                     "official_id": best_match.of_id,
+#                     "name": best_match.full_name,
+#                     "fname": best_match.of_fname,
+#                     "lname": best_match.of_lname,
+#                     "username": best_match.account.username,
+#                     "role": best_match.of_role,
+#                     "profile_photo_url": profile_photo_url
+#                 }, status=status.HTTP_200_OK)
+
+#             print("[INFO] No matching face found")
+#             return Response({
+#                 "match": False,
+#                 "message": "No matching face found. Try again or use alternative login."
+#             }, status=status.HTTP_404_NOT_FOUND)
+
+#         except Exception as e:
+#             traceback.print_exc()
+#             return Response({
+#                 "match": False,
+#                 "error": str(e),
+#                 "suggestion": "Something went wrong with face verification."
+#             }, status=status.HTTP_400_BAD_REQUEST)
+
+#         finally:
+#             if chosen_frame and os.path.exists(chosen_frame):
+#                 os.remove(chosen_frame)

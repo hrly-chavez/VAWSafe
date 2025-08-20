@@ -1,3 +1,5 @@
 from django.contrib import admin
+from shared_model.models import *
 
-# Register your models here.
+admin.site.register(Victim)
+admin.site.register(VictimFaceSample)
