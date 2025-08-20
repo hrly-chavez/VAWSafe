@@ -1,6 +1,6 @@
 export default function Form3() {
   return (
-    <div>
+    <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
       {/* Header */}
       <h2 className="text-2xl font-semibold text-blue-700 mb-4">Session</h2>
 
