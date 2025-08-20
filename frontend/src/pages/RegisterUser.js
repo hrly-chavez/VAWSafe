@@ -48,8 +48,8 @@ const RegisterUser = () => {
 
     const formData = new FormData();
     formData.append("of_fname", of_fname);
-    formData.append("of_lname", of_lname);
-    formData.append("of_role", of_role);
+   formData.append("of_lname", of_lname);
+    formData.append("of_role", of_role); 
 
     // Convert all photos to File objects and append as of_photos[]
     for (let i = 0; i < photos.length; i++) {
@@ -71,7 +71,7 @@ const RegisterUser = () => {
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      setStatus("✅ Registration successful!");
+      setStatus(" Registration successful!");
       setCredentials({
         username: response.data.username,
         password: response.data.password,
@@ -85,7 +85,7 @@ const RegisterUser = () => {
       setCurrentIndex(0);
     } catch (err) {
       console.error(err);
-      setStatus("❌ Registration failed. Please check the input or camera.");
+      setStatus(" Registration failed. Please check the input or camera.");
     } finally {
       setLoading(false);
     }

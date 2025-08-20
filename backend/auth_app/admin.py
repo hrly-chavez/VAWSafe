@@ -1,5 +1,5 @@
 from django.contrib import admin
-from shared_model.models import Official, Account, OfficialFaceSample
+from shared_model.models import *
 
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):
@@ -24,3 +24,4 @@ class OfficialFaceSampleAdmin(admin.ModelAdmin):
         return "-"
     photo_preview.allow_tags = True
     photo_preview.short_description = "Preview"
+
