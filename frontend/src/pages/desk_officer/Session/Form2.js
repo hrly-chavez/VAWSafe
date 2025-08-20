@@ -10,8 +10,6 @@ export default function Form2() {
         <div className="h-[80vh] overflow-y-auto w-full">
           {/* Main content */}
           <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
-            {/* content */}
-            {/* Header */}
             <h2 className="text-2xl font-semibold text-blue-700 mb-4">
               Session
             </h2>

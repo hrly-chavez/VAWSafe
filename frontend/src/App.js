@@ -5,7 +5,7 @@ import RegisterUser from "./pages/RegisterUser";
 // desk officer
 import DeskOfficerPage from "./pages/desk_officer/tabs/DeskOfficerPage";
 import RegisterVictim from "./pages/desk_officer/RegisterVictim/RegisterVictim";
-import Session from "./pages/desk_officer/Session/Form2";
+import Start from "./pages/desk_officer/Session/Start";
 import VictimFacial from "./pages/desk_officer/RegisterVictim/VictimFacial";
 
 //DSWD
@@ -41,7 +41,7 @@ export default function App() {
           element={<RegisterVictim />}
         />
         <Route path="/desk_officer/victim_facial" element={<VictimFacial />} />
-        <Route path="/desk_officer/session" element={<Session />} />
+        <Route path="/desk_officer/start" element={<Start />} />
 
         {/* DSWD Page */}
         {/* <Route path="/dswd" element={<DSWDPage />} /> */}
