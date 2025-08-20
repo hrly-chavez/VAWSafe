@@ -26,6 +26,7 @@ import Sessions from "./pages/social_worker/Sessions/Sessions";
 import Services from "./pages/social_worker/Services/Services";
 import Victims from "./pages/social_worker/Victims/Victims";
 import VictimDetailPage from "./pages/social_worker/Victims/VictimDetailPage";
+import SearchVictimFacial from "./pages/social_worker/Victims/SearchVictimFacial.js";
 
 
 
@@ -68,6 +69,7 @@ export default function App() {
           <Route path="services" element={<Services />} />
           <Route path="victims" element={<Victims />} />
           <Route path="victims/:vic_id" element={<VictimDetailPage />} />
+          <Route path="/social_worker/victims/search-facial" element={<SearchVictimFacial />}/>
         </Route>
       </Routes>
     </Router>

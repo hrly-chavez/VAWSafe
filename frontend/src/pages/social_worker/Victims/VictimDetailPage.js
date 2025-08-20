@@ -47,6 +47,7 @@ export default function VictimDetailPage() {
         {/* Victim Photo */}
             {victim.vic_photo && (
             <div className="victim-photo">
+                <h3>Profile Photo(Mobile?)</h3>
                 <img
                 src={victim.vic_photo}   // already a full URL
                 alt="Victim"
@@ -55,22 +56,6 @@ export default function VictimDetailPage() {
             </div>
             )}
 
-            {/* Face Samples */}
-            {victim.face_samples && victim.face_samples.length > 0 && (
-            <div className="face-samples">
-                <h3>Face Samples</h3>
-                <div className="photos">
-                {victim.face_samples.map((sample, index) => (
-                    <img
-                    key={index}
-                    src={sample.photo}   // already a full URL
-                    alt={`Sample ${index + 1}`}
-                    width="150"
-                    />
-                ))}
-                </div>
-            </div>
-            )}
 
         {/* Case Report */}
         {victim.case_report && (
@@ -111,21 +96,21 @@ export default function VictimDetailPage() {
         )}
 
         {/* Face Samples */}
-        {victim.face_samples && victim.face_samples.length > 0 && (
-          <div className="face-samples">
-            <h3>Face Samples</h3>
-            <div className="photos">
-              {victim.face_samples.map((sample, index) => (
-                <img
-                  key={index}
-                  src={`http://127.0.0.1:8000${sample.photo}`}
-                  alt={`Sample ${index + 1}`}
-                  width="150"
-                />
-              ))}
+            {victim.face_samples && victim.face_samples.length > 0 && (
+            <div className="face-samples">
+                <h3>Face Samples</h3>
+                <div className="photos">
+                {victim.face_samples.map((sample, index) => (
+                    <img
+                    key={index}
+                    src={sample.photo}   // already a full URL
+                    alt={`Sample ${index + 1}`}
+                    width="150"
+                    />
+                ))}
+                </div>
             </div>
-          </div>
-        )}
+            )}
 
         {/* Back Button */}
         <Link to="/social_worker/victims" className="btn-back">
