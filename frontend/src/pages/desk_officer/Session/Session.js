@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 // pages
+import FaceRecog from "./FaceRecog";
 import Form2 from "./Form2";
 import Form3 from "./Form3";
 import Navbar from "../components/navBar";
@@ -32,20 +33,28 @@ export default function Session() {
     switch (currentStep) {
       case 1:
         return (
-          <Form2
+          <FaceRecog
             // formData={formData}
             // setFormData={setFormData}
-            next={next}
             cancel={cancel}
+            next={next}
           />
         );
       case 2:
         return (
+          <Form2
+            // formData={formData}
+            // setFormData={setFormData}
+            back={back}
+            next={next}
+          />
+        );
+      case 3:
+        return (
           <Form3
             // formData={formData}
             // setFormData={setFormData}
-            next={next}
-            back={back}
+            cancel={cancel}
           />
         );
       default:
