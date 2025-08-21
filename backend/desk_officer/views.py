@@ -19,7 +19,6 @@ def get_victims(request):
     data = VictimSerializer(victims, many=True).data
     return Response(data)
 
-
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
 @transaction.atomic
@@ -81,13 +80,12 @@ def register_victim(request):
 
                     embedding_vector = None
                     try:
-                        # be tolerant: don't fail whole request if a face isn't detected
+                        
                         reps = DeepFace.represent(
-                            img_path=tmp.name,
-                            model_name="ArcFace",
-                            detector_backend="retinaface",
-                            enforce_detection=False,   # <-- less strict
-                        )
+                        img_path=tmp.name,
+                        model_name="ArcFace",
+                        enforce_detection=True
+                    )
                         if isinstance(reps, list) and reps and isinstance(reps[0], dict):
                             embedding_vector = reps[0].get("embedding")
                         elif isinstance(reps, dict):
@@ -166,10 +164,6 @@ def register_victim(request):
         transaction.set_rollback(True)
         return Response({"success": False, "error": str(e)},
                         status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
 
 
 

@@ -3,10 +3,10 @@ import LoginPage from "./pages/LoginPage";
 import RegisterUser from "./pages/RegisterUser";
 
 // desk officer
-import DeskOfficerPage from "./pages/desk_officer/tabs/DeskOfficerPage";
-import RegisterVictim from "./pages/desk_officer/tabs/RegisterVictim";
-import VictimFacial from "./pages/desk_officer/components/VictimFacial";
-
+import DeskOfficerPage from "./pages/desk_officer/DeskOfficer/DeskOfficerPage";
+import RegisterVictim from "./pages/desk_officer/RegisterVictim/RegisterVictim";
+import Start from "./pages/desk_officer/Session/Start";
+import VictimFacial from "./pages/desk_officer/RegisterVictim/VictimFacial";
 
 //DSWD
 import DSWDDashboard from "./pages/dswd/DSWDDashboard";
@@ -17,6 +17,7 @@ import DSWDServices from "./pages/dswd/DSWDServices";
 import DSWDNotification from "./pages/dswd/DSWDNotification";
 import DSWDFileMaintenance from "./pages/dswd/DSWDFileMaintenance";
 
+//SOCIAL WORKER
 import ManualLoginPage from "./pages/ManualLoginPage";
 import SidebarLayout from "./pages/social_worker/SidebarLayout";
 import DashboardPage from "./pages/social_worker/Dashboard/Dashboard";
@@ -24,6 +25,10 @@ import CaseRecords from "./pages/social_worker/CaseRecords/CaseRecords";
 import Sessions from "./pages/social_worker/Sessions/Sessions";
 import Services from "./pages/social_worker/Services/Services";
 import Victims from "./pages/social_worker/Victims/Victims";
+import VictimDetailPage from "./pages/social_worker/Victims/VictimDetailPage";
+import SearchVictimFacial from "./pages/social_worker/Victims/SearchVictimFacial.js";
+
+
 
 export default function App() {
   return (
@@ -36,8 +41,12 @@ export default function App() {
 
         {/* desk officer */}
         <Route path="/desk_officer" element={<DeskOfficerPage />} />
-        <Route path="/desk_officer/register_victim"element={<RegisterVictim />}/>
+        <Route
+          path="/desk_officer/register_victim"
+          element={<RegisterVictim />}
+        />
         <Route path="/desk_officer/victim_facial" element={<VictimFacial />} />
+        <Route path="/desk_officer/start" element={<Start />} />
 
         {/* DSWD Page */}
         {/* <Route path="/dswd" element={<DSWDPage />} /> */}
@@ -59,6 +68,8 @@ export default function App() {
           <Route path="sessions" element={<Sessions />} />
           <Route path="services" element={<Services />} />
           <Route path="victims" element={<Victims />} />
+          <Route path="victims/:vic_id" element={<VictimDetailPage />} />
+          <Route path="/social_worker/victims/search-facial" element={<SearchVictimFacial />}/>
         </Route>
       </Routes>
     </Router>

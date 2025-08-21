@@ -33,6 +33,11 @@ export default function Sidebar() {
     },
     {
       icon: "/images/tools.png",
+      label: "Sessions",
+      path: "/desk_officer/start",
+    },
+    {
+      icon: "/images/tools.png",
       label: "Log Out",
       path: "/login", // You can later replace with actual logout logic
     },

@@ -2,8 +2,8 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Webcam from "react-webcam";
-import Navbar from "./navBar";
-import Sidebar from "./sideBar";
+import Navbar from "../components/navBar";
+import Sidebar from "../components/sideBar";
 
 const MAX_PHOTOS = 3;
 
@@ -44,7 +44,9 @@ export default function VictimFacial() {
       alert(`Please capture all ${MAX_PHOTOS} photos before proceeding.`);
       return;
     }
-    navigate("/desk_officer/register_victim", { state: { victimPhotos: photos } });
+    navigate("/desk_officer/register_victim", {
+      state: { victimPhotos: photos },
+    });
   };
 
   return (
@@ -54,7 +56,9 @@ export default function VictimFacial() {
         <Sidebar />
         <div className="h-[80vh] overflow-y-auto w-full">
           <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md text-center">
-            <h1 className="text-2xl font-semibold mb-4">Capture Victim Photos</h1>
+            <h1 className="text-2xl font-semibold mb-4">
+              Capture Victim Photos
+            </h1>
 
             <Webcam
               audio={false}
