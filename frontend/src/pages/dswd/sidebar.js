@@ -182,6 +182,7 @@ export default function Sidebar() {
     { icon: "/images/high-value.png", label: "Services", path: "/Dswd_services" },
     { icon: "/images/bell.png", label: "Notification", path: "/Dswd_notification" },
     { icon: "/images/tools.png", label: "File Maintenance", path: "/Dswd_file_maintenance" },
+    { icon: "/images/tools.png", label: "Logout", path: "/login" },
   ];
 
   // Safe name + photo fallbacks
