@@ -12,7 +12,7 @@ export default function Start() {
         <Sidebar />
         <div className="h-[80vh] overflow-y-auto w-full">
           {/* Main content */}
-          <Form2 />
+          <Form2></Form2>
           <Form3></Form3>
         </div>
       </div>
