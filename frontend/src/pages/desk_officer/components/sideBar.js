@@ -34,7 +34,7 @@ export default function Sidebar() {
     {
       icon: "/images/tools.png",
       label: "Sessions",
-      path: "/desk_officer/start",
+      path: "/desk_officer/session",
     },
     {
       icon: "/images/tools.png",

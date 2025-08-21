@@ -6,7 +6,7 @@ import RegisterUser from "./pages/RegisterUser";
 import DeskOfficerPage from "./pages/desk_officer/DeskOfficer/DeskOfficerPage";
 import VictimFacial from "./pages/desk_officer/RegisterVictim/VictimFacial";
 import RegisterVictim from "./pages/desk_officer/RegisterVictim/RegisterVictim";
-import Start from "./pages/desk_officer/Session/Start";
+import Session from "./pages/desk_officer/Session/Session";
 // for testing
 import Test from "./pages/desk_officer/Testing/Test.js";
 
@@ -46,7 +46,7 @@ export default function App() {
           element={<RegisterVictim />}
         />
         <Route path="/desk_officer/victim_facial" element={<VictimFacial />} />
-        <Route path="/desk_officer/start" element={<Start />} />
+        <Route path="/desk_officer/session" element={<Session />} />
         {/* for testing */}
         <Route path="/test" element={<Test></Test>} />
 

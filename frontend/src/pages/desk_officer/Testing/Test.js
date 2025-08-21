@@ -6,7 +6,6 @@ import Page3 from "./Page3";
 export default function Test() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({});
-
   const next = () => setCurrentStep((prev) => prev + 1);
   const back = () => setCurrentStep((prev) => prev - 1);
   const cancel = () => {
