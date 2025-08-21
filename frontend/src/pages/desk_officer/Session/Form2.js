@@ -1,12 +1,10 @@
 import Sidebar from "../components/sideBar";
 import Navbar from "../components/navBar";
 
-export default function Form2() {
+export default function Form2({ back, next }) {
   return (
     <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
       <h2 className="text-2xl font-semibold text-blue-700 mb-4">Session</h2>
-
-      {/* Section Title */}
       <h3 className="text-lg font-medium text-gray-800 mb-2">
         Victims Sessions
       </h3>
@@ -142,11 +140,17 @@ export default function Form2() {
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 mt-4">
-            <button className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
-              CONTINUE
+            <button
+              className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600"
+              onClick={back}
+            >
+              BACK
             </button>
-            <button className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600">
-              CANCEL
+            <button
+              className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600"
+              onClick={next}
+            >
+              NEXT
             </button>
           </div>
         </div>
