@@ -4,7 +4,6 @@ import axios from "axios";
 
 const RegisterUser = () => {
   const MAX_PHOTOS = 3;
-
   const webcamRef = useRef(null);
   const [photos, setPhotos] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -12,10 +11,12 @@ const RegisterUser = () => {
   const [loading, setLoading] = useState(false);
   const [credentials, setCredentials] = useState(null);
 
+  // user credentials
   const [of_fname, setFname] = useState("");
   const [of_lname, setLname] = useState("");
   const [of_role, setRole] = useState("DSWD");
 
+  // functions start here
   const capturePhoto = () => {
     const screenshot = webcamRef.current.getScreenshot();
     if (!screenshot) {
@@ -48,8 +49,8 @@ const RegisterUser = () => {
 
     const formData = new FormData();
     formData.append("of_fname", of_fname);
-   formData.append("of_lname", of_lname);
-    formData.append("of_role", of_role); 
+    formData.append("of_lname", of_lname);
+    formData.append("of_role", of_role);
 
     // Convert all photos to File objects and append as of_photos[]
     for (let i = 0; i < photos.length; i++) {
@@ -70,6 +71,8 @@ const RegisterUser = () => {
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
+
+      // alert(response.data.username);
 
       setStatus(" Registration successful!");
       setCredentials({
