@@ -30,7 +30,7 @@ yarn-error.log*
 .vscode/
 
 # custom
-/backend/media/face_samples/
-/backend/media/photos/
-/backend/media/victim_face_samples/
-/backend/media/victim_photos/
+backend/media/face_samples/
+backend/media/photos/
+backend/media/victim_face_samples/
+backend/media/victim_photos/
