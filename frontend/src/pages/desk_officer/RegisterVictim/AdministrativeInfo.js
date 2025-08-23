@@ -1,4 +1,4 @@
-// src/pages/desk_officer/components/AdministrativeInfo.js
+// src/pages/desk_officer/RegisterVictim/AdministrativeInfo.js
 export default function AdministrativeInfo({ formDataState, setFormDataState }) {
   const handleChange = (field, value) => {
     setFormDataState((prev) => ({
