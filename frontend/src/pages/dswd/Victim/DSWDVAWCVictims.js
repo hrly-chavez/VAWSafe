@@ -140,7 +140,7 @@ export default function DSWDVAWCVictims() {
                           <td className="px-4 py-3">{v.vic_sex || "—"}</td>
                           <td className="px-4 py-3">{v.vic_birth_place}</td>
                           <td className="px-4 py-3">
-                            <Link to={`/Dswd_vawc_victims/victims/${v.vic_id}`} className="bg-[#10b981] px-2 py-1 rounded-[10px] text-white transition duration-200 hover:bg-[#059669] mr-2">View</Link>
+                            <Link to={`/dswd/victims/${v.vic_id}`} className="bg-[#10b981] px-2 py-1 rounded-[10px] text-white transition duration-200 hover:bg-[#059669] mr-2">View</Link>
                             <button className="bg-[#f1c40f] px-2 py-1 rounded-[10px] text-white transition duration-200 hover:bg-[#caa40d] mr-2">Edit</button>
                             <button className="bg-[#e74c3c] px-2 py-1 rounded-[10px] text-white transition duration-200 hover:bg-[#b33a2d]">Delete</button>
                           </td>
@@ -161,7 +161,7 @@ export default function DSWDVAWCVictims() {
           onClose={() => setShowSearchModal(false)}
           onFound={(victimId) => {
             setShowSearchModal(false);
-            navigate(`/Dswd_vawc_victims/victims/${victimId}`);
+            navigate(`/dswd/victims/${victimId}`);
           }}
         />
       )}

@@ -176,12 +176,12 @@ export default function Sidebar() {
 
   const sidebarItems = [
     { icon: "/images/dashboard.png", label: "Dashboard", path: "/dswd" },
-    { icon: "/images/hands.png", label: "VAWC Victims", path: "/Dswd_vawc_victims" },
-    { icon: "/images/user.png", label: "Social Workers", path: "/Dswd_social_workers" },
-    { icon: "/images/edit.png", label: "Case Records", path: "/Dswd_case_records" },
-    { icon: "/images/high-value.png", label: "Services", path: "/Dswd_services" },
-    { icon: "/images/bell.png", label: "Notification", path: "/Dswd_notification" },
-    { icon: "/images/tools.png", label: "File Maintenance", path: "/Dswd_file_maintenance" },
+    { icon: "/images/hands.png", label: "VAWC Victims", path: "/dswd/vawc-victims" },
+    { icon: "/images/user.png", label: "Social Workers", path: "/dswd/social-workers" },
+    { icon: "/images/edit.png", label: "Case Records", path: "/dswd/case-records" },
+    { icon: "/images/high-value.png", label: "Services", path: "/dswd/services" },
+    { icon: "/images/bell.png", label: "Notification", path: "/dswd/notification" },
+    { icon: "/images/tools.png", label: "File Maintenance", path: "/dswd/file-maintenance" },
     { icon: "/images/tools.png", label: "Logout", path: "/login" },
   ];
 

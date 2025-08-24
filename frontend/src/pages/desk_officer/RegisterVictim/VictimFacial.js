@@ -1,4 +1,4 @@
-// src/pages/desk_officer/components/VictimFacial.js
+// src/pages/desk_officer/RegisterVictim/VictimFacial.js
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Webcam from "react-webcam";

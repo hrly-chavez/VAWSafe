@@ -137,7 +137,7 @@ const RegisterUser = () => {
         </div>
 
         {/* webcam */}
-        <div style={{ marginTop: "15px" }}>
+        <div className="">
           <Webcam
             audio={false}
             ref={webcamRef}
