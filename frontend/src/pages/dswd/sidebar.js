@@ -176,7 +176,7 @@ export default function Sidebar() {
 
   const sidebarItems = [
     { icon: "/images/dashboard.png", label: "Dashboard", path: "/dswd" },
-    { icon: "/images/hands.png", label: "VAWC Victims", path: "/dswd/vawc-victims" },
+    { icon: "/images/hands.png", label: "VAWC Victims", path: "/dswd/victims" },
     { icon: "/images/user.png", label: "Social Workers", path: "/dswd/social-workers" },
     { icon: "/images/edit.png", label: "Case Records", path: "/dswd/case-records" },
     { icon: "/images/high-value.png", label: "Services", path: "/dswd/services" },
