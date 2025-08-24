@@ -11,13 +11,15 @@ import Session from "./pages/desk_officer/Session/Session";
 import Test from "./pages/desk_officer/Testing/Test.js";
 
 //DSWD
-import DSWDDashboard from "./pages/dswd/DSWDDashboard";
-import DSWDVAWCVictims from "./pages/dswd/DSWDVAWCVictims";
-import DSWDSocialWorkers from "./pages/dswd/DSWDSocialWorkers";
-import DSWDCaseRecord from "./pages/dswd/DSWDCaseRecord";
-import DSWDServices from "./pages/dswd/DSWDServices";
-import DSWDNotification from "./pages/dswd/DSWDNotification";
-import DSWDFileMaintenance from "./pages/dswd/DSWDFileMaintenance";
+import DSWDDashboard from "./pages/dswd/Dashboard/DSWDDashboard.js";
+import DSWDVAWCVictims from "./pages/dswd/Victim/DSWDVAWCVictims";
+import DSWDVictimDetail from "./pages/dswd/Victim/VictimDetails.js";
+import DSWDSearchVictim from './pages/dswd/Victim/SearchVictim';
+import DSWDSocialWorkers from "./pages/dswd/SocialWorker/DSWDSocialWorkers.js";
+import DSWDCaseRecord from "./pages/dswd/CaseRecord/DSWDCaseRecord.js";
+import DSWDServices from "./pages/dswd/ServiceDSWD/DSWDServices.js";
+import DSWDNotification from "./pages/dswd/NotificationDSWD/DSWDNotification.js";
+import DSWDFileMaintenance from "./pages/dswd/FileMaintenance/DSWDFileMaintenance.js";
 
 //SOCIAL WORKER
 import ManualLoginPage from "./pages/ManualLoginPage";
@@ -54,6 +56,8 @@ export default function App() {
         {/* <Route path="/dswd" element={<DSWDPage />} /> */}
         <Route path="/dswd" element={<DSWDDashboard />} />
         <Route path="/Dswd_vawc_victims" element={<DSWDVAWCVictims />} />
+        <Route path="/Dswd_vawc_victims/search-victim" element={<DSWDSearchVictim />} />
+        <Route path="/Dswd_vawc_victims/victims/:vic_id" element={<DSWDVictimDetail />} />
         <Route path="/Dswd_social_workers" element={<DSWDSocialWorkers />} />
         <Route path="/Dswd_case_records" element={<DSWDCaseRecord />} />
         <Route path="/Dswd_services" element={<DSWDServices />} />
