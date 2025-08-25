@@ -1,4 +1,4 @@
-// src/pages/desk_officer/RegisterVictim/RegisterVictim.js
+// src/pages/desk_officer/tabs/RegisterVictim.js
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 
@@ -185,7 +185,6 @@ export default function RegisterVictim() {
       if (!res.ok || payload?.success === false) {
         const errors = payload?.errors;
         let msg = payload?.error || "❌ Registration failed.";
-        
         if (errors && typeof errors === "object") {
           const lines = Object.entries(errors).map(
             ([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`
