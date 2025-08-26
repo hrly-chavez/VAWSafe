@@ -1,82 +1,163 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import React, { Suspense, lazy } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { ROUTES } from "./routes/routes";
+
+// Login/Register Pages
 import LoginPage from "./pages/LoginPage";
 import RegisterUser from "./pages/RegisterUser";
-
-// desk officer
-import DeskOfficerPage from "./pages/desk_officer/DeskOfficer/DeskOfficerPage";
-import VictimFacial from "./pages/desk_officer/RegisterVictim/VictimFacial";
-import RegisterVictim from "./pages/desk_officer/RegisterVictim/RegisterVictim";
-import Session from "./pages/desk_officer/Session/Session";
-// for testing
-import Test from "./pages/desk_officer/Testing/Test.js";
-
-//DSWD
-import DSWDDashboard from "./pages/dswd/DSWDDashboard";
-import DSWDVAWCVictims from "./pages/dswd/DSWDVAWCVictims";
-import DSWDSocialWorkers from "./pages/dswd/DSWDSocialWorkers";
-import DSWDCaseRecord from "./pages/dswd/DSWDCaseRecord";
-import DSWDServices from "./pages/dswd/DSWDServices";
-import DSWDNotification from "./pages/dswd/DSWDNotification";
-import DSWDFileMaintenance from "./pages/dswd/DSWDFileMaintenance";
-
-//SOCIAL WORKER
 import ManualLoginPage from "./pages/ManualLoginPage";
-import SidebarLayout from "./pages/social_worker/SidebarLayout";
-import DashboardPage from "./pages/social_worker/Dashboard/Dashboard";
-import CaseRecords from "./pages/social_worker/CaseRecords/CaseRecords";
-import Sessions from "./pages/social_worker/Sessions/Sessions";
-import Services from "./pages/social_worker/Services/Services";
-import Victims from "./pages/social_worker/Victims/Victims";
-import VictimDetailPage from "./pages/social_worker/Victims/VictimDetailPage";
-import SearchVictimFacial from "./pages/social_worker/Victims/SearchVictimFacial.js";
+
+// Desk Officer Pages (lazy loaded)
+const DeskOfficerPage = lazy(() =>
+  import("./pages/desk_officer/DeskOfficer/DeskOfficerPage")
+);
+const VictimFacial = lazy(() =>
+  import("./pages/desk_officer/RegisterVictim/VictimFacial")
+);
+const RegisterVictim = lazy(() =>
+  import("./pages/desk_officer/RegisterVictim/RegisterVictim")
+);
+const Session = lazy(() => import("./pages/desk_officer/Session/Session"));
+const Test = lazy(() => import("./pages/desk_officer/Testing/Test"));
+
+// DSWD Pages (lazy loaded)
+const DSWDDashboard = lazy(() =>
+  import("./pages/dswd/Dashboard/DSWDDashboard")
+);
+const DSWDVAWCVictims = lazy(() =>
+  import("./pages/dswd/Victim/DSWDVAWCVictims")
+);
+const DSWDVictimDetail = lazy(() =>
+  import("./pages/dswd/Victim/VictimDetails")
+);
+const DSWDSearchVictim = lazy(() => import("./pages/dswd/Victim/SearchVictim"));
+const DSWDSocialWorkers = lazy(() =>
+  import("./pages/dswd/SocialWorker/DSWDSocialWorkers")
+);
+const DSWDCaseRecord = lazy(() =>
+  import("./pages/dswd/CaseRecord/DSWDCaseRecord")
+);
+const DSWDServices = lazy(() =>
+  import("./pages/dswd/ServiceDSWD/DSWDServices")
+);
+const DSWDNotification = lazy(() =>
+  import("./pages/dswd/NotificationDSWD/DSWDNotification")
+);
+const DSWDFileMaintenance = lazy(() =>
+  import("./pages/dswd/FileMaintenance/DSWDFileMaintenance")
+);
+
+// Social Worker Pages (lazy loaded)
+const SidebarLayout = lazy(() => import("./pages/social_worker/SidebarLayout"));
+const DashboardPage = lazy(() =>
+  import("./pages/social_worker/Dashboard/Dashboard")
+);
+const CaseRecords = lazy(() =>
+  import("./pages/social_worker/CaseRecords/CaseRecords")
+);
+const Sessions = lazy(() => import("./pages/social_worker/Sessions/Sessions"));
+const Services = lazy(() => import("./pages/social_worker/Services/Services"));
+const Victims = lazy(() => import("./pages/social_worker/Victims/Victims"));
+const VictimDetailPage = lazy(() =>
+  import("./pages/social_worker/Victims/VictimDetailPage")
+);
+const SearchVictimFacial = lazy(() =>
+  import("./pages/social_worker/Victims/SearchVictimFacial")
+);
 
 export default function App() {
   return (
     <Router>
-      <Routes>
-        {/* LOGIN & REGISTER  PAGES */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/login/manual" element={<ManualLoginPage />} />
-        <Route path="/register" element={<RegisterUser />} />
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          {/* Default route: redirect to login */}
+          <Route path="/" element={<Navigate to={ROUTES.LOGIN} replace />} />
 
-        {/* desk officer */}
-        <Route path="/desk_officer" element={<DeskOfficerPage />} />
-        <Route
-          path="/desk_officer/register_victim"
-          element={<RegisterVictim />}
-        />
-        <Route path="/desk_officer/victim_facial" element={<VictimFacial />} />
-        <Route path="/desk_officer/session" element={<Session />} />
-        {/* for testing */}
-        <Route path="/test" element={<Test></Test>} />
+          {/* LOGIN & REGISTER PAGES */}
+          <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+          <Route path={ROUTES.MANUAL_LOGIN} element={<ManualLoginPage />} />
+          <Route path={ROUTES.REGISTER} element={<RegisterUser />} />
 
-        {/* DSWD Page */}
-        {/* <Route path="/dswd" element={<DSWDPage />} /> */}
-        <Route path="/dswd" element={<DSWDDashboard />} />
-        <Route path="/Dswd_vawc_victims" element={<DSWDVAWCVictims />} />
-        <Route path="/Dswd_social_workers" element={<DSWDSocialWorkers />} />
-        <Route path="/Dswd_case_records" element={<DSWDCaseRecord />} />
-        <Route path="/Dswd_services" element={<DSWDServices />} />
-        <Route path="/Dswd_notification" element={<DSWDNotification />} />
-        <Route
-          path="/Dswd_file_maintenance"
-          element={<DSWDFileMaintenance />}
-        />
-
-        {/* SOCIAL WORKER PAGES */}
-        <Route path="/social_worker" element={<SidebarLayout />}>
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="case-records" element={<CaseRecords />} />
-          <Route path="sessions" element={<Sessions />} />
-          <Route path="services" element={<Services />} />
-          <Route path="victims" element={<Victims />} />
-          <Route path="victims/:vic_id" element={<VictimDetailPage />} />
+          {/* DESK OFFICER */}
+          <Route path={ROUTES.DESK_OFFICER} element={<DeskOfficerPage />} />
           <Route
-            path="/social_worker/victims/search-facial"
-            element={<SearchVictimFacial />}
+            path={ROUTES.DESK_OFFICER_REGISTER_VICTIM}
+            element={<RegisterVictim />}
           />
-        </Route>
-      </Routes>
+          <Route
+            path={ROUTES.DESK_OFFICER_VICTIM_FACIAL}
+            element={<VictimFacial />}
+          />
+          <Route path={ROUTES.DESK_OFFICER_SESSION} element={<Session />} />
+          <Route path={ROUTES.TEST} element={<Test />} />
+
+          {/* DSWD */}
+          <Route path={ROUTES.DSWD} element={<DSWDDashboard />} />
+          <Route
+            path={ROUTES.DSWD_VAWC_VICTIMS}
+            element={<DSWDVAWCVictims />}
+          />
+          <Route
+            path={ROUTES.DSWD_VICTIM_DETAIL}
+            element={<DSWDVictimDetail />}
+          />
+          <Route
+            path={ROUTES.DSWD_SEARCH_VICTIM}
+            element={<DSWDSearchVictim />}
+          />
+          <Route
+            path={ROUTES.DSWD_SOCIAL_WORKERS}
+            element={<DSWDSocialWorkers />}
+          />
+          <Route path={ROUTES.DSWD_CASE_RECORDS} element={<DSWDCaseRecord />} />
+          <Route path={ROUTES.DSWD_SERVICES} element={<DSWDServices />} />
+          <Route
+            path={ROUTES.DSWD_NOTIFICATION}
+            element={<DSWDNotification />}
+          />
+          <Route
+            path={ROUTES.DSWD_FILE_MAINTENANCE}
+            element={<DSWDFileMaintenance />}
+          />
+
+          {/* SOCIAL WORKER (nested routes under sidebar layout) */}
+          <Route path={ROUTES.SOCIAL_WORKER} element={<SidebarLayout />}>
+            <Route
+              path={ROUTES.SOCIAL_WORKER_DASHBOARD}
+              element={<DashboardPage />}
+            />
+            <Route
+              path={ROUTES.SOCIAL_WORKER_CASE_RECORDS}
+              element={<CaseRecords />}
+            />
+            <Route
+              path={ROUTES.SOCIAL_WORKER_SESSIONS}
+              element={<Sessions />}
+            />
+            <Route
+              path={ROUTES.SOCIAL_WORKER_SERVICES}
+              element={<Services />}
+            />
+            <Route path={ROUTES.SOCIAL_WORKER_VICTIMS} element={<Victims />} />
+            <Route
+              path={ROUTES.SOCIAL_WORKER_VICTIM_DETAIL}
+              element={<VictimDetailPage />}
+            />
+            <Route
+              path={ROUTES.SOCIAL_WORKER_SEARCH_FACIAL}
+              element={<SearchVictimFacial />}
+            />
+          </Route>
+
+          {/* Catch-all: if no route matches, redirect to login */}
+          <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
+        </Routes>
+      </Suspense>
     </Router>
   );
 }

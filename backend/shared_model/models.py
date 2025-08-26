@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 
-
 class Account(models.Model):
     username = models.CharField(max_length=150, unique=True)
     password = models.CharField(max_length=255)  
@@ -15,7 +14,6 @@ class Official(models.Model):
     ('VAWDesk', 'VAWDesk'),
     ('Social Worker', 'Social Worker'),
     ]
-
 
     account = models.OneToOneField(Account, on_delete=models.CASCADE)
     of_id = models.AutoField(primary_key=True)
