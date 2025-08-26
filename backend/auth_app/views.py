@@ -13,140 +13,6 @@ from scipy.spatial.distance import euclidean
 from django.utils.crypto import get_random_string
 from vawsafe_core.blink_model.blink_utils import detect_blink
 
-class UserCreateView(APIView):
-    parser_classes = [MultiPartParser, FormParser]
-
-    FACE_DUPLICATE_THRESHOLD = 0.7  # lower = stricter
-
-    def post(self, request):
-        serializer = OfficialSerializer(data=request.data)
-        if not serializer.is_valid():
-            print("[ERROR] Invalid data for Official creation")
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        fname = request.data.get("of_fname", "").strip().lower()
-        lname = request.data.get("of_lname", "").strip().lower()
-        generated_username = f"{fname}{lname}"
-        generated_password = get_random_string(length=12)
-
-        # 🚨 Step 0: Check if user already exists
-        if Account.objects.filter(username=generated_username).exists():
-            return Response(
-                {"error": f"❌ Official with username '{generated_username}' already exists."},
-                status=status.HTTP_409_CONFLICT
-            )
-
-        # Step 1: Create account + official
-        account = Account.objects.create(username=generated_username, password=generated_password)
-        official = Official.objects.create(account=account, **serializer.validated_data)
-
-        # Step 2: Load photos
-        photo_files = request.FILES.getlist("of_photos")
-        if not photo_files:
-            single_photo = request.FILES.get("of_photo")
-            if single_photo:
-                photo_files = [single_photo]
-
-        if not photo_files:
-            return Response(
-                {"error": "❌ At least one face photo is required."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Save first photo as profile image
-        official.of_photo = photo_files[0]
-        official.save()
-
-        # 🚨 Step 2.5: Check for duplicate face in ALL uploaded photos
-        for idx, file in enumerate(photo_files, start=1):
-            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
-            try:
-                Image.open(file).convert("RGB").save(tmp, format="JPEG")
-                tmp.flush(); tmp.close()
-
-                reps = DeepFace.represent(
-                    img_path=tmp.name,
-                    model_name="ArcFace",
-                    enforce_detection=True
-                )
-                new_embedding = reps[0]["embedding"] if isinstance(reps, list) else reps.get("embedding")
-
-                if new_embedding:
-                    for sample in OfficialFaceSample.objects.all():
-                        if not sample.embedding:
-                            continue
-                        try:
-                            result = DeepFace.verify(
-                                img1_path=tmp.name,
-                                img2_path=sample.photo.path,
-                                model_name="ArcFace",
-                                enforce_detection=True
-                            )
-                            if result["verified"] and result["distance"] < self.FACE_DUPLICATE_THRESHOLD:
-                                return Response(
-                                    {"error": f"❌ Duplicate detected! Photo #{idx} already exists in database."},
-                                    status=status.HTTP_409_CONFLICT
-                                )
-                        except Exception as ve:
-                            print(f"[DUPLICATE CHECK] skipped sample {sample.id}: {ve}")
-
-            finally:
-                if os.path.exists(tmp.name):
-                    os.remove(tmp.name)
-
-        # Step 3: Process embeddings
-        created_count = 0
-        for index, file in enumerate(photo_files):
-            temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
-            try:
-                image = Image.open(file).convert("RGB")
-                image.save(temp_image, format="JPEG")
-                temp_image.flush()
-                temp_image.close()
-
-                embeddings = DeepFace.represent(
-                    img_path=temp_image.name,
-                    model_name="ArcFace",
-                    enforce_detection=True
-                )
-
-                if isinstance(embeddings, list) and embeddings and "embedding" in embeddings[0]:
-                    embedding_vector = embeddings[0]["embedding"]
-                elif isinstance(embeddings, dict) and "embedding" in embeddings:
-                    embedding_vector = embeddings["embedding"]
-                else:
-                    raise ValueError("Unexpected format from DeepFace.represent()")
-
-                OfficialFaceSample.objects.create(
-                    official=official,
-                    photo=file,
-                    embedding=embedding_vector
-                )
-                created_count += 1
-                print(f"[INFO] Face sample #{index + 1} saved for {official.full_name}")
-
-            except Exception as e:
-                print(f"[ERROR] Failed to process face sample #{index + 1}: {str(e)}")
-                traceback.print_exc()
-            finally:
-                if os.path.exists(temp_image.name):
-                    os.remove(temp_image.name)
-
-        if created_count == 0:
-            return Response(
-                {"error": "❌ Face registration failed. Please upload clearer photos."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        return Response({
-            "message": f"✅ Registration successful. {created_count} face sample(s) saved.",
-            "official_id": official.of_id,
-            "username": generated_username,
-            "password": generated_password,
-            "role": official.of_role,
-            "photo_url": official.of_photo.url if official.of_photo else None
-        }, status=status.HTTP_201_CREATED)
-
 
 class FaceLoginView(APIView):
     parser_classes = [MultiPartParser, FormParser]
@@ -418,92 +284,92 @@ class ManualLoginView(APIView):
 
 
 
-#WORKING NO PROBLEM (BACK UP)
-# class UserCreateView(APIView):
-#     parser_classes = [MultiPartParser, FormParser]  # Para mo dawat og file uploads or plain text
+#WORKING, NO PROBLEM (BACK UP)
+class UserCreateView(APIView):
+    parser_classes = [MultiPartParser, FormParser]  # Para mo dawat og file uploads or plain text
 
-#     def post(self, request):
-#         serializer = OfficialSerializer(data=request.data)
-#         if not serializer.is_valid():
-#             print("[ERROR] Invalid data for Official creation")
-#             print(serializer.errors)
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        serializer = OfficialSerializer(data=request.data)
+        if not serializer.is_valid():
+            print("[ERROR] Invalid data for Official creation")
+            print(serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-#         # Step 1: Create account + official
-#         fname = request.data.get("of_fname", "").lower()
-#         lname = request.data.get("of_lname", "").lower()
-#         generated_username = f"{fname}{lname}"
-#         generated_password = get_random_string(length=12)
+        # Step 1: Create account + official
+        fname = request.data.get("of_fname", "").lower()
+        lname = request.data.get("of_lname", "").lower()
+        generated_username = f"{fname}{lname}"
+        generated_password = get_random_string(length=12)
 
-#         account = Account.objects.create(username=generated_username, password=generated_password)
-#         official = Official.objects.create(account=account, **serializer.validated_data)
+        account = Account.objects.create(username=generated_username, password=generated_password)
+        official = Official.objects.create(account=account, **serializer.validated_data)
 
-#         # Step 2: Load photos
-#         photo_files = request.FILES.getlist("of_photos")  #kuhaon ang uploaded files from multipart request.
-#         if not photo_files:
-#             single_photo = request.FILES.get("of_photo")
-#             if single_photo:                                
-#                 photo_files = [single_photo]   #I array 
+        # Step 2: Load photos
+        photo_files = request.FILES.getlist("of_photos")  #kuhaon ang uploaded files from multipart request.
+        if not photo_files:
+            single_photo = request.FILES.get("of_photo")
+            if single_photo:                                
+                photo_files = [single_photo]   #I array 
 
-#         if not photo_files:
-#             print("[WARN] No photo(s) provided for face samples")
-#             return Response({"error": "At least one face photo is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if not photo_files:
+            print("[WARN] No photo(s) provided for face samples")
+            return Response({"error": "At least one face photo is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-#         # Save first photo as profile image
-#         official.of_photo = photo_files[0]  
-#         official.save()
+        # Save first photo as profile image
+        official.of_photo = photo_files[0]  
+        official.save()
 
-#         # Step 3: Process embeddings
-#         created_count = 0   
-#         for index, file in enumerate(photo_files):
-#             temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") # temp file
-#             try:
-#                 image = Image.open(file).convert("RGB")   # used pillow to opem the file
-#                 image.save(temp_image, format="JPEG")
-#                 temp_image.flush()
-#                 temp_image.close()
+        # Step 3: Process embeddings
+        created_count = 0   
+        for index, file in enumerate(photo_files):
+            temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") # temp file
+            try:
+                image = Image.open(file).convert("RGB")   # used pillow to opem the file
+                image.save(temp_image, format="JPEG")
+                temp_image.flush()
+                temp_image.close()
 
-#                 embeddings = DeepFace.represent(  
-#                     img_path=temp_image.name,
-#                     model_name="ArcFace",
-#                     enforce_detection=True
-#                 )
+                embeddings = DeepFace.represent(  
+                    img_path=temp_image.name,
+                    model_name="ArcFace",
+                    enforce_detection=True
+                )
 
-#                 if isinstance(embeddings, list):
-#                     if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
-#                         embedding_vector = embeddings[0]["embedding"]
-#                     elif all(isinstance(x, float) for x in embeddings):
-#                         embedding_vector = embeddings
-#                     else:
-#                         raise ValueError("Unexpected list format from DeepFace.")
-#                 elif isinstance(embeddings, dict) and "embedding" in embeddings:
-#                     embedding_vector = embeddings["embedding"]
-#                 else:
-#                     raise ValueError("Unexpected format from DeepFace.represent()")
+                if isinstance(embeddings, list):
+                    if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
+                        embedding_vector = embeddings[0]["embedding"]
+                    elif all(isinstance(x, float) for x in embeddings):
+                        embedding_vector = embeddings
+                    else:
+                        raise ValueError("Unexpected list format from DeepFace.")
+                elif isinstance(embeddings, dict) and "embedding" in embeddings:
+                    embedding_vector = embeddings["embedding"]
+                else:
+                    raise ValueError("Unexpected format from DeepFace.represent()")
 
-#                 OfficialFaceSample.objects.create(   
-#                     official=official,
-#                     photo=file,
-#                     embedding=embedding_vector
-#                 )
-#                 created_count += 1  #1 row per photo in postgre
-#                 print(f"[INFO] Face sample #{index + 1} saved for {official.full_name}")
+                OfficialFaceSample.objects.create(   
+                    official=official,
+                    photo=file,
+                    embedding=embedding_vector
+                )
+                created_count += 1  #1 row per photo in postgre
+                print(f"[INFO] Face sample #{index + 1} saved for {official.full_name}")
 
-#             except Exception as e:
-#                 print(f"[ERROR] Failed to process face sample #{index + 1}: {str(e)}")
-#                 traceback.print_exc()
-#             finally:
-#                 if os.path.exists(temp_image.name):
-#                     os.remove(temp_image.name)
+            except Exception as e:
+                print(f"[ERROR] Failed to process face sample #{index + 1}: {str(e)}")
+                traceback.print_exc()
+            finally:
+                if os.path.exists(temp_image.name):
+                    os.remove(temp_image.name)
 
-#         if created_count == 0:
-#             return Response({"error": "Face registration failed. Please upload clearer photos."}, status=status.HTTP_400_BAD_REQUEST)
+        if created_count == 0:
+            return Response({"error": "Face registration failed. Please upload clearer photos."}, status=status.HTTP_400_BAD_REQUEST)
 
-#         return Response({
-#             "message": f"✅ Registration successful. {created_count} face sample(s) saved.",
-#             "official_id": official.of_id,
-#             "username": generated_username,
-#             "password": generated_password,
-#             "role": official.of_role,
-#             "photo_url": official.of_photo.url if official.of_photo else None
-#         }, status=status.HTTP_201_CREATED)
+        return Response({
+            "message": f"✅ Registration successful. {created_count} face sample(s) saved.",
+            "official_id": official.of_id,
+            "username": generated_username,
+            "password": generated_password,
+            "role": official.of_role,
+            "photo_url": official.of_photo.url if official.of_photo else None
+        }, status=status.HTTP_201_CREATED)

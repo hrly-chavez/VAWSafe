@@ -228,7 +228,7 @@ class IncidentInformation(models.Model):
     def __str__(self):
         return f"Incident {self.incident_id}"
     
-class CaseReport(models.Model):
+class CaseReport(models.Model):  #ADMINISTRATIVE INFO
     victim = models.OneToOneField(Victim, on_delete=models.CASCADE, related_name="case_report")
 
     handling_org = models.CharField(max_length=255,null=True, blank=True)
