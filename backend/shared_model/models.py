@@ -250,20 +250,22 @@ class Session(models.Model):
         ('Done', 'Done'),
     ]
     sess_id = models.AutoField(primary_key=True)
-    sess_date_today = models.DateField(null=True, blank=True)
-    sess_type = models.TextField(null=True, blank=True)
-    sess_notes = models.TextField(null=True, blank=True)
-    sess_created_at = models.DateField(null=True, blank=True)
-    sess_updated_at = models.DateField(null=True, blank=True)
-    sess_next_sched = models.DateField(null=True, blank=True)
-    sess_description = models.TextField(null=True, blank=True)
+    sess_num = models.IntegerField(null=True, blank=True)
     sess_status = models.CharField(max_length=20,choices=SESSION_STAT, default='Pending')
+    sess_next_sched = models.DateField(null=True, blank=True)
+    sess_date_today = models.DateTimeField(null=True, blank=True)
+    sess_mental_note = models.TextField(null=True,blank=True)
+    sess_physical_note = models.TextField(null=True,blank=True)
+    sess_financial_note = models.TextField(null=True,blank=True)
+    sess_location = models.CharField(max_length=200, null=True, blank=True)
+    sess_updated_at = models.DateField(null=True, blank=True)
+    sess_description = models.TextField(null=True, blank=True)  
     incident_id = models.ForeignKey(IncidentInformation,to_field='incident_id', on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
     of_id = models.ForeignKey(Official, on_delete=models.CASCADE,to_field='of_id', related_name='sessions_handled',null=True, blank=True)
 
     def __str__(self):
-        return f"Session {self.sess_id}"
-
+        return f"Session {self.sess_id}" 
+    
 class Session_Changelog(models.Model):
     sc_changed_timestamp = models.DateTimeField()
     sc_field_changed = models.CharField(max_length=100)
