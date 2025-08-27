@@ -1,17 +1,24 @@
-// src/pages/desk_officer/components/PerpetratorInfo.js
-export default function PerpetratorInfo({ formDataState, setFormDataState }) {
+export default function PerpetratorInfo({
+  formDataState,
+  setFormDataState,
+  back,
+  submit,
+  loading,
+}) {
   const handleChange = (field, value) =>
     setFormDataState((prev) => ({ ...prev, [field]: value }));
 
   return (
-    <div className="p-6 bg-white shadow-md rounded-lg space-y-6">
+    <div>
       <h2 className="text-2xl font-semibold text-gray-800 border-b pb-2">
         Alleged Perpetrator Information
       </h2>
 
       {/* Name */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Name
+        </label>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input
             className="input"
@@ -39,7 +46,9 @@ export default function PerpetratorInfo({ formDataState, setFormDataState }) {
 
       {/* Sex */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Sex</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Sex
+        </label>
         <select
           className="input w-full"
           value={formDataState.per_sex || ""}
@@ -108,6 +117,20 @@ export default function PerpetratorInfo({ formDataState, setFormDataState }) {
       </div>
 
       {/* Keep more fields only if they exist in the model */}
+      {/* buttons */}
+      <button
+        className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600"
+        onClick={back}
+      >
+        Back
+      </button>
+      <button
+        onClick={submit}
+        disabled={loading}
+        className=" bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+      >
+        {loading ? "Submitting..." : "Submit"}
+      </button>
     </div>
   );
 }
