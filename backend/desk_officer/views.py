@@ -134,7 +134,7 @@ def register_victim(request):
             # FK field name on your model is vic_id (not "victim")
             incident_data["vic_id"] = victim.pk  # or victim.vic_id
 
-            # Coerce booleans from strings
+            
             for key in ("is_via_electronic_means", "is_conflict_area", "is_calamity_area"):
                 if key in incident_data:
                     incident_data[key] = to_bool(incident_data[key])
