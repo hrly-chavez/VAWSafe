@@ -18,7 +18,7 @@ export default function Sidebar() {
   const sidebarItems = [
     {
       icon: "/images/dashboard.png",
-      label: "Dashboard",
+      label: "Account Page",
       path: "/desk_officer",
     },
     {

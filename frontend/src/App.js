@@ -26,14 +26,28 @@ const Session = lazy(() => import("./pages/desk_officer/Session/Session"));
 const Test = lazy(() => import("./pages/desk_officer/Testing/Test"));
 
 // DSWD Pages (lazy loaded)
-const DSWDDashboard = lazy(() => import("./pages/dswd/Dashboard/DSWDDashboard"));
-const DSWDVAWCVictims = lazy(() => import("./pages/dswd/Victim/DSWDVAWCVictims"));
-const DSWDVictimDetail = lazy(() => import("./pages/dswd/Victim/VictimDetails"))
-const DSWDSearchVictim = lazy(() => import("./pages/dswd/Victim/SearchVictim"))
-const DSWDSocialWorkers = lazy(() => import("./pages/dswd/SocialWorker/DSWDSocialWorkers"));
-const DSWDCaseRecord = lazy(() => import("./pages/dswd/CaseRecord/DSWDCaseRecord"));
-const DSWDServices = lazy(() => import("./pages/dswd/ServiceDSWD/DSWDServices"));
-const DSWDNotification = lazy(() => import("./pages/dswd/NotificationDSWD/DSWDNotification"));
+const DSWDDashboard = lazy(() =>
+  import("./pages/dswd/Dashboard/DSWDDashboard")
+);
+const DSWDVAWCVictims = lazy(() =>
+  import("./pages/dswd/Victim/DSWDVAWCVictims")
+);
+const DSWDVictimDetail = lazy(() =>
+  import("./pages/dswd/Victim/VictimDetails")
+);
+const DSWDSearchVictim = lazy(() => import("./pages/dswd/Victim/SearchVictim"));
+const DSWDSocialWorkers = lazy(() =>
+  import("./pages/dswd/SocialWorker/DSWDSocialWorkers")
+);
+const DSWDCaseRecord = lazy(() =>
+  import("./pages/dswd/CaseRecord/DSWDCaseRecord")
+);
+const DSWDServices = lazy(() =>
+  import("./pages/dswd/ServiceDSWD/DSWDServices")
+);
+const DSWDNotification = lazy(() =>
+  import("./pages/dswd/NotificationDSWD/DSWDNotification")
+);
 const DSWDFileMaintenance = lazy(() =>
   import("./pages/dswd/FileMaintenance/DSWDFileMaintenance")
 );
@@ -70,11 +84,16 @@ export default function App() {
           <Route path={ROUTES.REGISTER} element={<RegisterUser />} />
 
           {/* DESK OFFICER */}
-          <Route path={ROUTES.DESK_OFFICER} element={<DeskOfficerPage />}>
-            <Route path="register_victim" element={<RegisterVictim />} />
-            <Route path="victim_facial" element={<VictimFacial />} />
-            <Route path="session" element={<Session />} />
-          </Route>
+          <Route path={ROUTES.DESK_OFFICER} element={<DeskOfficerPage />} />
+          <Route
+            path={ROUTES.DESK_OFFICER_REGISTER_VICTIM}
+            element={<RegisterVictim />}
+          />
+          <Route
+            path={ROUTES.DESK_OFFICER_VICTIM_FACIAL}
+            element={<VictimFacial />}
+          />
+          <Route path={ROUTES.DESK_OFFICER_SESSION} element={<Session />} />
           <Route path={ROUTES.TEST} element={<Test />} />
 
           {/* DSWD */}
@@ -83,11 +102,11 @@ export default function App() {
             path={ROUTES.DSWD_VAWC_VICTIMS}
             element={<DSWDVAWCVictims />}
           />
-          <Route 
+          <Route
             path={ROUTES.DSWD_VICTIM_DETAIL}
             element={<DSWDVictimDetail />}
           />
-          <Route 
+          <Route
             path={ROUTES.DSWD_SEARCH_VICTIM}
             element={<DSWDSearchVictim />}
           />
