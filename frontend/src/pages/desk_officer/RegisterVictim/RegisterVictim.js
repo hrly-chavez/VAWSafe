@@ -119,110 +119,110 @@ export default function RegisterVictim() {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    // try {
-    //   setLoading(true);
-    //   setStatusMessage(
-    //     "⏳ Processing registration... please wait while we process photos and save information."
-    //   );
+    try {
+      setLoading(true);
+      setStatusMessage(
+        "⏳ Processing registration... please wait while we process photos and save information."
+      );
 
-    //   // Required fields
-    //   for (const k of REQUIRED_VICTIM_KEYS) {
-    //     if (!formDataState[k]) {
-    //       setStatusMessage(`❌ Missing required victim field: ${k}`);
-    //       setLoading(false);
-    //       return;
-    //     }
-    //   }
-    //   if (victimPhotos.length !== 3 || victimPhotos.some((p) => !p)) {
-    //     setStatusMessage("❌ Please capture exactly 3 victim photos.");
-    //     setLoading(false);
-    //     return;
-    //   }
+      // Required fields
+      for (const k of REQUIRED_VICTIM_KEYS) {
+        if (!formDataState[k]) {
+          setStatusMessage(`❌ Missing required victim field: ${k}`);
+          setLoading(false);
+          return;
+        }
+      }
+      if (victimPhotos.length !== 3 || victimPhotos.some((p) => !p)) {
+        setStatusMessage("❌ Please capture exactly 3 victim photos.");
+        setLoading(false);
+        return;
+      }
 
-    //   // Victim payload (only include filled fields)
-    //   const victimPayload = {};
-    //   VICTIM_FIELDS.forEach((k) => {
-    //     const v = formDataState[k];
-    //     if (v !== undefined && v !== null && v !== "") {
-    //       victimPayload[k] = v;
-    //     }
-    //   });
+      // Victim payload (only include filled fields)
+      const victimPayload = {};
+      VICTIM_FIELDS.forEach((k) => {
+        const v = formDataState[k];
+        if (v !== undefined && v !== null && v !== "") {
+          victimPayload[k] = v;
+        }
+      });
 
-    //   // Optional sections (only include if something was filled)
-    //   const caseReportPayload = hasAny(formDataState, CASE_REPORT_KEYS)
-    //     ? Object.fromEntries(
-    //         CASE_REPORT_KEYS.map((k) => [k, formDataState[k] ?? ""])
-    //       )
-    //     : null;
+      // Optional sections (only include if something was filled)
+      const caseReportPayload = hasAny(formDataState, CASE_REPORT_KEYS)
+        ? Object.fromEntries(
+            CASE_REPORT_KEYS.map((k) => [k, formDataState[k] ?? ""])
+          )
+        : null;
 
-    //   const incidentPayload = hasAny(formDataState, INCIDENT_KEYS)
-    //     ? Object.fromEntries(
-    //         INCIDENT_KEYS.map((k) => [
-    //           k,
-    //           typeof formDataState[k] === "boolean"
-    //             ? !!formDataState[k]
-    //             : formDataState[k] ?? "",
-    //         ])
-    //       )
-    //     : null;
+      const incidentPayload = hasAny(formDataState, INCIDENT_KEYS)
+        ? Object.fromEntries(
+            INCIDENT_KEYS.map((k) => [
+              k,
+              typeof formDataState[k] === "boolean"
+                ? !!formDataState[k]
+                : formDataState[k] ?? "",
+            ])
+          )
+        : null;
 
-    //   const perpetratorPayload = hasAny(formDataState, PERP_KEYS)
-    //     ? Object.fromEntries(PERP_KEYS.map((k) => [k, formDataState[k] ?? ""]))
-    //     : null;
+      const perpetratorPayload = hasAny(formDataState, PERP_KEYS)
+        ? Object.fromEntries(PERP_KEYS.map((k) => [k, formDataState[k] ?? ""]))
+        : null;
 
-    //   // Build multipart form-data for the unified endpoint
-    //   const fd = new FormData();
-    //   fd.append("victim", JSON.stringify(victimPayload));
-    //   if (caseReportPayload)
-    //     fd.append("case_report", JSON.stringify(caseReportPayload));
-    //   if (incidentPayload)
-    //     fd.append("incident", JSON.stringify(incidentPayload));
-    //   if (perpetratorPayload)
-    //     fd.append("perpetrator", JSON.stringify(perpetratorPayload));
-    //   victimPhotos.forEach((file) => fd.append("photos", file));
+      // Build multipart form-data for the unified endpoint
+      const fd = new FormData();
+      fd.append("victim", JSON.stringify(victimPayload));
+      if (caseReportPayload)
+        fd.append("case_report", JSON.stringify(caseReportPayload));
+      if (incidentPayload)
+        fd.append("incident", JSON.stringify(incidentPayload));
+      if (perpetratorPayload)
+        fd.append("perpetrator", JSON.stringify(perpetratorPayload));
+      victimPhotos.forEach((file) => fd.append("photos", file));
 
-    //   const res = await fetch(
-    //     `${API_BASE}/api/desk_officer/victims/register/`,
-    //     {
-    //       method: "POST",
-    //       body: fd, // don't set Content-Type manually
-    //     }
-    //   );
+      const res = await fetch(
+        `${API_BASE}/api/desk_officer/victims/register/`,
+        {
+          method: "POST",
+          body: fd, // don't set Content-Type manually
+        }
+      );
 
-    //   // Parse JSON if possible, otherwise keep raw response for debugging
-    //   const raw = await res.text();
-    //   let payload;
-    //   try {
-    //     payload = JSON.parse(raw);
-    //   } catch {
-    //     payload = { raw };
-    //   }
+      // Parse JSON if possible, otherwise keep raw response for debugging
+      const raw = await res.text();
+      let payload;
+      try {
+        payload = JSON.parse(raw);
+      } catch {
+        payload = { raw };
+      }
 
-    //   if (!res.ok || payload?.success === false) {
-    //     const errors = payload?.errors;
-    //     let msg = payload?.error || "❌ Registration failed.";
+      if (!res.ok || payload?.success === false) {
+        const errors = payload?.errors;
+        let msg = payload?.error || "❌ Registration failed.";
 
-    //     if (errors && typeof errors === "object") {
-    //       const lines = Object.entries(errors).map(
-    //         ([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`
-    //       );
-    //       msg = `❌ Registration failed:\n${lines.join("\n")}`;
-    //     }
-    //     console.error("Register error payload:", payload);
-    //     setStatusMessage(msg);
-    //     setLoading(false);
-    //     return;
-    //   }
+        if (errors && typeof errors === "object") {
+          const lines = Object.entries(errors).map(
+            ([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`
+          );
+          msg = `❌ Registration failed:\n${lines.join("\n")}`;
+        }
+        console.error("Register error payload:", payload);
+        setStatusMessage(msg);
+        setLoading(false);
+        return;
+      }
 
-    //   setStatusMessage("✅ Victim registered successfully!");
-    //   setLoading(false);
-    // } catch (err) {
-    //   console.error("Register victim exception:", err);
-    //   setStatusMessage("❌ Something went wrong.");
-    //   setLoading(false);
-    // }
+      setStatusMessage("✅ Victim registered successfully!");
+      setLoading(false);
+    } catch (err) {
+      console.error("Register victim exception:", err);
+      setStatusMessage("❌ Something went wrong.");
+      setLoading(false);
+    }
 
-    navigate("/desk_officer/session");
+    // navigate("/desk_officer/session");
   };
 
   const renderForm = () => {
