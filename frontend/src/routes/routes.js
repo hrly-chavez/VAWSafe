@@ -7,6 +7,7 @@ export const ROUTES = {
   DESK_OFFICER_REGISTER_VICTIM: "/desk_officer/register_victim",
   DESK_OFFICER_VICTIM_FACIAL: "/desk_officer/victim_facial",
   DESK_OFFICER_SESSION: "/desk_officer/session",
+  DESK_OFFICER_VICTIMS: "/desk_officer/victims",
   TEST: "/test",
 
   DSWD: "/dswd",

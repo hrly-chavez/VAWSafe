@@ -3,8 +3,8 @@ import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
-import Navbar from "../components/navBar";
-import Sidebar from "../components/sideBar";
+import Navbar from "../navBar";
+import Sidebar from "../sideBar";
 import AdministrativeInfo from "./AdministrativeInfo";
 import VictimInfo from "./VictimInfo";
 import IncidentInfo from "./IncidentInfo";
@@ -222,7 +222,7 @@ export default function RegisterVictim() {
     //   setLoading(false);
     // }
 
-    navigate("/desk_officer/session")
+    navigate("/desk_officer/session");
   };
 
   const renderForm = () => {

@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import FaceRecog from "./FaceRecog";
 import Form2 from "./Form2";
 import Form3 from "./Form3";
-import Navbar from "../components/navBar";
-import Sidebar from "../components/sideBar";
+import Navbar from "../navBar";
+import Sidebar from "../sideBar";
 
 export default function Session() {
   const navigate = useNavigate();

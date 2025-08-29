@@ -23,7 +23,9 @@ const RegisterVictim = lazy(() =>
   import("./pages/desk_officer/RegisterVictim/RegisterVictim")
 );
 const Session = lazy(() => import("./pages/desk_officer/Session/Session"));
+// !TEST AREA
 const Test = lazy(() => import("./pages/desk_officer/Testing/Test"));
+const DOVictims = lazy(() => import("./pages/desk_officer/Victims/Victims"));
 
 // DSWD Pages (lazy loaded)
 const DSWDDashboard = lazy(() =>
@@ -39,7 +41,9 @@ const DSWDSearchVictim = lazy(() => import("./pages/dswd/Victim/SearchVictim"));
 const DSWDSocialWorkers = lazy(() =>
   import("./pages/dswd/SocialWorker/DSWDSocialWorkers")
 );
-const DSWDSocialWorkerDetail = lazy(() => import("./pages/dswd/SocialWorker/SocialWorkerDetails"));
+const DSWDSocialWorkerDetail = lazy(() =>
+  import("./pages/dswd/SocialWorker/SocialWorkerDetails")
+);
 const DSWD_VAWDESK_OFFICER = lazy(() =>
   import("./pages/dswd/VawDeskOfficer/DSWDVawDeskOfficer")
 );
@@ -89,6 +93,8 @@ export default function App() {
             element={<VictimFacial />}
           />
           <Route path={ROUTES.DESK_OFFICER_SESSION} element={<Session />} />
+          {/* Testing */}
+          <Route path={ROUTES.DESK_OFFICER_VICTIMS} element={<DOVictims />} />
           <Route path={ROUTES.TEST} element={<Test />} />
 
           {/* DSWD */}
@@ -113,7 +119,10 @@ export default function App() {
             path={ROUTES.DSWD_SOCIAL_WORKERS_DETAILS}
             element={<DSWDSocialWorkerDetail />}
           />
-          <Route path={ROUTES.DSWD_VAWDESK_OFFICER} element={<DSWD_VAWDESK_OFFICER />} />
+          <Route
+            path={ROUTES.DSWD_VAWDESK_OFFICER}
+            element={<DSWD_VAWDESK_OFFICER />}
+          />
           <Route path={ROUTES.DSWD_SERVICES} element={<DSWDServices />} />
 
           {/* SOCIAL WORKER (nested routes under sidebar layout) */}
