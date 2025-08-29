@@ -46,6 +46,7 @@ class PerpetratorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Perpetrator
         fields = "__all__"
+        
 class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
     perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)
 
