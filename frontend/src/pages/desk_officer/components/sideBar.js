@@ -18,7 +18,7 @@ export default function Sidebar() {
   const sidebarItems = [
     {
       icon: "/images/dashboard.png",
-      label: "Dashboard",
+      label: "Account Page",
       path: "/desk_officer",
     },
     {
@@ -30,6 +30,11 @@ export default function Sidebar() {
       icon: "/images/tools.png",
       label: "Register Victim",
       path: "/desk_officer/register_victim",
+    },
+    {
+      icon: "/images/tools.png",
+      label: "Sessions",
+      path: "/desk_officer/session",
     },
     {
       icon: "/images/tools.png",

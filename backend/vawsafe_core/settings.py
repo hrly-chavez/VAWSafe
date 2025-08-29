@@ -71,17 +71,13 @@ ROOT_URLCONF = 'vawsafe_core.urls'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny', 
+        'rest_framework.permissions.AllowAny',
     ],
-      'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle',
+    'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.ScopedRateThrottle',
     ],
-     'DEFAULT_THROTTLE_RATES': {
-        'anon': '10/minute',
-        'user': '30/minute',
-        'face_login': '5/minute',  # Custom throttle for face login
+    'DEFAULT_THROTTLE_RATES': {
+        'face_login': '5/minute',
     }
 }
 
@@ -111,7 +107,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'vawsafe',
         'USER': 'postgres',
-        'PASSWORD': 'postgres', # my pgadmin password, mata
+        'PASSWORD': 'postgres', 
         'HOST': 'localhost',
         'PORT': '5432',
     }

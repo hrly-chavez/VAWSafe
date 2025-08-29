@@ -2,19 +2,21 @@ import React, { useRef, useState } from "react";
 import Webcam from "react-webcam";
 import axios from "axios";
 
-const MAX_PHOTOS = 3;
-
 const RegisterUser = () => {
+  const MAX_PHOTOS = 3;
   const webcamRef = useRef(null);
   const [photos, setPhotos] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [of_fname, setFname] = useState("");
-  const [of_lname, setLname] = useState("");
-  const [of_role, setRole] = useState("DSWD");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [credentials, setCredentials] = useState(null);
 
+  // user credentials
+  const [of_fname, setFname] = useState("");
+  const [of_lname, setLname] = useState("");
+  const [of_role, setRole] = useState("DSWD");
+
+  // functions start here
   const capturePhoto = () => {
     const screenshot = webcamRef.current.getScreenshot();
     if (!screenshot) {
@@ -70,7 +72,9 @@ const RegisterUser = () => {
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      setStatus("✅ Registration successful!");
+      // alert(response.data.username);
+
+      setStatus(" Registration successful!");
       setCredentials({
         username: response.data.username,
         password: response.data.password,
@@ -84,7 +88,7 @@ const RegisterUser = () => {
       setCurrentIndex(0);
     } catch (err) {
       console.error(err);
-      setStatus("❌ Registration failed. Please check the input or camera.");
+      setStatus(" Registration failed. Please check the input or camera.");
     } finally {
       setLoading(false);
     }
@@ -93,7 +97,10 @@ const RegisterUser = () => {
   return (
     <div style={{ maxWidth: "600px", margin: "auto" }}>
       <h2>Register Official (Multi-Face Sample)</h2>
+
+      {/* entire form consists of input fields and webcam */}
       <form onSubmit={handleSubmit}>
+        {/* first name */}
         <div>
           <label>First Name:</label>
           <input
@@ -103,6 +110,8 @@ const RegisterUser = () => {
             required
           />
         </div>
+
+        {/* last name */}
         <div>
           <label>Last Name:</label>
           <input
@@ -112,6 +121,8 @@ const RegisterUser = () => {
             required
           />
         </div>
+
+        {/* user role */}
         <div>
           <label>Role:</label>
           <select
@@ -125,7 +136,8 @@ const RegisterUser = () => {
           </select>
         </div>
 
-        <div style={{ marginTop: "15px" }}>
+        {/* webcam */}
+        <div className="">
           <Webcam
             audio={false}
             ref={webcamRef}
@@ -135,6 +147,7 @@ const RegisterUser = () => {
           />
         </div>
 
+        {/* capture picture button */}
         <button
           type="button"
           onClick={capturePhoto}
@@ -144,6 +157,7 @@ const RegisterUser = () => {
           Capture Photo {currentIndex + 1}/{MAX_PHOTOS}
         </button>
 
+        {/* show images */}
         <div
           style={{
             display: "flex",
@@ -171,6 +185,7 @@ const RegisterUser = () => {
           ))}
         </div>
 
+        {/* submit button */}
         <button
           type="submit"
           disabled={loading || photos.length < MAX_PHOTOS}
@@ -180,8 +195,10 @@ const RegisterUser = () => {
         </button>
       </form>
 
+      {/* ? */}
       {status && <p style={{ marginTop: "15px" }}>{status}</p>}
 
+      {/* debugging purposes, show status */}
       {credentials && (
         <div
           style={{

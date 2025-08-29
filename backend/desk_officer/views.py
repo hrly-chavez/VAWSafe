@@ -1,95 +1,175 @@
 import tempfile
 import os
 import traceback
+import json
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
 from deepface import DeepFace
 from PIL import Image
-
+from django.db import transaction
+from django.utils.dateparse import parse_date, parse_time
 from shared_model.models import *
 from .serializers import *
+
 @api_view(['GET'])
 def get_victims(request):
-    victims = Victim.objects.all()
-    serialized_data = VictimSerializer(victims, many=True).data
-    return Response(serialized_data)
+    victims = Victim.objects.all().order_by('-vic_id')
+    data = VictimSerializer(victims, many=True).data
+    return Response(data)
 
+
+
+
+
+
+# WORKING, NO PROBLEM (BACK UP)
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
+@transaction.atomic
 def register_victim(request):
     """
-    Registers victim details + up to 3 facial images in one request.
+    Unified endpoint:
+    - Creates Victim (+ profile photo)
+    - Stores victim face samples + embeddings (best-effort)
+    - Optionally creates CaseReport, IncidentInformation, Perpetrator
     """
-    # Step 1: Create Victim record
-    serializer = VictimSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    victim = serializer.save()
+    def parse_json_field(key):
+        raw = request.data.get(key)
+        if raw is None or raw == "":
+            return None
+        if isinstance(raw, (dict, list)):
+            return raw
+        if isinstance(raw, str):
+            try:
+                return json.loads(raw)
+            except Exception:
+                raise ValueError(f"Invalid JSON in '{key}'")
+        return None
 
-    # Step 2: Handle photo uploads
-    photo_files = request.FILES.getlist("victim_photos")  # field name in frontend form
-    if not photo_files:
-        return Response({"error": "At least one victim photo is required."}, status=status.HTTP_400_BAD_REQUEST)
+    def to_bool(v):
+        if isinstance(v, bool):
+            return v
+        # normalize common truthy/falsey string/int values from forms
+        if v in (1, "1", "true", "True", "on", "yes", "Yes", "y", "Y"):
+            return True
+        if v in (0, "0", "false", "False", "off", "no", "No", "n", "N", "", None):
+            return False
+        return v  # leave as-is; serializer will complain if truly invalid
 
-    # Save first photo as profile picture
-    victim.vic_photo = photo_files[0]
-    victim.save()
+    try:
+        print(f"[register_victim] hit: {request.content_type}")
 
-    # Step 3: Process each photo for embeddings
-    created_count = 0
-    for index, file in enumerate(photo_files):
-        temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
-        try:
-            image = Image.open(file).convert("RGB")
-            image.save(temp_image, format="JPEG")
-            temp_image.flush()
-            temp_image.close()
+        # 1) Victim
+        victim_data = parse_json_field("victim") or {}
+        v_ser = VictimSerializer(data=victim_data)
+        if not v_ser.is_valid():
+            print("[victim] errors:", v_ser.errors)
+            return Response({"success": False, "errors": v_ser.errors},
+                            status=status.HTTP_400_BAD_REQUEST)
+        victim = v_ser.save()  # PK available via victim.pk or victim.vic_id
 
-            embeddings = DeepFace.represent(
-                img_path=temp_image.name,
-                model_name="ArcFace",
-                enforce_detection=True
-            )
+        # 2) Photos + Face Samples
+        photo_files = request.FILES.getlist("photos")
+        if photo_files:
+            victim.vic_photo = photo_files[0]
+            victim.save()
 
-            if isinstance(embeddings, list) and len(embeddings) > 0 and isinstance(embeddings[0], dict):
-                embedding_vector = embeddings[0]["embedding"]
-            elif isinstance(embeddings, dict) and "embedding" in embeddings:
-                embedding_vector = embeddings["embedding"]
-            else:
-                raise ValueError("Unexpected DeepFace format")
+            created_count = 0
+            for idx, file in enumerate(photo_files, start=1):
+                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+                try:
+                    Image.open(file).convert("RGB").save(tmp, format="JPEG")
+                    tmp.flush(); tmp.close()
 
-            VictimFaceSample.objects.create(
-                victim=victim,
-                photo=file,
-                embedding=embedding_vector
-            )
-            created_count += 1
-            print(f"[INFO] Saved face sample #{index + 1} for victim {victim.vic_first_name}")
+                    embedding_vector = None
+                    try:
+                        
+                        reps = DeepFace.represent(
+                        img_path=tmp.name,
+                        model_name="ArcFace",
+                        enforce_detection=True
+                    )
+                        if isinstance(reps, list) and reps and isinstance(reps[0], dict):
+                            embedding_vector = reps[0].get("embedding")
+                        elif isinstance(reps, dict):
+                            embedding_vector = reps.get("embedding")
+                    except Exception as face_err:
+                        print(f"[EMBEDDING] Failed on photo #{idx}: {face_err}")
 
-        except Exception as e:
-            traceback.print_exc()
-        finally:
-            if os.path.exists(temp_image.name):
-                os.remove(temp_image.name)
+                    VictimFaceSample.objects.create(
+                        victim=victim, photo=file, embedding=embedding_vector
+                    )
+                    created_count += 1
 
-    if created_count == 0:
-        return Response({"error": "Face registration failed. No valid samples processed."}, status=status.HTTP_400_BAD_REQUEST)
+                except Exception:
+                    print(f"[PHOTO] unexpected error on photo #{idx}")
+                    traceback.print_exc()
+                finally:
+                    if os.path.exists(tmp.name):
+                        os.remove(tmp.name)
 
-    return Response({
-        "message": f"✅ Victim registered successfully with {created_count} face sample(s).",
-        "victim_id": victim.vic_id
-    }, status=status.HTTP_201_CREATED)
+            if created_count == 0:
+                transaction.set_rollback(True)
+                return Response({"success": False, "error": "No photos could be saved."},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-# @api_view(['POST'])
-# def register_victim_survivor(request):
-#     data = request.data
-#     serializer = VictimSurvivorSerializer(data=data)
+        # 3) CaseReport (optional)
+        case_report = None
+        case_report_data = parse_json_field("case_report")
+        if case_report_data:
+            c_ser = CaseReportSerializer(data=case_report_data)
+            if not c_ser.is_valid():
+                print("[case_report] errors:", c_ser.errors)
+                return Response({"success": False, "errors": c_ser.errors},
+                                status=status.HTTP_400_BAD_REQUEST)
+            case_report = c_ser.save(victim=victim)
 
-#     if serializer.is_valid():
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # 4) IncidentInformation (optional)
+        incident = None
+        incident_data = parse_json_field("incident")
+        if incident_data:
+            # FK field name on your model is vic_id (not "victim")
+            incident_data["vic_id"] = victim.pk  # or victim.vic_id
+
+            
+            for key in ("is_via_electronic_means", "is_conflict_area", "is_calamity_area"):
+                if key in incident_data:
+                    incident_data[key] = to_bool(incident_data[key])
+
+            i_ser = IncidentInformationSerializer(data=incident_data)
+            if not i_ser.is_valid():
+                print("[incident] errors:", i_ser.errors)
+                return Response({"success": False, "errors": i_ser.errors},
+                                status=status.HTTP_400_BAD_REQUEST)
+            incident = i_ser.save()
+
+        # 5) Perpetrator (optional)
+        perpetrator = None
+        perpetrator_data = parse_json_field("perpetrator")
+        if perpetrator_data:
+            p_ser = PerpetratorSerializer(data=perpetrator_data)
+            if not p_ser.is_valid():
+                print("[perpetrator] errors:", p_ser.errors)
+                return Response({"success": False, "errors": p_ser.errors},
+                                status=status.HTTP_400_BAD_REQUEST)
+            perpetrator = p_ser.save()
+
+        return Response({
+            "success": True,
+            "victim": VictimSerializer(victim).data,
+            "case_report": CaseReportSerializer(case_report).data if case_report else None,
+            "incident": IncidentInformationSerializer(incident).data if incident else None,
+            "perpetrator": PerpetratorSerializer(perpetrator).data if perpetrator else None,
+        }, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        traceback.print_exc()
+        transaction.set_rollback(True)
+        return Response({"success": False, "error": str(e)},
+                        status=status.HTTP_400_BAD_REQUEST)
+
+
+
