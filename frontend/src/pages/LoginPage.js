@@ -128,7 +128,7 @@ const LoginPage = () => {
     : "text-neutral-800";
 
   return (
-    <div className="min-h-screen bg-[#eae7e6] bg-cover bg-center bg-no-repeat">
+    <div className="min-h-screen bg-cover bg-center bg-no-repeat" name='background' style={{ backgroundImage: "url(/assets/images/istockphoto-1017190202-612x612.jpg)" }}>
       <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
       <div className="relative">
         <Navbar />
