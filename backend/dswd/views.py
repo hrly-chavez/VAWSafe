@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from deepface import DeepFace
 from .serializers import *
+from django.db.models import Prefetch
 
 # Create your views here.
 
@@ -90,3 +91,74 @@ class search_victim_facial(APIView):
         finally:
             if chosen_frame and os.path.exists(chosen_frame):
                 os.remove(chosen_frame)
+
+class ViewSocialWorker(generics.ListAPIView):
+    serializer_class = SocialWorkerListSerializer
+
+    def get_queryset(self):
+        qs = (Official.objects
+              .filter(of_role="Social Worker")
+              .select_related("account")
+              .order_by("of_lname", "of_fname"))
+        q = self.request.query_params.get("q")
+        if q:
+            # simple search by name/Brgy/specialization/contact
+            return qs.filter(
+                (models.Q(of_fname__icontains=q) |
+                 models.Q(of_lname__icontains=q) |
+                 models.Q(of_brgy_assigned__icontains=q) |
+                 models.Q(of_specialization__icontains=q) |
+                 models.Q(of_contact__icontains=q))
+            )
+        return qs
+
+    def list(self, request, *args, **kwargs):
+        # ensure absolute image URLs
+        self.serializer_class.context = {"request": request}
+        return super().list(request, *args, **kwargs)
+    
+class ViewSocialWorkerDetail(generics.RetrieveAPIView):
+    serializer_class = SocialWorkerDetailSerializer
+    lookup_field = "of_id"
+
+    def get_queryset(self):
+        return (
+            Official.objects
+            .filter(of_role="Social Worker")
+            .select_related("account")
+            .prefetch_related(
+                "face_samples",
+                Prefetch("handled_incidents", queryset=IncidentInformation.objects.select_related("vic_id").order_by("-incident_date")),
+                Prefetch("sessions_handled", queryset=Session.objects.select_related("incident_id").order_by("-sess_date_today")),
+            )
+        )
+
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx.update({"request": self.request})  # absolute media URLs
+        return ctx
+    
+class ViewVAWDeskOfficer(generics.ListAPIView):
+    serializer_class = VAWDeskOfficerListSerializer
+
+    def get_queryset(self):
+        qs = (Official.objects
+              .filter(of_role="VAWDesk")
+              .select_related("account")
+              .order_by("of_lname", "of_fname"))
+        q = self.request.query_params.get("q")
+        if q:
+            # simple search by name/Brgy/specialization/contact
+            return qs.filter(
+                (models.Q(of_fname__icontains=q) |
+                 models.Q(of_lname__icontains=q) |
+                 models.Q(of_brgy_assigned__icontains=q) |
+                 models.Q(of_specialization__icontains=q) |
+                 models.Q(of_contact__icontains=q))
+            )
+        return qs
+
+    def list(self, request, *args, **kwargs):
+        # ensure absolute image URLs
+        self.serializer_class.context = {"request": request}
+        return super().list(request, *args, **kwargs)

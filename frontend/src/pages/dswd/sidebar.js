@@ -183,23 +183,13 @@ export default function Sidebar() {
     },
     {
       icon: "/images/edit.png",
-      label: "Case Records",
-      path: "/dswd/case-records",
+      label: "VAW Desk Officer",
+      path: "/dswd/vawdesk-officer",
     },
     {
       icon: "/images/high-value.png",
       label: "Services",
       path: "/dswd/services",
-    },
-    {
-      icon: "/images/bell.png",
-      label: "Notification",
-      path: "/dswd/notification",
-    },
-    {
-      icon: "/images/tools.png",
-      label: "File Maintenance",
-      path: "/dswd/file-maintenance",
     },
     { icon: "/images/tools.png", label: "Logout", path: "/login" },
   ];

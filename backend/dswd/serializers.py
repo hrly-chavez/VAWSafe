@@ -57,3 +57,117 @@ class VictimDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Victim
         fields = "__all__"
+
+class SocialWorkerListSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+    photo = serializers.ImageField(source="of_photo", read_only=True)
+
+    class Meta:
+        model = Official
+        fields = [
+            "of_id",
+            "full_name",
+            "of_role",
+            "of_contact",
+            "photo",
+            "of_brgy_assigned",
+            "of_specialization",
+        ]
+
+    def get_full_name(self, obj):
+        parts = [obj.of_fname]
+        if obj.of_m_initial:
+            parts.append(f"{obj.of_m_initial}.")
+        parts.append(obj.of_lname)
+        if obj.of_suffix:
+            parts.append(obj.of_suffix)
+        return " ".join(parts)
+    
+
+class OfficialFaceSampleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OfficialFaceSample
+        fields = ["photo"]  # keep it light; omit embeddings in API responses
+
+
+class VictimMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Victim
+        fields = ["vic_id", "vic_first_name", "vic_last_name", "vic_sex"]
+
+
+class IncidentMiniSerializer(serializers.ModelSerializer):
+    victim = VictimMiniSerializer(source="vic_id", read_only=True)
+    perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)
+
+    class Meta:
+        model = IncidentInformation
+        fields = [
+            "incident_id",
+            "incident_date",
+            "incident_location",
+            "incident_description",
+            "type_of_place",
+            "victim",
+            "perpetrator",
+        ]
+
+
+class SessionMiniSerializer(serializers.ModelSerializer):
+    incident = IncidentMiniSerializer(source="incident_id", read_only=True)
+
+    class Meta:
+        model = Session
+        fields = [
+            "sess_id",
+            "sess_date_today",
+            "sess_status",
+            "sess_next_sched",
+            "incident",
+        ]
+
+
+class SocialWorkerDetailSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+    face_samples = OfficialFaceSampleSerializer(many=True, read_only=True)
+    handled_incidents = IncidentMiniSerializer(many=True, read_only=True)
+    sessions_handled = SessionMiniSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Official
+        fields = "__all__"
+
+    def get_full_name(self, obj):
+        parts = [obj.of_fname]
+        if obj.of_m_initial:
+            parts.append(f"{obj.of_m_initial}.")
+        parts.append(obj.of_lname)
+        if obj.of_suffix:
+            parts.append(obj.of_suffix)
+        return " ".join(parts)
+    
+class VAWDeskOfficerListSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+    photo = serializers.ImageField(source="of_photo", read_only=True)
+
+    class Meta:
+        model = Official
+        fields = [
+            "of_id",
+            "full_name",
+            "of_role",
+            "of_contact",
+            "photo",
+            "of_brgy_assigned",
+            "of_specialization",
+        ]
+
+    def get_full_name(self, obj):
+        parts = [obj.of_fname]
+        if obj.of_m_initial:
+            parts.append(f"{obj.of_m_initial}.")
+        parts.append(obj.of_lname)
+        if obj.of_suffix:
+            parts.append(obj.of_suffix)
+        return " ".join(parts)
+    

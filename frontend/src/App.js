@@ -39,17 +39,12 @@ const DSWDSearchVictim = lazy(() => import("./pages/dswd/Victim/SearchVictim"));
 const DSWDSocialWorkers = lazy(() =>
   import("./pages/dswd/SocialWorker/DSWDSocialWorkers")
 );
-const DSWDCaseRecord = lazy(() =>
-  import("./pages/dswd/CaseRecord/DSWDCaseRecord")
+const DSWDSocialWorkerDetail = lazy(() => import("./pages/dswd/SocialWorker/SocialWorkerDetails"));
+const DSWD_VAWDESK_OFFICER = lazy(() =>
+  import("./pages/dswd/VawDeskOfficer/DSWDVawDeskOfficer")
 );
 const DSWDServices = lazy(() =>
   import("./pages/dswd/ServiceDSWD/DSWDServices")
-);
-const DSWDNotification = lazy(() =>
-  import("./pages/dswd/NotificationDSWD/DSWDNotification")
-);
-const DSWDFileMaintenance = lazy(() =>
-  import("./pages/dswd/FileMaintenance/DSWDFileMaintenance")
 );
 
 // Social Worker Pages (lazy loaded)
@@ -114,16 +109,12 @@ export default function App() {
             path={ROUTES.DSWD_SOCIAL_WORKERS}
             element={<DSWDSocialWorkers />}
           />
-          <Route path={ROUTES.DSWD_CASE_RECORDS} element={<DSWDCaseRecord />} />
+          <Route
+            path={ROUTES.DSWD_SOCIAL_WORKERS_DETAILS}
+            element={<DSWDSocialWorkerDetail />}
+          />
+          <Route path={ROUTES.DSWD_VAWDESK_OFFICER} element={<DSWD_VAWDESK_OFFICER />} />
           <Route path={ROUTES.DSWD_SERVICES} element={<DSWDServices />} />
-          <Route
-            path={ROUTES.DSWD_NOTIFICATION}
-            element={<DSWDNotification />}
-          />
-          <Route
-            path={ROUTES.DSWD_FILE_MAINTENANCE}
-            element={<DSWDFileMaintenance />}
-          />
 
           {/* SOCIAL WORKER (nested routes under sidebar layout) */}
           <Route path={ROUTES.SOCIAL_WORKER} element={<SidebarLayout />}>

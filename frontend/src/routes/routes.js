@@ -14,10 +14,9 @@ export const ROUTES = {
   DSWD_VICTIM_DETAIL: "/dswd/victims/:vic_id",
   DSWD_SEARCH_VICTIM: "/dswd/victims/search",
   DSWD_SOCIAL_WORKERS: "/dswd/social-workers",
-  DSWD_CASE_RECORDS: "/dswd/case-records",
+  DSWD_SOCIAL_WORKERS_DETAILS: "/dswd/social-workers/:of_id",
+  DSWD_VAWDESK_OFFICER: "/dswd/vawdesk-officer",
   DSWD_SERVICES: "/dswd/services",
-  DSWD_NOTIFICATION: "/dswd/notification",
-  DSWD_FILE_MAINTENANCE: "/dswd/file-maintenance",
 
   SOCIAL_WORKER: "/social_worker",
   SOCIAL_WORKER_DASHBOARD: "dashboard",
