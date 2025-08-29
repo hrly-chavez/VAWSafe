@@ -1,4 +1,9 @@
-export default function IncidentInfo({ formDataState, setFormDataState }) {
+export default function IncidentInfo({
+  formDataState,
+  setFormDataState,
+  back,
+  next,
+}) {
   const handleChange = (field, value) => {
     setFormDataState((prev) => ({
       ...prev,
@@ -31,14 +36,16 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
   };
 
   return (
-    <div className="p-6 bg-white shadow-md rounded-lg space-y-6">
+    <div>
       <h2 className="text-2xl font-semibold text-gray-800 border-b pb-2">
         Incident Information
       </h2>
 
       {/* Incident Description */}
       <div>
-        <label className="block text-sm font-medium">Details of the Incident</label>
+        <label className="block text-sm font-medium">
+          Details of the Incident
+        </label>
         <input
           type="text"
           placeholder="e.g. Physical altercation at workplace"
@@ -50,7 +57,9 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
 
       {/* Date */}
       <div>
-        <label className="block text-sm font-medium">Date of the Incident</label>
+        <label className="block text-sm font-medium">
+          Date of the Incident
+        </label>
         <input
           type="date"
           className="input"
@@ -61,7 +70,9 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
 
       {/* Time */}
       <div>
-        <label className="block text-sm font-medium">Time of the Incident</label>
+        <label className="block text-sm font-medium">
+          Time of the Incident
+        </label>
         <input
           type="time"
           className="input"
@@ -156,6 +167,20 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
           onChange={(e) => toggleCalamity(e.target.checked)}
         />
       </label>
+
+      {/* buttons */}
+      <button
+        className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600"
+        onClick={back}
+      >
+        Back
+      </button>
+      <button
+        className=" bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+        onClick={next}
+      >
+        Next
+      </button>
     </div>
   );
 }

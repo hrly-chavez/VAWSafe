@@ -1,5 +1,10 @@
 // src/pages/desk_officer/RegisterVictim/AdministrativeInfo.js
-export default function AdministrativeInfo({ formDataState, setFormDataState }) {
+export default function AdministrativeInfo({
+  formDataState,
+  setFormDataState,
+  cancel,
+  next,
+}) {
   const handleChange = (field, value) => {
     setFormDataState((prev) => ({
       ...prev,
@@ -22,14 +27,15 @@ export default function AdministrativeInfo({ formDataState, setFormDataState }) 
     }
   };
 
-  const onTrimmed = (field) => (e) => handleChange(field, e.target.value.trimStart());
+  const onTrimmed = (field) => (e) =>
+    handleChange(field, e.target.value.trimStart());
 
   const showInformant =
     formDataState.report_type &&
     formDataState.report_type !== "Reported by the victim-survivor";
 
   return (
-    <div className="p-6 bg-white shadow-md rounded-lg space-y-6">
+    <div>
       <h2 className="text-2xl font-semibold text-gray-800 border-b pb-2">
         Administrative Information
       </h2>
@@ -77,10 +83,12 @@ export default function AdministrativeInfo({ formDataState, setFormDataState }) 
               Reported by the victim-survivor
             </option>
             <option value="Reported by victim-survivor's companion and victim-survivor is present">
-              Reported by victim-survivor's companion and victim-survivor is present
+              Reported by victim-survivor's companion and victim-survivor is
+              present
             </option>
             <option value="Reported by informant and victim-survivor is not present at reporting">
-              Reported by informant and victim-survivor is not present at reporting
+              Reported by informant and victim-survivor is not present at
+              reporting
             </option>
           </select>
         </div>
@@ -89,7 +97,9 @@ export default function AdministrativeInfo({ formDataState, setFormDataState }) 
       {/* Informant details (only when applicable) */}
       {showInformant && (
         <div className="mt-6 border-t pt-4">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">Informant Details</h3>
+          <h3 className="text-lg font-semibold text-gray-700 mb-4">
+            Informant Details
+          </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -133,6 +143,20 @@ export default function AdministrativeInfo({ formDataState, setFormDataState }) 
           </div>
         </div>
       )}
+
+      {/* buttons */}
+      <button
+        className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600"
+        onClick={cancel}
+      >
+        Cancel
+      </button>
+      <button
+        className=" bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+        onClick={next}
+      >
+        Next
+      </button>
     </div>
   );
 }

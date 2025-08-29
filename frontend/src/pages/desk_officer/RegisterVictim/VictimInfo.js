@@ -1,7 +1,11 @@
-
 import { useEffect } from "react";
 
-export default function VictimInfo({ formDataState, setFormDataState }) {
+export default function VictimInfo({
+  formDataState,
+  setFormDataState,
+  back,
+  next,
+}) {
   // Utility to calculate if victim is minor
   function isMinor(birthDate) {
     if (!birthDate) return false;
@@ -11,7 +15,8 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
       today.getFullYear() -
       birth.getFullYear() -
       (today.getMonth() < birth.getMonth() ||
-      (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())
+      (today.getMonth() === birth.getMonth() &&
+        today.getDate() < birth.getDate())
         ? 1
         : 0);
     return age < 18;
@@ -129,21 +134,27 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
               type="text"
               placeholder="Guardian First Name"
               value={formDataState.guardian_first_name || ""}
-              onChange={(e) => handleChange("guardian_first_name", e.target.value)}
+              onChange={(e) =>
+                handleChange("guardian_first_name", e.target.value)
+              }
             />
             <input
               className="input"
               type="text"
               placeholder="Guardian Middle Name"
               value={formDataState.guardian_middle_name || ""}
-              onChange={(e) => handleChange("guardian_middle_name", e.target.value)}
+              onChange={(e) =>
+                handleChange("guardian_middle_name", e.target.value)
+              }
             />
             <input
               className="input"
               type="text"
               placeholder="Guardian Last Name"
               value={formDataState.guardian_last_name || ""}
-              onChange={(e) => handleChange("guardian_last_name", e.target.value)}
+              onChange={(e) =>
+                handleChange("guardian_last_name", e.target.value)
+              }
             />
             <input
               className="input"
@@ -174,7 +185,9 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         <select
           className="input"
           value={formDataState.vic_educational_attainment || ""}
-          onChange={(e) => handleChange("vic_educational_attainment", e.target.value)}
+          onChange={(e) =>
+            handleChange("vic_educational_attainment", e.target.value)
+          }
         >
           <option value="">Educational Attainment</option>
           <option value="No Formal Education">No formal education</option>
@@ -250,7 +263,9 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
           <option value="">Migratory Status</option>
           <option value="Current OFW">Current OFW</option>
           <option value="Former/Returning OFW">Former/Returning OFW</option>
-          <option value="Seeking employment abroad">Seeking employment abroad</option>
+          <option value="Seeking employment abroad">
+            Seeking employment abroad
+          </option>
           <option value="Not Applicable">Not Applicable</option>
         </select>
 
@@ -284,14 +299,22 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         >
           <option value="">PWD Status</option>
           <option value="None">None</option>
-          <option value="Deaf or Hard of Hearing">Deaf or Hard of Hearing</option>
-          <option value="Intellectual Disability">Intellectual Disability</option>
+          <option value="Deaf or Hard of Hearing">
+            Deaf or Hard of Hearing
+          </option>
+          <option value="Intellectual Disability">
+            Intellectual Disability
+          </option>
           <option value="Learning Disability">Learning Disability</option>
           <option value="Mental Disability">Mental Disability</option>
           <option value="Orthopedic Disability">Orthopedic Disability</option>
           <option value="Physical Disability">Physical Disability</option>
-          <option value="Psychological Disability">Psychological Disability</option>
-          <option value="Speech and Language Disability">Speech and Language Disability</option>
+          <option value="Psychological Disability">
+            Psychological Disability
+          </option>
+          <option value="Speech and Language Disability">
+            Speech and Language Disability
+          </option>
           <option value="Visual Disability">Visual Disability</option>
         </select>
       </div>
@@ -304,6 +327,20 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         value={formDataState.vic_contact_number || ""}
         onChange={(e) => handleChange("vic_contact_number", e.target.value)}
       />
+
+      {/* buttons */}
+      <button
+        className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600"
+        onClick={back}
+      >
+        Back
+      </button>
+      <button
+        className=" bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+        onClick={next}
+      >
+        Next
+      </button>
     </div>
   );
 }

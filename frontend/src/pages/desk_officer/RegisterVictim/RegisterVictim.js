@@ -1,6 +1,7 @@
 // src/pages/desk_officer/RegisterVictim/RegisterVictim.js
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import Navbar from "../components/navBar";
 import Sidebar from "../components/sideBar";
@@ -91,6 +92,19 @@ const hasAny = (state, keys) =>
   );
 
 export default function RegisterVictim() {
+  // for multi step form
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
+  const next = () => setCurrentStep((prev) => prev + 1);
+  const back = () => setCurrentStep((prev) => prev - 1);
+  const cancel = () => {
+    alert("Form cancelled!");
+    // setFormData({});
+    setCurrentStep(1);
+    // Redirect to another page
+    navigate("/desk_officer/");
+  };
+
   const location = useLocation();
   const victimPhotos = location.state?.victimPhotos || [];
 
@@ -107,7 +121,9 @@ export default function RegisterVictim() {
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      setStatusMessage("⏳ Processing registration... please wait while we process photos and save information.");
+      setStatusMessage(
+        "⏳ Processing registration... please wait while we process photos and save information."
+      );
 
       // Required fields
       for (const k of REQUIRED_VICTIM_KEYS) {
@@ -185,7 +201,7 @@ export default function RegisterVictim() {
       if (!res.ok || payload?.success === false) {
         const errors = payload?.errors;
         let msg = payload?.error || "❌ Registration failed.";
-        
+
         if (errors && typeof errors === "object") {
           const lines = Object.entries(errors).map(
             ([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`
@@ -207,6 +223,51 @@ export default function RegisterVictim() {
     }
   };
 
+  const renderForm = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <AdministrativeInfo
+            formDataState={formDataState}
+            setFormDataState={setFormDataState}
+            cancel={cancel}
+            next={next}
+          />
+        );
+      case 2:
+        return (
+          <VictimInfo
+            formDataState={formDataState}
+            setFormDataState={setFormDataState}
+            back={back}
+            next={next}
+          />
+        );
+      case 3:
+        return (
+          <IncidentInfo
+            formDataState={formDataState}
+            setFormDataState={setFormDataState}
+            back={back}
+            next={next}
+          />
+        );
+      case 4:
+        return (
+          <PerpetratorInfo
+            formDataState={formDataState}
+            setFormDataState={setFormDataState}
+            cancel={cancel}
+            back={back}
+            submit={handleSubmit}
+            loading={loading}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="outline-2">
       <Navbar />
@@ -214,22 +275,7 @@ export default function RegisterVictim() {
         <Sidebar />
         <div className="h-[80vh] overflow-y-auto w-full">
           <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
-            <AdministrativeInfo
-              formDataState={formDataState}
-              setFormDataState={setFormDataState}
-            />
-            <VictimInfo
-              formDataState={formDataState}
-              setFormDataState={setFormDataState}
-            />
-            <IncidentInfo
-              formDataState={formDataState}
-              setFormDataState={setFormDataState}
-            />
-            <PerpetratorInfo
-              formDataState={formDataState}
-              setFormDataState={setFormDataState}
-            />
+            {renderForm()}
 
             {/* Status banner */}
             {statusMessage && (
@@ -246,17 +292,16 @@ export default function RegisterVictim() {
               </div>
             )}
 
-            <button
+            {/* <button
               onClick={handleSubmit}
               disabled={loading}
               className="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition disabled:opacity-50"
             >
               {loading ? "Submitting..." : "Submit"}
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
     </div>
   );
 }
-
