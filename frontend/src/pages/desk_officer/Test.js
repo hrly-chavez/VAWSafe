@@ -1,5 +1,6 @@
-import Navbar from "../navBar";
-import Sidebar from "../sideBar";
+import Navbar from "./navBar";
+import Sidebar from "./sideBar";
+
 export default function DeskOfficerPage() {
   return (
     <div>
@@ -8,7 +9,7 @@ export default function DeskOfficerPage() {
         <div>
           <Sidebar></Sidebar>
         </div>
-        <div>desk officer</div>
+        <div>Main Content</div>
       </div>
     </div>
   );
