@@ -208,7 +208,6 @@ class IncidentInformation(models.Model):
         ('Others', 'Others'),
     ]
     incident_id = models.AutoField(primary_key=True)
-    
     incident_description = models.TextField()
     incident_date = models.DateField()
     incident_time = models.TimeField()

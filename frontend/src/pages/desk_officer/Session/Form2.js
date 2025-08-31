@@ -1,5 +1,5 @@
-import Sidebar from "../components/sideBar";
-import Navbar from "../components/navBar";
+import Sidebar from "../sideBar";
+import Navbar from "../navBar";
 
 export default function Form2({ back, next }) {
   return (

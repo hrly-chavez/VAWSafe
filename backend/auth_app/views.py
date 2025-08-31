@@ -15,7 +15,7 @@ from vawsafe_core.blink_model.blink_utils import detect_blink
 
 
 class create_official(APIView):
-    parser_classes = [MultiPartParser, FormParser]  # Para mo dawat og file uploads or plain text
+    parser_classes = [MultiPartParser, FormParser]  
 
     def post(self, request):
         serializer = OfficialSerializer(data=request.data)
@@ -34,11 +34,11 @@ class create_official(APIView):
         official = Official.objects.create(account=account, **serializer.validated_data)
 
         # Step 2: Load photos
-        photo_files = request.FILES.getlist("of_photos")  #kuhaon ang uploaded files from multipart request.
+        photo_files = request.FILES.getlist("of_photos")  
         if not photo_files:
             single_photo = request.FILES.get("of_photo")
             if single_photo:                                
-                photo_files = [single_photo]   #I array 
+                photo_files = [single_photo]   #
 
         if not photo_files:
             print("[WARN] No photo(s) provided for face samples")
@@ -51,9 +51,9 @@ class create_official(APIView):
         # Step 3: Process embeddings
         created_count = 0   
         for index, file in enumerate(photo_files):
-            temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") # temp file
+            temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") 
             try:
-                image = Image.open(file).convert("RGB")   # used pillow to opem the file
+                image = Image.open(file).convert("RGB")   
                 image.save(temp_image, format="JPEG")
                 temp_image.flush()
                 temp_image.close()
@@ -81,7 +81,7 @@ class create_official(APIView):
                     photo=file,
                     embedding=embedding_vector
                 )
-                created_count += 1  #1 row per photo in postgre
+                created_count += 1  #1 row per photo 
                 print(f"[INFO] Face sample #{index + 1} saved for {official.full_name}")
 
             except Exception as e:
@@ -95,7 +95,7 @@ class create_official(APIView):
             return Response({"error": "Face registration failed. Please upload clearer photos."}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({
-            "message": f"✅ Registration successful. {created_count} face sample(s) saved.",
+            "message": f" Registration successful. {created_count} face sample(s) saved.",
             "official_id": official.of_id,
             "username": generated_username,
             "password": generated_password,
@@ -118,7 +118,7 @@ class face_login(APIView):
         lowest_distance = float("inf")
 
         try:
-            # Loop over candidate frames
+            # Loop over candidate frames (blink ±1 from frontend)
             for file in uploaded_frames:
                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
                 image = Image.open(file).convert("RGB")
@@ -136,7 +136,8 @@ class face_login(APIView):
                                 enforce_detection=True
                             )
                             official = sample.official
-                            print(f"[DEBUG] Compared {temp_image.name} with {official.full_name}, distance={result['distance']:.4f}")
+                            # ✅ Always print distance and verified (True/False)
+                            print(f"[DEBUG] Compared {official.full_name}, distance={result['distance']:.4f}, verified={result['verified']}")
 
                             if result["verified"] and result["distance"] < lowest_distance:
                                 lowest_distance = result["distance"]
@@ -174,6 +175,7 @@ class face_login(APIView):
                     "profile_photo_url": profile_photo_url
                 }, status=200)
 
+            print("[INFO] No matching face found")
             return Response({"match": False, "message": "No matching face found."}, status=404)
 
         except Exception as e:
@@ -183,7 +185,6 @@ class face_login(APIView):
                 "error": str(e),
                 "suggestion": "Something went wrong with face verification."
             }, status=400)
-
 
 
 class blick_check(APIView):
@@ -254,3 +255,4 @@ class manual_login(APIView):
             return Response({"match": False, "message": "Invalid username or password"}, status=status.HTTP_404_NOT_FOUND)
         except Official.DoesNotExist:
             return Response({"match": False, "message": "Linked official not found"}, status=status.HTTP_404_NOT_FOUND)
+
