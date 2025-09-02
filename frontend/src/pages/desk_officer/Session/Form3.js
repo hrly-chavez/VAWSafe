@@ -106,20 +106,8 @@ export default function Form3({ back, cancel }) {
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 mt-4">
-            <button
-              className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600"
-              onClick={cancel}
-            >
-              CANCEL
-            </button>
-            <button
-              className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600"
-              onClick={back}
-            >
-              BACK
-            </button>
             <button className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">
-              CONTINUE
+              Submit
             </button>
           </div>
         </div>
