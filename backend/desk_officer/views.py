@@ -24,7 +24,7 @@ def get_victims(request):
 
 
 
-# WORKING, NO PROBLEM (BACK UP)
+
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
 @transaction.atomic
