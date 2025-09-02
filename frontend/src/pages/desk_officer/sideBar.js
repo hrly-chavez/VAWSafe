@@ -39,7 +39,7 @@ export default function Sidebar() {
     {
       icon: "/images/tools.png",
       label: "VAWC Victims",
-      path: "/desk_officer/session",
+      path: "/desk_officer/victims",
     },
     {
       icon: "/images/tools.png",

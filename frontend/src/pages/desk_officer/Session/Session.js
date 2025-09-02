@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 
 // pages
 import FaceRecog from "./FaceRecog";
-import Form2 from "./Form2";
+import Schedule from "./Schedule";
 import Form3 from "./Form3";
-import Navbar from "../components/navBar";
-import Sidebar from "../components/sideBar";
+import Navbar from "../navBar";
+import Sidebar from "../sideBar";
 
 export default function Session() {
   const navigate = useNavigate();
@@ -33,23 +33,14 @@ export default function Session() {
     switch (currentStep) {
       case 1:
         return (
-          <FaceRecog
-            // formData={formData}
-            // setFormData={setFormData}
-            cancel={cancel}
-            next={next}
-          />
-        );
-      case 2:
-        return (
-          <Form2
+          <Schedule
             // formData={formData}
             // setFormData={setFormData}
             back={back}
             next={next}
           />
         );
-      case 3:
+      case 2:
         return (
           <Form3
             // formData={formData}
