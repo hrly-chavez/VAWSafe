@@ -1,7 +1,5 @@
-// src/pages/desk_officer/RegisterVictim/RegisterVictim.js
-import { useState } from "react";
-import { useLocation } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import Navbar from "../components/navBar";
 import Sidebar from "../components/sideBar";
@@ -86,221 +84,294 @@ const PERP_KEYS = [
   "per_non_state_actor_detail",
 ];
 
+// Utility to check if any relevant fields are filled
 const hasAny = (state, keys) =>
   keys.some(
-    (k) => state[k] !== undefined && state[k] !== "" && state[k] !== null
+    (key) => state[key] !== undefined && state[key] !== "" && state[key] !== null
   );
 
 export default function RegisterVictim() {
-  // for multi step form
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
-  const next = () => setCurrentStep((prev) => prev + 1);
-  const back = () => setCurrentStep((prev) => prev - 1);
-  const cancel = () => {
-    alert("Form cancelled!");
-    // setFormData({});
-    setCurrentStep(1);
-    // Redirect to another page
-    navigate("/desk_officer/");
-  };
-
   const location = useLocation();
   const victimPhotos = location.state?.victimPhotos || [];
 
-  // Unified state passed to all child sections
+  const [currentStep, setCurrentStep] = useState(1);
   const [formDataState, setFormDataState] = useState({
     vic_first_name: "",
     vic_last_name: "",
     vic_sex: "",
   });
 
+  const [openSections, setOpenSections] = useState({
+    adminInfo: false,
+    victimInfo: false,
+    incidentInfo: false,
+    perpInfo: false,
+  });
+
   const [statusMessage, setStatusMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const cancel = () => {
+    alert("Form cancelled!");
+    setCurrentStep(1);
+    navigate("/desk_officer/");
+  };
+
+  const toggleSection = (section) => {
+    setOpenSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
+
   const handleSubmit = async () => {
-    // try {
-    //   setLoading(true);
-    //   setStatusMessage(
-    //     "⏳ Processing registration... please wait while we process photos and save information."
-    //   );
+    try {
+      setLoading(true);
+      setStatusMessage("⏳ Processing registration...");
 
-    //   // Required fields
-    //   for (const k of REQUIRED_VICTIM_KEYS) {
-    //     if (!formDataState[k]) {
-    //       setStatusMessage(`❌ Missing required victim field: ${k}`);
-    //       setLoading(false);
-    //       return;
-    //     }
-    //   }
-    //   if (victimPhotos.length !== 3 || victimPhotos.some((p) => !p)) {
-    //     setStatusMessage("❌ Please capture exactly 3 victim photos.");
-    //     setLoading(false);
-    //     return;
-    //   }
+      // Required fields
+      // for (const k of REQUIRED_VICTIM_KEYS) {
+      //   if (!formDataState[k]) {
+      //     setStatusMessage(`❌ Missing required victim field: ${k}`);
+      //     setLoading(false);
+      //     return;
+      //   }
+      // }
+      // if (victimPhotos.length !== 3 || victimPhotos.some((p) => !p)) {
+      //   setStatusMessage("❌ Please capture exactly 3 victim photos.");
+      //   setLoading(false);
+      //   return;
+      // }
 
-    //   // Victim payload (only include filled fields)
-    //   const victimPayload = {};
-    //   VICTIM_FIELDS.forEach((k) => {
-    //     const v = formDataState[k];
-    //     if (v !== undefined && v !== null && v !== "") {
-    //       victimPayload[k] = v;
-    //     }
-    //   });
+      // Victim payload (only include filled fields)
+      const victimPayload = {};
+      VICTIM_FIELDS.forEach((k) => {
+        const v = formDataState[k];
+        if (v !== undefined && v !== null && v !== "") {
+          victimPayload[k] = v;
+        }
+      }); 
 
-    //   // Optional sections (only include if something was filled)
-    //   const caseReportPayload = hasAny(formDataState, CASE_REPORT_KEYS)
-    //     ? Object.fromEntries(
-    //         CASE_REPORT_KEYS.map((k) => [k, formDataState[k] ?? ""])
-    //       )
-    //     : null;
+      // Optional sections (only include if something was filled)
+      const caseReportPayload = hasAny(formDataState, CASE_REPORT_KEYS)
+        ? Object.fromEntries(
+          CASE_REPORT_KEYS.map((k) => [k, formDataState[k] ?? ""])
+        )
+        : null;
 
-    //   const incidentPayload = hasAny(formDataState, INCIDENT_KEYS)
-    //     ? Object.fromEntries(
-    //         INCIDENT_KEYS.map((k) => [
-    //           k,
-    //           typeof formDataState[k] === "boolean"
-    //             ? !!formDataState[k]
-    //             : formDataState[k] ?? "",
-    //         ])
-    //       )
-    //     : null;
+      const incidentPayload = hasAny(formDataState, INCIDENT_KEYS)
+        ? Object.fromEntries(
+          INCIDENT_KEYS.map((k) => [
+            k,
+            typeof formDataState[k] === "boolean"
+              ? !!formDataState[k]
+              : formDataState[k] ?? "",
+          ])
+        )
+        : null;
 
-    //   const perpetratorPayload = hasAny(formDataState, PERP_KEYS)
-    //     ? Object.fromEntries(PERP_KEYS.map((k) => [k, formDataState[k] ?? ""]))
-    //     : null;
+      const perpetratorPayload = hasAny(formDataState, PERP_KEYS)
+        ? Object.fromEntries(PERP_KEYS.map((k) => [k, formDataState[k] ?? ""]))
+        : null;
 
-    //   // Build multipart form-data for the unified endpoint
-    //   const fd = new FormData();
-    //   fd.append("victim", JSON.stringify(victimPayload));
-    //   if (caseReportPayload)
-    //     fd.append("case_report", JSON.stringify(caseReportPayload));
-    //   if (incidentPayload)
-    //     fd.append("incident", JSON.stringify(incidentPayload));
-    //   if (perpetratorPayload)
-    //     fd.append("perpetrator", JSON.stringify(perpetratorPayload));
-    //   victimPhotos.forEach((file) => fd.append("photos", file));
+      // Build multipart form-data for the unified endpoint
+      const fd = new FormData();
+      fd.append("victim", JSON.stringify(victimPayload));
+      if (caseReportPayload)
+        fd.append("case_report", JSON.stringify(caseReportPayload));
+      if (incidentPayload)
+        fd.append("incident", JSON.stringify(incidentPayload));
+      if (perpetratorPayload)
+        fd.append("perpetrator", JSON.stringify(perpetratorPayload));
+      victimPhotos.forEach((file) => fd.append("photos", file));
 
-    //   const res = await fetch(
-    //     `${API_BASE}/api/desk_officer/victims/register/`,
-    //     {
-    //       method: "POST",
-    //       body: fd, // don't set Content-Type manually
-    //     }
-    //   );
+      const res = await fetch(
+        `${API_BASE}/api/desk_officer/victims/register/`,
+        {
+          method: "POST",
+          body: fd, // don't set Content-Type manually
+        }
+      );
 
-    //   // Parse JSON if possible, otherwise keep raw response for debugging
-    //   const raw = await res.text();
-    //   let payload;
-    //   try {
-    //     payload = JSON.parse(raw);
-    //   } catch {
-    //     payload = { raw };
-    //   }
+      // Parse JSON if possible, otherwise keep raw response for debugging
+      const raw = await res.text();
+      let payload;
+      try {
+        payload = JSON.parse(raw);
+      } catch {
+        payload = { raw };
+      }
 
-    //   if (!res.ok || payload?.success === false) {
-    //     const errors = payload?.errors;
-    //     let msg = payload?.error || "❌ Registration failed.";
+      if (!res.ok || payload?.success === false) {
+        const errors = payload?.errors;
+        let msg = payload?.error || "❌ Registration failed.";
 
-    //     if (errors && typeof errors === "object") {
-    //       const lines = Object.entries(errors).map(
-    //         ([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`
-    //       );
-    //       msg = `❌ Registration failed:\n${lines.join("\n")}`;
-    //     }
-    //     console.error("Register error payload:", payload);
-    //     setStatusMessage(msg);
-    //     setLoading(false);
-    //     return;
-    //   }
+        if (errors && typeof errors === "object") {
+          const lines = Object.entries(errors).map(
+            ([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`
+          );
+          msg = `❌ Registration failed:\n${lines.join("\n")}`;
+        }
+        console.error("Register error payload:", payload);
+        setStatusMessage(msg);
+        setLoading(false);
+        return;
+      }
 
-    //   setStatusMessage("✅ Victim registered successfully!");
-    //   setLoading(false);
-    // } catch (err) {
-    //   console.error("Register victim exception:", err);
-    //   setStatusMessage("❌ Something went wrong.");
-    //   setLoading(false);
-    // }
+      setStatusMessage("✅ Victim registered successfully!");
+      setLoading(false);
+    } catch (err) {
+      console.error("Register victim exception:", err);
+      setStatusMessage("❌ Something went wrong.");
+      setLoading(false);
+    }
 
     navigate("/desk_officer/session")
   };
 
-  const renderForm = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <AdministrativeInfo
-            formDataState={formDataState}
-            setFormDataState={setFormDataState}
-            cancel={cancel}
-            next={next}
-          />
-        );
-      case 2:
-        return (
-          <VictimInfo
-            formDataState={formDataState}
-            setFormDataState={setFormDataState}
-            back={back}
-            next={next}
-          />
-        );
-      case 3:
-        return (
-          <IncidentInfo
-            formDataState={formDataState}
-            setFormDataState={setFormDataState}
-            back={back}
-            next={next}
-          />
-        );
-      case 4:
-        return (
-          <PerpetratorInfo
-            formDataState={formDataState}
-            setFormDataState={setFormDataState}
-            cancel={cancel}
-            back={back}
-            submit={handleSubmit}
-            loading={loading}
-          />
-        );
-      default:
-        return null;
+  const isFormValid = () => {
+    // Check required victim fields
+    for (const key of REQUIRED_VICTIM_KEYS) {
+      if (!formDataState[key]) return false;
     }
+
+    // Optional: check other required fields from incident or perpetrator if needed
+    // Example: if you want to require perpetrator name
+    if (!formDataState["per_first_name"] || !formDataState["incident_description"]) {
+      return false;
+    }
+
+    // Check photo count
+    if (victimPhotos.length !== 3 || victimPhotos.some((p) => !p)) return false;
+
+    return true;
   };
 
   return (
-    <div className="outline-2">
+    <div>
       <Navbar />
       <div className="flex flex-row">
         <Sidebar />
-        <div className="h-[80vh] overflow-y-auto w-full">
-          <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
-            {renderForm()}
+        <div className="h-[85vh] overflow-y-auto w-full p-6">
+          <div className="border-2 border-blue-600 rounded-lg p-6 bg-white max-w-5xl mx-auto shadow">
+            {/* Header */}
+            <h2 className="text-xl font-bold text-blue-800 mb-4">
+              Victim Registration
+            </h2>
+            <div className="bg-gray-100 border rounded p-3 mb-4 text-sm">
+              <strong>NATIONAL VIOLENCE AGAINST WOMEN (NVAW) DOCUMENTATION SYSTEM</strong> (Intake Form)
+            </div>
+
+            {/* Administrative Info */}
+            <div className="mb-4">
+              <button
+                onClick={() => toggleSection("adminInfo")}
+                className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
+              >
+                {openSections.adminInfo ? "▼" : "▶"} Barangay Client Card
+              </button>
+              {openSections.adminInfo && (
+                <div className="mt-4 border-l-4 border-blue-500 pl-4">
+                  <AdministrativeInfo
+                    formDataState={formDataState}
+                    setFormDataState={setFormDataState}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Victim Info */}
+            <div className="mb-4">
+              <button
+                onClick={() => toggleSection("victimInfo")}
+                className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
+              >
+                {openSections.victimInfo ? "▼" : "▶"} Victim-Survivor Information
+              </button>
+              {openSections.victimInfo && (
+                <div className="mt-4 border-l-4 border-blue-500 pl-4">
+                  <VictimInfo
+                    formDataState={formDataState}
+                    setFormDataState={setFormDataState}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Perpetrator Info */}
+            <div className="mb-4">
+              <button
+                onClick={() => toggleSection("perpInfo")}
+                className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
+              >
+                {openSections.perpInfo ? "▼" : "▶"} Alleged Perpetrator Information
+              </button>
+              {openSections.perpInfo && (
+                <div className="mt-4 border-l-4 border-blue-500 pl-4">
+                  <PerpetratorInfo
+                    formDataState={formDataState}
+                    setFormDataState={setFormDataState}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Incident Report */}
+            <div className="mb-4">
+              <button
+                onClick={() => toggleSection("incidentInfo")}
+                className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
+              >
+                {openSections.incidentInfo ? "▼" : "▶"} Incident Report
+              </button>
+              {openSections.incidentInfo && (
+                <div className="mt-4 border-l-4 border-blue-500 pl-4">
+                  <IncidentInfo
+                    formDataState={formDataState}
+                    setFormDataState={setFormDataState}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Notes */}
+            <div className="mt-6 space-y-1 text-red-600 text-sm">
+              <p>EVIDENCES AND RECORDS</p>
+              <p className="text-black">Note to Barangay VAW Desk Officer</p>
+            </div>
 
             {/* Status banner */}
             {statusMessage && (
               <div
-                className={`p-3 rounded ${
-                  statusMessage.startsWith("✅")
-                    ? "bg-green-100 text-green-800"
-                    : statusMessage.startsWith("⏳")
+                className={`mt-4 p-3 rounded text-sm ${statusMessage.startsWith("✅")
+                  ? "bg-green-100 text-green-800"
+                  : statusMessage.startsWith("⏳")
                     ? "bg-yellow-100 text-yellow-800"
                     : "bg-red-100 text-red-800"
-                }`}
+                  }`}
               >
                 {statusMessage}
               </div>
             )}
 
-            {/* <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition disabled:opacity-50"
-            >
-              {loading ? "Submitting..." : "Submit"}
-            </button> */}
+            {/* Footer buttons */}
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={cancel}
+                className="bg-red-600 text-white px-5 py-2 rounded hover:bg-red-700"
+              >
+                CANCEL FORM
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className={`px-5 py-2 rounded text-white font-semibold transition ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+                  }`}
+              >
+                {loading ? "Submitting..." : "SUBMIT FORM"}
+              </button>
+            </div>
           </div>
         </div>
       </div>

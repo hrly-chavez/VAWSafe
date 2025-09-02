@@ -1,16 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Imbue:wght@400;600;700&family=Poppins:wght@300;400;600&display=swap');
 
 .navbar {
-  display: flex;
-  justify-content: space-between;
   background-color: #ffffff;
-  align-items: center;
-  padding: 5px 30px;
+  padding: 10px 20px;
   box-shadow: 0 5px 5px rgba(0, 0, 0, 0.1);
   border-bottom: 2px solid #464646;
   position: sticky;
   top: 0;
-  z-index: 1000; /* ensures it stays above other elements */
+  z-index: 1000;
+  /* ensures it stays above other elements */
+}
+
+.navbar-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 /* .navbar {
@@ -21,55 +27,88 @@
   z-index: 1000;
 } */
 
+/* Sections */
 .navbar-section {
-  flex: 1;
+  gap: 15px;
+  flex: 1 1 100%;
   display: flex;
   align-items: center;
-}
-
-/* LEFT SECTION */
-.left-section {
-  justify-content: flex-start;
-  gap: 15px;
-}
-
-.center-section {
   justify-content: center;
+  text-align: center;
 }
 
-.right-section {
-  justify-content: flex-end;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: large;
-  color: #333;
-  white-space: nowrap;
+@media (min-width: 640px) {
+  .navbar-section {
+    flex: 1;
+    margin-bottom: 0;
+    text-align: left;
+  }
+
+  /* LEFT SECTION */
+  .left-section {
+    justify-content: flex-start;
+  }
+
+  .center-section {
+    justify-content: center;
+  }
+
+  .right-section {
+    justify-content: flex-end;
+  }
 }
 
 /* TITLE TEXT */
 .title {
-  font-size: 18px;
+  font-size: 16px;
   font-family: 'Poppins', sans-serif;
   color: #292D96;
   font-weight: 500;
-  white-space: nowrap;
   letter-spacing: 0.5px;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 18px;
+    white-space: nowrap;
+  }
 }
 
 /* LOGO STYLES */
 .DSWD-img {
-  width: 100px;
+  width: 80px;
   border-radius: 5px;
 }
 
 .iacat-img,
 .iacvawc-img {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   border-radius: 5px;
 }
 
-.date-time {
-  margin: 0;
+@media (min-width: 768px) {
+  .DSWD-img {
+    width: 100px;
+  }
+
+  .iacat-img,
+  .iacvawc-img {
+    width: 60px;
+    height: 60px;
+  }
 }
 
+.date-time {
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
+}
 
+@media (min-width: 768px) {
+  .date-time {
+    font-size: 16px;
+  }
+}
