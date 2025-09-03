@@ -23,14 +23,14 @@ export default function Sidebar() {
     },
     {
       icon: "/images/tools.png",
-      label: "Facial Recognition",
-      path: "/desk_officer/victim_facial",
-    },
-    {
-      icon: "/images/tools.png",
       label: "Register Victim",
       path: "/desk_officer/register_victim",
     },
+    // {
+    //   icon: "/images/tools.png",
+    //   label: "Register Victim",
+    //   path: "/desk_officer/register_victim",
+    // },
     {
       icon: "/images/tools.png",
       label: "Sessions",

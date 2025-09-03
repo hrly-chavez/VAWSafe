@@ -2,8 +2,6 @@
 export default function AdministrativeInfo({
   formDataState,
   setFormDataState,
-  cancel,
-  next,
 }) {
   const handleChange = (field, value) => {
     setFormDataState((prev) => ({
@@ -35,8 +33,8 @@ export default function AdministrativeInfo({
     formDataState.report_type !== "Reported by the victim-survivor";
 
   return (
-    <div>
-      <h2 className="text-2xl font-semibold text-gray-800 border-b pb-2">
+    <div className="bg-white p-6 rounded-xl shadow-md space-y-6">
+      <h2 className="text-2xl font-bold text-blue-800 border-b pb-2 tracking-wide">
         Administrative Information
       </h2>
 
@@ -47,11 +45,11 @@ export default function AdministrativeInfo({
             Handling Organization
           </label>
           <input
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="text"
+            placeholder="e.g. DSWD"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm"
             value={formDataState.handling_org || ""}
             onChange={onTrimmed("handling_org")}
-            placeholder="e.g. DSWD"
           />
         </div>
 
@@ -60,11 +58,11 @@ export default function AdministrativeInfo({
             Office Address
           </label>
           <input
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="text"
+            placeholder="e.g. Quezon City, Metro Manila"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm"
             value={formDataState.office_address || ""}
             onChange={onTrimmed("office_address")}
-            placeholder="e.g. Quezon City, Metro Manila"
           />
         </div>
 
@@ -74,7 +72,7 @@ export default function AdministrativeInfo({
             Report Type
           </label>
           <select
-            className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm bg-white"
             value={formDataState.report_type || ""}
             onChange={(e) => handleReportType(e.target.value)}
           >
@@ -83,12 +81,10 @@ export default function AdministrativeInfo({
               Reported by the victim-survivor
             </option>
             <option value="Reported by victim-survivor's companion and victim-survivor is present">
-              Reported by victim-survivor's companion and victim-survivor is
-              present
+              Reported by victim-survivor's companion and victim-survivor is present
             </option>
             <option value="Reported by informant and victim-survivor is not present at reporting">
-              Reported by informant and victim-survivor is not present at
-              reporting
+              Reported by informant and victim-survivor is not present at reporting
             </option>
           </select>
         </div>
@@ -96,8 +92,8 @@ export default function AdministrativeInfo({
 
       {/* Informant details (only when applicable) */}
       {showInformant && (
-        <div className="mt-6 border-t pt-4">
-          <h3 className="text-lg font-semibold text-gray-700 mb-4">
+        <div className="mt-6 border-t pt-4 space-y-4">
+          <h3 className="text-lg font-semibold text-gray-800 tracking-wide">
             Informant Details
           </h3>
 
@@ -107,11 +103,11 @@ export default function AdministrativeInfo({
                 Name of Informant
               </label>
               <input
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 type="text"
+                placeholder="e.g. Juan Dela Cruz"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm"
                 value={formDataState.informant_name || ""}
                 onChange={onTrimmed("informant_name")}
-                placeholder="e.g. Juan Dela Cruz"
               />
             </div>
 
@@ -120,11 +116,11 @@ export default function AdministrativeInfo({
                 Relationship to Victim
               </label>
               <input
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 type="text"
+                placeholder="e.g. Friend, Relative"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm"
                 value={formDataState.informant_relationship || ""}
                 onChange={onTrimmed("informant_relationship")}
-                placeholder="e.g. Friend, Relative"
               />
             </div>
 
@@ -133,11 +129,11 @@ export default function AdministrativeInfo({
                 Contact Information
               </label>
               <input
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 type="text"
+                placeholder="e.g. 0917 123 4567"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm"
                 value={formDataState.informant_contact || ""}
                 onChange={onTrimmed("informant_contact")}
-                placeholder="e.g. 0917 123 4567"
               />
             </div>
           </div>
