@@ -87,7 +87,8 @@ const PERP_KEYS = [
 // Utility to check if any relevant fields are filled
 const hasAny = (state, keys) =>
   keys.some(
-    (key) => state[key] !== undefined && state[key] !== "" && state[key] !== null
+    (key) =>
+      state[key] !== undefined && state[key] !== "" && state[key] !== null
   );
 
 export default function RegisterVictim() {
@@ -131,18 +132,18 @@ export default function RegisterVictim() {
       setStatusMessage("⏳ Processing registration...");
 
       // Required fields
-      // for (const k of REQUIRED_VICTIM_KEYS) {
-      //   if (!formDataState[k]) {
-      //     setStatusMessage(`❌ Missing required victim field: ${k}`);
-      //     setLoading(false);
-      //     return;
-      //   }
-      // }
-      // if (victimPhotos.length !== 3 || victimPhotos.some((p) => !p)) {
-      //   setStatusMessage("❌ Please capture exactly 3 victim photos.");
-      //   setLoading(false);
-      //   return;
-      // }
+      for (const k of REQUIRED_VICTIM_KEYS) {
+        if (!formDataState[k]) {
+          setStatusMessage(`❌ Missing required victim field: ${k}`);
+          setLoading(false);
+          return;
+        }
+      }
+      if (victimPhotos.length !== 3 || victimPhotos.some((p) => !p)) {
+        setStatusMessage("❌ Please capture exactly 3 victim photos.");
+        setLoading(false);
+        return;
+      }
 
       // Victim payload (only include filled fields)
       const victimPayload = {};
@@ -151,76 +152,76 @@ export default function RegisterVictim() {
         if (v !== undefined && v !== null && v !== "") {
           victimPayload[k] = v;
         }
-      }); 
+      });
 
       // Optional sections (only include if something was filled)
       const caseReportPayload = hasAny(formDataState, CASE_REPORT_KEYS)
         ? Object.fromEntries(
-          CASE_REPORT_KEYS.map((k) => [k, formDataState[k] ?? ""])
-        )
+            CASE_REPORT_KEYS.map((k) => [k, formDataState[k] ?? ""])
+          )
         : null;
 
       const incidentPayload = hasAny(formDataState, INCIDENT_KEYS)
         ? Object.fromEntries(
-          INCIDENT_KEYS.map((k) => [
-            k,
-            typeof formDataState[k] === "boolean"
-              ? !!formDataState[k]
-              : formDataState[k] ?? "",
-          ])
-        )
+            INCIDENT_KEYS.map((k) => [
+              k,
+              typeof formDataState[k] === "boolean"
+                ? !!formDataState[k]
+                : formDataState[k] ?? "",
+            ])
+          )
         : null;
 
-      // const perpetratorPayload = hasAny(formDataState, PERP_KEYS)
-      //   ? Object.fromEntries(PERP_KEYS.map((k) => [k, formDataState[k] ?? ""]))
-      //   : null;
+      const perpetratorPayload = hasAny(formDataState, PERP_KEYS)
+        ? Object.fromEntries(PERP_KEYS.map((k) => [k, formDataState[k] ?? ""]))
+        : null;
 
-      // // Build multipart form-data for the unified endpoint
-      // const fd = new FormData();
-      // fd.append("victim", JSON.stringify(victimPayload));
-      // if (caseReportPayload)
-      //   fd.append("case_report", JSON.stringify(caseReportPayload));
-      // if (incidentPayload)
-      //   fd.append("incident", JSON.stringify(incidentPayload));
-      // if (perpetratorPayload)
-      //   fd.append("perpetrator", JSON.stringify(perpetratorPayload));
-      // victimPhotos.forEach((file) => fd.append("photos", file));
+      // Build multipart form-data for the unified endpoint
+      const fd = new FormData();
+      fd.append("victim", JSON.stringify(victimPayload));
+      if (caseReportPayload)
+        fd.append("case_report", JSON.stringify(caseReportPayload));
+      if (incidentPayload)
+        fd.append("incident", JSON.stringify(incidentPayload));
+      if (perpetratorPayload)
+        fd.append("perpetrator", JSON.stringify(perpetratorPayload));
+      victimPhotos.forEach((file) => fd.append("photos", file));
 
-      // const res = await fetch(
-      //   `${API_BASE}/api/desk_officer/victims/register/`,
-      //   {
-      //     method: "POST",
-      //     body: fd, // don't set Content-Type manually
-      //   }
-      // );
+      const res = await fetch(
+        `${API_BASE}/api/desk_officer/victims/register/`,
+        {
+          method: "POST",
+          body: fd, // don't set Content-Type manually
+        }
+      );
 
-      // // Parse JSON if possible, otherwise keep raw response for debugging
-      // const raw = await res.text();
-      // let payload;
-      // try {
-      //   payload = JSON.parse(raw);
-      // } catch {
-      //   payload = { raw };
-      // }
+      // Parse JSON if possible, otherwise keep raw response for debugging
+      const raw = await res.text();
+      let payload;
+      try {
+        payload = JSON.parse(raw);
+      } catch {
+        payload = { raw };
+      }
 
-      // if (!res.ok || payload?.success === false) {
-      //   const errors = payload?.errors;
-      //   let msg = payload?.error || "❌ Registration failed.";
+      if (!res.ok || payload?.success === false) {
+        const errors = payload?.errors;
+        let msg = payload?.error || "❌ Registration failed.";
 
-      //   if (errors && typeof errors === "object") {
-      //     const lines = Object.entries(errors).map(
-      //       ([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`
-      //     );
-      //     msg = `❌ Registration failed:\n${lines.join("\n")}`;
-      //   }
-      //   console.error("Register error payload:", payload);
-      //   setStatusMessage(msg);
-      //   setLoading(false);
-      //   return;
-      // }
+        if (errors && typeof errors === "object") {
+          const lines = Object.entries(errors).map(
+            ([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`
+          );
+          msg = `❌ Registration failed:\n${lines.join("\n")}`;
+        }
+        console.error("Register error payload:", payload);
+        setStatusMessage(msg);
+        setLoading(false);
+        return;
+      }
 
-      // setStatusMessage("✅ Victim registered successfully!");
-      // setLoading(false);
+      setStatusMessage("✅ Victim registered successfully!");
+      setLoading(false);
       navigate("/desk_officer/session");
     } catch (err) {
       console.error("Register victim exception:", err);
@@ -228,7 +229,7 @@ export default function RegisterVictim() {
       setLoading(false);
     }
 
-    navigate("/desk_officer/session")
+    navigate("/desk_officer/session");
   };
 
   const isFormValid = () => {
@@ -239,7 +240,10 @@ export default function RegisterVictim() {
 
     // Optional: check other required fields from incident or perpetrator if needed
     // Example: if you want to require perpetrator name
-    if (!formDataState["per_first_name"] || !formDataState["incident_description"]) {
+    if (
+      !formDataState["per_first_name"] ||
+      !formDataState["incident_description"]
+    ) {
       return false;
     }
 
@@ -261,7 +265,10 @@ export default function RegisterVictim() {
               Victim Registration
             </h2>
             <div className="bg-gray-100 border rounded p-3 mb-4 text-sm">
-              <strong>NATIONAL VIOLENCE AGAINST WOMEN (NVAW) DOCUMENTATION SYSTEM</strong> (Intake Form)
+              <strong>
+                NATIONAL VIOLENCE AGAINST WOMEN (NVAW) DOCUMENTATION SYSTEM
+              </strong>{" "}
+              (Intake Form)
             </div>
 
             {/* Administrative Info */}
@@ -288,7 +295,8 @@ export default function RegisterVictim() {
                 onClick={() => toggleSection("victimInfo")}
                 className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
               >
-                {openSections.victimInfo ? "▼" : "▶"} Victim-Survivor Information
+                {openSections.victimInfo ? "▼" : "▶"} Victim-Survivor
+                Information
               </button>
               {openSections.victimInfo && (
                 <div className="mt-4 border-l-4 border-blue-500 pl-4">
@@ -306,7 +314,8 @@ export default function RegisterVictim() {
                 onClick={() => toggleSection("perpInfo")}
                 className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
               >
-                {openSections.perpInfo ? "▼" : "▶"} Alleged Perpetrator Information
+                {openSections.perpInfo ? "▼" : "▶"} Alleged Perpetrator
+                Information
               </button>
               {openSections.perpInfo && (
                 <div className="mt-4 border-l-4 border-blue-500 pl-4">
@@ -345,12 +354,13 @@ export default function RegisterVictim() {
             {/* Status banner */}
             {statusMessage && (
               <div
-                className={`mt-4 p-3 rounded text-sm ${statusMessage.startsWith("✅")
-                  ? "bg-green-100 text-green-800"
-                  : statusMessage.startsWith("⏳")
+                className={`mt-4 p-3 rounded text-sm ${
+                  statusMessage.startsWith("✅")
+                    ? "bg-green-100 text-green-800"
+                    : statusMessage.startsWith("⏳")
                     ? "bg-yellow-100 text-yellow-800"
                     : "bg-red-100 text-red-800"
-                  }`}
+                }`}
               >
                 {statusMessage}
               </div>
@@ -367,8 +377,11 @@ export default function RegisterVictim() {
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className={`px-5 py-2 rounded text-white font-semibold transition ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
-                  }`}
+                className={`px-5 py-2 rounded text-white font-semibold transition ${
+                  loading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
               >
                 {loading ? "Submitting..." : "SUBMIT FORM"}
               </button>
