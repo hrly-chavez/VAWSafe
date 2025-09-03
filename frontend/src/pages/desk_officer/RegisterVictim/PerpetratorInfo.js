@@ -117,20 +117,6 @@ export default function PerpetratorInfo({
       </div>
 
       {/* Keep more fields only if they exist in the model */}
-      {/* buttons */}
-      <button
-        className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600"
-        onClick={back}
-      >
-        Back
-      </button>
-      <button
-        onClick={submit}
-        disabled={loading}
-        className=" bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-      >
-        {loading ? "Submitting..." : "Submit"}
-      </button>
     </div>
   );
 }

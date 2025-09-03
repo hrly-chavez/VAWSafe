@@ -1,25 +1,77 @@
 /* LoginPage.css */
 
 .status-message {
+  width: 100%;
+  max-width: 360px;
   margin-top: 1rem;
-  font-size: 14px;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.875rem; /* smaller text */
+  font-weight: 500;
   text-align: center;
-  font-weight: bold;
+  color: #f0f0f0;
+  background-color: rgba(60, 60, 60, 0.4); /* translucent gray */
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .status-success {
-  color: #28a745;
+  background-color: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
   animation: pulseSuccess 1s ease-in-out;
 }
 
 .status-fail {
-  color: #dc3545;
+  background-color: #fee2e2;
+  color: #991b1b;
   animation: shake 0.5s ease-in-out;
 }
 
 .status-loading {
-  color: #007bff;
+  background-color: #dbeafe;
+  color: #1e3a8a;
+  border: 1px solid #bfdbfe;
   animation: blink 1s infinite;
+}
+
+.sign-up-link {
+  color: #f0f0f0;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.sign-up-link:hover {
+  color: #fb923c; /* orange-400 */
+}
+
+.sign-up-link:active {
+  color: #f97316; /* orange-500 */
+}
+
+/* Styled Register Scrollbar */
+.scroll-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scroll-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  transition: background 0.3s ease;
+}
+
+.scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
 }
 
 @keyframes blink {
@@ -33,20 +85,64 @@
     transform: scale(0.95);
     opacity: 0.7;
   }
+
   70% {
     transform: scale(1.05);
     opacity: 1;
   }
+
   100% {
     transform: scale(1);
   }
 }
 
 @keyframes shake {
-  0% { transform: translateX(0); }
-  20% { transform: translateX(-4px); }
-  40% { transform: translateX(4px); }
-  60% { transform: translateX(-2px); }
-  80% { transform: translateX(2px); }
-  100% { transform: translateX(0); }
+  0% {
+    transform: translateX(0);
+  }
+
+  20% {
+    transform: translateX(-4px);
+  }
+
+  40% {
+    transform: translateX(4px);
+  }
+
+  60% {
+    transform: translateX(-2px);
+  }
+
+  80% {
+    transform: translateX(2px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-fade {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Style for the Welcome Alert screen */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out;
 }
