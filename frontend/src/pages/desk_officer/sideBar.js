@@ -24,17 +24,12 @@ export default function Sidebar() {
     {
       icon: "/images/tools.png",
       label: "Register Victim",
-      path: "/desk_officer/register_victim",
+      path: "/desk_officer/victim_facial",
     },
-    // {
-    //   icon: "/images/tools.png",
-    //   label: "Register Victim",
-    //   path: "/desk_officer/register_victim",
-    // },
     {
       icon: "/images/tools.png",
-      label: "Sessions",
-      path: "/desk_officer/session",
+      label: "Ongoing Sessions",
+      path: "/desk_officer",
     },
     {
       icon: "/images/tools.png",

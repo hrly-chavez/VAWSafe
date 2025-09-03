@@ -1,77 +1,69 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircleIcon, PlayCircleIcon } from "@heroicons/react/24/solid";
-
 
 // pages
 import FaceRecog from "./FaceRecog";
 import Schedule from "./Schedule";
 import Form3 from "./Form3";
+import Navbar from "../navBar";
+import Sidebar from "../sideBar";
 
-export default function SessionForm({ formDataState, setFormDataState }) {
-  const [openSections, setOpenSections] = useState({
-    sessionDetails: false,
-  });
+export default function Session() {
+  const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState(1);
 
-  const toggleSection = (section) => {
-    setOpenSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
+  // button navigation functions
+  const next = () => setCurrentStep((prev) => prev + 1);
+  const back = () => setCurrentStep((prev) => prev - 1);
+  const cancel = () => {
+    alert("Form cancelled!");
+    // setFormData({});
+    setCurrentStep(1);
+    // Redirect to another page
+    navigate("/desk_officer/"); // replace "/some-page" with your route
+  };
+  const submit = () => {
+    alert("Form submitted! ");
+    // alert("Form submitted! " + JSON.stringify(formData, null, 2));
+    // setFormData({});
+    setCurrentStep(1);
   };
 
-  const handleSubmitSchedule = () => {
-    alert("Session scheduled successfully!");
-  };
-
-  const handleStartSession = () => {
-    alert("Session started.");
+  const renderForm = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <Schedule
+            // formData={formData}
+            // setFormData={setFormData}
+            back={back}
+            next={next}
+          />
+        );
+      case 2:
+        return (
+          <Form3
+            // formData={formData}
+            // setFormData={setFormData}
+            back={back}
+            cancel={cancel}
+          />
+        );
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className="border-2 border-blue-600 rounded-lg p-6 bg-white max-w-5xl mx-auto shadow mt-10 space-y-6">
-      {/* Main Title */}
-      <h2 className="text-xl font-bold text-blue-800">
-        Session Intake Form
-      </h2>
-
-      {/* Collapsible Section */}
-      <div>
-        <button
-          onClick={() => toggleSection("sessionDetails")}
-          className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
-        >
-          {openSections.sessionDetails ? "▼" : "▶"} Victim Session Details
-        </button>
-        {openSections.sessionDetails && (
-          <div className="mt-4 border-l-4 border-blue-500 pl-4">
-            <Schedule
-              formDataState={formDataState}
-              setFormDataState={setFormDataState}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Action Buttons */}
-      {openSections.sessionDetails && (
-        <div className="flex justify-end gap-4 pt-6">
-          <button
-            onClick={handleSubmitSchedule}
-            className="flex items-center gap-2 px-6 py-2 rounded-md bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold shadow hover:from-green-600 hover:to-green-700 transition-all duration-200"
-          >
-            <CheckCircleIcon className="h-5 w-5 text-white" />
-            Submit to Schedule Session
-          </button>
-          <button
-            onClick={handleStartSession}
-            className="flex items-center gap-2 px-6 py-2 rounded-md bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
-          >
-            <PlayCircleIcon className="h-5 w-5 text-white" />
-            Start Session Now
-          </button>
+    <div className="outline-2">
+      <Navbar />
+      <div className="flex flex-row">
+        <Sidebar />
+        <div className="h-[80vh] overflow-y-auto w-full">
+          {/* Main content */}
+          {renderForm()}
         </div>
-      )}
+      </div>
     </div>
   );
 }
