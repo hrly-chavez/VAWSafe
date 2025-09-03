@@ -143,20 +143,6 @@ export default function AdministrativeInfo({
           </div>
         </div>
       )}
-
-      {/* buttons */}
-      <button
-        className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600"
-        onClick={cancel}
-      >
-        Cancel
-      </button>
-      <button
-        className=" bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-        onClick={next}
-      >
-        Next
-      </button>
     </div>
   );
 }
