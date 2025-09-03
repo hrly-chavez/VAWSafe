@@ -30,6 +30,9 @@ const DOVictimDetail = lazy(() =>
 const DOVictimSearch = lazy(() =>
   import("./pages/desk_officer/Victims/SearchVictim")
 );
+const DOOngoingSessions = lazy(() =>
+  import("./pages/desk_officer/OngoingSessions/OngoingSessions")
+);
 
 // DSWD Pages (lazy loaded)
 const DSWDDashboard = lazy(() =>
@@ -107,6 +110,10 @@ export default function App() {
             path={ROUTES.DESK_OFFICER_VICTIM_SEARCH}
             element={<DOVictimSearch />}
           />
+          <Route
+            path={ROUTES.DESK_OFFICER_ONGOING_SESSIONS}
+            element={<DOOngoingSessions></DOOngoingSessions>}
+          ></Route>
 
           {/* DSWD */}
           <Route path={ROUTES.DSWD} element={<DSWDDashboard />} />
