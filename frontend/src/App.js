@@ -23,8 +23,6 @@ const RegisterVictim = lazy(() =>
   import("./pages/desk_officer/RegisterVictim/RegisterVictim")
 );
 const Session = lazy(() => import("./pages/desk_officer/Session/Session"));
-// !TEST AREA
-const Test = lazy(() => import("./pages/desk_officer/Testing/Test"));
 const DOVictims = lazy(() => import("./pages/desk_officer/Victims/Victims"));
 const DOVictimDetail = lazy(() =>
   import("./pages/desk_officer/Victims/VictimDetails")
