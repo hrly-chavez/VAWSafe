@@ -28,7 +28,7 @@ const DOVictimDetail = lazy(() =>
   import("./pages/desk_officer/Victims/VictimDetails")
 );
 const DOVictimSearch = lazy(() =>
-  import("./pages/desk_officer/Victim/SearchVictim")
+  import("./pages/desk_officer/Victims/SearchVictim")
 );
 
 // DSWD Pages (lazy loaded)

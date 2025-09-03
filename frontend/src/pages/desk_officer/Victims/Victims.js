@@ -3,7 +3,7 @@ import Sidebar from "../sideBar";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-// import SearchVictim from "./SearchVictim";
+import SearchVictim from "./SearchVictim";
 
 export default function Victims() {
   const [victims, setVictims] = useState([]);
