@@ -50,74 +50,57 @@ export default function VictimFacial() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="outline-2">
       <Navbar />
-      <div className="flex flex-row flex-1">
+      <div className="flex flex-row">
         <Sidebar />
-        <div className="w-full p-6">
-          <div className="max-w-5xl mx-auto bg-white p-8 rounded-2xl shadow-lg h-[calc(100vh-4rem)] flex flex-col">
-            {/* Header */}
-            <h1 className="text-3xl font-bold text-gray-800 text-center">
+        <div className="h-[80vh] overflow-y-auto w-full">
+          <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md text-center">
+            <h1 className="text-2xl font-semibold mb-4">
               Capture Victim Photos
             </h1>
 
-            {/* Webcam fills available middle space */}
-            <div className="flex-1 my-6 rounded-xl overflow-hidden border shadow-md flex items-center justify-center">
-              <Webcam
-                audio={false}
-                ref={webcamRef}
-                screenshotFormat="image/jpeg"
-                className="w-full h-full object-cover"
-                videoConstraints={{
-                  width: 1920,
-                  height: 1080,
-                  facingMode: "user",
-                }}
-              />
-            </div>
+            <Webcam
+              audio={false}
+              ref={webcamRef}
+              screenshotFormat="image/jpeg"
+              width="100%"
+              videoConstraints={{ width: 640, height: 480, facingMode: "user" }}
+            />
 
-            {/* Buttons + previews stacked at bottom */}
-            <div className="space-y-6">
-              {/* Capture button */}
-              <button
-                type="button"
-                onClick={capturePhoto}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-xl shadow transition"
-              >
-                📸 Capture Photo {currentIndex + 1}/{MAX_PHOTOS}
-              </button>
+            <button
+              type="button"
+              onClick={capturePhoto}
+              className="mt-4 bg-green-600 text-white py-2 px-4 rounded"
+            >
+              Capture Photo {currentIndex + 1}/{MAX_PHOTOS}
+            </button>
 
-              {/* Photos preview */}
-              <div className="flex gap-4 justify-center flex-wrap">
-                {photos.map((photo, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-col items-center bg-gray-50 p-3 rounded-lg shadow-sm"
+            <div className="flex gap-2 mt-4 justify-center flex-wrap">
+              {photos.map((photo, index) => (
+                <div key={index} className="flex flex-col items-center">
+                  <img
+                    src={URL.createObjectURL(photo)}
+                    alt={`Face ${index + 1}`}
+                    className="w-24 h-24 object-cover rounded border"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => retakePhoto(index)}
+                    className="mt-1 bg-yellow-500 text-white px-2 py-1 rounded text-xs"
                   >
-                    <img
-                      src={URL.createObjectURL(photo)}
-                      alt={`Face ${index + 1}`}
-                      className="w-24 h-24 object-cover rounded-lg border shadow"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => retakePhoto(index)}
-                      className="mt-2 w-full bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg text-xs font-medium transition"
-                    >
-                      🔄 Retake #{index + 1}
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Next button */}
-              <button
-                onClick={handleNext}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow transition"
-              >
-                Next ➡️
-              </button>
+                    Retake #{index + 1}
+                  </button>
+                </div>
+              ))}
             </div>
+
+            <button
+              onClick={handleNext}
+              className="mt-6 bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+            >
+              Next
+            </button>
           </div>
         </div>
       </div>
