@@ -23,9 +23,13 @@ const RegisterVictim = lazy(() =>
   import("./pages/desk_officer/RegisterVictim/RegisterVictim")
 );
 const Session = lazy(() => import("./pages/desk_officer/Session/Session"));
-// !TEST AREA
-const Test = lazy(() => import("./pages/desk_officer/Testing/Test"));
 const DOVictims = lazy(() => import("./pages/desk_officer/Victims/Victims"));
+const DOVictimDetail = lazy(() =>
+  import("./pages/desk_officer/Victims/VictimDetails")
+);
+const DOVictimSearch = lazy(() =>
+  import("./pages/desk_officer/Victims/SearchVictim")
+);
 
 // DSWD Pages (lazy loaded)
 const DSWDDashboard = lazy(() =>
@@ -93,9 +97,16 @@ export default function App() {
             element={<VictimFacial />}
           />
           <Route path={ROUTES.DESK_OFFICER_SESSION} element={<Session />} />
-          {/* Testing */}
+
           <Route path={ROUTES.DESK_OFFICER_VICTIMS} element={<DOVictims />} />
-          <Route path={ROUTES.TEST} element={<Test />} />
+          <Route
+            path={ROUTES.DESK_OFFICER_VICTIM_DETAIL}
+            element={<DOVictimDetail />}
+          />
+          <Route
+            path={ROUTES.DESK_OFFICER_VICTIM_SEARCH}
+            element={<DOVictimSearch />}
+          />
 
           {/* DSWD */}
           <Route path={ROUTES.DSWD} element={<DSWDDashboard />} />
