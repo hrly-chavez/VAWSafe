@@ -2,8 +2,8 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Webcam from "react-webcam";
-import Navbar from "../navBar";
-import Sidebar from "../sideBar";
+import Navbar from "../../Navbar";
+import Sidebar from "../../Sidebar";
 
 const MAX_PHOTOS = 3;
 

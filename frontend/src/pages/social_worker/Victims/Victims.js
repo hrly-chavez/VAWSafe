@@ -94,6 +94,8 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import SearchVictimFacial from "./SearchVictimFacial";
 import "./Victims.css";
+import Navbar from "../../Navbar";
+import Sidebar from "../../Sidebar";
 
 export default function Victims() {
   const [victims, setVictims] = useState([]);
@@ -118,68 +120,75 @@ export default function Victims() {
   };
 
   return (
-    <div className="sw-victims-page">
-      <div className="sw-victims-card">
-        <div className="victim-header-row flex justify-between items-center">
-          <p className="list-text">List of VAWC Victims</p>
-          <button
-            className="btn-search-facial bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            onClick={() => setShowFacialModal(true)}
-          >
-            Search Facial
-          </button>
-        </div>
+    <div>
+      <Navbar />
 
-        <div className="table-container">
-          <table className="table-victims">
-            <thead>
-              <tr>
-                <th>Victim No.</th>
-                <th>Victim Name</th>
-                <th>Age</th>
-                <th>Place / Barangay</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {victims.length > 0 ? (
-                victims.map((v) => (
-                  <tr key={v.vic_id}>
-                    <td>{v.vic_id}</td>
-                    <td>
-                      {v.vic_first_name} {v.vic_middle_name || ""} {v.vic_last_name} {v.vic_extension || ""}
-                    </td>
-                    <td>{v.age || "N/A"}</td>
-                    <td>{v.vic_birth_place || "N/A"}</td>
-                    <td>
-                      <div className="action-buttons">
-                        <Link to={`/social_worker/victims/${v.vic_id}`} className="btn-view">View</Link>
-                        <Link to={`/social_worker/victims/${v.vic_id}/edit`} className="btn-edit">Edit</Link>
-                        <button onClick={() => handleDelete(v.vic_id)} className="btn-delete">Delete</button>
-                      </div>
-                    </td>
+      <div className="flex min-h-screen bg-white">
+        <Sidebar />
+        <div className="sw-victims-page">
+          <div className="sw-victims-card">
+            <div className="victim-header-row flex justify-between items-center">
+              <p className="list-text">List of VAWC Victims</p>
+              <button
+                className="btn-search-facial bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                onClick={() => setShowFacialModal(true)}
+              >
+                Search Facial
+              </button>
+            </div>
+
+            <div className="table-container">
+              <table className="table-victims">
+                <thead>
+                  <tr>
+                    <th>Victim No.</th>
+                    <th>Victim Name</th>
+                    <th>Age</th>
+                    <th>Place / Barangay</th>
+                    <th>Actions</th>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5">No victims found.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {victims.length > 0 ? (
+                    victims.map((v) => (
+                      <tr key={v.vic_id}>
+                        <td>{v.vic_id}</td>
+                        <td>
+                          {v.vic_first_name} {v.vic_middle_name || ""} {v.vic_last_name} {v.vic_extension || ""}
+                        </td>
+                        <td>{v.age || "N/A"}</td>
+                        <td>{v.vic_birth_place || "N/A"}</td>
+                        <td>
+                          <div className="action-buttons">
+                            <Link to={`/social_worker/victims/${v.vic_id}`} className="btn-view">View</Link>
+                            <Link to={`/social_worker/victims/${v.vic_id}/edit`} className="btn-edit">Edit</Link>
+                            <button onClick={() => handleDelete(v.vic_id)} className="btn-delete">Delete</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5">No victims found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Modal injected here */}
+          {showFacialModal && (
+            <SearchVictimFacial
+              onClose={() => setShowFacialModal(false)}
+              onFound={(victimId) => {
+                setShowFacialModal(false);
+                navigate(`/social_worker/victims/${victimId}`);
+              }}
+            />
+          )}
         </div>
       </div>
-
-      {/* Modal injected here */}
-      {showFacialModal && (
-        <SearchVictimFacial
-          onClose={() => setShowFacialModal(false)}
-          onFound={(victimId) => {
-            setShowFacialModal(false);
-            navigate(`/social_worker/victims/${victimId}`);
-          }}
-        />
-      )}
     </div>
   );
 }

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
-import Navbar from "../navBar";
-import Sidebar from "../sideBar";
+import Navbar from "../../Navbar";
+import Sidebar from "../../Sidebar";
 
 const API_BASE = "http://127.0.0.1:8000/api/desk_officer";
 

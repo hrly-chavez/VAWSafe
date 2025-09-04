@@ -1,8 +1,8 @@
 import { useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import Navbar from "../navBar";
-import Sidebar from "../sideBar";
+import Navbar from "../../Navbar";
+import Sidebar from "../../Sidebar";
 import AdministrativeInfo from "./AdministrativeInfo";
 import VictimInfo from "./VictimInfo";
 import IncidentInfo from "./IncidentInfo";

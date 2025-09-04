@@ -1,5 +1,5 @@
-import Navbar from "../Navbar";
-import Sidebar from "../sidebar";
+import Navbar from "../../Navbar";
+import Sidebar from "../../Sidebar";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
 

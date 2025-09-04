@@ -56,7 +56,8 @@ const DSWDServices = lazy(() =>
 );
 
 // Social Worker Pages (lazy loaded)
-const SidebarLayout = lazy(() => import("./pages/social_worker/SidebarLayout"));
+// const SidebarLayout = lazy(() => import("./pages/social_worker/SidebarLayout"));
+// const SidebarLayout = lazy(() => import("./pages/Sidebar"));
 const DashboardPage = lazy(() =>
   import("./pages/social_worker/Dashboard/Dashboard")
 );
@@ -136,7 +137,7 @@ export default function App() {
           />
           <Route path={ROUTES.DSWD_SERVICES} element={<DSWDServices />} />
 
-          {/* SOCIAL WORKER (nested routes under sidebar layout) */}
+          {/* SOCIAL WORKER (nested routes under sidebar layout)
           <Route path={ROUTES.SOCIAL_WORKER} element={<SidebarLayout />}>
             <Route
               path={ROUTES.SOCIAL_WORKER_DASHBOARD}
@@ -163,7 +164,37 @@ export default function App() {
               path={ROUTES.SOCIAL_WORKER_SEARCH_FACIAL}
               element={<SearchVictimFacial />}
             />
-          </Route>
+          </Route> */}
+
+          {/* SOCIAL WORKER (no sidebar) */}
+          <Route
+            path={ROUTES.SOCIAL_WORKER_DASHBOARD}
+            element={<DashboardPage />}
+          />
+          <Route
+            path={ROUTES.SOCIAL_WORKER_CASE_RECORDS}
+            element={<CaseRecords />}
+          />
+          <Route
+            path={ROUTES.SOCIAL_WORKER_SESSIONS}
+            element={<Sessions />}
+          />
+          <Route
+            path={ROUTES.SOCIAL_WORKER_SERVICES}
+            element={<Services />}
+          />
+          <Route
+            path={ROUTES.SOCIAL_WORKER_VICTIMS} element={<Victims />}
+          />
+          <Route
+            path={ROUTES.SOCIAL_WORKER_VICTIM_DETAIL}
+            element={<VictimDetailPage />}
+          />
+          <Route
+            path={ROUTES.SOCIAL_WORKER_SEARCH_FACIAL}
+            element={<SearchVictimFacial />}
+          />
+
 
           {/* Catch-all: if no route matches, redirect to login */}
           <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />

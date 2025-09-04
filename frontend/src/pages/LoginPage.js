@@ -2,7 +2,7 @@
 import React, { useRef, useState } from "react";
 import Webcam from "react-webcam";
 import { useNavigate } from "react-router-dom";
-import Navbar from "./social_worker/Navbar";
+import Navbar from "./Navbar";
 import "./LoginPage.css";
 // Nag downlod kog Icons
 import { UserIcon, LockClosedIcon, ExclamationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
