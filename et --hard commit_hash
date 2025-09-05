@@ -1,0 +1,120 @@
+[33ma1f8a0b[m[33m ([m[1;36mHEAD -> [m[1;32mauthentication1[m[33m)[m HEAD@{0}: pull origin main: Merge made by the 'ort' strategy.
+[33m13ab7fd[m HEAD@{1}: checkout: moving from main to authentication1
+[33m490b51d[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m HEAD@{2}: pull --tags origin main: Merge made by the 'ort' strategy.
+[33mf8296d4[m HEAD@{3}: checkout: moving from authentication1 to main
+[33m13ab7fd[m HEAD@{4}: commit: navbar and sidebar gi usa na nako
+[33mf8296d4[m HEAD@{5}: checkout: moving from main to authentication1
+[33mf8296d4[m HEAD@{6}: commit: pull rha nako ang latest
+[33md5796bf[m HEAD@{7}: pull --tags origin main: Fast-forward
+[33m60c44f8[m HEAD@{8}: checkout: moving from authentication to main
+[33m352f2bc[m[33m ([m[1;32mauthentication[m[33m)[m HEAD@{9}: commit: authentication and navbar nausa pero still incomplete
+[33ma2033b3[m HEAD@{10}: pull origin main: Merge made by the 'ort' strategy.
+[33ma02e0c2[m HEAD@{11}: commit: initial authentication naa pay flaws
+[33m60c44f8[m HEAD@{12}: merge main: Fast-forward
+[33m4e01e76[m HEAD@{13}: checkout: moving from main to authentication
+[33m60c44f8[m HEAD@{14}: pull --tags origin main: Merge made by the 'ort' strategy.
+[33m4e01e76[m HEAD@{15}: checkout: moving from authentication to main
+[33m4e01e76[m HEAD@{16}: checkout: moving from main to authentication
+[33m4e01e76[m HEAD@{17}: checkout: moving from dswd to main
+[33m970b8e9[m[33m ([m[1;32mdswd[m[33m)[m HEAD@{18}: commit: uncomplete progress sa authentication dli na gamiton kay gubot
+[33m4e01e76[m HEAD@{19}: merge main: Fast-forward
+[33md3695d0[m[33m ([m[1;31morigin/dswd[m[33m)[m HEAD@{20}: checkout: moving from main to dswd
+[33m4e01e76[m HEAD@{21}: commit: Login bg fixed
+[33md3695d0[m[33m ([m[1;31morigin/dswd[m[33m)[m HEAD@{22}: checkout: moving from dswd to main
+[33md3695d0[m[33m ([m[1;31morigin/dswd[m[33m)[m HEAD@{23}: merge main: Fast-forward
+[33m2414a5c[m HEAD@{24}: checkout: moving from main to dswd
+[33md3695d0[m[33m ([m[1;31morigin/dswd[m[33m)[m HEAD@{25}: pull --tags origin main: Merge made by the 'ort' strategy.
+[33m0739e03[m HEAD@{26}: commit: view and search function in dswd working
+[33mbe67ef7[m HEAD@{27}: commit (merge): Merge branch 'main' of https://github.com/hrly-chavez/VAWSafe
+[33m222ffe2[m HEAD@{28}: commit: changes sa sidebar
+[33m8cee088[m HEAD@{29}: commit (merge): Merge branch 'main' of https://github.com/hrly-chavez/VAWSafe
+[33mad3ce29[m HEAD@{30}: commit: updated view victim and integrated search victim for dswd module
+[33maae0d7e[m HEAD@{31}: pull origin main: Fast-forward
+[33me057ca5[m HEAD@{32}: pull --tags origin main: Merge made by the 'ort' strategy.
+[33m2414a5c[m HEAD@{33}: merge dswd: Fast-forward
+[33m472c7a3[m HEAD@{34}: checkout: moving from dswd to main
+[33m2414a5c[m HEAD@{35}: commit: na integrate na ang view victim sa dswd
+[33m472c7a3[m HEAD@{36}: checkout: moving from main to dswd
+[33m472c7a3[m HEAD@{37}: checkout: moving from dswd to main
+[33m472c7a3[m HEAD@{38}: checkout: moving from dswd to dswd
+[33m472c7a3[m HEAD@{39}: merge main: Fast-forward
+[33m6dd23c0[m HEAD@{40}: checkout: moving from main to dswd
+[33m472c7a3[m HEAD@{41}: commit (merge): Merge branch 'main' of https://github.com/hrly-chavez/VAWSafe
+[33mb6c8a49[m HEAD@{42}: commit: login updated design
+[33m6dd23c0[m HEAD@{43}: merge dswd: Fast-forward
+[33me391449[m HEAD@{44}: checkout: moving from dswd to main
+[33m6dd23c0[m HEAD@{45}: commit: MERGE MAIN AND DSWD
+[33ma0cb984[m HEAD@{46}: merge main: Merge made by the 'ort' strategy.
+[33mf4bf50a[m HEAD@{47}: reset: moving to origin/dswd
+[33m9043c69[m HEAD@{48}: merge main: Merge made by the 'ort' strategy.
+[33mf4bf50a[m HEAD@{49}: reset: moving to origin/dswd
+[33ma4cbb0c[m HEAD@{50}: merge main: Merge made by the 'ort' strategy.
+[33mf4bf50a[m HEAD@{51}: checkout: moving from main to dswd
+[33me391449[m HEAD@{52}: checkout: moving from dswd to main
+[33mf4bf50a[m HEAD@{53}: checkout: moving from main to dswd
+[33me391449[m HEAD@{54}: checkout: moving from dswd to main
+[33mf4bf50a[m HEAD@{55}: checkout: moving from main to dswd
+[33me391449[m HEAD@{56}: reset: moving to HEAD~1
+[33m3cbb206[m HEAD@{57}: merge dswd: Merge made by the 'ort' strategy.
+[33me391449[m HEAD@{58}: pull origin main: Fast-forward
+[33mfc398ff[m HEAD@{59}: checkout: moving from dswd to main
+[33mf4bf50a[m HEAD@{60}: commit: updated design sa login
+[33m8ec9e7e[m HEAD@{61}: checkout: moving from main to dswd
+[33mfc398ff[m HEAD@{62}: commit: gi convert nako ang css to tailwind
+[33m8ec9e7e[m HEAD@{63}: checkout: moving from dswd to main
+[33m8ec9e7e[m HEAD@{64}: checkout: moving from main to dswd
+[33m8ec9e7e[m HEAD@{65}: merge dswd: Fast-forward
+[33ma33fa9d[m[33m ([m[1;31morigin/rhodjien[m[33m)[m HEAD@{66}: checkout: moving from dswd to main
+[33m8ec9e7e[m HEAD@{67}: commit: gi convert nako ang design sa css sa tailwind
+[33ma33fa9d[m[33m ([m[1;31morigin/rhodjien[m[33m)[m HEAD@{68}: checkout: moving from dswd to dswd
+[33ma33fa9d[m[33m ([m[1;31morigin/rhodjien[m[33m)[m HEAD@{69}: checkout: moving from main to dswd
+[33ma33fa9d[m[33m ([m[1;31morigin/rhodjien[m[33m)[m HEAD@{70}: checkout: moving from rhodjien to main
+[33mf840a1b[m[33m ([m[1;32mrhodjien[m[33m)[m HEAD@{71}: commit: changes naa rhay problem ang pag mmigrate
+[33ma33fa9d[m[33m ([m[1;31morigin/rhodjien[m[33m)[m HEAD@{72}: checkout: moving from main to rhodjien
+[33ma33fa9d[m[33m ([m[1;31morigin/rhodjien[m[33m)[m HEAD@{73}: checkout: moving from main to main
+[33ma33fa9d[m[33m ([m[1;31morigin/rhodjien[m[33m)[m HEAD@{74}: checkout: moving from rhodjien to main
+[33ma33fa9d[m[33m ([m[1;31morigin/rhodjien[m[33m)[m HEAD@{75}: merge main: Fast-forward
+[33mb04d928[m HEAD@{76}: checkout: moving from main to rhodjien
+[33ma33fa9d[m[33m ([m[1;31morigin/rhodjien[m[33m)[m HEAD@{77}: checkout: moving from jin to main
+[33m71521d1[m[33m ([m[1;31morigin/jin[m[33m, [m[1;32mjin[m[33m)[m HEAD@{78}: checkout: moving from main to jin
+[33ma33fa9d[m[33m ([m[1;31morigin/rhodjien[m[33m)[m HEAD@{79}: pull origin main: Fast-forward
+[33me9d7589[m HEAD@{80}: pull origin main: Fast-forward
+[33mfce56ef[m HEAD@{81}: pull origin main: Fast-forward
+[33ma313c7f[m HEAD@{82}: commit (merge): Merge branch 'main' of https://github.com/hrly-chavez/VAWSafe
+[33m9604abf[m HEAD@{83}: commit: done vawc victim design
+[33m6d6b4bc[m HEAD@{84}: pull --tags origin main: Merge made by the 'ort' strategy.
+[33mb04d928[m HEAD@{85}: merge rhodjien: Fast-forward
+[33m3b68d23[m HEAD@{86}: checkout: moving from rhodjien to main
+[33mb04d928[m HEAD@{87}: commit: Done design sa dswd vawc victim
+[33m3b68d23[m HEAD@{88}: checkout: moving from main to rhodjien
+[33m3b68d23[m HEAD@{89}: merge rhodjien: Fast-forward
+[33m52bfd6c[m HEAD@{90}: checkout: moving from rhodjien to main
+[33m3b68d23[m HEAD@{91}: checkout: moving from main to rhodjien
+[33m52bfd6c[m HEAD@{92}: checkout: moving from rhodjien to main
+[33m3b68d23[m HEAD@{93}: commit: na integrate na diri ang design sa frontend ug ang backend sa login
+[33m52bfd6c[m HEAD@{94}: checkout: moving from rhodjien to rhodjien
+[33m52bfd6c[m HEAD@{95}: checkout: moving from main to rhodjien
+[33m52bfd6c[m HEAD@{96}: commit (merge): updated design sa dswd pwede rha ninyo i retrieve ang sidebar ug ang navbar nga .js and .css file para ma reuse sa inyong module
+[33mab971ce[m HEAD@{97}: commit: updated design sa dswd nga module
+[33m828116e[m HEAD@{98}: commit (merge): Merge branch 'main' of https://github.com/hrly-chavez/VAWSafe
+[33m5b58576[m HEAD@{99}: commit: sidebar and header done sa dswd. note nga ang DSWDPage.js kay mao na ang login
+[33m5210a1b[m HEAD@{100}: checkout: moving from jin to main
+[33mbb37c97[m HEAD@{101}: checkout: moving from main to jin
+[33m5210a1b[m HEAD@{102}: checkout: moving from jin to main
+[33mbb37c97[m HEAD@{103}: checkout: moving from main to jin
+[33m5210a1b[m HEAD@{104}: checkout: moving from jin to main
+[33mbb37c97[m HEAD@{105}: checkout: moving from main to jin
+[33m5210a1b[m HEAD@{106}: checkout: moving from jin to main
+[33mbb37c97[m HEAD@{107}: commit: navbar and dashboard done
+[33m71521d1[m[33m ([m[1;31morigin/jin[m[33m, [m[1;32mjin[m[33m)[m HEAD@{108}: checkout: moving from jin to jin
+[33m71521d1[m[33m ([m[1;31morigin/jin[m[33m, [m[1;32mjin[m[33m)[m HEAD@{109}: checkout: moving from main to jin
+[33m5210a1b[m HEAD@{110}: commit: setup na nako - jin
+[33m02ebe73[m HEAD@{111}: pull --tags origin main: Fast-forward
+[33m1d55aef[m HEAD@{112}: checkout: moving from jin to main
+[33m71521d1[m[33m ([m[1;31morigin/jin[m[33m, [m[1;32mjin[m[33m)[m HEAD@{113}: commit: frontend login
+[33m1d55aef[m HEAD@{114}: checkout: moving from main to jin
+[33m1d55aef[m HEAD@{115}: checkout: moving from jin to main
+[33m1d55aef[m HEAD@{116}: checkout: moving from main to jin
+[33m1d55aef[m HEAD@{117}: checkout: moving from jin to main
+[33m1d55aef[m HEAD@{118}: checkout: moving from main to jin
+[33m1d55aef[m HEAD@{119}: clone: from https://github.com/hrly-chavez/VAWSafe.git
