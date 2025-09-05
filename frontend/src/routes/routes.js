@@ -11,6 +11,7 @@ export const ROUTES = {
   DESK_OFFICER_VICTIMS: "/desk_officer/victims",
   DESK_OFFICER_VICTIM_DETAIL: "/desk_officer/victims/:vic_id",
   DESK_OFFICER_VICTIM_SEARCH: "/desk_officer/victims/search",
+  DO_TEST: "/desk_officer/test",
 
   DSWD: "/dswd",
   DSWD_VAWC_VICTIMS: "/dswd/victims",
