@@ -61,7 +61,7 @@ const LoginPage = () => {
 
   const handleContinue = () => {
     const role = (welcomeData?.role || "").toLowerCase();
-    if (role === "social worker") navigate("/social_worker/dashboard");
+    if (role === "social worker") navigate("/social_worker");
     else if (role === "vawdesk") navigate("/desk_officer");
     else if (role === "dswd") navigate("/dswd");
   };
