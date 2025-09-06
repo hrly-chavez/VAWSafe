@@ -95,7 +95,7 @@ import axios from "axios";
 import SearchVictimFacial from "./SearchVictimFacial";
 import "./Victims.css";
 import Navbar from "../../Navbar";
-import Sidebar from "../../Sidebar";
+import api from "../../../api/axios";
 
 export default function Victims() {
   const [victims, setVictims] = useState([]);
@@ -103,9 +103,17 @@ export default function Victims() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get("http://127.0.0.1:8000/api/social_worker/victims/")
-      .then((res) => setVictims(res.data))
-      .catch((err) => console.error(err));
+    const loadVictims = async () => {
+      try {
+        const res = await api.get("/api/social_worker/victims/");
+        setVictims(res.data);
+        console.log("Fetched victims:", res.data); // optional debug
+      } catch (err) {
+        console.error("Error fetching victims:", err);
+      }
+    };
+
+    loadVictims();
   }, []);
 
   const handleDelete = async (vic_id) => {
@@ -124,7 +132,6 @@ export default function Victims() {
       <Navbar />
 
       <div className="flex min-h-screen bg-white">
-        <Sidebar />
         <div className="sw-victims-page">
           <div className="sw-victims-card">
             <div className="victim-header-row flex justify-between items-center">

@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import "./VictimDetailPage.css";
 import Navbar from "../../Navbar";
-import Sidebar from "../../Sidebar";
+import api from "../../../api/axios";
 
 export default function VictimDetailPage() {
   const { vic_id } = useParams();
@@ -11,16 +11,20 @@ export default function VictimDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
-      .get(`http://127.0.0.1:8000/api/social_worker/victims/${vic_id}/`)
-      .then((res) => {
+    const loadVictim = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get(`/api/social_worker/victims/${vic_id}/`);
         setVictim(res.data);
+        console.log("Fetched victim:", res.data); // optional debug
+      } catch (err) {
+        console.error("Error fetching victim:", err);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setLoading(false);
-      });
+      }
+    };
+
+    if (vic_id) loadVictim();
   }, [vic_id]);
 
   if (loading) return <p>Loading victim details...</p>;
@@ -31,7 +35,6 @@ export default function VictimDetailPage() {
       <Navbar />
 
       <div className="flex min-h-screen bg-white">
-        <Sidebar />
         <div className="victim-detail-page">
           <div className="victim-detail-card">
             <h2>Victim Details</h2>

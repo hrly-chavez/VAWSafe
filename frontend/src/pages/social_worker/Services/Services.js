@@ -2,7 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "./Services.css";
 import Navbar from '../../Navbar';
-import Sidebar from '../../Sidebar';
 
 /**
  * Social Worker > Services page
@@ -15,7 +14,6 @@ export default function Services() {
       <Navbar />
 
       <div className="flex min-h-screen bg-white">
-        <Sidebar />
         <div className="sw-services-page">
           <div className="sw-services-card">
             <h2 className="servicetext">Service</h2>

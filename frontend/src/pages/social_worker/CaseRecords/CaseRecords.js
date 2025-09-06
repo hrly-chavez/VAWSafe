@@ -2,7 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "./CaseRecords.css";
 import Navbar from '../../Navbar';
-import Sidebar from '../../Sidebar';
 
 export default function CaseRecords() {
   return (
@@ -10,7 +9,6 @@ export default function CaseRecords() {
         <Navbar />
   
         <div className="flex min-h-screen bg-white">
-          <Sidebar />
           <div className="sw-case-records-page">
             <div className="sw-case-records-card">
               <h2 className="caserecordstext">Case Records</h2>

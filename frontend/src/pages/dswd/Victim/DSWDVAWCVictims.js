@@ -1,9 +1,9 @@
 import Navbar from "../../Navbar";
-import Sidebar from "../../Sidebar";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SearchVictim from "./SearchVictim";
+import api from "../../../api/axios";
 
 export default function DSWDVAWCVictims() {
   const [victims, setVictims] = useState([]);
@@ -15,9 +15,11 @@ export default function DSWDVAWCVictims() {
   useEffect(() => {
     const fetchVictims = async () => {
       try {
-        const res = await axios.get("http://127.0.0.1:8000/api/dswd/victims/");
-        // Expecting an array like:
-        // [{ vic_id, vic_first_name, vic_middle_name, vic_last_name, vic_extension, vic_sex, vic_birth_place, age }, ...]
+        setLoading(true);
+
+        const res = await api.get("/api/dswd/victims/");
+
+        // If backend returns an array, use it; otherwise fallback to empty array
         setVictims(Array.isArray(res.data) ? res.data : []);
       } catch (e) {
         console.error(e);
@@ -26,6 +28,7 @@ export default function DSWDVAWCVictims() {
         setLoading(false);
       }
     };
+
     fetchVictims();
   }, []);
 
@@ -34,7 +37,6 @@ export default function DSWDVAWCVictims() {
       <Navbar />
 
       <div className="flex min-h-screen bg-white">
-        <Sidebar />
 
         <div className="flex-1 px-6 py-6 m-5 bg-white rounded-[20px] h-[400px] shadow-[0_2px_6px_0_rgba(0,0,0,0.1),0_-2px_6px_0_rgba(0,0,0,0.1)]">
           {/* Title + top filters */}

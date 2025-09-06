@@ -5,6 +5,9 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAuthenticated
+from shared_model.permissions import IsRole
 
 from deepface import DeepFace
 from PIL import Image
@@ -19,11 +22,16 @@ from .serializers import *
 class ViewVictim (generics.ListAPIView):
     queryset = Victim.objects.all()
     serializer_class = VictimListSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['VAWDesk']
+    
     
 class ViewDetail (generics.ListAPIView):
     queryset = Victim.objects.all()
     serializer_class = VictimDetailSerializer
     lookup_field = "vic_id"
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['VAWDesk']
 
 class search_victim_facial(APIView):
     parser_classes = [MultiPartParser, FormParser]
@@ -96,6 +104,9 @@ class search_victim_facial(APIView):
         finally:
             if chosen_frame and os.path.exists(chosen_frame):
                 os.remove(chosen_frame)
+
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['VAWDesk']
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])

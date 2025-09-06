@@ -72,7 +72,6 @@
 // }
 
 import Navbar from "../../Navbar";
-import Sidebar from "../../Sidebar";
 
 export default function DSWDServices() {
   return (
@@ -80,7 +79,6 @@ export default function DSWDServices() {
       <Navbar />
 
       <div className="flex min-h-screen bg-white">
-        <Sidebar />
 
         <div className="flex-1 px-6 py-6 m-5 bg-white rounded-[20px] h-[400px] shadow-[0_2px_6px_0_rgba(0,0,0,0.1),0_-2px_6px_0_rgba(0,0,0,0.1)]">
           {/* Title */}

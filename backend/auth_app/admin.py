@@ -1,10 +1,16 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from shared_model.models import *
 
-@admin.register(Account)
-class AccountAdmin(admin.ModelAdmin):
-    list_display = ['username']
-    search_fields = ['username']
+User = get_user_model()
+
+admin.site.unregister(User)
+
+@admin.register(User)
+class UserAdmin(BaseUserAdmin):
+    list_display = ["id", "username"]
+    search_fields = ["username"]
 
 @admin.register(Official)
 class OfficialAdmin(admin.ModelAdmin):

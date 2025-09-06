@@ -2,7 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "./Sessions.css";
 import Navbar from "../../Navbar";
-import Sidebar from "../../Sidebar";
 
 export default function Sessions() {
   return (
@@ -10,7 +9,6 @@ export default function Sessions() {
       <Navbar />
 
       <div className="flex min-h-screen bg-white">
-        <Sidebar />
         <div className="sw-sessions-page">
           <div className="sw-sessions-card">
             <h2 className="sessionstext">Sessions</h2>

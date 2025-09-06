@@ -6,7 +6,6 @@ import FaceRecog from "./FaceRecog";
 import Schedule from "./Schedule";
 import Form3 from "./Form3";
 import Navbar from "../../Navbar";
-import Sidebar from "../../Sidebar";
 
 export default function Session() {
   const navigate = useNavigate();
@@ -58,7 +57,6 @@ export default function Session() {
     <div className="outline-2">
       <Navbar />
       <div className="flex flex-row">
-        <Sidebar />
         <div className="h-[80vh] overflow-y-auto w-full">
           {/* Main content */}
           {renderForm()}

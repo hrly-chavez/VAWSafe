@@ -2,10 +2,14 @@ from rest_framework import serializers
 from shared_model.models import *
 from django.contrib.auth.models import User
 
-class AccountSerializer(serializers.ModelSerializer):
+# class AccountSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Account
+#         fields = ['username', 'password']
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Account
-        fields = ['username', 'password']
+        model = User
+        fields = ["id", "username"]
 
 class OfficialSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,3 +29,8 @@ class OfficialSerializer(serializers.ModelSerializer):
             'of_brgy_assigned',
             'of_specialization',
         ]
+
+class OfficialFaceSampleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OfficialFaceSample
+        fields = "__all__"

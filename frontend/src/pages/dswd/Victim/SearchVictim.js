@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Webcam from "react-webcam";
+import api from "../../../api/axios";
 
-const API_BASE = "http://127.0.0.1:8000/api/dswd";
 
 export default function SearchVictim({ onClose, onFound }) {
   const webcamRef = useRef(null);
@@ -41,20 +41,18 @@ export default function SearchVictim({ onClose, onFound }) {
       const formData = new FormData();
       formData.append("frame", blob, "capture.jpg");
 
-      const res = await fetch(`${API_BASE}/victims/search-victim/`, {
-        method: "POST",
-        body: formData,
-      });
+      // Use global axios instance
+      const res = await api.post("/api/dswd/victims/search-victim/", formData);
+      const data = res.data;
 
-      const data = await res.json();
-
-      if (res.ok && data.match) {
+      if (data.match) {
         onFound?.(data.victim_id); // parent navigates
       } else {
         setMessage(data.message || "No victim match found.");
       }
+
     } catch (err) {
-      console.error(err);
+      console.error("Search victim error:", err);
       setMessage("Error connecting to server.");
     } finally {
       setLoading(false);

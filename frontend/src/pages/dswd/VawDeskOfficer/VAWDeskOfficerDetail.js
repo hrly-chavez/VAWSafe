@@ -6,7 +6,7 @@ import Navbar from "../../Navbar";
 import api from "../../../api/axios";
 
 
-export default function SocialWorkerDetails() {
+export default function VAWDeskOfficerDetail() {
   const { of_id } = useParams();
   const [worker, setWorker] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,11 +39,11 @@ export default function SocialWorkerDetails() {
 
       try {
         // Use global axios instance
-        const res = await api.get(`/api/dswd/social_worker/${of_id}/`);
+        const res = await api.get(`/api/dswd/vawdesk_officer/${of_id}/`);
 
         // API returns a single object
         setWorker(res.data || null);
-        console.log("Fetched social worker:", res.data); // debug log
+        console.log("Fetched desk officer:", res.data); // debug log
 
       } catch (err) {
         setError(
@@ -51,7 +51,7 @@ export default function SocialWorkerDetails() {
             ? `Error ${err.response.status}`
             : "Request failed"
         );
-        console.error("Fetch social worker error:", err);
+        console.error("Fetch desk officer error:", err);
       } finally {
         setLoading(false);
       }
@@ -70,12 +70,12 @@ export default function SocialWorkerDetails() {
       <div className="flex min-h-screen bg-white">
 
         <div className="flex-1 p-6">
-          {loading && <p className="text-gray-600">Loading social worker details…</p>}
+          {loading && <p className="text-gray-600">Loading desk officer details…</p>}
           {error && <p className="text-red-600">{error}</p>}
 
           {!loading && !error && (
             <div className="max-w-4xl rounded-2xl bg-white p-6 shadow">
-              <h2 className="mb-4 text-2xl font-bold text-[#292D96]">Social Worker Details</h2>
+              <h2 className="mb-4 text-2xl font-bold text-[#292D96]">VAWDesk Officer Details</h2>
 
               {!worker ? (
                 <p className="text-gray-600">No data found.</p>
@@ -96,7 +96,7 @@ export default function SocialWorkerDetails() {
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold">{fullName || "N/A"}</h3>
                       <p className="text-sm text-neutral-600">
-                        <strong>Role:</strong> {get(worker, ["of_role"], "Social Worker")}
+                        <strong>Role:</strong> {get(worker, ["of_role"], "VAWDesk")}
                       </p>
                       <div className="mt-2 flex flex-wrap gap-3 text-sm">
                         <span>
@@ -215,7 +215,7 @@ export default function SocialWorkerDetails() {
 
               <div className="mt-6">
                 <Link
-                  to="/dswd/social-workers"
+                  to="/dswd/vawdesk-officer"
                   className="inline-flex items-center rounded-lg bg-[#292D96] px-4 py-2 text-white hover:bg-[#1f2375]"
                 >
                   ← Back to List

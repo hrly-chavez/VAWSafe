@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Webcam from "react-webcam";
+import api from "../../../api/axios";
 
-const API_BASE = "http://127.0.0.1:8000/api/desk_officer";
 
 export default function SearchVictim({ onClose, onFound }) {
   const webcamRef = useRef(null);
@@ -35,27 +35,23 @@ export default function SearchVictim({ onClose, onFound }) {
       const mimeString = imageSrc.split(",")[0].split(":")[1].split(";")[0];
       const ab = new ArrayBuffer(byteString.length);
       const ia = new Uint8Array(ab);
-      for (let i = 0; i < byteString.length; i++)
-        ia[i] = byteString.charCodeAt(i);
+      for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
       const blob = new Blob([ab], { type: mimeString });
 
       const formData = new FormData();
       formData.append("frame", blob, "capture.jpg");
 
-      const res = await fetch(`${API_BASE}/victims/search-victim/`, {
-        method: "POST",
-        body: formData,
-      });
+      // Use global axios instance instead of fetch
+      const res = await api.post("api/desk_officer/victims/search-victim/", formData);
+      const data = res.data;
 
-      const data = await res.json();
-
-      if (res.ok && data.match) {
+      if (data.match) {
         onFound?.(data.victim_id); // parent navigates
       } else {
         setMessage(data.message || "No victim match found.");
       }
     } catch (err) {
-      console.error(err);
+      console.error("Search victim error:", err);
       setMessage("Error connecting to server.");
     } finally {
       setLoading(false);
@@ -66,6 +62,7 @@ export default function SearchVictim({ onClose, onFound }) {
     // close if you click the dimmed backdrop
     if (e.target === e.currentTarget) onClose?.();
   };
+
 
   return (
     <div

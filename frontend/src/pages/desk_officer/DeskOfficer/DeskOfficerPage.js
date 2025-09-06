@@ -1,6 +1,5 @@
 import { useState } from "react";
 import Navbar from "../../Navbar";
-import Sidebar from "../../Sidebar";
 import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -70,7 +69,6 @@ export default function DeskOfficerPage() {
       <div className="grid grid-cols-1 md:grid-cols-5">
         {/* Sidebar */}
         <div className="md:col-span-1">
-          <Sidebar />
         </div>
 
         {/* Main Content */}

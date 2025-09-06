@@ -1,9 +1,9 @@
 import Navbar from "../../Navbar";
-import Sidebar from "../../Sidebar";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import SearchVictim from "./SearchVictim";
+import api from "../../../api/axios";
 
 export default function Victims() {
   const [victims, setVictims] = useState([]);
@@ -11,23 +11,24 @@ export default function Victims() {
   const [error, setError] = useState("");
   const [showSearchModal, setShowSearchModal] = useState(false);
   const navigate = useNavigate();
+  
 
   useEffect(() => {
     const fetchVictims = async () => {
+      setLoading(true);
+      setError("");
+
       try {
-        const res = await axios.get(
-          "http://127.0.0.1:8000/api/desk_officer/victims/"
-        );
-        // Expecting an array like:
-        // [{ vic_id, vic_first_name, vic_middle_name, vic_last_name, vic_extension, vic_sex, vic_birth_place, age }, ...]
+        const res = await api.get("api/desk_officer/victims/");
         setVictims(Array.isArray(res.data) ? res.data : []);
       } catch (e) {
-        console.error(e);
+        console.error("Error fetching victims:", e);
         setError("Failed to load victims.");
       } finally {
         setLoading(false);
       }
     };
+
     fetchVictims();
   }, []);
 
@@ -35,7 +36,6 @@ export default function Victims() {
     <>
       <Navbar />
       <div className="flex min-h-screen bg-white">
-        <Sidebar />
         <div className="flex-1 px-6 py-6 m-5 bg-white rounded-[20px] h-[400px] shadow-[0_2px_6px_0_rgba(0,0,0,0.1),0_-2px_6px_0_rgba(0,0,0,0.1)]">
           {/* Title + top filters */}
           <h2 className="text-2xl font-semibold font-[Poppins] tracking-tight text-[#292D96]">
