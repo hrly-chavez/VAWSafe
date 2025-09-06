@@ -98,7 +98,6 @@ const hasAny = (state, keys) =>
 export default function RegisterVictim() {
   const navigate = useNavigate();
   const location = useLocation();
-  const victimPhotos = location.state?.victimPhotos || [];
 
   const [currentStep, setCurrentStep] = useState(1);
   const [formDataState, setFormDataState] = useState({
@@ -106,6 +105,8 @@ export default function RegisterVictim() {
     vic_last_name: "",
     vic_sex: "",
   });
+
+  const victimPhotos = formDataState.victimPhotos || []; // Replace this lines "const victimPhotos = location.state?.victimPhotos || [];"
 
   // Toggle Sections
   const [openSections, setOpenSections] = useState({
@@ -169,19 +170,19 @@ export default function RegisterVictim() {
       // Optional sections (only include if something was filled)
       const caseReportPayload = hasAny(formDataState, CASE_REPORT_KEYS)
         ? Object.fromEntries(
-            CASE_REPORT_KEYS.map((k) => [k, formDataState[k] ?? ""])
-          )
+          CASE_REPORT_KEYS.map((k) => [k, formDataState[k] ?? ""])
+        )
         : null;
 
       const incidentPayload = hasAny(formDataState, INCIDENT_KEYS)
         ? Object.fromEntries(
-            INCIDENT_KEYS.map((k) => [
-              k,
-              typeof formDataState[k] === "boolean"
-                ? !!formDataState[k]
-                : formDataState[k] ?? "",
-            ])
-          )
+          INCIDENT_KEYS.map((k) => [
+            k,
+            typeof formDataState[k] === "boolean"
+              ? !!formDataState[k]
+              : formDataState[k] ?? "",
+          ])
+        )
         : null;
 
       const perpetratorPayload = hasAny(formDataState, PERP_KEYS)
@@ -234,14 +235,12 @@ export default function RegisterVictim() {
 
       setStatusMessage("✅ Victim registered successfully!");
       setLoading(false);
-      navigate("/desk_officer/session");
+      setShowSessionForm(true);
     } catch (err) {
       console.error("Register victim exception:", err);
       setStatusMessage("❌ Something went wrong.");
       setLoading(false);
     }
-
-    setShowSessionForm(true);
   };
 
   const isFormValid = () => {
@@ -415,13 +414,12 @@ export default function RegisterVictim() {
             {/* Status banner */}
             {statusMessage && (
               <div
-                className={`mt-4 p-3 rounded text-sm ${
-                  statusMessage.startsWith("✅")
-                    ? "bg-green-100 text-green-800"
-                    : statusMessage.startsWith("⏳")
+                className={`mt-4 p-3 rounded text-sm ${statusMessage.startsWith("✅")
+                  ? "bg-green-100 text-green-800"
+                  : statusMessage.startsWith("⏳")
                     ? "bg-yellow-100 text-yellow-800"
                     : "bg-red-100 text-red-800"
-                }`}
+                  }`}
               >
                 {statusMessage}
               </div>
@@ -441,8 +439,8 @@ export default function RegisterVictim() {
                   onClick={handleSubmit}
                   disabled={loading}
                   className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold shadow transition-all duration-200 ${loading
-                      ? "bg-gray-400 cursor-not-allowed text-white"
-                      : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
+                    ? "bg-gray-400 cursor-not-allowed text-white"
+                    : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
                     }`}
                 >
                   <CheckCircleIcon className="h-5 w-5 text-white" />
@@ -452,12 +450,11 @@ export default function RegisterVictim() {
             )}
           </div>
           {/* Session Form appears after successful registration */}
-          {/* Session Form appears after successful registration */}
-          {showSessionForm && (
-            <div className="mt-10">
-              <SessionForm embedded={true} />
-            </div>
-          )}
+            {showSessionForm && (
+              <div className="mt-10 border-t pt-6">
+                <SessionForm embedded={true} />
+              </div>
+            )}
         </div>
       </div>
     </div>

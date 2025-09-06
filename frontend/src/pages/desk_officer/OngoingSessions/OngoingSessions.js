@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 export default function OngoingSession() {
-  const [sessions, setSessions] = useState([
+  const [sessions] = useState([
     { id: 1, name: "Session 1" },
     { id: 2, name: "Session 2" },
     { id: 3, name: "Session 3" },
