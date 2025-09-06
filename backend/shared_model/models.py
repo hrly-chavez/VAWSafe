@@ -8,6 +8,60 @@ class Account(models.Model):
     def __str__(self):
         return self.username
 
+class City(models.Model):
+    name = models.CharField(max_length=150, unique=True)
+
+    def __str__(self):
+        return self.name
+
+class Municipality(models.Model):
+    name = models.CharField(max_length=150)
+    city = models.ForeignKey(City, on_delete=models.CASCADE, related_name="municipalities")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["city", "name"], name="unique_municipality_per_city")
+        ]
+
+    def __str__(self):
+        return f"{self.name}, {self.city.name}"
+
+class Barangay(models.Model):
+    name = models.CharField(max_length=150)
+    municipality = models.ForeignKey(Municipality, on_delete=models.CASCADE, related_name="barangays")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["municipality", "name"], name="unique_barangay_per_municipality")
+        ]
+
+    def __str__(self):
+        return f"{self.name}, {self.municipality.name}"
+    
+class Sitio(models.Model):
+    name = models.CharField(max_length=150)
+    barangay = models.ForeignKey(Barangay, on_delete=models.CASCADE, related_name="sitios")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["barangay", "name"], name="unique_sitio_per_barangay")
+        ]
+
+    def __str__(self):
+        return f"{self.name}, {self.barangay.name}"
+    
+class Street(models.Model):
+    name = models.CharField(max_length=150)
+    sitio = models.ForeignKey(Sitio, on_delete=models.CASCADE, related_name="streets")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["sitio", "name"], name="unique_street_per_sitio")
+        ]
+
+    def __str__(self):
+        return f"{self.name}, {self.sitio.name}"
+    
 class Official(models.Model):
     ROLE_CHOICES = [
     ('DSWD', 'DSWD'),
@@ -24,12 +78,15 @@ class Official(models.Model):
     of_sex = models.CharField(max_length=1, null=True, blank=True)
     of_dob = models.DateField(null=True, blank=True)
     of_pob = models.CharField(max_length=255, null=True, blank=True)
-    of_address = models.TextField(null=True, blank=True)
     of_contact = models.CharField(max_length=20, null=True, blank=True)
     of_role = models.CharField(max_length=50, choices=ROLE_CHOICES, blank=True, null=True)
-    of_brgy_assigned = models.CharField(max_length=100, null=True, blank=True)
     of_specialization = models.CharField(max_length=100, null=True, blank=True)
     of_photo = models.ImageField(upload_to='photos/')  # Profile image only
+
+    sitio = models.ForeignKey(Sitio, on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
+    street = models.ForeignKey(Street, on_delete=models.SET_NULL, null=True, blank=True, related_name="officials")  
+    #where na baranggay assigned
+    assigned_barangay = models.ForeignKey(Barangay, on_delete=models.PROTECT, related_name="assigned_officials", null=True, blank=True)
 
     def __str__(self):
         return f"{self.of_fname}, {self.of_lname}"
@@ -46,20 +103,6 @@ class OfficialFaceSample(models.Model):
     def __str__(self):
         return f"FaceSample for {self.official.full_name}"
     
-SEX_CHOICES = [
-        ('Male', 'Male'),
-        ('Female', 'Female'),
-    ]
-
-RELIGION_CHOICES = [
-        ('Roman Catholic', 'Roman Catholic'),
-        ('Islam', 'Islam'),
-        ('Evangelicals', 'Evangelicals'),
-        ('Protestant', 'Protestant'),
-        ('Iglesia ni Cristo', 'Iglesia ni Cristo'),
-        ('Others', 'Others'),
-    ]
-
 class Victim(models.Model):
     CIVIL_STATUS_CHOICES = [
         ('SINGLE', 'Single'),
@@ -117,6 +160,18 @@ class Victim(models.Model):
         ('Speech and Language Disability', 'Speech and Language Disability'),
         ('Visual Disability', 'Visual Disability'),
     ]
+    SEX_CHOICES = [
+        ('Male', 'Male'),
+        ('Female', 'Female'),
+    ]
+    RELIGION_CHOICES = [
+        ('Roman Catholic', 'Roman Catholic'),
+        ('Islam', 'Islam'),
+        ('Evangelicals', 'Evangelicals'),
+        ('Protestant', 'Protestant'),
+        ('Iglesia ni Cristo', 'Iglesia ni Cristo'),
+        ('Others', 'Others'),
+    ]
     vic_id = models.AutoField(primary_key=True)
     vic_last_name = models.CharField(max_length=100)
     vic_first_name = models.CharField(max_length=100)
@@ -139,12 +194,19 @@ class Victim(models.Model):
     vic_PWD_type = models.CharField(max_length=50, choices=PWD_CHOICES, default='None')
     vic_contact_number = models.CharField(max_length=15, blank=True, null=True)
     vic_account = models.OneToOneField(Account, on_delete=models.CASCADE, null=True, blank=True)
+    
+    city = models.ForeignKey("City", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
+    municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
+    barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
+    sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
+    street = models.ForeignKey("Street", on_delete=models.SET_NULL, related_name="victims", null=True, blank=True)
+
     # Profile photo (first photo uploaded)
     vic_photo = models.ImageField(upload_to='victim_photos/', null=True, blank=True)
 
     def __str__(self):
         return self.vic_last_name
-
+ 
 class VictimFaceSample(models.Model):
     victim = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name="face_samples")
     photo = models.ImageField(upload_to='victim_face_samples/')
@@ -155,35 +217,26 @@ class VictimFaceSample(models.Model):
 
 class Perpetrator(models.Model):
     perp_id = models.AutoField(primary_key=True)
-    # Name
     per_first_name = models.CharField(max_length=100)
     per_middle_name = models.CharField(max_length=100, blank=True, null=True)
     per_last_name = models.CharField(max_length=100)
-    # Sex
     per_sex = models.CharField(max_length=10, choices=[
         ('Male', 'Male'),
         ('Female', 'Female')
     ], blank=True, null=True)
     per_birth_date = models.DateField(blank=True, null=True)
     per_birth_place = models.CharField(max_length=255, blank=True, null=True)
-    per_guardian_first_name = models.CharField(max_length=100, blank=True, null=True)
-    per_guardian_middle_name = models.CharField(max_length=100, blank=True, null=True)
-    per_guardian_last_name = models.CharField(max_length=100, blank=True, null=True)
-    per_guardian_contact = models.CharField(max_length=50, blank=True, null=True)
-    per_guardian_child_category = models.CharField(max_length=50, blank=True, null=True)
+    per_contact = models.IntegerField(null=True,blank=True)
     per_nationality = models.CharField(max_length=50, blank=True, null=True)
-    per_nationality_other = models.CharField(max_length=100, blank=True, null=True)
     per_occupation = models.CharField(max_length=100, blank=True, null=True)
     per_religion = models.CharField(max_length=50, blank=True, null=True)
-    per_religion_other = models.CharField(max_length=100, blank=True, null=True)
     per_relationship_category = models.CharField(max_length=50, blank=True, null=True) # should be relationship-to-victim?
-    per_relationship_detail = models.CharField(max_length=100, blank=True, null=True)
-    per_actor_type = models.CharField(max_length=50, blank=True, null=True)  # State Actor / Non-State Actor
-    per_state_actor_detail = models.CharField(max_length=100, blank=True, null=True)
-    per_security_branch = models.CharField(max_length=100, blank=True, null=True)
-    per_non_state_actor_detail = models.CharField(max_length=100, blank=True, null=True)
-    created_at = models.DateTimeField(null=True, blank=True)
-
+    # per_relationship_detail = models.CharField(max_length=100, blank=True, null=True)
+    # per_guardian_first_name = models.CharField(max_length=100, blank=True, null=True)
+    # per_guardian_middle_name = models.CharField(max_length=100, blank=True, null=True)
+    # per_guardian_last_name = models.CharField(max_length=100, blank=True, null=True)
+    # per_guardian_contact = models.CharField(max_length=50, blank=True, null=True)
+    # per_guardian_child_category = models.CharField(max_length=50, blank=True, null=True)
     def __str__(self):
         return f"{self.per_last_name}, {self.per_first_name}"
   
