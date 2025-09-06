@@ -502,8 +502,8 @@ export default function App() {
               }
             >
               <Route path={ROUTES.DESK_OFFICER} element={<DeskOfficerPage />} />
-              <Route path={ROUTES.DESK_OFFICER_REGISTER_VICTIM} element={<VictimFacial />} />
-              <Route path={ROUTES.DESK_OFFICER_VICTIM_FACIAL} element={<RegisterVictim />} />
+              <Route path={ROUTES.DESK_OFFICER_REGISTER_VICTIM} element={<RegisterVictim />} />
+              <Route path={ROUTES.DESK_OFFICER_VICTIM_FACIAL} element={<VictimFacial />} />
               <Route path={ROUTES.DESK_OFFICER_SESSION} element={<Session />} />
               <Route path={ROUTES.DESK_OFFICER_VICTIMS} element={<DOVictims />} />
               <Route path={ROUTES.DESK_OFFICER_VICTIM_DETAIL} element={<DOVictimDetail />} />

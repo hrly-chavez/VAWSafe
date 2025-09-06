@@ -289,7 +289,7 @@ export default function RegisterVictim() {
       victimPhotos.forEach((file) => fd.append("photos", file));
 
       // Use global axios instance
-      const res = await api.post("/desk_officer/victims/register/", fd);
+      const res = await api.post("/api/desk_officer/victims/register/", fd);
 
       if (!res.data || res.data.success === false) {
         const errors = res.data?.errors;

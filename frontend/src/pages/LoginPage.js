@@ -364,16 +364,21 @@ const LoginPage = () => {
         localStorage.setItem(
           "vawsafeAuth",
           JSON.stringify({
-            access: data.access,
-            refresh: data.refresh,
-            user: data.user,
+            access: data.tokens.access,
+            refresh: data.tokens.refresh,
+            user: {
+              username: data.username,
+              role: data.role,
+              name: data.name,
+              official_id: data.official_id
+            }
           })
         );
 
-        setMessage(`Welcome, ${data.user?.fname || ""} ${data.user?.lname || ""} (${data.user?.role})`);
+        setMessage(`Welcome, ${data.name} (${data.role})`);
 
-        const role = data.user?.role?.toLowerCase();
-        if (role === "social worker") navigate("/social_worker/dashboard");
+        const role = data.role?.toLowerCase();
+        if (role === "social worker") navigate("/social_worker");
         else if (role === "vawdesk") navigate("/desk_officer");
         else if (role === "dswd") navigate("/dswd");
       } else {
