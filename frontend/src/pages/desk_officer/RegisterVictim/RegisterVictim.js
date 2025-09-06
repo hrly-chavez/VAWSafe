@@ -1,5 +1,7 @@
 import { useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
+
 
 import Navbar from "../navBar";
 import Sidebar from "../sideBar";
@@ -7,6 +9,8 @@ import AdministrativeInfo from "./AdministrativeInfo";
 import VictimInfo from "./VictimInfo";
 import IncidentInfo from "./IncidentInfo";
 import PerpetratorInfo from "./PerpetratorInfo";
+import CaptureVictimFacial from "./VictimFacial";
+import SessionForm from "./../Session/Session";
 
 // Point to your Django dev server
 const API_BASE = "http://127.0.0.1:8000";
@@ -103,12 +107,20 @@ export default function RegisterVictim() {
     vic_sex: "",
   });
 
+  // Toggle Sections
   const [openSections, setOpenSections] = useState({
     adminInfo: false,
     victimInfo: false,
     incidentInfo: false,
     perpInfo: false,
+    facialCapture: false,
+    evidenceRecords: false,
+    barangayNote: false,
   });
+
+  // Show session form
+  const [showSessionForm, setShowSessionForm] = useState(false);
+
 
   const [statusMessage, setStatusMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -229,7 +241,7 @@ export default function RegisterVictim() {
       setLoading(false);
     }
 
-    navigate("/desk_officer/session");
+    setShowSessionForm(true);
   };
 
   const isFormValid = () => {
@@ -253,14 +265,18 @@ export default function RegisterVictim() {
     return true;
   };
 
+  // Buttons pops up when any of the section is open 
+  const isAnySectionOpen = Object.values(openSections).some((v) => v);
+
+
   return (
     <div>
       <Navbar />
       <div className="flex flex-row">
         <Sidebar />
         <div className="h-[85vh] overflow-y-auto w-full p-6">
+          {/* Victim Registration Form Sections */}
           <div className="border-2 border-blue-600 rounded-lg p-6 bg-white max-w-5xl mx-auto shadow">
-            {/* Header */}
             <h2 className="text-xl font-bold text-blue-800 mb-4">
               Victim Registration
             </h2>
@@ -345,10 +361,55 @@ export default function RegisterVictim() {
               )}
             </div>
 
-            {/* Notes */}
-            <div className="mt-6 space-y-1 text-red-600 text-sm">
-              <p>EVIDENCES AND RECORDS</p>
-              <p className="text-black">Note to Barangay VAW Desk Officer</p>
+            {/* Evidence and Records */}
+            <div className="mb-4">
+              <button
+                onClick={() => toggleSection("evidenceRecords")}
+                className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
+              >
+                {openSections.evidenceRecords ? "▼" : "▶"} Evidence and Records
+              </button>
+              {openSections.evidenceRecords && (
+                <div className="mt-4 border-l-4 border-blue-500 pl-4 text-sm text-gray-600">
+                  {/* Placeholder content */}
+                  <p>This section will contain uploaded evidence and supporting documents.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Note to Barangay VAW Desk Officer */}
+            <div className="mb-4">
+              <button
+                onClick={() => toggleSection("barangayNote")}
+                className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
+              >
+                {openSections.barangayNote ? "▼" : "▶"} Note to Barangay VAW Desk Officer
+              </button>
+              {openSections.barangayNote && (
+                <div className="mt-4 border-l-4 border-blue-500 pl-4 text-sm text-gray-600">
+                  {/* Placeholder content */}
+                  <p>This section will contain notes or instructions for the Barangay VAW Desk Officer.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Capture Victim Facial */}
+            <div className="mb-4 mt-4">
+              <button
+                onClick={() => toggleSection("facialCapture")}
+                className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
+              >
+                {openSections.facialCapture ? "▼" : "▶"} Capture Victim Facial
+              </button>
+              {openSections.facialCapture && (
+                <div className="mt-4 border-l-4 border-blue-500 pl-4">
+                  <CaptureVictimFacial
+                    victimPhotos={victimPhotos}
+                    formDataState={formDataState}
+                    setFormDataState={setFormDataState}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Status banner */}
@@ -366,27 +427,37 @@ export default function RegisterVictim() {
               </div>
             )}
 
-            {/* Footer buttons */}
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={cancel}
-                className="bg-red-600 text-white px-5 py-2 rounded hover:bg-red-700"
-              >
-                CANCEL FORM
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className={`px-5 py-2 rounded text-white font-semibold transition ${
-                  loading
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-700"
-                }`}
-              >
-                {loading ? "Submitting..." : "SUBMIT FORM"}
-              </button>
-            </div>
+            {/* Show buttons only when any section is open */}
+            {isAnySectionOpen && (
+              <div className="flex justify-end gap-4 mt-8">
+                <button
+                  onClick={cancel}
+                  className="flex items-center gap-2 px-6 py-2 rounded-md bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold shadow hover:from-red-600 hover:to-red-700 transition-all duration-200"
+                >
+                  <XCircleIcon className="h-5 w-5 text-white" />
+                  Cancel Form
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold shadow transition-all duration-200 ${loading
+                      ? "bg-gray-400 cursor-not-allowed text-white"
+                      : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
+                    }`}
+                >
+                  <CheckCircleIcon className="h-5 w-5 text-white" />
+                  {loading ? "Submitting..." : "Submit Form"}
+                </button>
+              </div>
+            )}
           </div>
+          {/* Session Form appears after successful registration */}
+          {/* Session Form appears after successful registration */}
+          {showSessionForm && (
+            <div className="mt-10">
+              <SessionForm embedded={true} />
+            </div>
+          )}
         </div>
       </div>
     </div>
