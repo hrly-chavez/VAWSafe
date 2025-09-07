@@ -1,10 +1,8 @@
-// src/pages/desk_officer/RegisterVictim/RegisterVictim.js
+// frontend/src/pages/desk_officer/RegisterVictim/RegisterVictim.js
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
-
-// import Navbar from "../navBar";
-// import Sidebar from "../sideBar";
+import { useLocation, useNavigate } from "react-router-dom";
+import Navbar from "../navBar";
+import Sidebar from "../sideBar";
 import AdministrativeInfo from "./AdministrativeInfo";
 import VictimInfo from "./VictimInfo";
 import IncidentInfo from "./IncidentInfo";
@@ -36,9 +34,7 @@ const VICTIM_FIELDS = [
   "vic_PWD_type",
   "vic_contact_number",
 ];
-
 const REQUIRED_VICTIM_KEYS = ["vic_first_name", "vic_last_name", "vic_sex"];
-
 const CASE_REPORT_KEYS = [
   "handling_org",
   "office_address",
@@ -85,10 +81,7 @@ const PERP_KEYS = [
 ];
 
 const hasAny = (state, keys) =>
-  keys.some(
-    (key) =>
-      state[key] !== undefined && state[key] !== "" && state[key] !== null
-  );
+  keys.some((key) => state[key] !== undefined && state[key] !== "" && state[key] !== null);
 
 export default function RegisterVictim() {
   const navigate = useNavigate();
@@ -111,7 +104,6 @@ export default function RegisterVictim() {
     evidenceRecords: false,
     barangayNote: false,
   });
-
   const [statusMessage, setStatusMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSchedulePage, setShowSchedulePage] = useState(false);
@@ -133,13 +125,13 @@ export default function RegisterVictim() {
       // Required fields
       for (const k of REQUIRED_VICTIM_KEYS) {
         if (!formDataState[k]) {
-          setStatusMessage(`❌ Missing required victim field: ${k}`);
+          setStatusMessage(` Missing required victim field: ${k}`);
           setLoading(false);
           return;
         }
       }
       if (victimPhotos.length !== 3 || victimPhotos.some((p) => !p)) {
-        setStatusMessage("❌ Please capture exactly 3 victim photos.");
+        setStatusMessage(" Please capture exactly 3 victim photos.");
         setLoading(false);
         return;
       }
@@ -196,7 +188,7 @@ export default function RegisterVictim() {
           const lines = Object.entries(errors).map(
             ([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : String(v)}`
           );
-          msg = `❌ Registration failed:\n${lines.join("\n")}`;
+          msg = ` Registration failed:\n${lines.join("\n")}`;
         }
 
         console.error("Register error payload:", res.data);
@@ -205,12 +197,12 @@ export default function RegisterVictim() {
         return;
       }
 
-      setStatusMessage("✅ Victim registered successfully!");
+      setStatusMessage(" Victim registered successfully!");
       setLoading(false);
       setShowSchedulePage(true); // 👈 show schedule after success
     } catch (err) {
       console.error("Register victim exception:", err);
-      setStatusMessage("❌ Something went wrong.");
+      setStatusMessage(" Something went wrong.");
       setLoading(false);
     }
   };

@@ -31,3 +31,5 @@ class OfficialFaceSampleAdmin(admin.ModelAdmin):
     photo_preview.allow_tags = True
     photo_preview.short_description = "Preview"
 
+
+
