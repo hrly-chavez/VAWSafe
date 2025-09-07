@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from shared_model.models import *
-
+from django.contrib.auth.models import User
 
 # class AccountSerializer(serializers.ModelSerializer):
 #     class Meta:
@@ -15,3 +15,8 @@ class OfficialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Official
         fields = "__all__"
+
+class OfficialFaceSampleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OfficialFaceSample
+        fields = "_all_"
