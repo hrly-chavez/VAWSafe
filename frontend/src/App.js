@@ -23,6 +23,7 @@ const RegisterVictim = lazy(() =>
   import("./pages/desk_officer/RegisterVictim/RegisterVictim")
 );
 const Session = lazy(() => import("./pages/desk_officer/Session/Session"));
+
 const DOVictims = lazy(() => import("./pages/desk_officer/Victims/Victims"));
 const DOVictimDetail = lazy(() =>
   import("./pages/desk_officer/Victims/VictimDetails")
@@ -31,6 +32,24 @@ const DOVictimSearch = lazy(() =>
   import("./pages/desk_officer/Victims/SearchVictim")
 );
 const DOTest = lazy(() => import("./pages/desk_officer/Test"));
+
+// Social Worker Pages (lazy loaded)
+const SidebarLayout = lazy(() => import("./pages/social_worker/SidebarLayout"));
+const DashboardPage = lazy(() =>
+  import("./pages/social_worker/Dashboard/Dashboard")
+);
+const CaseRecords = lazy(() =>
+  import("./pages/social_worker/CaseRecords/CaseRecords")
+);
+const Sessions = lazy(() => import("./pages/social_worker/Sessions/Sessions"));
+const Services = lazy(() => import("./pages/social_worker/Services/Services"));
+const Victims = lazy(() => import("./pages/social_worker/Victims/Victims"));
+const VictimDetailPage = lazy(() =>
+  import("./pages/social_worker/Victims/VictimDetailPage")
+);
+const SearchVictimFacial = lazy(() =>
+  import("./pages/social_worker/Victims/SearchVictimFacial")
+);
 
 // DSWD Pages (lazy loaded)
 const DSWDDashboard = lazy(() =>
@@ -54,24 +73,6 @@ const DSWD_VAWDESK_OFFICER = lazy(() =>
 );
 const DSWDServices = lazy(() =>
   import("./pages/dswd/ServiceDSWD/DSWDServices")
-);
-
-// Social Worker Pages (lazy loaded)
-const SidebarLayout = lazy(() => import("./pages/social_worker/SidebarLayout"));
-const DashboardPage = lazy(() =>
-  import("./pages/social_worker/Dashboard/Dashboard")
-);
-const CaseRecords = lazy(() =>
-  import("./pages/social_worker/CaseRecords/CaseRecords")
-);
-const Sessions = lazy(() => import("./pages/social_worker/Sessions/Sessions"));
-const Services = lazy(() => import("./pages/social_worker/Services/Services"));
-const Victims = lazy(() => import("./pages/social_worker/Victims/Victims"));
-const VictimDetailPage = lazy(() =>
-  import("./pages/social_worker/Victims/VictimDetailPage")
-);
-const SearchVictimFacial = lazy(() =>
-  import("./pages/social_worker/Victims/SearchVictimFacial")
 );
 
 export default function App() {
@@ -110,34 +111,6 @@ export default function App() {
           />
           <Route path={ROUTES.DO_TEST} element={<DOTest />} />
 
-          {/* DSWD */}
-          <Route path={ROUTES.DSWD} element={<DSWDDashboard />} />
-          <Route
-            path={ROUTES.DSWD_VAWC_VICTIMS}
-            element={<DSWDVAWCVictims />}
-          />
-          <Route
-            path={ROUTES.DSWD_VICTIM_DETAIL}
-            element={<DSWDVictimDetail />}
-          />
-          <Route
-            path={ROUTES.DSWD_SEARCH_VICTIM}
-            element={<DSWDSearchVictim />}
-          />
-          <Route
-            path={ROUTES.DSWD_SOCIAL_WORKERS}
-            element={<DSWDSocialWorkers />}
-          />
-          <Route
-            path={ROUTES.DSWD_SOCIAL_WORKERS_DETAILS}
-            element={<DSWDSocialWorkerDetail />}
-          />
-          <Route
-            path={ROUTES.DSWD_VAWDESK_OFFICER}
-            element={<DSWD_VAWDESK_OFFICER />}
-          />
-          <Route path={ROUTES.DSWD_SERVICES} element={<DSWDServices />} />
-
           {/* SOCIAL WORKER (nested routes under sidebar layout) */}
           <Route path={ROUTES.SOCIAL_WORKER} element={<SidebarLayout />}>
             <Route
@@ -166,6 +139,34 @@ export default function App() {
               element={<SearchVictimFacial />}
             />
           </Route>
+
+          {/* DSWD */}
+          <Route path={ROUTES.DSWD} element={<DSWDDashboard />} />
+          <Route
+            path={ROUTES.DSWD_VAWC_VICTIMS}
+            element={<DSWDVAWCVictims />}
+          />
+          <Route
+            path={ROUTES.DSWD_VICTIM_DETAIL}
+            element={<DSWDVictimDetail />}
+          />
+          <Route
+            path={ROUTES.DSWD_SEARCH_VICTIM}
+            element={<DSWDSearchVictim />}
+          />
+          <Route
+            path={ROUTES.DSWD_SOCIAL_WORKERS}
+            element={<DSWDSocialWorkers />}
+          />
+          <Route
+            path={ROUTES.DSWD_SOCIAL_WORKERS_DETAILS}
+            element={<DSWDSocialWorkerDetail />}
+          />
+          <Route
+            path={ROUTES.DSWD_VAWDESK_OFFICER}
+            element={<DSWD_VAWDESK_OFFICER />}
+          />
+          <Route path={ROUTES.DSWD_SERVICES} element={<DSWDServices />} />
 
           {/* Catch-all: if no route matches, redirect to login */}
           <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
