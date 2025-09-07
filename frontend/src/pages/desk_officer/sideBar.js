@@ -28,7 +28,7 @@ export default function Sidebar() {
     },
     {
       icon: "/images/tools.png",
-      label: "Ongoing Sessions",
+      label: "Sessions",
       path: "/desk_officer",
     },
     {
