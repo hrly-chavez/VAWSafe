@@ -1,145 +1,80 @@
-import Navbar from "../../Navbar";
+import { useState } from "react";
+import { CheckCircleIcon, PlayCircleIcon } from "@heroicons/react/24/solid";
 
-export default function Schedule({ back, next }) {
+export default function SchedulePage() {
+  const handleSubmitSchedule = () => {
+    alert("✅ Session scheduled successfully!");
+    // TODO: Send data to backend or navigate
+  };
+
+  const handleStartSession = () => {
+    alert("▶️ Session started.");
+    // TODO: Trigger session logic
+  };
+
   return (
-    <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
-      <h2 className="text-2xl font-semibold text-blue-700 mb-4">
-        Schedule Session
-      </h2>
+    <div className="border-2 border-blue-600 rounded-lg p-6 bg-white max-w-5xl mx-auto shadow mt-10 space-y-6">
+      {/* Main Title */}
+      <h2 className="text-xl font-bold text-blue-800">Schedule Session Form</h2>
 
-      <div className="border rounded-lg">
-        <div className="bg-gray-100 p-3 rounded-t-lg text-sm font-medium text-gray-700">
-          Monitoring Session Forms of VAWC Victims
-        </div>
+      {/* Scheduling Form */}
+      <div className="border rounded-lg p-4 bg-gray-50 mt-2">
+        <p className="text-gray-500 mb-3">Please fill out the session schedule.</p>
 
-        {/* Action Links */}
-        <div className="p-4 text-sm space-y-2">
-          {/* Form */}
-          <div className="border rounded-lg p-4 bg-gray-50 mt-2">
-            <p className="text-gray-500 mb-3">Please Fill up the form.</p>
-
-            <div className="grid grid-cols-3 gap-3 mb-3">
-              <div>
-                <label className="text-xs text-gray-600">Session No.</label>
-                <input
-                  type="text"
-                  value="01"
-                  disabled
-                  className="w-full border rounded p-2 text-gray-500 bg-gray-100"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-600">
-                  Victim Register No.
-                </label>
-                <input
-                  type="text"
-                  value="VAW-2025-05-00123"
-                  disabled
-                  className="w-full border rounded p-2 text-gray-500 bg-gray-100"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-600">Case No.</label>
-                <input
-                  type="text"
-                  value="01"
-                  disabled
-                  className="w-full border rounded p-2 text-gray-500 bg-gray-100"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div>
-                <label className="text-xs text-gray-600">Date</label>
-                <input
-                  type="date"
-                  className="w-full border rounded p-2"
-                  defaultValue={new Date().toISOString().split("T")[0]} // current date
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-600">Time</label>
-                <input
-                  type="time"
-                  className="w-full border rounded p-2"
-                  defaultValue={new Date().toTimeString().slice(0, 5)} // current time HH:MM
-                />
-              </div>
-            </div>
-
-            <div className="mb-3">
-              <label className="text-xs text-gray-600">Location Address</label>
-              <input type="text" className="w-full border rounded p-2" />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div>
-                <label className="text-xs text-gray-600">Region</label>
-                <select className="w-full border rounded p-2">
-                  <option>Select Region</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-xs text-gray-600">Province</label>
-                <select className="w-full border rounded p-2">
-                  <option>Select Province</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-xs text-gray-600">CityMun.</label>
-                <select className="w-full border rounded p-2">
-                  <option>Select City</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-xs text-gray-600">Barangay</label>
-                <select className="w-full border rounded p-2">
-                  <option>Select Barangay</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div>
-                <label className="text-xs text-gray-600">Type of Session</label>
-                <select className="w-full border rounded p-2">
-                  <option>Select Type</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-xs text-gray-600 block">Attended?</label>
-                <div className="flex items-center space-x-4 mt-1">
-                  <label className="flex items-center space-x-1">
-                    <input type="radio" name="attended" />
-                    <span>Yes</span>
-                  </label>
-                  <label className="flex items-center space-x-1">
-                    <input type="radio" name="attended" />
-                    <span>No</span>
-                  </label>
-                </div>
-              </div>
-            </div>
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className="text-xs text-gray-600">Date</label>
+            <input
+              type="date"
+              className="w-full border rounded p-2"
+              defaultValue={new Date().toISOString().split("T")[0]}
+            />
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex justify-end gap-3 mt-4">
-            <button
-              className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600"
-              onClick={next}
-            >
-              Submit to Schedule Session
-            </button>
-            <button
-              className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600"
-              onClick={next}
-            >
-              Start Session Now
-            </button>
+          <div>
+            <label className="text-xs text-gray-600">Time</label>
+            <input
+              type="time"
+              className="w-full border rounded p-2"
+              defaultValue={new Date().toTimeString().slice(0, 5)}
+            />
           </div>
         </div>
+
+        <div className="mb-3">
+          <label className="text-xs text-gray-600">Location</label>
+          <input type="text" className="w-full border rounded p-2" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className="text-xs text-gray-600">Type of Session</label>
+            <select className="w-full border rounded p-2">
+              <option>Select Type</option>
+              <option>Initial Intake</option>
+              <option>Follow-up</option>
+              <option>Monitoring</option>
+              <option>Emergency</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-4 pt-6">
+        <button
+          onClick={handleSubmitSchedule}
+          className="flex items-center gap-2 px-6 py-2 rounded-md bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold shadow hover:from-green-600 hover:to-green-700 transition-all duration-200"
+        >
+          <CheckCircleIcon className="h-5 w-5 text-white" />
+          Submit to Schedule Session
+        </button>
+        <button
+          onClick={handleStartSession}
+          className="flex items-center gap-2 px-6 py-2 rounded-md bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
+        >
+          <PlayCircleIcon className="h-5 w-5 text-white" />
+          Start Session Now
+        </button>
       </div>
     </div>
   );
