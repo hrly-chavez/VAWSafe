@@ -442,7 +442,6 @@ const DOVictimSearch = lazy(() =>
 const DOTest = lazy(() => import("./pages/desk_officer/Test"));
 
 // Social Worker Pages (lazy loaded)
-const SidebarLayout = lazy(() => import("./pages/social_worker/SidebarLayout"));
 const DashboardPage = lazy(() =>
   import("./pages/social_worker/Dashboard/Dashboard")
 );

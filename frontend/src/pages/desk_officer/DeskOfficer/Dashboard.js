@@ -1,6 +1,4 @@
 import { useState } from "react";
-import Navbar from "../navBar";
-import Sidebar from "../sideBar";
 import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
