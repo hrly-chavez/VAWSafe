@@ -24,8 +24,6 @@ export default function Session() {
   };
   const submit = () => {
     alert("Form submitted! ");
-    // alert("Form submitted! " + JSON.stringify(formData, null, 2));
-    // setFormData({});
     setCurrentStep(1);
   };
 
@@ -35,7 +33,7 @@ export default function Session() {
         return (
           <Schedule
             // formData={formData}
-            // setFormData={setFormData}
+            // setFormData={setFormData}  
             back={back}
             next={next}
           />

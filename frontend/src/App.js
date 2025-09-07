@@ -89,84 +89,35 @@ export default function App() {
 
           {/* DESK OFFICER */}
           <Route path={ROUTES.DESK_OFFICER} element={<DeskOfficerPage />} />
-          <Route
-            path={ROUTES.DESK_OFFICER_REGISTER_VICTIM}
-            element={<RegisterVictim />}
-          />
-          <Route
-            path={ROUTES.DESK_OFFICER_VICTIM_FACIAL}
-            element={<VictimFacial />}
-          />
+          <Route path={ROUTES.DESK_OFFICER_REGISTER_VICTIM} element={<RegisterVictim />}/>
+          <Route path={ROUTES.DESK_OFFICER_VICTIM_FACIAL} element={<VictimFacial />} />
           <Route path={ROUTES.DESK_OFFICER_SESSION} element={<Session />} />
-
           <Route path={ROUTES.DESK_OFFICER_VICTIMS} element={<DOVictims />} />
-          <Route
-            path={ROUTES.DESK_OFFICER_VICTIM_DETAIL}
-            element={<DOVictimDetail />}
-          />
-          <Route
-            path={ROUTES.DESK_OFFICER_VICTIM_SEARCH}
-            element={<DOVictimSearch />}
-          />
+          <Route path={ROUTES.DESK_OFFICER_VICTIM_DETAIL} element={<DOVictimDetail />}/>
+          <Route path={ROUTES.DESK_OFFICER_VICTIM_SEARCH} element={<DOVictimSearch />}/>
           <Route path={ROUTES.DO_TEST} element={<DOTest />} />
 
           {/* DSWD */}
           <Route path={ROUTES.DSWD} element={<DSWDDashboard />} />
-          <Route
-            path={ROUTES.DSWD_VAWC_VICTIMS}
-            element={<DSWDVAWCVictims />}
-          />
-          <Route
-            path={ROUTES.DSWD_VICTIM_DETAIL}
-            element={<DSWDVictimDetail />}
-          />
-          <Route
-            path={ROUTES.DSWD_SEARCH_VICTIM}
-            element={<DSWDSearchVictim />}
-          />
-          <Route
-            path={ROUTES.DSWD_SOCIAL_WORKERS}
-            element={<DSWDSocialWorkers />}
-          />
-          <Route
-            path={ROUTES.DSWD_SOCIAL_WORKERS_DETAILS}
-            element={<DSWDSocialWorkerDetail />}
-          />
-          <Route
-            path={ROUTES.DSWD_VAWDESK_OFFICER}
-            element={<DSWD_VAWDESK_OFFICER />}
-          />
+          <Route path={ROUTES.DSWD_VAWC_VICTIMS} element={<DSWDVAWCVictims />} />
+          <Route path={ROUTES.DSWD_VICTIM_DETAIL} element={<DSWDVictimDetail />}/>
+          <Route path={ROUTES.DSWD_SEARCH_VICTIM} element={<DSWDSearchVictim />} />
+          <Route  path={ROUTES.DSWD_SOCIAL_WORKERS} element={<DSWDSocialWorkers />}/>
+          <Route path={ROUTES.DSWD_SOCIAL_WORKERS_DETAILS} element={<DSWDSocialWorkerDetail />}/>
+          <Route path={ROUTES.DSWD_VAWDESK_OFFICER} element={<DSWD_VAWDESK_OFFICER />} />
           <Route path={ROUTES.DSWD_SERVICES} element={<DSWDServices />} />
 
           {/* SOCIAL WORKER (nested routes under sidebar layout) */}
           <Route path={ROUTES.SOCIAL_WORKER} element={<SidebarLayout />}>
-            <Route
-              path={ROUTES.SOCIAL_WORKER_DASHBOARD}
-              element={<DashboardPage />}
-            />
-            <Route
-              path={ROUTES.SOCIAL_WORKER_CASE_RECORDS}
-              element={<CaseRecords />}
-            />
-            <Route
-              path={ROUTES.SOCIAL_WORKER_SESSIONS}
-              element={<Sessions />}
-            />
-            <Route
-              path={ROUTES.SOCIAL_WORKER_SERVICES}
-              element={<Services />}
-            />
+            <Route path={ROUTES.SOCIAL_WORKER_DASHBOARD} element={<DashboardPage />}/>
+            <Route path={ROUTES.SOCIAL_WORKER_CASE_RECORDS} element={<CaseRecords />}/>
+            <Route path={ROUTES.SOCIAL_WORKER_SESSIONS} element={<Sessions />} />
+            <Route path={ROUTES.SOCIAL_WORKER_SERVICES} element={<Services />}/>
             <Route path={ROUTES.SOCIAL_WORKER_VICTIMS} element={<Victims />} />
-            <Route
-              path={ROUTES.SOCIAL_WORKER_VICTIM_DETAIL}
-              element={<VictimDetailPage />}
-            />
-            <Route
-              path={ROUTES.SOCIAL_WORKER_SEARCH_FACIAL}
-              element={<SearchVictimFacial />}
-            />
+            <Route path={ROUTES.SOCIAL_WORKER_VICTIM_DETAIL} element={<VictimDetailPage />} />
+            <Route path={ROUTES.SOCIAL_WORKER_SEARCH_FACIAL} element={<SearchVictimFacial />}/>
           </Route>
-
+          
           {/* Catch-all: if no route matches, redirect to login */}
           <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
         </Routes>

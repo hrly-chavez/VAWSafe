@@ -1,4 +1,4 @@
-// src/pages/desk_officer/RegisterVictim/VictimFacial.js
+//frontend/src/pages/desk_officer/RegisterVictim/VictimFacial.js
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Webcam from "react-webcam";
@@ -84,7 +84,7 @@ export default function VictimFacial() {
                 onClick={capturePhoto}
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-6 rounded-xl shadow transition"
               >
-                📸 Capture Photo {currentIndex + 1}/{MAX_PHOTOS}
+                 Capture Photo {currentIndex + 1}/{MAX_PHOTOS}
               </button>
 
               {/* Photos preview */}
@@ -104,7 +104,7 @@ export default function VictimFacial() {
                       onClick={() => retakePhoto(index)}
                       className="mt-2 w-full bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg text-xs font-medium transition"
                     >
-                      🔄 Retake #{index + 1}
+                       Retake #{index + 1}
                     </button>
                   </div>
                 ))}
@@ -115,7 +115,7 @@ export default function VictimFacial() {
                 onClick={handleNext}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl shadow transition"
               >
-                Next ➡️
+                Next 
               </button>
             </div>
           </div>

@@ -30,4 +30,5 @@ export const ROUTES = {
   SOCIAL_WORKER_VICTIMS: "victims",
   SOCIAL_WORKER_VICTIM_DETAIL: "victims/:vic_id",
   SOCIAL_WORKER_SEARCH_FACIAL: "victims/search-facial",
+  
 };

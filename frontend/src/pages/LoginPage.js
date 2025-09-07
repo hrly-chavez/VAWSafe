@@ -147,7 +147,7 @@ const LoginPage = () => {
     setRegErrors(newErrors);
     if (hasError) return;
 
-    // ✅ 2. Prepare form data only if validation passed
+    //  2. Prepare form data only if validation passed
     const formData = new FormData();
     formData.append("of_fname", of_fname);
     formData.append("of_lname", of_lname);
@@ -161,7 +161,7 @@ const LoginPage = () => {
       formData.append("of_photos", photoFile);
     }
 
-    // ✅ 3. Submit form
+    //  3. Submit form
     setLoading(true);
     setStatus("");
     setCredentials(null);
@@ -174,14 +174,14 @@ const LoginPage = () => {
 
       const data = await response.json();
 
-      setStatus("✅ Registration successful!");
+      setStatus(" Registration successful!");
       setCredentials({
         username: data.username,
         password: data.password,
         role: data.role,
       });
 
-      // ✅ 4. Reset form state
+      //  4. Reset form state
       setPhotos([]);
       setFname("");
       setLname("");
@@ -189,7 +189,7 @@ const LoginPage = () => {
       setCurrentIndex(0);
     } catch (err) {
       console.error(err);
-      setStatus("❌ Registration failed. Please check the input or camera.");
+      setStatus(" Registration failed. Please check the input or camera.");
     } finally {
       setLoading(false);
     }
@@ -228,21 +228,21 @@ const LoginPage = () => {
 
     // countdown
     for (let i = 3; i > 0; i--) {
-      if (loginCancelledRef.current) return; // 🔴 stop if user pressed Go Back
+      if (loginCancelledRef.current) return; //  stop if user pressed Go Back
       setCountdown(i);
       await delay(1000);
     }
 
-    if (loginCancelledRef.current) return; // 🔴 stop before capture
+    if (loginCancelledRef.current) return; //  stop before capture
 
     setCountdown(null);
     setMessage("📸 Capturing frames... Please blink now!");
 
     const frames = await captureBurstFrames();
-    if (loginCancelledRef.current) return; // 🔴 stop after capture
+    if (loginCancelledRef.current) return; //  stop after capture
 
     if (frames.length === 0) {
-      setMessage("❌ Failed to capture webcam images.");
+      setMessage(" Failed to capture webcam images.");
       setLoading(false);
       return;
     }
@@ -259,18 +259,18 @@ const LoginPage = () => {
         method: "POST",
         body: blinkForm,
       });
-      if (loginCancelledRef.current) return; // 🔴 stop if cancelled
+      if (loginCancelledRef.current) return; //  stop if cancelled
       const blinkData = await blinkRes.json();
 
       if (!blinkRes.ok || !blinkData.blink) {
-        setMessage(blinkData.message || "❌ No blink detected, please try again.");
+        setMessage(blinkData.message || " No blink detected, please try again.");
         setLoading(false);
         return;
       }
 
-      // ✅ Blink detected
+      //  Blink detected
       setBlinkCaptured(true);
-      setMessage("👁️ Blink captured ✅ Now verifying face...");
+      setMessage(" Blink captured  Now verifying face...");
 
       // Step 2: Send candidate frames to face-login
       const loginForm = new FormData();
@@ -283,21 +283,21 @@ const LoginPage = () => {
         method: "POST",
         body: loginForm,
       });
-      if (loginCancelledRef.current) return; // 🔴 stop if cancelled
+      if (loginCancelledRef.current) return; //  stop if cancelled
       const loginData = await loginRes.json();
       setLoading(false);
 
       if (loginRes.ok && loginData.match) {
-        // ✅ Save user data
+        //  Save user data
         localStorage.removeItem("loggedInUser");
         localStorage.setItem("vawsafeUser", JSON.stringify(loginData));
 
-        // ✅ Show welcome card
+        //  Show welcome card
         setWelcomeData(loginData);
         setShowWelcomeCard(true);
 
       } else {
-        setMessage(loginData.message || "❌ Face verification failed.");
+        setMessage(loginData.message || " Face verification failed.");
       }
     } catch (err) {
       console.error(err);
@@ -324,7 +324,7 @@ const LoginPage = () => {
     setLoginErrors(newErrors);
     if (hasError) return;
 
-    // ✅ Only proceed if no errors
+    //  Only proceed if no errors
     setMessage('Logging in...');
 
     try {
@@ -372,7 +372,7 @@ const LoginPage = () => {
         backgroundRepeat: "no-repeat",
       }}
     >
-      {/* ✅ Navbar stays full width on top */}
+      {/*  Navbar stays full width on top */}
       <Navbar />
 
       <div className="flex items-center justify-center py-8 sm:py-12 px-4 relative z-10">
@@ -394,7 +394,7 @@ const LoginPage = () => {
           {/* Right Sign-in Section */}
           <div className="bg-white/10 backdrop-blur-md flex flex-col justify-center items-center px-10 w-full h-[600px]">
             {showRegister ? (
-              // ✅ REGISTER FORM
+              //  REGISTER FORM
               <div className="w-full h-full flex justify-center items-center">
                 <div className="w-full max-w-[600px] h-[90%] overflow-y-auto px-4 py-6 rounded-xl bg-white/10 backdrop-blur-md shadow-lg scroll-container">
                   <h2 className="text-2xl font-bold mb-4 text-white">Register Official</h2>
@@ -681,7 +681,7 @@ const LoginPage = () => {
                     <div className="mt-6 flex flex-col sm:flex-row sm:gap-6 gap-4 items-center">
                       {!loading &&
                         (message === "No blink detected. Please blink clearly." ||
-                          message.includes("❌")) && (
+                          message.includes("")) && (
                           <button
                             onClick={handleFaceLogin}
                             className="w-44 py-2 bg-red-500 text-white font-semibold rounded-lg shadow hover:bg-red-600 transition"
@@ -691,7 +691,7 @@ const LoginPage = () => {
                         )}
                       <button
                         onClick={() => {
-                          loginCancelledRef.current = true; // 🔴 cancel running flow
+                          loginCancelledRef.current = true; //  cancel running flow
                           setShowCamera(false);
                           setMessage("");
                           setCountdown(3);
