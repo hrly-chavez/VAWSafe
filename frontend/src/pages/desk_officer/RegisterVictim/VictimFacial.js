@@ -1,4 +1,4 @@
-// src/pages/desk_officer/RegisterVictim/VictimFacial.js
+//frontend/src/pages/desk_officer/RegisterVictim/VictimFacial.js
 import { useRef, useState } from "react";
 import Webcam from "react-webcam";
 import { CameraIcon, ArrowPathIcon, TrashIcon } from "@heroicons/react/24/solid";

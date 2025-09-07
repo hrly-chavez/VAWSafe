@@ -1,5 +1,4 @@
 import tempfile, os, traceback, json
-
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
@@ -11,10 +10,8 @@ from shared_model.permissions import IsRole
 
 from deepface import DeepFace
 from PIL import Image
-
 from django.db import transaction
 from django.utils.dateparse import parse_date, parse_time
-
 from shared_model.models import *
 from .serializers import *
 
@@ -254,5 +251,7 @@ def register_victim(request):
         return Response({"success": False, "error": str(e)},
                         status=status.HTTP_400_BAD_REQUEST)
 
-
+#SESSION FUNCTIONS
+def schedule_session(request):
+    pass
 
