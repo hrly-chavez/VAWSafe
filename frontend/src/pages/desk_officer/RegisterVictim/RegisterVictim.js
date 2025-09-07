@@ -1,15 +1,14 @@
 // frontend/src/pages/desk_officer/RegisterVictim/RegisterVictim.js
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Navbar from "../navBar";
-import Sidebar from "../sideBar";
+
 import AdministrativeInfo from "./AdministrativeInfo";
 import VictimInfo from "./VictimInfo";
 import IncidentInfo from "./IncidentInfo";
 import PerpetratorInfo from "./PerpetratorInfo";
 import CaptureVictimFacial from "./VictimFacial";
 import SchedulePage from "../Session/Schedule";
-
+import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import api from "../../../api/axios";
 
 const VICTIM_FIELDS = [
