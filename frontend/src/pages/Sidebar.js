@@ -152,106 +152,40 @@ export default function Sidebar() {
     }
   }, [auth]);
 
+
   // Generate sidebar items based on role
   const getSidebarItems = () => {
     const role = user?.role?.toLowerCase();
 
-    if (role === "vawdesk" || role === "desk officer") {
-      return [
-        {
-          icon: "/images/dashboard.png",
-          label: "Account Page",
-          path: "/desk_officer",
-        },
-        {
-          icon: "/images/tools.png",
-          label: "Register Victim",
-          path: "/desk_officer/register_victim",
-        },
-        {
-          icon: "/images/tools.png",
-          label: "Ongoing Sessions",
-          path: "/desk_officer",
-        },
-        {
-          icon: "/images/tools.png",
-          label: "VAWC Victims",
-          path: "/desk_officer/victims",
-        },
-        {
-          icon: "/images/tools.png",
-          label: "Log Out",
-          path: "/login",
-          action: logout,
-        },
-      ];
-    }
-
     if (role === "social worker") {
       return [
-        {
-          icon: "/images/dashboard.png",
-          label: "Dashboard",
-          path: "/social_worker",
-        },
-        {
-          icon: "/images/edit.png",
-          label: "Case Records",
-          path: "/social_worker/case-records",
-        },
-        {
-          icon: "/images/tools.png",
-          label: "Sessions",
-          path: "/social_worker/sessions",
-        },
-        {
-          icon: "/images/high-value.png",
-          label: "Services",
-          path: "/social_worker/services",
-        },
-        {
-          icon: "/images/hands.png",
-          label: "VAWC Victims",
-          path: "/social_worker/victims",
-        },
-        {
-          icon: "/images/tools.png",
-          label: "Log Out",
-          path: "/login",
-          action: logout,
-        },
+        { icon: "/images/dashboard.png", label: "Dashboard", path: "/social_worker" },
+        { icon: "/images/edit.png", label: "Case Records", path: "/social_worker/case-records" },
+        { icon: "/images/tools.png", label: "Sessions", path: "/social_worker/sessions" },
+        { icon: "/images/high-value.png", label: "Services", path: "/social_worker/services" },
+        { icon: "/images/hands.png", label: "VAWC Victims", path: "/social_worker/victims" },
+        { icon: "/images/tools.png", label: "Log Out", path: "/login", action: logout },
       ];
     }
 
     if (role === "dswd") {
       return [
         { icon: "/images/dashboard.png", label: "Dashboard", path: "/dswd" },
-        {
-          icon: "/images/hands.png",
-          label: "VAWC Victims",
-          path: "/dswd/victims",
-        },
-        {
-          icon: "/images/user.png",
-          label: "Social Workers",
-          path: "/dswd/social-workers",
-        },
-        {
-          icon: "/images/edit.png",
-          label: "VAW Desk Officer",
-          path: "/dswd/vawdesk-officer",
-        },
-        {
-          icon: "/images/high-value.png",
-          label: "Services",
-          path: "/dswd/services",
-        },
-        {
-          icon: "/images/tools.png",
-          label: "Log Out",
-          path: "/login",
-          action: logout,
-        },
+        { icon: "/images/hands.png", label: "VAWC Victims", path: "/dswd/victims" },
+        { icon: "/images/user.png", label: "Social Workers", path: "/dswd/social-workers" },
+        { icon: "/images/edit.png", label: "VAW Desk Officer", path: "/dswd/vawdesk-officer" },
+        { icon: "/images/high-value.png", label: "Services", path: "/dswd/services" },
+        { icon: "/images/tools.png", label: "Log Out", path: "/login", action: logout },
+      ];
+    }
+
+    if (role === "vawdesk" || role === "desk officer") {
+      return [
+        { icon: "/images/dashboard.png", label: "Account Page", path: "/desk_officer" },
+        { icon: "/images/tools.png", label: "Register Victim", path: "/desk_officer/victim_facial" },
+        { icon: "/images/tools.png", label: "Ongoing Sessions", path: "/desk_officer" },
+        { icon: "/images/tools.png", label: "VAWC Victims", path: "/desk_officer/victims" },
+        { icon: "/images/tools.png", label: "Log Out", path: "/login", action: logout },
       ];
     }
 
@@ -260,8 +194,7 @@ export default function Sidebar() {
 
   const sidebarItems = getSidebarItems();
 
-  const displayName =
-    user?.name || `${user?.fname || ""} ${user?.lname || ""}`.trim();
+  const displayName = user?.name || `${user?.fname || ""} ${user?.lname || ""}`.trim();
   const profilePhoto = user?.profile_photo_url || "/images/bussiness-man.png";
 
   return (
