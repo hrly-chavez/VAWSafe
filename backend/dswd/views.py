@@ -8,17 +8,31 @@ from rest_framework import status
 from deepface import DeepFace
 from .serializers import *
 from django.db.models import Prefetch
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from shared_model.permissions import IsRole
+
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
+
 
 # Create your views here.
-
+#Add @never_cache to sensitive view functions, or create middleware. Example for viewset:
+@method_decorator(never_cache, name='dispatch')
 class ViewVictim (generics.ListAPIView):
     queryset = Victim.objects.all()
     serializer_class = VictimListSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
+    # permission_classes = [AllowAny] #gamita lang ni sya if ganahan mo makakita sa value kay tungod ni sa settingskatung JWTAuthentication 
     
 class ViewDetail (generics.ListAPIView):
     queryset = Victim.objects.all()
     serializer_class = VictimDetailSerializer
     lookup_field = "vic_id"
+    # permission_classes = [IsAuthenticated, IsRole]
+    # allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
+    
 
 class search_victim_facial(APIView):
     parser_classes = [MultiPartParser, FormParser]
@@ -91,6 +105,9 @@ class search_victim_facial(APIView):
         finally:
             if chosen_frame and os.path.exists(chosen_frame):
                 os.remove(chosen_frame)
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
+    
 
 class ViewSocialWorker(generics.ListAPIView):
     serializer_class = SocialWorkerListSerializer
@@ -98,7 +115,6 @@ class ViewSocialWorker(generics.ListAPIView):
     def get_queryset(self):
         qs = (Official.objects
               .filter(of_role="Social Worker")
-              .select_related("account")
               .order_by("of_lname", "of_fname"))
         q = self.request.query_params.get("q")
         if q:
@@ -117,6 +133,10 @@ class ViewSocialWorker(generics.ListAPIView):
         self.serializer_class.context = {"request": request}
         return super().list(request, *args, **kwargs)
     
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
+    
+    
 class ViewSocialWorkerDetail(generics.RetrieveAPIView):
     serializer_class = SocialWorkerDetailSerializer
     lookup_field = "of_id"
@@ -125,7 +145,6 @@ class ViewSocialWorkerDetail(generics.RetrieveAPIView):
         return (
             Official.objects
             .filter(of_role="Social Worker")
-            .select_related("account")
             .prefetch_related(
                 "face_samples",
                 Prefetch("handled_incidents", queryset=IncidentInformation.objects.select_related("vic_id").order_by("-incident_date")),
@@ -138,13 +157,16 @@ class ViewSocialWorkerDetail(generics.RetrieveAPIView):
         ctx.update({"request": self.request})  # absolute media URLs
         return ctx
     
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
+    
+    
 class ViewVAWDeskOfficer(generics.ListAPIView):
     serializer_class = VAWDeskOfficerListSerializer
 
     def get_queryset(self):
         qs = (Official.objects
               .filter(of_role="VAWDesk")
-              .select_related("account")
               .order_by("of_lname", "of_fname"))
         q = self.request.query_params.get("q")
         if q:
@@ -162,3 +184,28 @@ class ViewVAWDeskOfficer(generics.ListAPIView):
         # ensure absolute image URLs
         self.serializer_class.context = {"request": request}
         return super().list(request, *args, **kwargs)
+    
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
+    
+class ViewVAWDeskOfficerDetail(generics.RetrieveAPIView):
+    serializer_class = VAWDeskOfficerListSerializer
+    lookup_field = "of_id"
+
+    def get_queryset(self):
+        return (
+            Official.objects
+            .filter(of_role="VAWDesk")
+            .prefetch_related(
+                "face_samples"
+            )
+        )
+
+    def get_serializer_context(self):
+        ctx = super().get_serializer_context()
+        ctx.update({"request": self.request})  # absolute media URLs
+        return ctx
+    
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
+   

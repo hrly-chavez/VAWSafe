@@ -2,10 +2,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
-import Navbar from "../Navbar";
-import Sidebar from "../sidebar";
-
-const API_BASE = "http://127.0.0.1:8000/api/dswd";
+import Navbar from "../../Navbar";
+import api from "../../../api/axios"; // import your global axios instance
 
 export default function VictimDetails() {
   const { vic_id } = useParams();
@@ -13,22 +11,38 @@ export default function VictimDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+
+
   useEffect(() => {
     const run = async () => {
       setLoading(true);
       setError("");
+
       try {
-        const res = await axios.get(`${API_BASE}/victims/${vic_id}/`);
+        // Use global axios instance
+        const res = await api.get(`/api/dswd/victims/${vic_id}/`);
+
+        // If backend returns an array, take first element; else use object
         const data = Array.isArray(res.data) ? res.data[0] : res.data;
+
         setVictim(data || null);
+        console.log("Fetched victim data:", data); // debug log to see backend response
+
       } catch (err) {
-        setError(err?.response?.status ? `Error ${err.response.status}` : "Request failed");
+        setError(
+          err?.response?.status
+            ? `Error ${err.response.status}`
+            : "Request failed"
+        );
+        console.error("Fetch victim error:", err);
       } finally {
         setLoading(false);
       }
     };
-    run();
+
+    if (vic_id) run();
   }, [vic_id]);
+
 
   // small helper to read whichever key exists (keeps UI from going blank if fields differ)
   const get = (obj, keys, fallback = "N/A") => {
@@ -54,7 +68,6 @@ export default function VictimDetails() {
       <Navbar />
 
       <div className="flex min-h-screen bg-white">
-        <Sidebar />
 
         <div className="flex-1 p-6">
           {loading && <p className="text-gray-600">Loading victim details…</p>}

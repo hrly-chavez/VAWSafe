@@ -7,19 +7,25 @@ from rest_framework import status
 from deepface import DeepFace
 from shared_model.models import *
 from .serializers import *
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.permissions import IsAuthenticated
+from shared_model.permissions import IsRole
 
 
 
 class victim_list(generics.ListAPIView):
     queryset = Victim.objects.all()
     serializer_class = VictimListSerializer
-
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['Social Worker']
 
 
 class victim_detail(generics.RetrieveAPIView):
     queryset = Victim.objects.all()
     serializer_class = VictimDetailSerializer
     lookup_field = "vic_id"
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['Social Worker']
 
 class search_victim_facial(APIView):
     parser_classes = [MultiPartParser, FormParser]
@@ -92,3 +98,6 @@ class search_victim_facial(APIView):
         finally:
             if chosen_frame and os.path.exists(chosen_frame):
                 os.remove(chosen_frame)
+
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['Social Worker']

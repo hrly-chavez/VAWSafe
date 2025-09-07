@@ -1,7 +1,7 @@
-import Navbar from "../Navbar";
-import Sidebar from "../sidebar";
+import Navbar from "../../Navbar";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
+import api from "../../../api/axios";
 
 export default function DSWDSocialWorkers() {
   const [workers, setWorkers] = useState([]);
@@ -11,20 +11,26 @@ export default function DSWDSocialWorkers() {
 
   useEffect(() => {
     const load = async () => {
+      setLoading(true);
+      setErr("");
       try {
-        setLoading(true);
-        const res = await axios.get(
-          `http://127.0.0.1:8000/api/dswd/social_worker/`,
-          { params: search ? { q: search } : {} }
-        );
+        // Use global axios instance
+        const res = await api.get("/api/dswd/social_worker/", {
+          params: search ? { q: search } : {},
+        });
+
+        // Handle array or paginated response
         setWorkers(Array.isArray(res.data) ? res.data : res.data.results ?? []);
+        console.log("Fetched social workers:", res.data); // optional debug log
+
       } catch (e) {
-        console.error(e);
+        console.error("Error fetching social workers:", e);
         setErr("Failed to load social workers.");
       } finally {
         setLoading(false);
       }
     };
+
     load();
   }, [search]);
 
@@ -34,7 +40,6 @@ export default function DSWDSocialWorkers() {
     <>
       <Navbar />
       <div className="flex min-h-screen bg-white">
-        <Sidebar />
         <div className="flex-1 px-6 py-6 m-5 bg-white rounded-[20px] shadow-[0_2px_6px_0_rgba(0,0,0,0.1),0_-2px_6px_0_rgba(0,0,0,0.1)]">
           <h2 className="text-2xl font-semibold font-[Poppins] tracking-tight text-[#292D96]">
             Social Workers

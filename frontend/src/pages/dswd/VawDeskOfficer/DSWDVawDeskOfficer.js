@@ -114,10 +114,10 @@
 // }
 
 
-import Navbar from "../Navbar";
-import Sidebar from "../sidebar";
+import Navbar from "../../Navbar";
 import axios from "axios";
 import { useEffect, useMemo, useState } from "react";
+import api from "../../../api/axios";
 
 export default function DSWDVawDeskOfficer() {
   const [workers, setWorkers] = useState([]);
@@ -127,20 +127,27 @@ export default function DSWDVawDeskOfficer() {
 
   useEffect(() => {
     const load = async () => {
+      setLoading(true);
+      setErr("");
+
       try {
-        setLoading(true);
-        const res = await axios.get(
-          `http://127.0.0.1:8000/api/dswd/vawdesk_officer/`,
-          { params: search ? { q: search } : {} }
-        );
+        // Use global axios instance
+        const res = await api.get("/api/dswd/vawdesk_officer/", {
+          params: search ? { q: search } : {},
+        });
+
+        // Handle array or paginated response
         setWorkers(Array.isArray(res.data) ? res.data : res.data.results ?? []);
+        console.log("Fetched VAW desk officers:", res.data); // optional debug
+
       } catch (e) {
-        console.error(e);
-        setErr("Failed to load social workers.");
+        console.error("Error fetching VAW desk officers:", e);
+        setErr("Failed to load VAW Desk Officers.");
       } finally {
         setLoading(false);
       }
     };
+
     load();
   }, [search]);
 
@@ -150,16 +157,15 @@ export default function DSWDVawDeskOfficer() {
     <>
       <Navbar />
       <div className="flex min-h-screen bg-white">
-        <Sidebar />
         <div className="flex-1 px-6 py-6 m-5 bg-white rounded-[20px] shadow-[0_2px_6px_0_rgba(0,0,0,0.1),0_-2px_6px_0_rgba(0,0,0,0.1)]">
           <h2 className="text-2xl font-semibold font-[Poppins] tracking-tight text-[#292D96]">
-            Social Workers
+            Desk Officers
           </h2>
 
           <div className="mt-3">
             <div className="flex flex-col gap-[30px] md:flex-row md:items-center md:justify-between">
               <p className="text-sm font-medium text-[#292D96]">
-                List of Social Workers
+                List of Desk Officers
               </p>
 
               <div className="flex items-center gap-3">
@@ -228,13 +234,13 @@ export default function DSWDVawDeskOfficer() {
                             <span>{w.full_name}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3">{w.of_role || "Social Worker"}</td>
+                        <td className="px-4 py-3">{w.of_role || "VAWDesk"}</td>
                         <td className="px-4 py-3">{w.of_contact || "—"}</td>
                         <td className="px-4 py-3">{w.of_specialization || "—"}</td>
                         <td className="px-4 py-3">{w.of_brgy_assigned || "—"}</td>
                         <td className="px-4 py-3">
                           <a
-                            href={`/dswd/social-workers/${w.of_id}`}
+                            href={`/dswd/vawdesk-officer/${w.of_id}`}
                             className="font-medium text-blue-600 hover:underline"
                           >
                             View Form
@@ -245,7 +251,7 @@ export default function DSWDVawDeskOfficer() {
                     {rows.length === 0 && (
                       <tr>
                         <td className="px-4 py-6 text-sm text-neutral-500" colSpan={6}>
-                          No social workers found.
+                          No desk officer found.
                         </td>
                       </tr>
                     )}

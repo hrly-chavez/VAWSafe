@@ -2,10 +2,14 @@ from rest_framework import serializers
 from shared_model.models import *
 
 
-class AccountSerializer(serializers.ModelSerializer):
+# class AccountSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Account
+#         fields = ['username', 'password']
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Account
-        fields = ['username', 'password']
+        model = User
+        fields = ["id", "username"]
 
 class OfficialSerializer(serializers.ModelSerializer):
     class Meta:

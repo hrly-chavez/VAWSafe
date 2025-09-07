@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import axios from "axios";
-import Navbar from "../navBar";
-import Sidebar from "../sideBar";
+import Navbar from "../../Navbar";
+import api from "../../../api/axios";
 
-const API_BASE = "http://127.0.0.1:8000/api/desk_officer";
 
 export default function VictimDetails() {
   const { vic_id } = useParams();
@@ -16,8 +15,9 @@ export default function VictimDetails() {
     const run = async () => {
       setLoading(true);
       setError("");
+
       try {
-        const res = await axios.get(`${API_BASE}/victims/${vic_id}/`);
+        const res = await api.get(`api/desk_officer/victims/${vic_id}/`);
         const data = Array.isArray(res.data) ? res.data[0] : res.data;
         setVictim(data || null);
       } catch (err) {
@@ -30,7 +30,8 @@ export default function VictimDetails() {
         setLoading(false);
       }
     };
-    run();
+
+    if (vic_id) run();
   }, [vic_id]);
 
   // small helper to read whichever key exists (keeps UI from going blank if fields differ)
@@ -61,7 +62,6 @@ export default function VictimDetails() {
       <Navbar />
 
       <div className="flex min-h-screen bg-white">
-        <Sidebar />
 
         <div className="flex-1 p-6">
           {loading && <p className="text-gray-600">Loading victim details…</p>}

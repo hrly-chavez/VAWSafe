@@ -1,5 +1,4 @@
-import Sidebar from "../sideBar";
-import Navbar from "../navBar";
+import Navbar from "../../Navbar";
 
 export default function Schedule({ back, next }) {
   return (

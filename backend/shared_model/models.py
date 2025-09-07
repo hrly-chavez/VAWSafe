@@ -1,12 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
-
-class Account(models.Model):
-    username = models.CharField(max_length=150, unique=True)
-    password = models.CharField(max_length=255)  
-
-    def __str__(self):
-        return self.username
+from django.conf import settings
 
 class City(models.Model):
     name = models.CharField(max_length=150, unique=True)
@@ -64,12 +58,12 @@ class Street(models.Model):
     
 class Official(models.Model):
     ROLE_CHOICES = [
-    ('DSWD', 'DSWD'),
-    ('VAWDesk', 'VAWDesk'),
-    ('Social Worker', 'Social Worker'),
+        ('DSWD', 'DSWD'),
+        ('VAWDesk', 'VAWDesk'),
+        ('Social Worker', 'Social Worker'),
     ]
-
-    account = models.OneToOneField(Account, on_delete=models.CASCADE)
+    #change user nga dili modawat ug default ug null kay ako rha ni gi test para sa authorization ug authentication
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="official", null=True, blank=True)
     of_id = models.AutoField(primary_key=True)
     of_fname = models.CharField(max_length=50)
     of_lname = models.CharField(max_length=50)
@@ -81,7 +75,7 @@ class Official(models.Model):
     of_contact = models.CharField(max_length=20, null=True, blank=True)
     of_role = models.CharField(max_length=50, choices=ROLE_CHOICES, blank=True, null=True)
     of_specialization = models.CharField(max_length=100, null=True, blank=True)
-    of_photo = models.ImageField(upload_to='photos/')  # Profile image only
+    of_photo = models.ImageField(upload_to='photos/', null=True, blank=True)
 
     sitio = models.ForeignKey(Sitio, on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
     street = models.ForeignKey(Street, on_delete=models.SET_NULL, null=True, blank=True, related_name="officials")  
@@ -89,11 +83,13 @@ class Official(models.Model):
     assigned_barangay = models.ForeignKey(Barangay, on_delete=models.PROTECT, related_name="assigned_officials", null=True, blank=True)
 
     def __str__(self):
-        return f"{self.of_fname}, {self.of_lname}"
+        return f"{self.of_fname} {self.of_lname}"
 
     @property
     def full_name(self):
-        return f"{self.of_fname} {self.of_m_initial or ''}. {self.of_lname} {self.of_suffix or ''}".strip()
+        middle = f"{self.of_m_initial or ''}."
+        return f"{self.of_fname} {middle} {self.of_lname} {self.of_suffix or ''}".strip()
+
 
 class OfficialFaceSample(models.Model):
     official = models.ForeignKey(Official, on_delete=models.CASCADE, related_name='face_samples')
@@ -193,7 +189,6 @@ class Victim(models.Model):
     vic_is_displaced = models.BooleanField(default=False)
     vic_PWD_type = models.CharField(max_length=50, choices=PWD_CHOICES, default='None')
     vic_contact_number = models.CharField(max_length=15, blank=True, null=True)
-    vic_account = models.OneToOneField(Account, on_delete=models.CASCADE, null=True, blank=True)
     
     city = models.ForeignKey("City", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
     municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
@@ -201,6 +196,9 @@ class Victim(models.Model):
     sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
     street = models.ForeignKey("Street", on_delete=models.SET_NULL, related_name="victims", null=True, blank=True)
 
+    vic_account = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
+    )
     # Profile photo (first photo uploaded)
     vic_photo = models.ImageField(upload_to='victim_photos/', null=True, blank=True)
 
