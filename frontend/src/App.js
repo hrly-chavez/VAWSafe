@@ -431,12 +431,32 @@ const RegisterVictim = lazy(() =>
   import("./pages/desk_officer/RegisterVictim/RegisterVictim")
 );
 const Session = lazy(() => import("./pages/desk_officer/Session/Session"));
+
 const DOVictims = lazy(() => import("./pages/desk_officer/Victims/Victims"));
 const DOVictimDetail = lazy(() =>
   import("./pages/desk_officer/Victims/VictimDetails")
 );
 const DOVictimSearch = lazy(() =>
   import("./pages/desk_officer/Victims/SearchVictim")
+);
+const DOTest = lazy(() => import("./pages/desk_officer/Test"));
+
+// Social Worker Pages (lazy loaded)
+const SidebarLayout = lazy(() => import("./pages/social_worker/SidebarLayout"));
+const DashboardPage = lazy(() =>
+  import("./pages/social_worker/Dashboard/Dashboard")
+);
+const CaseRecords = lazy(() =>
+  import("./pages/social_worker/CaseRecords/CaseRecords")
+);
+const Sessions = lazy(() => import("./pages/social_worker/Sessions/Sessions"));
+const Services = lazy(() => import("./pages/social_worker/Services/Services"));
+const Victims = lazy(() => import("./pages/social_worker/Victims/Victims"));
+const VictimDetailPage = lazy(() =>
+  import("./pages/social_worker/Victims/VictimDetailPage")
+);
+const SearchVictimFacial = lazy(() =>
+  import("./pages/social_worker/Victims/SearchVictimFacial")
 );
 
 //DSWD
@@ -462,21 +482,6 @@ const DSWD_VAWDESK_OFFICER_Detail = lazy(() =>
 );
 const DSWDServices = lazy(() =>
   import("./pages/dswd/ServiceDSWD/DSWDServices")
-);
-
-//Social Worker
-const DashboardPage = lazy(() => import("./pages/social_worker/Dashboard/Dashboard"));
-const CaseRecords = lazy(() =>
-  import("./pages/social_worker/CaseRecords/CaseRecords")
-);
-const Sessions = lazy(() => import("./pages/social_worker/Sessions/Sessions"));
-const Services = lazy(() => import("./pages/social_worker/Services/Services"));
-const Victims = lazy(() => import("./pages/social_worker/Victims/Victims"));
-const VictimDetailPage = lazy(() =>
-  import("./pages/social_worker/Victims/VictimDetailPage")
-);
-const SearchVictimFacial = lazy(() =>
-  import("./pages/social_worker/Victims/SearchVictimFacial")
 );
 
 export default function App() {

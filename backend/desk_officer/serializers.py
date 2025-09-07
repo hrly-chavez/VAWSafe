@@ -2,6 +2,7 @@ from rest_framework import serializers
 from shared_model.models import *
 from datetime import date
 
+# --- Lightweight list serializer ---
 class VictimListSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
 
@@ -44,14 +45,14 @@ class VictimSerializer(serializers.ModelSerializer):
         model = Victim
         fields = "__all__"
 
-class PerpetratorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Perpetrator
-        fields = "__all__"
-
 class IncidentInformationSerializer(serializers.ModelSerializer):
     class Meta:
         model = IncidentInformation
+        fields = "__all__"
+
+class PerpetratorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Perpetrator
         fields = "__all__"
 
 class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):

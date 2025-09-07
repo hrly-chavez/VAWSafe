@@ -22,25 +22,5 @@ How to run project
 4. npm start
 
 
-
-Kung libog ang frontend
-
-src/
-├── api/                 # Axios instance
-├── components/          # Shared components
-├── pages/               # auth & role pages
-│   ├── auth/
-│   ├── desk_officer/<file_name>.js
-│   ├── social_worker/<file_name>.js
-│   ├── victim/<file_name>.js
-│   ├── dswd/<file_name>.js
-├── App.js               # Main router setup
-├── index.js             # Entry point
-├── index.css            # Base global styles
-
-
-unsaon pag search
-http://localhost:3000/login
-http://localhost:3000/desk_officer
-http://localhost:3000/social_worker
-http://localhost:3000/dswd
+city  csv file
+https://psa.gov.ph/system/files/scd/PSGC-1Q-2025-Publication-Datafile.xlsx
