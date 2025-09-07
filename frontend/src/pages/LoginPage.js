@@ -58,11 +58,12 @@ const LoginPage = () => {
   const [welcomeData, setWelcomeData] = useState(null);
 
   const handleContinue = () => {
-    const role = (welcomeData?.role || "").toLowerCase();
-    if (role === "social worker") navigate("/social_worker/dashboard");
-    else if (role === "vawdesk") navigate("/desk_officer");
-    else if (role === "dswd") navigate("/dswd");
-  };
+  const role = (welcomeData?.role || "").toLowerCase();
+  if (role === "social worker") navigate("/social_worker/dashboard");
+  else if (role === "vawdesk") navigate("/desk_officer");
+  else if (role === "dswd") navigate("/dswd");
+  else navigate("/login");
+};
 
 
 
@@ -287,38 +288,28 @@ const LoginPage = () => {
       setLoading(false);
 
       if (loginRes.ok && loginData.match) {
-        // ✅ Store JWT tokens and user info in localStorage for axios interceptor
+        loginData.user = {
+          username: loginData.username,
+          role: loginData.role,
+          name: loginData.name,
+          official_id: loginData.official_id,
+          fname: loginData.fname, // ✅ now available
+          lname: loginData.lname, // ✅ now available
+          profile_photo_url: loginData.profile_photo_url
+        };
+
         localStorage.setItem(
           "vawsafeAuth",
           JSON.stringify({
             access: loginData.tokens.access,
             refresh: loginData.tokens.refresh,
-            user: {
-              username: loginData.username,
-              role: loginData.role,
-              name: loginData.name,
-              official_id: loginData.official_id
-            }
+            user: loginData.user
           })
         );
-
 
         // ✅ Also set welcome card info
         setWelcomeData(loginData.user);
         setShowWelcomeCard(true);
-
-        const user = loginData;
-
-        // ✅ Redirect based on role
-        if (user.role === "DSWD") {
-          navigate("/dswd");
-        } else if (user.role === "VAWDesk") {
-          navigate("/desk_officer");
-        } else if (user.role === "Social Worker") {
-          navigate("/social_worker");
-        } else {
-          navigate("/login"); // fallback
-        }
 
       } else {
         setMessage(loginData.message || "❌ Face verification failed.");
@@ -744,7 +735,7 @@ const LoginPage = () => {
                         <div className="bg-green-100 border border-green-400 rounded-lg p-6 shadow-xl text-green-900 w-full max-w-md text-center animate-fade-in">
                           <CheckCircleIcon className="h-6 w-6 text-green-500 mx-auto mb-2" />
                           <h3 className="text-lg font-semibold">
-                            Welcome, {welcomeData.fname} {welcomeData.lname}!
+                            Welcome, {welcomeData.name}!
                           </h3>
                           <p className="text-sm mt-1">
                             You're now signed in as <strong>{welcomeData.role}</strong>. Let's get started.
