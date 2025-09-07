@@ -14,7 +14,7 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(Official)
 class OfficialAdmin(admin.ModelAdmin):
-    list_display = ['of_fname', 'of_lname', 'of_role']
+    list_display = ['of_fname', 'of_lname', 'of_role', 'user__username']
     search_fields = ['of_fname', 'of_lname']
     list_filter = ['of_role']
 
