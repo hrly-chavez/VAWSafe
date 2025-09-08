@@ -44,208 +44,176 @@ export default function VictimDetails() {
 
   const fullName = victim
     ? [
-        get(
-          victim,
-          ["vic_first_name", "first_name", "fname", "given_name"],
-          ""
-        ),
-        get(victim, ["vic_middle_name", "middle_name", "mname"], ""),
-        get(victim, ["vic_last_name", "last_name", "lname", "surname"], ""),
-        get(victim, ["vic_extension", "name_suffix"], ""),
-      ]
-        .filter(Boolean)
-        .join(" ")
+      get(
+        victim,
+        ["vic_first_name", "first_name", "fname", "given_name"],
+        ""
+      ),
+      get(victim, ["vic_middle_name", "middle_name", "mname"], ""),
+      get(victim, ["vic_last_name", "last_name", "lname", "surname"], ""),
+      get(victim, ["vic_extension", "name_suffix"], ""),
+    ]
+      .filter(Boolean)
+      .join(" ")
     : "";
+
+  const [activeTab, setActiveTab] = useState("victim");
 
   return (
     <>
-      <Navbar />
+      <div className="flex flex-col min-h-screen bg-white">
+        <Navbar />
+        <h1 className="text-2xl font-bold text-[#292D96] px-6 pt-6">Victim Details</h1>
+        <div className="flex flex-1 gap-6 px-6 py-8 max-w-screen-xl mx-auto w-full">
+          {/* Left: Profile Sidebar */}
+          <div className="w-[300px] bg-white rounded-xl shadow p-4 border flex flex-col items-center">
+            {/* Profile Photo */}
+            <img
+              src={get(victim, ["vic_photo", "photo_url", "photo"], "")}
+              alt="Victim"
+              className="h-[180px] w-[180px] object-cover rounded-md mb-4 border"
+            />
 
-      <div className="flex min-h-screen bg-white">
+            {/* Name & ID */}
+            <div className="text-center w-full">
+              <h2 className="text-xl font-semibold text-[#292D96]">{fullName || "N/A"}</h2>
+              <p className="text-sm text-gray-500 mt-1">Victim ID: {get(victim, ["vic_id", "id"])}</p>
+            </div>
 
-        <div className="flex-1 p-6">
-          {loading && <p className="text-gray-600">Loading victim details…</p>}
-          {error && <p className="text-red-600">{error}</p>}
+            {/* Case Info Container */}
+            <div className="mt-6 w-full space-y-3">
+              <h3 className="text-base font-semibold text-[#292D96] mb-1">Case Information</h3>
 
-          {!loading && !error && (
-            <div className="max-w-3xl rounded-2xl bg-white p-6 shadow">
-              <h2 className="mb-4 text-2xl font-bold text-[#292D96]">
-                Victim Details
-              </h2>
+              {[
+                { label: "Case No.", value: get(victim?.case_report, ["case_no", "case_number"]) },
+                { label: "Intake Form Date", value: get(victim?.case_report, ["intake_date", "form_date"]) },
+                { label: "Handling Organization", value: get(victim?.case_report, ["handling_org", "organization"]) },
+                { label: "Case Manager", value: get(victim?.case_report, ["case_manager", "manager_name"]) },
+                { label: "Position", value: get(victim?.case_report, ["manager_position", "position"]) },
+              ].map((item, index) => (
+                <div key={index} className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm">
+                  <p className="text-xs text-gray-500 mb-1">{item.label}</p>
+                  <p className="text-sm font-medium text-gray-800">{item.value || "—"}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
-              {!victim ? (
-                <p className="text-gray-600">No victim data found.</p>
-              ) : (
-                <div className="space-y-2 text-gray-800">
-                  <p>
-                    <strong>Victim ID:</strong> {get(victim, ["vic_id", "id"])}
-                  </p>
-                  <p>
-                    <strong>Name:</strong> {fullName || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Sex:</strong>{" "}
-                    {get(victim, ["vic_sex", "sex", "gender"])}
-                  </p>
-                  <p>
-                    <strong>Age:</strong> {get(victim, ["age"])}
-                  </p>
-                  <p>
-                    <strong>Birth Place:</strong>{" "}
-                    {get(victim, ["vic_birth_place", "birth_place", "place"])}
-                  </p>
+          {/* Right: Tabbed Content */}
+          <div className="flex-1 bg-white rounded-xl shadow p-6 border">
+            {/* Tab Menu */}
+            <div className="flex space-x-6 border-b mb-6">
+              {[
+                { key: "victim", label: "Victim Information" },
+                { key: "perpetrator", label: "Perpetrator Information" },
+                { key: "incident", label: "Incident Reports & Records" },
+                { key: "sessions", label: "Sessions" },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`pb-2 text-sm font-medium ${activeTab === tab.key
+                    ? "text-[#292D96] border-b-2 border-[#292D96]"
+                    : "text-gray-500 hover:text-[#292D96]"
+                    }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
 
-                  {/* Photo if provided (expects absolute URL) */}
-                  {get(victim, ["vic_photo", "photo_url", "photo"], null) && (
-                    <div className="mt-4">
-                      <h3 className="mb-1 text-lg font-semibold">
-                        Profile Photo
-                      </h3>
-                      <img
-                        src={get(
-                          victim,
-                          ["vic_photo", "photo_url", "photo"],
-                          ""
-                        )}
-                        alt="Victim"
-                        width="220"
-                        className="rounded-lg border"
-                      />
-                    </div>
-                  )}
-
-                  {/* Case Report */}
-                  {victim.case_report && (
-                    <div className="mt-6">
-                      <h3 className="mb-2 text-lg font-semibold">
-                        Case Report
-                      </h3>
-                      <p>
-                        <strong>Handling Org:</strong>{" "}
-                        {get(victim.case_report, ["handling_org"])}
-                      </p>
-                      <p>
-                        <strong>Report Type:</strong>{" "}
-                        {get(victim.case_report, ["report_type"])}
-                      </p>
-                      <p>
-                        <strong>Informant:</strong>{" "}
-                        {get(victim.case_report, ["informant_name"])} (
-                        {get(victim.case_report, ["informant_relationship"])})
-                      </p>
-                      <p>
-                        <strong>Contact:</strong>{" "}
-                        {get(victim.case_report, ["informant_contact"])}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Incidents */}
-                  {Array.isArray(victim.incidents) &&
-                    victim.incidents.length > 0 && (
-                      <div className="mt-6">
-                        <h3 className="mb-2 text-lg font-semibold">
-                          Incidents
-                        </h3>
-                        <ul className="space-y-3">
-                          {victim.incidents.map((incident) => (
-                            <li
-                              key={incident.incident_id}
-                              className="rounded-lg border p-3"
-                            >
-                              <p>
-                                <strong>Date:</strong>{" "}
-                                {get(incident, ["incident_date"])}
-                              </p>
-                              <p>
-                                <strong>Description:</strong>{" "}
-                                {get(incident, ["incident_description"])}
-                              </p>
-                              <p>
-                                <strong>Location:</strong>{" "}
-                                {get(incident, ["incident_location"])}
-                              </p>
-
-                              {incident.perpetrator ? (
-                                <div className="mt-2 rounded-md bg-gray-50 p-2">
-                                  <h4 className="font-semibold">Perpetrator</h4>
-                                  <p>
-                                    <strong>Name:</strong>{" "}
-                                    {[
-                                      get(
-                                        incident.perpetrator,
-                                        ["per_first_name", "first_name"],
-                                        ""
-                                      ),
-                                      get(
-                                        incident.perpetrator,
-                                        ["per_last_name", "last_name"],
-                                        ""
-                                      ),
-                                    ]
-                                      .filter(Boolean)
-                                      .join(" ") || "N/A"}
-                                  </p>
-                                  <p>
-                                    <strong>Sex:</strong>{" "}
-                                    {get(incident.perpetrator, [
-                                      "per_sex",
-                                      "sex",
-                                    ])}
-                                  </p>
-                                  <p>
-                                    <strong>Relationship:</strong>{" "}
-                                    {get(incident.perpetrator, [
-                                      "per_relationship_category",
-                                      "relationship",
-                                    ])}
-                                  </p>
-                                </div>
-                              ) : (
-                                <p>
-                                  <em>No perpetrator linked</em>
-                                </p>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
+            {/* Tab Content */}
+            <div className="text-sm text-gray-800">
+              {activeTab === "victim" && (
+                <div>
+                  <h4 className="text-lg font-semibold text-[#292D96] mb-4">Victim Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      { label: "Full Name", value: fullName },
+                      { label: "Sex", value: get(victim, ["vic_sex", "sex", "gender"]) },
+                      { label: "SOGIE", value: get(victim, ["vic_sogie", "sogie"]) },
+                      { label: "Date of Birth", value: get(victim, ["vic_birth_date", "birth_date"]) },
+                      { label: "Birth Place", value: get(victim, ["vic_birth_place", "birth_place", "place"]) },
+                      { label: "Age", value: get(victim, ["age"]) },
+                      { label: "Civil Status", value: get(victim, ["vic_civil_status", "civil_status"]) },
+                      { label: "Educational Attainment", value: get(victim, ["vic_education", "education"]) },
+                      { label: "Nationality", value: get(victim, ["vic_nationality", "nationality"]) },
+                      { label: "Ethnicity", value: get(victim, ["vic_ethnicity", "ethnicity"]) },
+                      { label: "Occupation", value: get(victim, ["vic_occupation", "occupation"]) },
+                      { label: "Monthly Income", value: get(victim, ["vic_monthly_income", "monthly_income"]) },
+                      { label: "Religion", value: get(victim, ["vic_religion", "religion"]) },
+                      { label: "Contact No.", value: get(victim, ["vic_contact", "contact"]) },
+                    ].map((item, index) => (
+                      <div key={index} className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm">
+                        <p className="text-xs text-gray-500 mb-1">{item.label}</p>
+                        <p className="text-sm font-medium text-gray-800">{item.value || "—"}</p>
                       </div>
-                    )}
+                    ))}
+                  </div>
 
-                  {/* Face samples */}
-                  {Array.isArray(victim.face_samples) &&
-                    victim.face_samples.length > 0 && (
-                      <div className="mt-6">
-                        <h3 className="mb-2 text-lg font-semibold">
-                          Face Samples
-                        </h3>
-                        <div className="flex flex-wrap gap-2">
-                          {victim.face_samples.map((sample, i) => (
-                            <img
-                              key={i}
-                              src={get(sample, ["photo"], "")}
-                              alt={`Sample ${i + 1}`}
-                              width="150"
-                              className="rounded-md border"
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                  {/* Full Address in its own row */}
+                  <div className="mt-4">
+                    <div className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm">
+                      <p className="text-xs text-gray-500 mb-1">Full Address</p>
+                      <p className="text-sm font-medium text-gray-800">{get(victim, ["vic_address", "address"]) || "—"}</p>
+                    </div>
+                  </div>
                 </div>
               )}
 
-              <div className="mt-6">
-                <Link
-                  to="/desk_officer/victims"
-                  className="inline-flex items-center rounded-lg bg-[#292D96] px-4 py-2 text-white hover:bg-[#1f2375]"
-                >
-                  ← Back to List
-                </Link>
-              </div>
+              {activeTab === "perpetrator" && (
+                <div>
+                  <h4 className="text-lg font-semibold text-[#292D96] mb-4">Perpetrator Information</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      {
+                        label: "Full Name",
+                        value: [
+                          get(victim?.incidents?.[0]?.perpetrator, ["per_first_name", "first_name"], ""),
+                          get(victim?.incidents?.[0]?.perpetrator, ["per_last_name", "last_name"], "")
+                        ].filter(Boolean).join(" ")
+                      },
+                      { label: "Sex", value: get(victim?.incidents?.[0]?.perpetrator, ["per_sex", "sex"]) },
+                      { label: "Date of Birth", value: get(victim?.incidents?.[0]?.perpetrator, ["per_birth_date", "birth_date"]) },
+                      { label: "Birth Place", value: get(victim?.incidents?.[0]?.perpetrator, ["per_birth_place", "birth_place"]) },
+                      { label: "Nationality", value: get(victim?.incidents?.[0]?.perpetrator, ["per_nationality", "nationality"]) },
+                      { label: "Occupation", value: get(victim?.incidents?.[0]?.perpetrator, ["per_occupation", "occupation"]) },
+                      { label: "Religion", value: get(victim?.incidents?.[0]?.perpetrator, ["per_religion", "religion"]) },
+                    ].map((item, index) => (
+                      <div key={index} className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm">
+                        <p className="text-xs text-gray-500 mb-1">{item.label}</p>
+                        <p className="text-sm font-medium text-gray-800">{item.value || "—"}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "incident" && (
+                <div>
+                  <h4 className="text-lg font-semibold text-[#292D96] mb-2">Incident Reports & Records</h4>
+                  <p>Review incident descriptions, locations, and evidence.</p>
+                </div>
+              )}
+
+              {activeTab === "sessions" && (
+                <div>
+                  <h4 className="text-lg font-semibold text-[#292D96] mb-2">Sessions</h4>
+                  <p>Track session history, status, and assigned personnel.</p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
+      </div >
+      {/* Back Button Below Right Section */}
+      <div className="max-w-screen-xl mx-auto w-full px-6 pb-8 flex justify-end">
+        <Link
+          to="/desk_officer/victims"
+          className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
+        >
+          ← Back to List
+        </Link>
       </div>
     </>
   );
