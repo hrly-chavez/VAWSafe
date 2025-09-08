@@ -84,7 +84,7 @@ class Official(models.Model):
     street = models.ForeignKey("Street", on_delete=models.SET_NULL, null=True, blank=True, related_name="officials") 
 
     #where na baranggay assigned
-    assigned_barangay = models.ForeignKey(Barangay, on_delete=models.PROTECT, related_name="assigned_officials", null=True, blank=True)
+    of_assigned_barangay = models.ForeignKey(Barangay, on_delete=models.PROTECT, related_name="assigned_officials", null=True, blank=True)
 
 
     def __str__(self):
@@ -343,7 +343,7 @@ class Session(models.Model):
     sess_id = models.AutoField(primary_key=True)
     sess_num = models.IntegerField(null=True, blank=True)
     sess_status = models.CharField(max_length=20,choices=SESSION_STAT, default='Pending') 
-    sess_next_sched = models.DateField(null=True, blank=True) # if scheduled session
+    sess_next_sched = models.DateTimeField(null=True, blank=True) # if scheduled session
     sess_date_today = models.DateTimeField(null=True, blank=True)   #if start right away
     sess_mental_note = models.TextField(null=True,blank=True)
     sess_physical_note = models.TextField(null=True,blank=True)
@@ -356,7 +356,12 @@ class Session(models.Model):
     
 
     def __str__(self):
-        return f"Session {self.sess_id} Incident Id: {self.incident_id}" 
+        victim_name = (
+            f"{self.incident_id.vic_id.vic_last_name}, {self.incident_id.vic_id.vic_first_name}"
+            if self.incident_id and self.incident_id.vic_id
+            else "No Victim"
+        )
+        return f"Session {self.sess_id} - Victim: {victim_name}" 
     
 class Session_Changelog(models.Model):
     sc_changed_timestamp = models.DateTimeField()
