@@ -23,7 +23,7 @@ class ViewVictim (generics.ListAPIView):
     allowed_roles = ['VAWDesk']
     
     
-class ViewDetail (generics.ListAPIView):
+class ViewDetail (generics.RetrieveAPIView):
     queryset = Victim.objects.all()
     serializer_class = VictimDetailSerializer
     lookup_field = "vic_id"
