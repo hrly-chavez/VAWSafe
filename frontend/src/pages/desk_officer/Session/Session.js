@@ -3,11 +3,15 @@ import { useNavigate } from "react-router-dom";
 import Schedule from "./Schedule";
 import Form3 from "./Form3";
 
+
+
 export default function Sessions() {
   const [sessions, setSessions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentStep, setCurrentStep] = useState(1);
   const navigate = useNavigate();
+
+
 
   useEffect(() => {
     // Fetch sessions from API
