@@ -19,9 +19,21 @@ export default function Navbar() {
     >
       {/* LEFT (LOGOS) */}
       <div className="flex items-center gap-[15px]">
-        <img src="/images/DSWD.webp" alt="DSWD" className="w-[100px] rounded-[5px]" />
-        <img src="/images/iacat.jpg" alt="IACAT" className="h-[60px] w-[60px] rounded-[5px] object-cover" />
-        <img src="/images/iacvawc-logo.png" alt="IACVAWC" className="h-[60px] w-[60px] rounded-[5px] object-contain" />
+        <img
+          src="/images/DSWD.webp"
+          alt="DSWD"
+          className="w-[100px] rounded-[5px]"
+        />
+        <img
+          src="/images/iacat.jpg"
+          alt="IACAT"
+          className="h-[60px] w-[60px] rounded-[5px] object-cover"
+        />
+        <img
+          src="/images/iacvawc-logo.png"
+          alt="IACVAWC"
+          className="h-[60px] w-[60px] rounded-[5px] object-contain"
+        />
       </div>
 
       {/* CENTER (TITLE) */}
