@@ -64,7 +64,15 @@ class SocialWorkerListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Official
-        fields = "__all__"
+        fields = [
+            "of_id",
+            "full_name",
+            "of_role",
+            "of_contact",
+            "photo",
+            "assigned_barangay",
+            "of_specialization",
+        ]
 
     def get_full_name(self, obj):
         parts = [obj.of_fname]
