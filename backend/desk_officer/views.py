@@ -1,5 +1,4 @@
 import tempfile, os, traceback, json
-
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
@@ -11,10 +10,8 @@ from shared_model.permissions import IsRole
 
 from deepface import DeepFace
 from PIL import Image
-
 from django.db import transaction
 from django.utils.dateparse import parse_date, parse_time
-
 from shared_model.models import *
 from .serializers import *
 
@@ -26,7 +23,7 @@ class ViewVictim (generics.ListAPIView):
     allowed_roles = ['VAWDesk']
     
     
-class ViewDetail (generics.ListAPIView):
+class ViewDetail (generics.RetrieveAPIView):
     queryset = Victim.objects.all()
     serializer_class = VictimDetailSerializer
     lookup_field = "vic_id"
@@ -253,6 +250,31 @@ def register_victim(request):
         transaction.set_rollback(True)
         return Response({"success": False, "error": str(e)},
                         status=status.HTTP_400_BAD_REQUEST)
+
+#SESSION FUNCTIONS
+class SessionListCreateView(generics.ListCreateAPIView):
+    queryset = Session.objects.all()
+    serializer_class = SessionSerializer
+
+
+class SessionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Session.objects.all()
+    serializer_class = SessionSerializer
+    lookup_field = "sess_id"
+
+
+@api_view(["POST"])
+def schedule_session(request):
+    """
+    API for scheduling a session (sess_next_sched).
+    Requires: incident_id, sess_next_sched, sess_type, sess_location
+    """
+    serializer = SessionSerializer(data=request.data)
+    if serializer.is_valid():
+        session = serializer.save(sess_status="Pending")
+        return Response(SessionSerializer(session).data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 

@@ -26,12 +26,12 @@ class ViewVictim (generics.ListAPIView):
     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
     # permission_classes = [AllowAny] #gamita lang ni sya if ganahan mo makakita sa value kay tungod ni sa settingskatung JWTAuthentication 
     
-class ViewDetail (generics.ListAPIView):
+class ViewDetail (generics.RetrieveAPIView):
     queryset = Victim.objects.all()
     serializer_class = VictimDetailSerializer
     lookup_field = "vic_id"
-    # permission_classes = [IsAuthenticated, IsRole]
-    # allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
     
 
 class search_victim_facial(APIView):

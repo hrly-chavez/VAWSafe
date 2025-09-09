@@ -16,6 +16,45 @@ export default function Sessions() {
   const filteredSessions = sessions.filter((session) =>
     session.victim_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  // button navigation functions
+  const next = () => setCurrentStep((prev) => prev + 1);
+  const back = () => setCurrentStep((prev) => prev - 1);
+  const cancel = () => {
+    alert("Form cancelled!");
+    // setFormData({});
+    setCurrentStep(1);
+    // Redirect to another page
+    navigate("/desk_officer/"); // replace "/some-page" with your route
+  };
+  const submit = () => {
+    alert("Form submitted! ");
+    setCurrentStep(1);
+  };
+
+  const renderForm = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <Schedule
+            // formData={formData}
+            // setFormData={setFormData}  
+            back={back}
+            next={next}
+          />
+        );
+      case 2:
+        return (
+          <Form3
+            // formData={formData}
+            // setFormData={setFormData}
+            back={back}
+            cancel={cancel}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="p-6">

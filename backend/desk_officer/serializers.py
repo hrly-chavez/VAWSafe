@@ -70,3 +70,27 @@ class VictimDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Victim
         fields = "__all__"
+        
+class SessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Session
+        fields = "__all__"
+        read_only_fields = ["sess_id", "sess_num", "sess_status", "sess_updated_at"]
+
+    def create(self, validated_data):
+        # Auto-generate sess_num based on incident
+        incident = validated_data.get("incident_id")
+        if incident:
+            last_num = (
+                Session.objects.filter(incident_id=incident)
+                .order_by("-sess_num")
+                .values_list("sess_num", flat=True)
+                .first()
+            )
+            validated_data["sess_num"] = (last_num or 0) + 1
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data["sess_updated_at"] = date.today()
+        return super().update(instance, validated_data)
+

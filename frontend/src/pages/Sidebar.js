@@ -134,6 +134,8 @@ import { AuthContext } from "../context/AuthContext";
 export default function Sidebar() {
   const { auth, logout } = useContext(AuthContext);
   const [user, setUser] = useState(null);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+
 
   // Load user from localStorage if auth context not available yet
   useEffect(() => {
@@ -175,6 +177,7 @@ export default function Sidebar() {
         { icon: "/images/user.png", label: "Social Workers", path: "/dswd/social-workers" },
         { icon: "/images/edit.png", label: "VAW Desk Officer", path: "/dswd/vawdesk-officer" },
         { icon: "/images/high-value.png", label: "Services", path: "/dswd/services" },
+        { icon: "/images/user.png", label: "Account Management", path: "/dswd/account-management" },
         { icon: "/images/tools.png", label: "Log Out", path: "/login", action: logout },
       ];
     }
