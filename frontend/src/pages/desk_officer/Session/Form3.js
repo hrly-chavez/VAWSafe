@@ -1,3 +1,4 @@
+//src/pages/desk_officer/Session/Form3.js
 export default function Form3({ back, cancel }) {
   return (
     <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
@@ -5,7 +6,7 @@ export default function Form3({ back, cancel }) {
       <h2 className="text-2xl font-semibold text-blue-700 mb-4">Session</h2>
 
       <h3 className="text-lg font-medium text-gray-800 mb-2">
-        Victims Sessions
+        Session Contents/Notes
       </h3>
 
       <div className="border rounded-lg">
@@ -14,17 +15,6 @@ export default function Form3({ back, cancel }) {
         </div>
 
         <div className="p-4 text-sm space-y-3">
-          {/* Links */}
-          <a href="#" className="text-red-600 block hover:underline">
-            View Victim’s Case
-          </a>
-          <a href="#" className="text-red-600 block hover:underline">
-            Session Forms
-          </a>
-          <a href="#" className="text-red-600 block hover:underline">
-            Session Contents/Notes
-          </a>
-
           {/* Form */}
           <div className="border rounded-lg p-4 bg-gray-50 space-y-4">
             <p className="text-gray-500">Please Fill up the form.</p>
@@ -92,16 +82,6 @@ export default function Form3({ back, cancel }) {
                 placeholder="Type here..."
               />
             </div>
-          </div>
-
-          {/* Extra Links */}
-          <div className="space-y-1">
-            <a href="#" className="text-red-600 block hover:underline">
-              Next Session Appointment
-            </a>
-            <a href="#" className="text-red-600 block hover:underline">
-              Feedback
-            </a>
           </div>
 
           {/* Action Buttons */}

@@ -14,23 +14,9 @@ class UserSerializer(serializers.ModelSerializer):
 class OfficialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Official
-        fields = [
-            'of_id',
-            'of_fname',
-            'of_lname',
-            'of_m_initial',
-            'of_suffix',
-            'of_sex',
-            'of_dob',
-            'of_pob',
-            'of_address',
-            'of_contact',
-            'of_role',
-            'of_brgy_assigned',
-            'of_specialization',
-        ]
+        fields = "__all__"
 
 class OfficialFaceSampleSerializer(serializers.ModelSerializer):
     class Meta:
         model = OfficialFaceSample
-        fields = "__all__"
+        fields = "_all_"

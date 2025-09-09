@@ -213,7 +213,6 @@ export default function DSWDVawDeskOfficer() {
                       <th className="px-4 py-3">Position</th>
                       <th className="px-4 py-3">Contact Number</th>
                       <th className="px-4 py-3">Specialization</th>
-                      <th className="px-4 py-3">Barangay Assigned</th>
                       <th className="px-4 py-3">Forms</th>
                     </tr>
                   </thead>
@@ -237,7 +236,6 @@ export default function DSWDVawDeskOfficer() {
                         <td className="px-4 py-3">{w.of_role || "VAWDesk"}</td>
                         <td className="px-4 py-3">{w.of_contact || "—"}</td>
                         <td className="px-4 py-3">{w.of_specialization || "—"}</td>
-                        <td className="px-4 py-3">{w.of_brgy_assigned || "—"}</td>
                         <td className="px-4 py-3">
                           <a
                             href={`/dswd/vawdesk-officer/${w.of_id}`}

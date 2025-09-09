@@ -1,8 +1,7 @@
 // frontend/src/pages/social_worker/victims/SearchVictimFacial.js
 import React, { useRef, useState } from "react";
 import Webcam from "react-webcam";
-
-const API_BASE = "http://127.0.0.1:8000/api/social_worker";
+import api from "../../../api/axios"; // ✅ import your axios instance
 
 export default function SearchVictimFacial({ onClose, onFound }) {
   const webcamRef = useRef(null);
@@ -32,21 +31,18 @@ export default function SearchVictimFacial({ onClose, onFound }) {
       }
       const blob = new Blob([ab], { type: mimeString });
 
-      // Send to backend
+      // Send to backend with axios (auth handled by interceptor)
       const formData = new FormData();
       formData.append("frame", blob, "capture.jpg");
 
-      const res = await fetch(`${API_BASE}/victims/search_face/`, {
-        method: "POST",
-        body: formData,
+      const res = await api.post("/api/social_worker/victims/search_face/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const data = await res.json();
-
-      if (res.ok && data.match) {
-        onFound(data.victim_id); //  callback to parent (Victims.js)
+      if (res.data.match) {
+        onFound(res.data.victim_id); // callback to parent (Victims.js)
       } else {
-        setMessage(data.message || "No victim match found.");
+        setMessage(res.data.message || "No victim match found.");
       }
     } catch (err) {
       console.error(err);
@@ -56,8 +52,8 @@ export default function SearchVictimFacial({ onClose, onFound }) {
     }
   };
 
-        return (
-        <div className="facial-modal-overlay">
+  return (
+    <div className="facial-modal-overlay">
       <div className="facial-modal">
         {/* Header row */}
         <div className="modal-header">
@@ -78,6 +74,5 @@ export default function SearchVictimFacial({ onClose, onFound }) {
         {message && <p>{message}</p>}
       </div>
     </div>
-        );
-
+  );
 }

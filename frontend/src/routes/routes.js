@@ -3,6 +3,7 @@ export const ROUTES = {
   MANUAL_LOGIN: "/login/manual",
   REGISTER: "/register",
 
+  // desk officer pages
   DESK_OFFICER: "/desk_officer",
   DESK_OFFICER_REGISTER_VICTIM: "/desk_officer/register_victim",
   DESK_OFFICER_VICTIM_FACIAL: "/desk_officer/victim_facial",
@@ -21,6 +22,7 @@ export const ROUTES = {
   DSWD_VAWDESK_OFFICER: "/dswd/vawdesk-officer",
   DSWD_VAWDESK_OFFICER_DETAILS: "/dswd/vawdesk-officer/:of_id",
   DSWD_SERVICES: "/dswd/services",
+  DSWD_ACCOUNT_MANAGEMENT: "/dswd/account-management",
 
   SOCIAL_WORKER_DASHBOARD: "/social_worker",
   SOCIAL_WORKER_CASE_RECORDS: "/social_worker/case-records",

@@ -34,3 +34,6 @@ backend/media/face_samples/
 backend/media/photos/
 backend/media/victim_face_samples/
 backend/media/victim_photos/
+
+**/migrations/*.py
+!**/migrations/__init__.py

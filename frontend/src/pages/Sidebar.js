@@ -134,6 +134,8 @@ import { AuthContext } from "../context/AuthContext";
 export default function Sidebar() {
   const { auth, logout } = useContext(AuthContext);
   const [user, setUser] = useState(null);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+
 
   // Load user from localStorage if auth context not available yet
   useEffect(() => {
@@ -175,6 +177,7 @@ export default function Sidebar() {
         { icon: "/images/user.png", label: "Social Workers", path: "/dswd/social-workers" },
         { icon: "/images/edit.png", label: "VAW Desk Officer", path: "/dswd/vawdesk-officer" },
         { icon: "/images/high-value.png", label: "Services", path: "/dswd/services" },
+        { icon: "/images/user.png", label: "Account Management", path: "/dswd/account-management" },
         { icon: "/images/tools.png", label: "Log Out", path: "/login", action: logout },
       ];
     }
@@ -182,7 +185,7 @@ export default function Sidebar() {
     if (role === "vawdesk" || role === "desk officer") {
       return [
         { icon: "/images/dashboard.png", label: "Account Page", path: "/desk_officer" },
-        { icon: "/images/tools.png", label: "Register Victim", path: "/desk_officer/victim_facial" },
+        { icon: "/images/tools.png", label: "Register Victim", path: "/desk_officer/register_victim" },
         { icon: "/images/tools.png", label: "Ongoing Sessions", path: "/desk_officer" },
         { icon: "/images/tools.png", label: "VAWC Victims", path: "/desk_officer/victims" },
         { icon: "/images/tools.png", label: "Log Out", path: "/login", action: logout },
