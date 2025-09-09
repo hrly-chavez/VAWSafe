@@ -252,6 +252,29 @@ def register_victim(request):
                         status=status.HTTP_400_BAD_REQUEST)
 
 #SESSION FUNCTIONS
+class SessionListCreateView(generics.ListCreateAPIView):
+    queryset = Session.objects.all()
+    serializer_class = SessionSerializer
+
+
+class SessionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Session.objects.all()
+    serializer_class = SessionSerializer
+    lookup_field = "sess_id"
+
+
+@api_view(["POST"])
 def schedule_session(request):
-    pass
+    """
+    API for scheduling a session (sess_next_sched).
+    Requires: incident_id, sess_next_sched, sess_type, sess_location
+    """
+    serializer = SessionSerializer(data=request.data)
+    if serializer.is_valid():
+        session = serializer.save(sess_status="Pending")
+        return Response(SessionSerializer(session).data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 

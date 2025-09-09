@@ -9,5 +9,7 @@ urlpatterns = [
     path("victims/search-victim/", search_victim_facial.as_view(), name="search-face"),
     path('victims/register/', register_victim, name='register_victim'),
     #sessions
+    path("sessions/", SessionListCreateView.as_view(), name="session-list-create"),
+    path("sessions/<int:sess_id>/", SessionDetailView.as_view(), name="session-detail"),
     path("sessions/create_sched/", schedule_session, name="create-session"),
 ] 

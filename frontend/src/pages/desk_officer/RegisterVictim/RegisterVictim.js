@@ -105,7 +105,7 @@ export default function RegisterVictim() {
   });
   const [statusMessage, setStatusMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showSchedulePage, setShowSchedulePage] = useState(false);
+  const [showSchedulePage, setShowSchedulePage] = useState(null);
 
   const cancel = () => {
     alert("Form cancelled!");
@@ -196,9 +196,15 @@ export default function RegisterVictim() {
         return;
       }
 
-      setStatusMessage(" Victim registered successfully!");
+      // after successful registration
+      setStatusMessage("✅ Victim registered successfully!");
       setLoading(false);
-      setShowSchedulePage(true); // 👈 show schedule after success
+
+      // Pass victim + incident to SchedulePage
+      setShowSchedulePage({
+        victim: res.data.victim,
+        incident: res.data.incident,
+      });
     } catch (err) {
       console.error("Register victim exception:", err);
       setStatusMessage(" Something went wrong.");
@@ -355,10 +361,15 @@ export default function RegisterVictim() {
 
       {/* Show schedule page after success */}
       {showSchedulePage && (
-        <div className="mt-10 border-t pt-6">
-          <SchedulePage embedded={true} />
-        </div>
-      )}
+      <SchedulePage
+        embedded={true}
+        victim={showSchedulePage.victim}
+        incident={showSchedulePage.incident}
+      />
+    )}
     </div>
   );
 }
+
+
+
