@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../../../api/axios";
 
-
 export default function VictimDetails() {
   const { vic_id } = useParams();
   const [victim, setVictim] = useState(null);
@@ -42,23 +41,25 @@ export default function VictimDetails() {
 
   const fullName = victim
     ? [
-      get(
-        victim,
-        ["vic_first_name", "first_name", "fname", "given_name"],
-        ""
-      ),
-      get(victim, ["vic_middle_name", "middle_name", "mname"], ""),
-      get(victim, ["vic_last_name", "last_name", "lname", "surname"], ""),
-      get(victim, ["vic_extension", "name_suffix"], ""),
-    ]
-      .filter(Boolean)
-      .join(" ")
-    : ""; z
+        get(
+          victim,
+          ["vic_first_name", "first_name", "fname", "given_name"],
+          ""
+        ),
+        get(victim, ["vic_middle_name", "middle_name", "mname"], ""),
+        get(victim, ["vic_last_name", "last_name", "lname", "surname"], ""),
+        get(victim, ["vic_extension", "name_suffix"], ""),
+      ]
+        .filter(Boolean)
+        .join(" ")
+    : "";
 
   return (
     <>
       <div className="flex flex-col min-h-screen bg-white">
-        <h1 className="text-2xl font-bold text-[#292D96] px-6 pt-6">Victim Details</h1>
+        <h1 className="text-2xl font-bold text-[#292D96] px-6 pt-6">
+          Victim Details
+        </h1>
         <div className="flex flex-1 gap-6 px-6 py-8 max-w-screen-xl mx-auto w-full">
           {/* Left: Profile Sidebar */}
           <div className="w-[300px] bg-white rounded-xl shadow p-4 border flex flex-col items-center">
@@ -70,9 +71,10 @@ export default function VictimDetails() {
             />
 
             <div className="flex min-h-screen bg-white">
-
               <div className="flex-1 p-6">
-                {loading && <p className="text-gray-600">Loading victim details…</p>}
+                {loading && (
+                  <p className="text-gray-600">Loading victim details…</p>
+                )}
                 {error && <p className="text-red-600">{error}</p>}
 
                 {!loading && !error && (
@@ -86,7 +88,8 @@ export default function VictimDetails() {
                     ) : (
                       <div className="space-y-2 text-gray-800">
                         <p>
-                          <strong>Victim ID:</strong> {get(victim, ["vic_id", "id"])}
+                          <strong>Victim ID:</strong>{" "}
+                          {get(victim, ["vic_id", "id"])}
                         </p>
                         <p>
                           <strong>Name:</strong> {fullName || "N/A"}
@@ -100,11 +103,19 @@ export default function VictimDetails() {
                         </p>
                         <p>
                           <strong>Birth Place:</strong>{" "}
-                          {get(victim, ["vic_birth_place", "birth_place", "place"])}
+                          {get(victim, [
+                            "vic_birth_place",
+                            "birth_place",
+                            "place",
+                          ])}
                         </p>
 
                         {/* Photo if provided (expects absolute URL) */}
-                        {get(victim, ["vic_photo", "photo_url", "photo"], null) && (
+                        {get(
+                          victim,
+                          ["vic_photo", "photo_url", "photo"],
+                          null
+                        ) && (
                           <div className="mt-4">
                             <h3 className="mb-1 text-lg font-semibold">
                               Profile Photo
@@ -139,7 +150,10 @@ export default function VictimDetails() {
                             <p>
                               <strong>Informant:</strong>{" "}
                               {get(victim.case_report, ["informant_name"])} (
-                              {get(victim.case_report, ["informant_relationship"])})
+                              {get(victim.case_report, [
+                                "informant_relationship",
+                              ])}
+                              )
                             </p>
                             <p>
                               <strong>Contact:</strong>{" "}
@@ -176,7 +190,9 @@ export default function VictimDetails() {
 
                                     {incident.perpetrator ? (
                                       <div className="mt-2 rounded-md bg-gray-50 p-2">
-                                        <h4 className="font-semibold">Perpetrator</h4>
+                                        <h4 className="font-semibold">
+                                          Perpetrator
+                                        </h4>
                                         <p>
                                           <strong>Name:</strong>{" "}
                                           {[

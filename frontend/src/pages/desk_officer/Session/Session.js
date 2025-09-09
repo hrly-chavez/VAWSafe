@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Schedule from "./Schedule";
+import Form3 from "./Form3";
 
 export default function Sessions() {
   const [sessions, setSessions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentStep, setCurrentStep] = useState(1);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Fetch sessions from API
@@ -37,7 +42,7 @@ export default function Sessions() {
         return (
           <Schedule
             // formData={formData}
-            // setFormData={setFormData}  
+            // setFormData={setFormData}
             back={back}
             next={next}
           />
@@ -60,7 +65,9 @@ export default function Sessions() {
     <div className="p-6">
       {/* Header */}
       <h1 className="text-2xl font-bold text-[#292D96] mb-4">Sessions</h1>
-      <h2 className="text-lg font-semibold text-gray-700 mb-6">List of Scheduled Sessions</h2>
+      <h2 className="text-lg font-semibold text-gray-700 mb-6">
+        List of Scheduled Sessions
+      </h2>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-6">
@@ -110,8 +117,12 @@ export default function Sessions() {
                   <td className="px-4 py-2">{session.case_type || "—"}</td>
                   <td className="px-4 py-2">{session.assigned_to || "—"}</td>
                   <td className="px-4 py-2 flex gap-2">
-                    <button className="text-blue-600 hover:underline">View PDF</button>
-                    <button className="text-gray-600 hover:underline">Edit</button>
+                    <button className="text-blue-600 hover:underline">
+                      View PDF
+                    </button>
+                    <button className="text-gray-600 hover:underline">
+                      Edit
+                    </button>
                   </td>
                 </tr>
               ))
