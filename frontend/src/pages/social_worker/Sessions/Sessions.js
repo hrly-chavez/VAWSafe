@@ -1,12 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import "./Sessions.css";
-import Navbar from "../../Navbar";
 
 export default function Sessions() {
   return (
     <div>
-      <Navbar />
 
       <div className="flex min-h-screen bg-white">
         <div className="sw-sessions-page">

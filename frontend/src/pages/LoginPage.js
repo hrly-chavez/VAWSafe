@@ -173,7 +173,7 @@ const LoginPage = () => {
 
       const data = await response.json();
 
-      setStatus("✅ Registration successful!");
+      setStatus(" Registration successful!");
       setCredentials({
         username: data.username,
         password: data.password,
@@ -188,7 +188,7 @@ const LoginPage = () => {
       setCurrentIndex(0);
     } catch (err) {
       console.error(err);
-      setStatus("❌ Registration failed. Please check the input or camera.");
+      setStatus(" Registration failed. Please check the input or camera.");
     } finally {
       setLoading(false);
     }
@@ -235,13 +235,13 @@ const LoginPage = () => {
     if (loginCancelledRef.current) return;
 
     setCountdown(null);
-    setMessage("📸 Capturing frames... Please blink now!");
+    setMessage("Capturing frames... Please blink now!");
 
     const frames = await captureBurstFrames();
     if (loginCancelledRef.current) return;
 
     if (frames.length === 0) {
-      setMessage("❌ Failed to capture webcam images.");
+      setMessage(" Failed to capture webcam images.");
       setLoading(false);
       return;
     }
@@ -262,13 +262,13 @@ const LoginPage = () => {
       const blinkData = await blinkRes.json();
 
       if (!blinkRes.ok || !blinkData.blink) {
-        setMessage(blinkData.message || "❌ No blink detected, please try again.");
+        setMessage(blinkData.message || " No blink detected, please try again.");
         setLoading(false);
         return;
       }
 
       setBlinkCaptured(true);
-      setMessage("👁️ Blink captured ✅ Now verifying face...");
+      setMessage("Blink captured...Now verifying face...");
 
       // Step 2: Send candidate frames to face-login
       const loginForm = new FormData();
@@ -310,9 +310,10 @@ const LoginPage = () => {
         // ✅ Also set welcome card info
         setWelcomeData(loginData.user);
         setShowWelcomeCard(true);
+        
 
       } else {
-        setMessage(loginData.message || "❌ Face verification failed.");
+        setMessage(loginData.message || "Face verification failed.");
       }
     } catch (err) {
       console.error(err);

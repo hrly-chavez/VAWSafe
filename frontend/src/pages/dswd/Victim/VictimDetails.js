@@ -65,7 +65,6 @@ export default function VictimDetails() {
 
   return (
     <>
-      <Navbar />
 
       <div className="flex min-h-screen bg-white">
 

@@ -5,7 +5,7 @@ export default function DeskOfficerProfile () {
 
     return (
         <>
-            <Navbar />
+          
         </>
     );
 }
