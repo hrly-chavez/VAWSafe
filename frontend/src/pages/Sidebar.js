@@ -186,7 +186,7 @@ export default function Sidebar() {
       return [
         { icon: "/images/dashboard.png", label: "Account Page", path: "/desk_officer" },
         { icon: "/images/tools.png", label: "Register Victim", path: "/desk_officer/register_victim" },
-        { icon: "/images/tools.png", label: "Ongoing Sessions", path: "/desk_officer" },
+        { icon: "/images/tools.png", label: "Sessions", path: "/desk_officer/session" },
         { icon: "/images/tools.png", label: "VAWC Victims", path: "/desk_officer/victims" },
         { icon: "/images/tools.png", label: "Log Out", path: "/login", action: logout },
       ];

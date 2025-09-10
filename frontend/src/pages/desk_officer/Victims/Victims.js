@@ -11,7 +11,7 @@ export default function Victims() {
   const [error, setError] = useState("");
   const [showSearchModal, setShowSearchModal] = useState(false);
   const navigate = useNavigate();
-  
+
 
   useEffect(() => {
     const fetchVictims = async () => {
@@ -34,7 +34,6 @@ export default function Victims() {
 
   return (
     <>
-      <Navbar />
       <div className="flex min-h-screen bg-white">
         <div className="flex-1 px-6 py-6 m-5 bg-white rounded-[20px] h-[400px] shadow-[0_2px_6px_0_rgba(0,0,0,0.1),0_-2px_6px_0_rgba(0,0,0,0.1)]">
           {/* Title + top filters */}
@@ -62,7 +61,7 @@ export default function Victims() {
                     name="gender"
                     className="h-10 w-48 rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900 outline-none ring-0 focus:border-neutral-400 focus:outline-none"
                     defaultValue="All"
-                    // disabled
+                  // disabled
                   >
                     <option>All</option>
                     <option>Male</option>
@@ -84,7 +83,7 @@ export default function Victims() {
                     name="type"
                     className="h-10 w-56 rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900 outline-none ring-0 focus:border-neutral-400 focus:outline-none"
                     defaultValue="All"
-                    // disabled
+                  // disabled
                   >
                     <option>All</option>
                   </select>

@@ -76,7 +76,6 @@ import Navbar from "../../Navbar";
 export default function DSWDServices() {
   return (
     <>
-      <Navbar />
 
       <div className="flex min-h-screen bg-white">
 

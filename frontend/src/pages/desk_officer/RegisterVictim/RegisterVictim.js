@@ -80,7 +80,10 @@ const PERP_KEYS = [
 ];
 
 const hasAny = (state, keys) =>
-  keys.some((key) => state[key] !== undefined && state[key] !== "" && state[key] !== null);
+  keys.some(
+    (key) =>
+      state[key] !== undefined && state[key] !== "" && state[key] !== null
+  );
 
 export default function RegisterVictim() {
   const navigate = useNavigate();
@@ -89,6 +92,7 @@ export default function RegisterVictim() {
     vic_first_name: "",
     vic_last_name: "",
     vic_sex: "",
+    report_type: "victim-survivor",
     victimPhotos: [], // 👈 store photos here
   });
 
@@ -361,15 +365,12 @@ export default function RegisterVictim() {
 
       {/* Show schedule page after success */}
       {showSchedulePage && (
-      <SchedulePage
-        embedded={true}
-        victim={showSchedulePage.victim}
-        incident={showSchedulePage.incident}
-      />
-    )}
+        <SchedulePage
+          embedded={true}
+          victim={showSchedulePage.victim}
+          incident={showSchedulePage.incident}
+        />
+      )}
     </div>
   );
 }
-
-
-

@@ -129,7 +129,6 @@ export default function Victims() {
 
   return (
     <div>
-      <Navbar />
 
       <div className="flex min-h-screen bg-white">
         <div className="sw-victims-page">

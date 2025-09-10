@@ -155,7 +155,6 @@ export default function DSWDVawDeskOfficer() {
 
   return (
     <>
-      <Navbar />
       <div className="flex min-h-screen bg-white">
         <div className="flex-1 px-6 py-6 m-5 bg-white rounded-[20px] shadow-[0_2px_6px_0_rgba(0,0,0,0.1),0_-2px_6px_0_rgba(0,0,0,0.1)]">
           <h2 className="text-2xl font-semibold font-[Poppins] tracking-tight text-[#292D96]">

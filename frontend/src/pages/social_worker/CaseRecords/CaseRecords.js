@@ -1,12 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import "./CaseRecords.css";
-import Navbar from '../../Navbar';
 
 export default function CaseRecords() {
   return (
       <div>
-        <Navbar />
   
         <div className="flex min-h-screen bg-white">
           <div className="sw-case-records-page">
