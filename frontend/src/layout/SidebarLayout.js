@@ -5,17 +5,19 @@ import { Outlet } from "react-router-dom";
 
 export default function SidebarLayout() {
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Top Navbar */}
-      <Navbar />
+    <div className="min-h-screen bg-gray-50">
+      {/* Fixed Navbar */}
+      <div className="fixed top-0 left-0 w-full z-50">
+        <Navbar />
+      </div>
 
-      {/* Sidebar + Content */}
-      <div className="flex flex-1">
-        {/* Sidebar below Navbar, vertical on the left */}
+      {/* Content below Navbar */}
+      <div className="pt-[70px] flex">
+        {/* Sidebar (scrolls with page) */}
         <Sidebar />
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-auto px-6 py-4 bg-gray-50">
+        {/* Main Content (scrolls with sidebar) */}
+        <main className="flex-1 px-6 py-4">
           <Outlet />
         </main>
       </div>

@@ -439,6 +439,18 @@ const DOVictimDetail = lazy(() =>
 const DOVictimSearch = lazy(() =>
   import("./pages/desk_officer/Victims/SearchVictim")
 );
+const DOTest = lazy(() => import("./pages/desk_officer/Test")
+);
+// nag add kog pages sa desk officer
+const DOSocialWorkers = lazy(() => import("./pages/desk_officer/SocialWorker/SocialWorker")
+);
+const DOServices = lazy(() => import("./pages/desk_officer/Services/Services")
+);
+const DOCaseRecords = lazy(() => import("./pages/desk_officer/CaseRecords/CaseRecords")
+);
+const DOAccountManagement = lazy(() => import("./pages/desk_officer/AccountManage/AccountManagement")
+);
+const DOPendingAccount = lazy(() => import("./pages/desk_officer/AccountManage/PendingAccount"));
 
 // Social Worker Pages (lazy loaded)
 const DashboardPage = lazy(() =>
@@ -475,13 +487,13 @@ const DSWDSocialWorkerDetail = lazy(() =>
 const DSWD_VAWDESK_OFFICER = lazy(() =>
   import("./pages/dswd/VawDeskOfficer/DSWDVawDeskOfficer")
 );
-const DSWD_VAWDESK_OFFICER_Detail = lazy(() => 
+const DSWD_VAWDESK_OFFICER_Detail = lazy(() =>
   import("./pages/dswd/VawDeskOfficer/VAWDeskOfficerDetail")
 );
 const DSWDServices = lazy(() =>
   import("./pages/dswd/ServiceDSWD/DSWDServices")
 );
-const DSWDAccountManagement = lazy(() => 
+const DSWDAccountManagement = lazy(() =>
   import("./pages/dswd/AccountManagement/DSWDAccountManagement")
 );
 
@@ -514,6 +526,12 @@ export default function App() {
               <Route path={ROUTES.DESK_OFFICER_VICTIMS} element={<DOVictims />} />
               <Route path={ROUTES.DESK_OFFICER_VICTIM_DETAIL} element={<DOVictimDetail />} />
               <Route path={ROUTES.DESK_OFFICER_VICTIM_SEARCH} element={<DOVictimSearch />} />
+              {/* mga bagong route paths sa desk officer nga katung gi add */}
+              <Route path={ROUTES.DESK_OFFICER_SOCIAL_WORKERS} element={<DOSocialWorkers />} />
+              <Route path={ROUTES.DESK_OFFICER_SERVICES} element={<DOServices />} />
+              <Route path={ROUTES.DESK_OFFICER_CASE_RECORDS} element={<DOCaseRecords />} />
+              <Route path={ROUTES.DESK_OFFICER_ACCOUNT_MANAGEMENT} element={<DOAccountManagement />} />
+              <Route path={ROUTES.DESK_OFFICER_PENDING_ACCOUNT} element={<DOPendingAccount />} />
             </Route>
 
             {/* DSWD group */}
@@ -525,14 +543,14 @@ export default function App() {
               }
             >
               <Route path={ROUTES.DSWD} element={<DSWDDashboard />} />
-              <Route path={ROUTES.DSWD_VAWC_VICTIMS} element={<DSWDVAWCVictims/>} />
-              <Route path={ROUTES.DSWD_VICTIM_DETAIL} element={<DSWDVictimDetail/>} />
-              <Route path={ROUTES.DSWD_SEARCH_VICTIM} element={<DSWDSearchVictim/>} />
-              <Route path={ROUTES.DSWD_SOCIAL_WORKERS} element={<DSWDSocialWorkers/>} />
-              <Route path={ROUTES.DSWD_SOCIAL_WORKERS_DETAILS} element={<DSWDSocialWorkerDetail/>} />
-              <Route path={ROUTES.DSWD_VAWDESK_OFFICER} element={<DSWD_VAWDESK_OFFICER/>} />
+              <Route path={ROUTES.DSWD_VAWC_VICTIMS} element={<DSWDVAWCVictims />} />
+              <Route path={ROUTES.DSWD_VICTIM_DETAIL} element={<DSWDVictimDetail />} />
+              <Route path={ROUTES.DSWD_SEARCH_VICTIM} element={<DSWDSearchVictim />} />
+              <Route path={ROUTES.DSWD_SOCIAL_WORKERS} element={<DSWDSocialWorkers />} />
+              <Route path={ROUTES.DSWD_SOCIAL_WORKERS_DETAILS} element={<DSWDSocialWorkerDetail />} />
+              <Route path={ROUTES.DSWD_VAWDESK_OFFICER} element={<DSWD_VAWDESK_OFFICER />} />
               <Route path={ROUTES.DSWD_VAWDESK_OFFICER_DETAILS} element={<DSWD_VAWDESK_OFFICER_Detail />} />
-              <Route path={ROUTES.DSWD_SERVICES} element={<DSWDServices/>} />
+              <Route path={ROUTES.DSWD_SERVICES} element={<DSWDServices />} />
               <Route path={ROUTES.DSWD_ACCOUNT_MANAGEMENT} element={<DSWDAccountManagement />} />
             </Route>
 

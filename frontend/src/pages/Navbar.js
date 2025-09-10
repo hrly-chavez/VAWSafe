@@ -11,46 +11,29 @@ export default function Navbar() {
   return (
     <div
       className="
-        flex items-center justify-between
-        bg-white px-7 py-[3px]
-        shadow-[0_5px_5px_rgba(0,0,0,0.1)]
-        border-b-2 border-[#464646]
-      "
+    fixed top-0 left-0 w-full z-50
+    flex items-center justify-between
+    bg-white px-8 py-2
+    shadow-md border-b border-[#d1d1d1]
+    font-sans text-[#292D96]
+  "
     >
       {/* LEFT (LOGOS) */}
-      <div className="flex items-center gap-[15px]">
-        <img
-          src="/images/DSWD.webp"
-          alt="DSWD"
-          className="w-[100px] rounded-[5px]"
-        />
-        <img
-          src="/images/iacat.jpg"
-          alt="IACAT"
-          className="h-[60px] w-[60px] rounded-[5px] object-cover"
-        />
-        <img
-          src="/images/iacvawc-logo.png"
-          alt="IACVAWC"
-          className="h-[60px] w-[60px] rounded-[5px] object-contain"
-        />
+      <div className="flex items-center gap-4">
+        <img src="/images/DSWD.webp" alt="DSWD" className="w-[100px] rounded-md" />
+        <img src="/images/iacat.jpg" alt="IACAT" className="h-[55px] w-[55px] rounded-md object-cover" />
+        <img src="/images/iacvawc-logo.png" alt="IACVAWC" className="h-[55px] w-[55px] rounded-md object-contain" />
       </div>
 
       {/* CENTER (TITLE) */}
       <div className="flex-1 flex justify-center">
-        <p
-          className="
-            m-0 whitespace-nowrap
-            text-[18px] font-medium tracking-[0.5px]
-            font-[Poppins] text-[#292D96]
-          "
-        >
+        <p className="m-0 text-[18px] font-semibold tracking-wide text-[#292D96]">
           VAWC Case Monitoring and Profiling System
         </p>
       </div>
 
       {/* RIGHT (DATE/TIME) */}
-      <div className="flex items-center justify-end whitespace-nowrap text-[#333] text-lg font-sans">
+      <div className="text-right text-sm text-gray-700 font-medium whitespace-nowrap">
         <p className="m-0">
           {dateTime.toLocaleDateString(undefined, {
             weekday: "long",
