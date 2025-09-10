@@ -4,9 +4,13 @@ import Webcam from "react-webcam";
 import { useNavigate } from "react-router-dom";
 import Navbar from "./Navbar";
 import "./LoginPage.css";
-import { UserIcon, LockClosedIcon, ExclamationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
+import {
+  UserIcon,
+  LockClosedIcon,
+  ExclamationCircleIcon,
+  CheckCircleIcon,
+} from "@heroicons/react/24/solid";
 const LoginPage = () => {
-
   //Regsiter states
   const MAX_PHOTOS = 3;
   const [photos, setPhotos] = useState([]);
@@ -16,7 +20,7 @@ const LoginPage = () => {
   const [of_fname, setFname] = useState("");
   const [of_lname, setLname] = useState("");
   const [of_role, setRole] = useState("");
-  // Dropdown of Register Choices 
+  // Dropdown of Register Choices
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const webcamRef = useRef(null);
@@ -29,8 +33,8 @@ const LoginPage = () => {
   const [showCounter, setShowCounter] = useState(false);
   const [blinkCaptured, setBlinkCaptured] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [showRegister, setShowRegister] = useState(false);
 
   // Keep a ref to track cancellation
@@ -43,7 +47,10 @@ const LoginPage = () => {
   });
 
   //Nag Add kog error state for backend validation
-  const [backendErrors, setBackendErrors] = useState({ username: "", password: "" });
+  const [backendErrors, setBackendErrors] = useState({
+    username: "",
+    password: "",
+  });
 
   // Adding error state for Register
   const [regErrors, setRegErrors] = useState({
@@ -63,8 +70,6 @@ const LoginPage = () => {
     else if (role === "vawdesk") navigate("/desk_officer");
     else if (role === "dswd") navigate("/dswd");
   };
-
-
 
   // Welcome slides
   const slides = [
@@ -193,7 +198,7 @@ const LoginPage = () => {
     }
   };
 
-  // Utility Functions for Login with Face 
+  // Utility Functions for Login with Face
   const captureBurstFrames = async () => {
     const frames = [];
 
@@ -203,7 +208,10 @@ const LoginPage = () => {
         break;
       }
 
-      if (!webcamRef.current || typeof webcamRef.current.getScreenshot !== "function") {
+      if (
+        !webcamRef.current ||
+        typeof webcamRef.current.getScreenshot !== "function"
+      ) {
         console.warn("Webcam not ready");
         break;
       }
@@ -234,7 +242,7 @@ const LoginPage = () => {
     if (loginCancelledRef.current) return;
 
     setCountdown(null);
-    setMessage("📸 Capturing frames... Please blink now!");
+    setMessage("Capturing frames... Please blink now!");
 
     const frames = await captureBurstFrames();
     if (loginCancelledRef.current) return;
@@ -253,15 +261,20 @@ const LoginPage = () => {
     });
 
     try {
-      const blinkRes = await fetch("http://localhost:8000/api/auth/blink-check/", {
-        method: "POST",
-        body: blinkForm,
-      });
+      const blinkRes = await fetch(
+        "http://localhost:8000/api/auth/blink-check/",
+        {
+          method: "POST",
+          body: blinkForm,
+        }
+      );
       if (loginCancelledRef.current) return;
       const blinkData = await blinkRes.json();
 
       if (!blinkRes.ok || !blinkData.blink) {
-        setMessage(blinkData.message || " No blink detected, please try again.");
+        setMessage(
+          blinkData.message || " No blink detected, please try again."
+        );
         setLoading(false);
         return;
       }
@@ -276,10 +289,13 @@ const LoginPage = () => {
         loginForm.append(`frame${j + 1}`, chosenBlob, `frame${j + 1}.jpg`);
       });
 
-      const loginRes = await fetch("http://localhost:8000/api/auth/face-login/", {
-        method: "POST",
-        body: loginForm,
-      });
+      const loginRes = await fetch(
+        "http://localhost:8000/api/auth/face-login/",
+        {
+          method: "POST",
+          body: loginForm,
+        }
+      );
       if (loginCancelledRef.current) return;
 
       const loginData = await loginRes.json();
@@ -297,11 +313,10 @@ const LoginPage = () => {
               username: loginData.username,
               role: loginData.role,
               name: loginData.name,
-              official_id: loginData.official_id
-            }
+              official_id: loginData.official_id,
+            },
           })
         );
-
 
         // ✅ Also set welcome card info
         setWelcomeData(loginData.user);
@@ -319,7 +334,6 @@ const LoginPage = () => {
         } else {
           navigate("/login"); // fallback
         }
-
       } else {
         setMessage(loginData.message || " Face verification failed.");
       }
@@ -351,11 +365,14 @@ const LoginPage = () => {
     setMessage("Logging in...");
 
     try {
-      const response = await fetch("http://localhost:8000/api/auth/manual-login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await fetch(
+        "http://localhost:8000/api/auth/manual-login/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        }
+      );
 
       const data = await response.json();
 
@@ -370,8 +387,8 @@ const LoginPage = () => {
               username: data.username,
               role: data.role,
               name: data.name,
-              official_id: data.official_id
-            }
+              official_id: data.official_id,
+            },
           })
         );
 
@@ -415,10 +432,16 @@ const LoginPage = () => {
           {/* Left Welcome Section */}
           <div className="bg-[#2d0a3a]/30 text-white flex flex-col justify-center items-start px-6 sm:px-12 py-8">
             <div key={currentSlide} className="slide-fade">
-              <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-6">{slides[currentSlide].title}</h1>
-              <p className="text-base sm:text-lg opacity-80 mb-6">{slides[currentSlide].desc}</p>
+              <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-6">
+                {slides[currentSlide].title}
+              </h1>
+              <p className="text-base sm:text-lg opacity-80 mb-6">
+                {slides[currentSlide].desc}
+              </p>
               <button
-                onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}
+                onClick={() =>
+                  setCurrentSlide((prev) => (prev + 1) % slides.length)
+                }
                 className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 rounded-lg shadow-lg font-semibold"
               >
                 Next
@@ -432,16 +455,24 @@ const LoginPage = () => {
               //  REGISTER FORM
               <div className="w-full h-full flex justify-center items-center">
                 <div className="w-full max-w-[600px] h-[90%] overflow-y-auto px-4 py-6 rounded-xl bg-white/10 backdrop-blur-md shadow-lg scroll-container">
-                  <h2 className="text-2xl font-bold mb-4 text-white">Register Official</h2>
-                  <form onSubmit={handleSubmit} className="flex flex-col gap-4 pb-6">
+                  <h2 className="text-2xl font-bold mb-4 text-white">
+                    Register Official
+                  </h2>
+                  <form
+                    onSubmit={handleSubmit}
+                    className="flex flex-col gap-4 pb-6"
+                  >
                     {/* First Name */}
                     <input
                       type="text"
                       placeholder="First Name"
                       value={of_fname}
                       onChange={(e) => setFname(e.target.value)}
-                      className={`px-4 py-2 rounded-lg bg-white/20 text-white placeholder-white/70 border ${regErrors.of_fname ? "border-red-500" : "border-white/30"
-                        }`}
+                      className={`px-4 py-2 rounded-lg bg-white/20 text-white placeholder-white/70 border ${
+                        regErrors.of_fname
+                          ? "border-red-500"
+                          : "border-white/30"
+                      }`}
                     />
                     {regErrors.of_fname && (
                       <p className="text-red-400 text-sm mt-[0.2px] flex items-center gap-1">
@@ -456,8 +487,11 @@ const LoginPage = () => {
                       placeholder="Last Name"
                       value={of_lname}
                       onChange={(e) => setLname(e.target.value)}
-                      className={`px-4 py-2 rounded-lg bg-white/20 text-white placeholder-white/70 border ${regErrors.of_lname ? "border-red-500" : "border-white/30"
-                        }`}
+                      className={`px-4 py-2 rounded-lg bg-white/20 text-white placeholder-white/70 border ${
+                        regErrors.of_lname
+                          ? "border-red-500"
+                          : "border-white/30"
+                      }`}
                     />
                     {regErrors.of_lname && (
                       <p className="text-red-400 text-sm mt-[0.2px] flex items-center gap-1">
@@ -471,8 +505,11 @@ const LoginPage = () => {
                       <button
                         type="button"
                         onClick={() => setDropdownOpen(!dropdownOpen)}
-                        className={`w-full px-4 py-2 rounded-lg bg-white/20 text-white border ${regErrors.of_role ? "border-red-500" : "border-white/30"
-                          } text-left focus:outline-none focus:ring-2 focus:ring-orange-400`}
+                        className={`w-full px-4 py-2 rounded-lg bg-white/20 text-white border ${
+                          regErrors.of_role
+                            ? "border-red-500"
+                            : "border-white/30"
+                        } text-left focus:outline-none focus:ring-2 focus:ring-orange-400`}
                       >
                         {of_role || "Select Role"}
                       </button>
@@ -508,7 +545,11 @@ const LoginPage = () => {
                       ref={webcamRef}
                       screenshotFormat="image/jpeg"
                       className="rounded-lg shadow-md"
-                      videoConstraints={{ width: 640, height: 480, facingMode: "user" }}
+                      videoConstraints={{
+                        width: 640,
+                        height: 480,
+                        facingMode: "user",
+                      }}
                     />
 
                     {/* Capture Button */}
@@ -533,9 +574,15 @@ const LoginPage = () => {
                           <button
                             type="button"
                             onClick={() => {
-                              const updated = photos.filter((_, i) => i !== index);
+                              const updated = photos.filter(
+                                (_, i) => i !== index
+                              );
                               setPhotos(updated);
-                              setCurrentIndex(updated.length < MAX_PHOTOS ? updated.length : MAX_PHOTOS - 1);
+                              setCurrentIndex(
+                                updated.length < MAX_PHOTOS
+                                  ? updated.length
+                                  : MAX_PHOTOS - 1
+                              );
                             }}
                             className="mt-2 w-full py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
                           >
@@ -552,7 +599,6 @@ const LoginPage = () => {
                       </p>
                     )}
 
-
                     {/* Submit Button */}
                     <button
                       type="submit"
@@ -563,15 +609,25 @@ const LoginPage = () => {
                     </button>
 
                     {/* Status Message */}
-                    {status && <p className="mt-4 text-sm text-white">{status}</p>}
+                    {status && (
+                      <p className="mt-4 text-sm text-white">{status}</p>
+                    )}
 
                     {/* Credentials Display */}
                     {credentials && credentials.username && (
                       <div className="mt-4 p-4 border border-green-500 bg-green-100 text-green-900 rounded">
-                        <h4 className="font-bold mb-2">Generated Credentials:</h4>
-                        <p><strong>Username:</strong> {credentials.username}</p>
-                        <p><strong>Password:</strong> {credentials.password}</p>
-                        <p><strong>Role:</strong> {credentials.role}</p>
+                        <h4 className="font-bold mb-2">
+                          Generated Credentials:
+                        </h4>
+                        <p>
+                          <strong>Username:</strong> {credentials.username}
+                        </p>
+                        <p>
+                          <strong>Password:</strong> {credentials.password}
+                        </p>
+                        <p>
+                          <strong>Role:</strong> {credentials.role}
+                        </p>
                       </div>
                     )}
 
@@ -588,11 +644,12 @@ const LoginPage = () => {
               </div>
             ) : (
               <>
-
                 {/* Header Section */}
                 {!showCamera ? (
                   <>
-                    <h2 className="text-4xl font-bold text-white mb-2">Log in</h2>
+                    <h2 className="text-4xl font-bold text-white mb-2">
+                      Log in
+                    </h2>
                     <p className="mb-6 text-white text-sm font-medium">
                       Don’t Have an Account?{" "}
                       <span
@@ -604,7 +661,9 @@ const LoginPage = () => {
                     </p>
                   </>
                 ) : (
-                  <h2 className="text-3xl font-bold text-white mb-6">Face Authentication</h2>
+                  <h2 className="text-3xl font-bold text-white mb-6">
+                    Face Authentication
+                  </h2>
                 )}
 
                 {/* Login Form vs Camera */}
@@ -626,7 +685,10 @@ const LoginPage = () => {
                           value={username}
                           onChange={(e) => {
                             setUsername(e.target.value);
-                            setBackendErrors({ ...backendErrors, username: "" }); // clear backend error on change
+                            setBackendErrors({
+                              ...backendErrors,
+                              username: "",
+                            }); // clear backend error on change
                           }}
                           className="bg-transparent w-full outline-none placeholder-white/70"
                         />
@@ -635,7 +697,12 @@ const LoginPage = () => {
                         )}
                       </div>
 
-                      {(loginErrors.username || backendErrors.username) && <p className="text-red-500 text-sm mt-1"> {loginErrors.username || backendErrors.username} </p>}
+                      {(loginErrors.username || backendErrors.username) && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {" "}
+                          {loginErrors.username || backendErrors.username}{" "}
+                        </p>
+                      )}
                     </div>
 
                     {/* Password Field */}
@@ -648,7 +715,10 @@ const LoginPage = () => {
                           value={password}
                           onChange={(e) => {
                             setPassword(e.target.value);
-                            setBackendErrors({ ...backendErrors, password: "" }); // clear backend error on change
+                            setBackendErrors({
+                              ...backendErrors,
+                              password: "",
+                            }); // clear backend error on change
                           }}
                           className="bg-transparent w-full outline-none placeholder-white/70"
                         />
@@ -656,7 +726,11 @@ const LoginPage = () => {
                           <ExclamationCircleIcon className="absolute right-3 top-2.5 h-5 w-5 text-red-500 animate-shake" />
                         )}
                       </div>
-                      {(loginErrors.password || backendErrors.password) && <p className="text-red-500 text-sm mt-1">{loginErrors.password} </p>}
+                      {(loginErrors.password || backendErrors.password) && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {loginErrors.password}{" "}
+                        </p>
+                      )}
                     </div>
 
                     <button
@@ -699,14 +773,16 @@ const LoginPage = () => {
                     {/* Status Message */}
                     {message && (
                       <p
-                        className={`mt-4 text-sm font-medium ${loading
-                          ? "text-white animate-pulse"
-                          : blinkCaptured || message.includes("✅")
+                        className={`mt-4 text-sm font-medium ${
+                          loading
+                            ? "text-white animate-pulse"
+                            : blinkCaptured || message.includes("✅")
                             ? "text-green-400"
-                            : message === "No blink detected. Please blink clearly."
-                              ? "text-red-400"
-                              : "text-white"
-                          }`}
+                            : message ===
+                              "No blink detected. Please blink clearly."
+                            ? "text-red-400"
+                            : "text-white"
+                        }`}
                       >
                         {message}
                       </p>
@@ -715,7 +791,8 @@ const LoginPage = () => {
                     {/* Retry + Back Buttons */}
                     <div className="mt-6 flex flex-col sm:flex-row sm:gap-6 gap-4 items-center">
                       {!loading &&
-                        (message === "No blink detected. Please blink clearly." ||
+                        (message ===
+                          "No blink detected. Please blink clearly." ||
                           message.includes("")) && (
                           <button
                             onClick={handleFaceLogin}
@@ -747,7 +824,9 @@ const LoginPage = () => {
                             Welcome, {welcomeData.fname} {welcomeData.lname}!
                           </h3>
                           <p className="text-sm mt-1">
-                            You're now signed in as <strong>{welcomeData.role}</strong>. Let's get started.
+                            You're now signed in as{" "}
+                            <strong>{welcomeData.role}</strong>. Let's get
+                            started.
                           </p>
                           <button
                             type="button"

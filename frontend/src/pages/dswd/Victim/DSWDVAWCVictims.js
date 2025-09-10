@@ -34,7 +34,6 @@ export default function DSWDVAWCVictims() {
 
   return (
     <>
-      <Navbar />
 
       <div className="flex min-h-screen bg-white">
 

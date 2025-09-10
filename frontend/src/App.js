@@ -71,6 +71,9 @@ const DSWD_VAWDESK_OFFICER_Detail = lazy(() =>
 const DSWDServices = lazy(() =>
   import("./pages/dswd/ServiceDSWD/DSWDServices")
 );
+const DSWDAccountManagement = lazy(() => 
+  import("./pages/dswd/AccountManagement/DSWDAccountManagement")
+);
 
 export default function App() {
   return (
@@ -121,6 +124,7 @@ export default function App() {
               <Route path={ROUTES.DSWD_VAWDESK_OFFICER} element={<DSWD_VAWDESK_OFFICER/>} />
               <Route path={ROUTES.DSWD_VAWDESK_OFFICER_DETAILS} element={<DSWD_VAWDESK_OFFICER_Detail />} />
               <Route path={ROUTES.DSWD_SERVICES} element={<DSWDServices/>} />
+              <Route path={ROUTES.DSWD_ACCOUNT_MANAGEMENT} element={<DSWDAccountManagement />} />
             </Route>
 
             {/* SOCIAL WORKER group */}

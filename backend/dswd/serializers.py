@@ -70,7 +70,7 @@ class SocialWorkerListSerializer(serializers.ModelSerializer):
             "of_role",
             "of_contact",
             "photo",
-            "of_brgy_assigned",
+            "assigned_barangay",
             "of_specialization",
         ]
 
@@ -152,15 +152,7 @@ class VAWDeskOfficerListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Official
-        fields = [
-            "of_id",
-            "full_name",
-            "of_role",
-            "of_contact",
-            "photo",
-            "of_brgy_assigned",
-            "of_specialization",
-        ]
+        fields = "__all__"
 
     def get_full_name(self, obj):
         parts = [obj.of_fname]

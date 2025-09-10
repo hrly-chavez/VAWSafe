@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Navbar from "../../Navbar";
 import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -54,7 +55,7 @@ const caseTypeData = {
   ],
 };
 
-export default function DeskOfficerPage() {
+export default function DSWDAccountManagement() {
   const [stats] = useState({
     victims: 2,
     cases: 2,
@@ -64,7 +65,7 @@ export default function DeskOfficerPage() {
 
   return (
     <div className="min-h-screen bg-white text-gray-900">
-      
+      <Navbar />
       <div className="grid grid-cols-1 md:grid-cols-5">
         {/* Sidebar */}
         <div className="md:col-span-1">

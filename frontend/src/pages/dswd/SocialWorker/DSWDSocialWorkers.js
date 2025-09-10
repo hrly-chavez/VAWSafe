@@ -38,7 +38,6 @@ export default function DSWDSocialWorkers() {
 
   return (
     <>
-      <Navbar />
       <div className="flex min-h-screen bg-white">
         <div className="flex-1 px-6 py-6 m-5 bg-white rounded-[20px] shadow-[0_2px_6px_0_rgba(0,0,0,0.1),0_-2px_6px_0_rgba(0,0,0,0.1)]">
           <h2 className="text-2xl font-semibold font-[Poppins] tracking-tight text-[#292D96]">
@@ -96,7 +95,6 @@ export default function DSWDSocialWorkers() {
                       <th className="px-4 py-3">Position</th>
                       <th className="px-4 py-3">Contact Number</th>
                       <th className="px-4 py-3">Specialization</th>
-                      <th className="px-4 py-3">Barangay Assigned</th>
                       <th className="px-4 py-3">Forms</th>
                     </tr>
                   </thead>
@@ -120,7 +118,6 @@ export default function DSWDSocialWorkers() {
                         <td className="px-4 py-3">{w.of_role || "Social Worker"}</td>
                         <td className="px-4 py-3">{w.of_contact || "—"}</td>
                         <td className="px-4 py-3">{w.of_specialization || "—"}</td>
-                        <td className="px-4 py-3">{w.of_brgy_assigned || "—"}</td>
                         <td className="px-4 py-3">
                           <a
                             href={`/dswd/social-workers/${w.of_id}`}

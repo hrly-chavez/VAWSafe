@@ -66,7 +66,6 @@ export default function SocialWorkerDetails() {
 
   return (
     <>
-      <Navbar />
       <div className="flex min-h-screen bg-white">
 
         <div className="flex-1 p-6">

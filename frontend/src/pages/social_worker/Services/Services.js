@@ -11,7 +11,6 @@ import Navbar from '../../Navbar';
 export default function Services() {
   return (
     <div>
-      <Navbar />
 
       <div className="flex min-h-screen bg-white">
         <div className="sw-services-page">
