@@ -5,8 +5,10 @@ from rest_framework.response import Response
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from shared_model.permissions import IsRole
+from rest_framework import viewsets
+from rest_framework.decorators import action
 
 from deepface import DeepFace
 from PIL import Image
@@ -14,6 +16,26 @@ from django.db import transaction
 from django.utils.dateparse import parse_date, parse_time
 from shared_model.models import *
 from .serializers import *
+
+class CityViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = City.objects.all()
+    serializer_class = CitySerializer
+
+    @action(detail=True, methods=["get"])
+    def municipalities(self, request, pk=None):
+        municipalities = Municipality.objects.filter(city_id=pk)
+        return Response(MunicipalitySerializer(municipalities, many=True).data)
+    permission_classes = [AllowAny]
+
+class MunicipalityViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Municipality.objects.all()
+    serializer_class = MunicipalitySerializer
+
+    @action(detail=True, methods=["get"])
+    def barangays(self, request, pk=None):
+        barangays = Barangay.objects.filter(municipality_id=pk)
+        return Response(BarangaySerializer(barangays, many=True).data)
+    permission_classes = [AllowAny]
 
 # victim functions
 class ViewVictim (generics.ListAPIView):

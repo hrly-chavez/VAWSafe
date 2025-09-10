@@ -1,6 +1,10 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from .views import *
 
+router = DefaultRouter()
+router.register(r"cities", CityViewSet)
+router.register(r"municipalities", MunicipalityViewSet)
 
 urlpatterns = [
     #victim
@@ -12,4 +16,5 @@ urlpatterns = [
     path("sessions/", SessionListCreateView.as_view(), name="session-list-create"),
     path("sessions/<int:sess_id>/", SessionDetailView.as_view(), name="session-detail"),
     path("sessions/create_sched/", schedule_session, name="create-session"),
-] 
+
+] + router.urls
