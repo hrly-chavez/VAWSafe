@@ -208,4 +208,4 @@ class ViewVAWDeskOfficerDetail(generics.RetrieveAPIView):
     
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
-   
+    
