@@ -209,6 +209,10 @@ class Victim(models.Model):
 
     def __str__(self):
         return self.vic_last_name
+    @property
+    def full_name(self):
+        parts = [self.vic_first_name, self.vic_middle_name, self.vic_last_name, self.vic_extension]
+        return " ".join(filter(None, parts))
  
 class VictimFaceSample(models.Model):
     victim = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name="face_samples")
@@ -264,6 +268,7 @@ class IncidentInformation(models.Model):
         ('Others', 'Others'),
     ]
     incident_id = models.AutoField(primary_key=True)
+    incident_num = models.IntegerField(null=True,blank=True)
     incident_description = models.TextField()
     incident_date = models.DateField()
     incident_time = models.TimeField()
@@ -283,37 +288,6 @@ class IncidentInformation(models.Model):
     barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
     sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
     street = models.ForeignKey("Street", on_delete=models.SET_NULL, related_name="incidents", null=True, blank=True)
-
-    def save(self, *args, **kwargs):
-        # Auto-fill hierarchy like in Victim & Official
-        if self.street:
-            self.sitio = self.street.sitio
-            self.barangay = self.street.sitio.barangay
-            self.municipality = self.street.sitio.barangay.municipality
-            self.city = self.street.sitio.barangay.municipality.city
-        elif self.sitio:
-            self.barangay = self.sitio.barangay
-            self.municipality = self.sitio.barangay.municipality
-            self.city = self.sitio.barangay.municipality.city
-        elif self.barangay:
-            self.municipality = self.barangay.municipality
-            self.city = self.barangay.municipality.city
-        elif self.municipality:
-            self.city = self.municipality.city
-
-        super().save(*args, **kwargs)
-
-    def clean(self):
-        """Ensure location hierarchy is consistent"""
-        from django.core.exceptions import ValidationError
-        if self.street and self.sitio and self.street.sitio != self.sitio:
-            raise ValidationError("Street must belong to the selected Sitio.")
-        if self.sitio and self.barangay and self.sitio.barangay != self.barangay:
-            raise ValidationError("Sitio must belong to the selected Barangay.")
-        if self.barangay and self.municipality and self.barangay.municipality != self.municipality:
-            raise ValidationError("Barangay must belong to the selected Municipality.")
-        if self.municipality and self.city and self.municipality.city != self.city:
-            raise ValidationError("Municipality must belong to the selected City.")
 
     def __str__(self):
         return f"Incident {self.incident_id}"

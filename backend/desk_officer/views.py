@@ -7,11 +7,11 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from shared_model.permissions import IsRole
-
+from django.utils import timezone
 from deepface import DeepFace
 from PIL import Image
 from django.db import transaction
-from django.utils.dateparse import parse_date, parse_time
+
 from shared_model.models import *
 from .serializers import *
 
@@ -264,17 +264,34 @@ class SessionDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 @api_view(["POST"])
-def schedule_session(request):
+def create_session(request):
     """
-    API for scheduling a session (sess_next_sched).
-    Requires: incident_id, sess_next_sched, sess_type, sess_location
+    API for scheduling or starting a session.
     """
-    serializer = SessionSerializer(data=request.data)
+    data = request.data.copy()
+    started_now = data.pop("started_now", False)
+
+    serializer = SessionSerializer(data=data)
     if serializer.is_valid():
-        session = serializer.save(sess_status="Pending")
+        if started_now:
+            session = serializer.save(
+                sess_status="Ongoing",
+                sess_date_today=timezone.now()
+            )
+        else:
+            session = serializer.save(sess_status="Pending")
         return Response(SessionSerializer(session).data, status=status.HTTP_201_CREATED)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
+# def schedule_session(request):
+#     """
+#     API for scheduling a session (sess_next_sched).
+#     Requires: incident_id, sess_next_sched, sess_type, sess_location
+#     """
+#     serializer = SessionSerializer(data=request.data)
+#     if serializer.is_valid():
+#         session = serializer.save(sess_status="Pending")
+#         return Response(SessionSerializer(session).data, status=status.HTTP_201_CREATED)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

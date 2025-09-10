@@ -1,10 +1,11 @@
+//src/pages/desk_officer/Session/Session.js
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 // pages
-import FaceRecog from "./FaceRecog";
+
 import Schedule from "./Schedule";
-import Form3 from "./Form3";
+import StartSession from "./StartSession";
 import Navbar from "../../Navbar";
 
 export default function Session() {
@@ -39,7 +40,7 @@ export default function Session() {
         );
       case 2:
         return (
-          <Form3
+          <StartSession
             // formData={formData}
             // setFormData={setFormData}
             back={back}
