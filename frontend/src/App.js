@@ -448,7 +448,9 @@ const DOServices = lazy(() => import("./pages/desk_officer/Services/Services")
 );
 const DOCaseRecords = lazy(() => import("./pages/desk_officer/CaseRecords/CaseRecords")
 );
-const DOAccountManagement = lazy(() => import("./pages/desk_officer/AccountManage/AccountManagement"));
+const DOAccountManagement = lazy(() => import("./pages/desk_officer/AccountManage/AccountManagement")
+);
+const DOPendingAccount = lazy(() => import("./pages/desk_officer/AccountManage/PendingAccount"));
 
 // Social Worker Pages (lazy loaded)
 const DashboardPage = lazy(() =>
@@ -529,6 +531,7 @@ export default function App() {
               <Route path={ROUTES.DESK_OFFICER_SERVICES} element={<DOServices />} />
               <Route path={ROUTES.DESK_OFFICER_CASE_RECORDS} element={<DOCaseRecords />} />
               <Route path={ROUTES.DESK_OFFICER_ACCOUNT_MANAGEMENT} element={<DOAccountManagement />} />
+              <Route path={ROUTES.DESK_OFFICER_PENDING_ACCOUNT} element={<DOPendingAccount />} />
             </Route>
 
             {/* DSWD group */}

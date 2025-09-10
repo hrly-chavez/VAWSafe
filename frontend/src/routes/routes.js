@@ -18,6 +18,7 @@ export const ROUTES = {
   DESK_OFFICER_SERVICES: "/desk_officer/services",
   DESK_OFFICER_CASE_RECORDS: "/desk_officer/case-records",
   DESK_OFFICER_ACCOUNT_MANAGEMENT: "/desk_officer/account-management",
+  DESK_OFFICER_PENDING_ACCOUNT: "/desk_officer/pending-account",
 
   DSWD: "/dswd",
   DSWD_VAWC_VICTIMS: "/dswd/victims",

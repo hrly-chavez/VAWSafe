@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from shared_model.permissions import IsRole
+from rest_framework.permissions import AllowAny
 
 from deepface import DeepFace
 from PIL import Image
@@ -276,5 +277,10 @@ def schedule_session(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# Account Management
+class OfficialViewSet(ModelViewSet):
+   queryset = Official.objects.all()
+   serializer_class = OfficialSerializer
+   permission_classes = [AllowAny]  # 👈 disables auth only for this view
 
 

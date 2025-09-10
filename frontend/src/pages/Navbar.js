@@ -11,7 +11,8 @@ export default function Navbar() {
   return (
     <div
       className="
-     flex items-center justify-between
+    fixed top-0 left-0 w-full z-50
+    flex items-center justify-between
     bg-white px-8 py-2
     shadow-md border-b border-[#d1d1d1]
     font-sans text-[#292D96]
