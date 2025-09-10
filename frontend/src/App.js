@@ -195,7 +195,6 @@
 //             element={<SearchVictimFacial />}
 //           />
 
-
 //           {/* Catch-all: if no route matches, redirect to login */}
 //           <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
 //         </Routes>
@@ -203,21 +202,6 @@
 //     </Router>
 //   );
 // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // import React, { Suspense, lazy } from "react";
 // import {
@@ -408,10 +392,14 @@
 //   );
 // }
 
-
 // src/App.js  (update as shown below)
 import React, { Suspense, lazy } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { ROUTES } from "./routes/routes";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -423,7 +411,9 @@ import RegisterUser from "./pages/RegisterUser";
 import ManualLoginPage from "./pages/ManualLoginPage";
 
 //Desk officer
-const DeskOfficerPage = lazy(() => import("./pages/desk_officer/DeskOfficer/DeskOfficerPage"));
+const DeskOfficerPage = lazy(() =>
+  import("./pages/desk_officer/DeskOfficer/DeskOfficerPage")
+);
 const VictimFacial = lazy(() =>
   import("./pages/desk_officer/RegisterVictim/VictimFacial")
 );
@@ -439,18 +429,21 @@ const DOVictimDetail = lazy(() =>
 const DOVictimSearch = lazy(() =>
   import("./pages/desk_officer/Victims/SearchVictim")
 );
-const DOTest = lazy(() => import("./pages/desk_officer/Test")
-);
+
 // nag add kog pages sa desk officer
-const DOSocialWorkers = lazy(() => import("./pages/desk_officer/SocialWorker/SocialWorker")
+const DOSocialWorkers = lazy(() =>
+  import("./pages/desk_officer/SocialWorker/SocialWorker")
 );
-const DOServices = lazy(() => import("./pages/desk_officer/Services/Services")
+const DOServices = lazy(() => import("./pages/desk_officer/Services/Services"));
+const DOCaseRecords = lazy(() =>
+  import("./pages/desk_officer/CaseRecords/CaseRecords")
 );
-const DOCaseRecords = lazy(() => import("./pages/desk_officer/CaseRecords/CaseRecords")
+const DOAccountManagement = lazy(() =>
+  import("./pages/desk_officer/AccountManage/AccountManagement")
 );
-const DOAccountManagement = lazy(() => import("./pages/desk_officer/AccountManage/AccountManagement")
+const DOPendingAccount = lazy(() =>
+  import("./pages/desk_officer/AccountManage/PendingAccount")
 );
-const DOPendingAccount = lazy(() => import("./pages/desk_officer/AccountManage/PendingAccount"));
 
 // Social Worker Pages (lazy loaded)
 const DashboardPage = lazy(() =>
@@ -470,7 +463,9 @@ const SearchVictimFacial = lazy(() =>
 );
 
 //DSWD
-const DSWDDashboard = lazy(() => import("./pages/dswd/Dashboard/DSWDDashboard"));
+const DSWDDashboard = lazy(() =>
+  import("./pages/dswd/Dashboard/DSWDDashboard")
+);
 const DSWDVAWCVictims = lazy(() =>
   import("./pages/dswd/Victim/DSWDVAWCVictims")
 );
@@ -520,18 +515,48 @@ export default function App() {
               }
             >
               <Route path={ROUTES.DESK_OFFICER} element={<DeskOfficerPage />} />
-              <Route path={ROUTES.DESK_OFFICER_REGISTER_VICTIM} element={<RegisterVictim />} />
-              <Route path={ROUTES.DESK_OFFICER_VICTIM_FACIAL} element={<VictimFacial />} />
+              <Route
+                path={ROUTES.DESK_OFFICER_REGISTER_VICTIM}
+                element={<RegisterVictim />}
+              />
+              <Route
+                path={ROUTES.DESK_OFFICER_VICTIM_FACIAL}
+                element={<VictimFacial />}
+              />
               <Route path={ROUTES.DESK_OFFICER_SESSION} element={<Session />} />
-              <Route path={ROUTES.DESK_OFFICER_VICTIMS} element={<DOVictims />} />
-              <Route path={ROUTES.DESK_OFFICER_VICTIM_DETAIL} element={<DOVictimDetail />} />
-              <Route path={ROUTES.DESK_OFFICER_VICTIM_SEARCH} element={<DOVictimSearch />} />
+              <Route
+                path={ROUTES.DESK_OFFICER_VICTIMS}
+                element={<DOVictims />}
+              />
+              <Route
+                path={ROUTES.DESK_OFFICER_VICTIM_DETAIL}
+                element={<DOVictimDetail />}
+              />
+              <Route
+                path={ROUTES.DESK_OFFICER_VICTIM_SEARCH}
+                element={<DOVictimSearch />}
+              />
               {/* mga bagong route paths sa desk officer nga katung gi add */}
-              <Route path={ROUTES.DESK_OFFICER_SOCIAL_WORKERS} element={<DOSocialWorkers />} />
-              <Route path={ROUTES.DESK_OFFICER_SERVICES} element={<DOServices />} />
-              <Route path={ROUTES.DESK_OFFICER_CASE_RECORDS} element={<DOCaseRecords />} />
-              <Route path={ROUTES.DESK_OFFICER_ACCOUNT_MANAGEMENT} element={<DOAccountManagement />} />
-              <Route path={ROUTES.DESK_OFFICER_PENDING_ACCOUNT} element={<DOPendingAccount />} />
+              <Route
+                path={ROUTES.DESK_OFFICER_SOCIAL_WORKERS}
+                element={<DOSocialWorkers />}
+              />
+              <Route
+                path={ROUTES.DESK_OFFICER_SERVICES}
+                element={<DOServices />}
+              />
+              <Route
+                path={ROUTES.DESK_OFFICER_CASE_RECORDS}
+                element={<DOCaseRecords />}
+              />
+              <Route
+                path={ROUTES.DESK_OFFICER_ACCOUNT_MANAGEMENT}
+                element={<DOAccountManagement />}
+              />
+              <Route
+                path={ROUTES.DESK_OFFICER_PENDING_ACCOUNT}
+                element={<DOPendingAccount />}
+              />
             </Route>
 
             {/* DSWD group */}
@@ -543,15 +568,39 @@ export default function App() {
               }
             >
               <Route path={ROUTES.DSWD} element={<DSWDDashboard />} />
-              <Route path={ROUTES.DSWD_VAWC_VICTIMS} element={<DSWDVAWCVictims />} />
-              <Route path={ROUTES.DSWD_VICTIM_DETAIL} element={<DSWDVictimDetail />} />
-              <Route path={ROUTES.DSWD_SEARCH_VICTIM} element={<DSWDSearchVictim />} />
-              <Route path={ROUTES.DSWD_SOCIAL_WORKERS} element={<DSWDSocialWorkers />} />
-              <Route path={ROUTES.DSWD_SOCIAL_WORKERS_DETAILS} element={<DSWDSocialWorkerDetail />} />
-              <Route path={ROUTES.DSWD_VAWDESK_OFFICER} element={<DSWD_VAWDESK_OFFICER />} />
-              <Route path={ROUTES.DSWD_VAWDESK_OFFICER_DETAILS} element={<DSWD_VAWDESK_OFFICER_Detail />} />
+              <Route
+                path={ROUTES.DSWD_VAWC_VICTIMS}
+                element={<DSWDVAWCVictims />}
+              />
+              <Route
+                path={ROUTES.DSWD_VICTIM_DETAIL}
+                element={<DSWDVictimDetail />}
+              />
+              <Route
+                path={ROUTES.DSWD_SEARCH_VICTIM}
+                element={<DSWDSearchVictim />}
+              />
+              <Route
+                path={ROUTES.DSWD_SOCIAL_WORKERS}
+                element={<DSWDSocialWorkers />}
+              />
+              <Route
+                path={ROUTES.DSWD_SOCIAL_WORKERS_DETAILS}
+                element={<DSWDSocialWorkerDetail />}
+              />
+              <Route
+                path={ROUTES.DSWD_VAWDESK_OFFICER}
+                element={<DSWD_VAWDESK_OFFICER />}
+              />
+              <Route
+                path={ROUTES.DSWD_VAWDESK_OFFICER_DETAILS}
+                element={<DSWD_VAWDESK_OFFICER_Detail />}
+              />
               <Route path={ROUTES.DSWD_SERVICES} element={<DSWDServices />} />
-              <Route path={ROUTES.DSWD_ACCOUNT_MANAGEMENT} element={<DSWDAccountManagement />} />
+              <Route
+                path={ROUTES.DSWD_ACCOUNT_MANAGEMENT}
+                element={<DSWDAccountManagement />}
+              />
             </Route>
 
             {/* SOCIAL WORKER group */}
@@ -562,13 +611,34 @@ export default function App() {
                 </ProtectedRoute>
               }
             >
-              <Route path={ROUTES.SOCIAL_WORKER_DASHBOARD} element={<DashboardPage />} />
-              <Route path={ROUTES.SOCIAL_WORKER_CASE_RECORDS} element={<CaseRecords />} />
-              <Route path={ROUTES.SOCIAL_WORKER_SESSIONS} element={<Sessions />} />
-              <Route path={ROUTES.SOCIAL_WORKER_SERVICES} element={<Services />} />
-              <Route path={ROUTES.SOCIAL_WORKER_VICTIMS} element={<Victims />} />
-              <Route path={ROUTES.SOCIAL_WORKER_VICTIM_DETAIL} element={<VictimDetailPage />} />
-              <Route path={ROUTES.SOCIAL_WORKER_SEARCH_FACIAL} element={<SearchVictimFacial />} />
+              <Route
+                path={ROUTES.SOCIAL_WORKER_DASHBOARD}
+                element={<DashboardPage />}
+              />
+              <Route
+                path={ROUTES.SOCIAL_WORKER_CASE_RECORDS}
+                element={<CaseRecords />}
+              />
+              <Route
+                path={ROUTES.SOCIAL_WORKER_SESSIONS}
+                element={<Sessions />}
+              />
+              <Route
+                path={ROUTES.SOCIAL_WORKER_SERVICES}
+                element={<Services />}
+              />
+              <Route
+                path={ROUTES.SOCIAL_WORKER_VICTIMS}
+                element={<Victims />}
+              />
+              <Route
+                path={ROUTES.SOCIAL_WORKER_VICTIM_DETAIL}
+                element={<VictimDetailPage />}
+              />
+              <Route
+                path={ROUTES.SOCIAL_WORKER_SEARCH_FACIAL}
+                element={<SearchVictimFacial />}
+              />
             </Route>
 
             <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
