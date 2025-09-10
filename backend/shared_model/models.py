@@ -67,6 +67,7 @@ class Official(models.Model):
     of_id = models.AutoField(primary_key=True)
     of_fname = models.CharField(max_length=50)
     of_lname = models.CharField(max_length=50)
+    of_email = models.CharField(max_length=100, blank=True, null=True)
     of_m_initial = models.CharField(max_length=50, null=True, blank=True)
     of_suffix = models.CharField(max_length=50, null=True, blank=True)
     of_sex = models.CharField(max_length=1, null=True, blank=True)
@@ -94,7 +95,6 @@ class Official(models.Model):
     def full_name(self):
         middle = f"{self.of_m_initial or ''}."
         return f"{self.of_fname} {middle} {self.of_lname} {self.of_suffix or ''}".strip()
-
 
 class OfficialFaceSample(models.Model):
     official = models.ForeignKey(Official, on_delete=models.CASCADE, related_name='face_samples')
