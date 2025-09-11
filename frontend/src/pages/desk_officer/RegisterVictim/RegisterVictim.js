@@ -2,14 +2,17 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
+import api from "../../../api/axios";
+
+// imported pages
 import AdministrativeInfo from "./AdministrativeInfo";
 import VictimInfo from "./VictimInfo";
 import IncidentInfo from "./IncidentInfo";
 import PerpetratorInfo from "./PerpetratorInfo";
 import CaptureVictimFacial from "./VictimFacial";
 import SchedulePage from "../Session/Schedule";
-import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
-import api from "../../../api/axios";
+import Evidences from "./Evidences";
 
 const VICTIM_FIELDS = [
   "vic_first_name",
@@ -106,6 +109,7 @@ export default function RegisterVictim() {
     perpInfo: false,
     evidenceRecords: false,
     barangayNote: false,
+    evidences: false,
   });
   const [statusMessage, setStatusMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -318,6 +322,21 @@ export default function RegisterVictim() {
                 formDataState={formDataState}
                 setFormDataState={setFormDataState}
               />
+            </div>
+          )}
+        </div>
+
+        {/* Evidences */}
+        <div className="mb-4">
+          <button
+            onClick={() => toggleSection("evidences")}
+            className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
+          >
+            {openSections.evidences ? "▼" : "▶"} Evidences
+          </button>
+          {openSections.evidences && (
+            <div className="mt-4 border-l-4 border-blue-500 pl-4">
+              <Evidences />
             </div>
           )}
         </div>
