@@ -6,6 +6,8 @@ router = DefaultRouter()
 router.register(r"cities", CityViewSet)
 router.register(r"municipalities", MunicipalityViewSet)
 
+router.register(r"officials", OfficialViewSet, basename='official')
+
 urlpatterns = [
     #victim
     path("victims/", ViewVictim.as_view(), name="view_victim"),
