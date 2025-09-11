@@ -253,8 +253,11 @@ def register_victim(request):
 
 #SESSION FUNCTIONS
 class SessionListCreateView(generics.ListCreateAPIView):
-    queryset = Session.objects.all()
     serializer_class = SessionSerializer
+
+    def get_queryset(self):
+        # Only return sessions that are Pending or Ongoing
+        return Session.objects.filter(sess_status__in=['Pending', 'Ongoing']).order_by('-sess_next_sched')
 
 
 class SessionDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -284,14 +287,3 @@ def create_session(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-# def schedule_session(request):
-#     """
-#     API for scheduling a session (sess_next_sched).
-#     Requires: incident_id, sess_next_sched, sess_type, sess_location
-#     """
-#     serializer = SessionSerializer(data=request.data)
-#     if serializer.is_valid():
-#         session = serializer.save(sess_status="Pending")
-#         return Response(SessionSerializer(session).data, status=status.HTTP_201_CREATED)
-#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

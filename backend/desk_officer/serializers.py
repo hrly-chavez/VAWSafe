@@ -87,11 +87,26 @@ class VictimDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
         
 class SessionSerializer(serializers.ModelSerializer):
+    victim_name = serializers.SerializerMethodField()
+    case_no = serializers.SerializerMethodField() 
+    location = serializers.SerializerMethodField()
+
     class Meta:
         model = Session
         fields = "__all__"
         read_only_fields = ["sess_id", "sess_num","sess_updated_at"]
-
+    def get_victim_name(self, obj):
+        # Check if session has an incident and victim
+        if obj.incident_id and obj.incident_id.vic_id:
+            return obj.incident_id.vic_id.full_name
+        return None
+    def get_case_no(self, obj):
+        if obj.incident_id:
+            return obj.incident_id.incident_num
+        return None
+    def get_location(self, obj):
+        return obj.sess_location or "—"
+    
     def create(self, validated_data):
         # Auto-generate sess_num based on incident
         incident = validated_data.get("incident_id")

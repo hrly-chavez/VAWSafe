@@ -28,7 +28,7 @@ def eye_aspect_ratio(eye_pts: np.ndarray) -> float:
         return 0.0
     return (A + B) / (2.0 * C)
 
-def detect_blink(image_bytes: bytes, ear_threshold: float = 0.20, upsample: int = 1) -> bool:
+def detect_blink(image_bytes: bytes, ear_threshold: float = 0.23, upsample: int = 1) -> bool:
     nparr = np.frombuffer(image_bytes, dtype=np.uint8)
     frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
     if frame is None:
