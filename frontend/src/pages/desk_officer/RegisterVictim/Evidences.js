@@ -43,7 +43,7 @@ export default function Evidences() {
   }, [files]);
 
   return (
-    <div className="p-4 bg-white rounded-lg shadow w-full max-w-md">
+    <div className="p-4 bg-white rounded-lg shadow w-full">
       <h2 className="text-lg font-semibold mb-3">Upload Photos</h2>
 
       <input
@@ -53,11 +53,11 @@ export default function Evidences() {
         ref={inputRef}
         onChange={handleChange}
         className="block w-full mb-2 text-sm text-gray-600 
-                   file:mr-2 file:py-1 file:px-3
-                   file:rounded-md file:border-0
-                   file:text-sm file:font-medium
-                   file:bg-blue-600 file:text-white
-                   hover:file:bg-blue-700 cursor-pointer"
+                 file:mr-2 file:py-1 file:px-3
+                 file:rounded-md file:border-0
+                 file:text-sm file:font-medium
+                 file:bg-blue-600 file:text-white
+                 hover:file:bg-blue-700 cursor-pointer"
       />
 
       {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
