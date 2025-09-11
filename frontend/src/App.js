@@ -27,7 +27,7 @@ const RegisterVictim = lazy(() =>
   import("./pages/desk_officer/RegisterVictim/RegisterVictim")
 );
 const Session = lazy(() => import("./pages/desk_officer/Session/Session"));
-
+const StartSession = lazy(() => import("./pages/desk_officer/Session/StartSession"));
 const DOVictims = lazy(() => import("./pages/desk_officer/Victims/Victims"));
 const DOVictimDetail = lazy(() =>
   import("./pages/desk_officer/Victims/VictimDetails")
@@ -141,6 +141,9 @@ export default function App() {
               <Route
                 path={ROUTES.DESK_OFFICER_VICTIM_SEARCH}
                 element={<DOVictimSearch />}
+              />
+              <Route 
+              path={ROUTES.DESK_OFFICER_START_SESSION} element={<StartSession />} 
               />
               {/* mga bagong route paths sa desk officer nga katung gi add */}
               <Route
