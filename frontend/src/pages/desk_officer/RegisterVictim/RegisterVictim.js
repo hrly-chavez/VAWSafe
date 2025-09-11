@@ -92,7 +92,7 @@ export default function RegisterVictim() {
     vic_first_name: "",
     vic_last_name: "",
     vic_sex: "",
-    report_type: "victim-survivor",
+    report_type: "",
     victimPhotos: [], // 👈 store photos here
   });
 

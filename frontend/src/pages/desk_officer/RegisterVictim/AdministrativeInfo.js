@@ -78,7 +78,7 @@ export default function AdministrativeInfo({
             value={formDataState.report_type || ""}
             onChange={(e) => handleReportType(e.target.value)}
           >
-            <option value="victim-survivor">Select report type</option>
+            <option value="">Select report type</option>
             <option value="victim-survivor">
               Reported by the victim-survivor
             </option>
@@ -92,22 +92,73 @@ export default function AdministrativeInfo({
             </option>
           </select>
         </div>
-
-        {/* popup depends on report type */}
-        {formDataState.report_type !== "victim-survivor" && (
-          <div>
+      </div>
+      {/* popup depends on report type */}
+      {formDataState.report_type !== "victim-survivor" &&
+        formDataState.report_type !== "" && (
+          <div className="">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Name of Informant
             </label>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <input
+                className="input"
+                type="text"
+                placeholder="First Name"
+                // value={formDataState.vic_first_name || ""}
+                // onChange={(e) => handleChange("vic_first_name", e.target.value)}
+              />
+              <input
+                className="input"
+                type="text"
+                placeholder="Middle Name"
+                // value={formDataState.vic_middle_name || ""}
+                // onChange={(e) =>
+                //   handleChange("vic_middle_name", e.target.value)
+                // }
+              />
+              <input
+                className="input"
+                type="text"
+                placeholder="Last Name"
+                // value={formDataState.vic_last_name || ""}
+                // onChange={(e) => handleChange("vic_last_name", e.target.value)}
+              />
+              <input
+                className="input"
+                type="text"
+                placeholder="Extension (e.g. Jr., III)"
+                // value={formDataState.vic_extension || ""}
+                // onChange={(e) => handleChange("vic_extension", e.target.value)}
+              />
+            </div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Relationship to victim-survivor
             </label>
+            <div>
+              <input
+                className="input"
+                type="text"
+                placeholder="Extension (e.g. Jr., III)"
+                // value={formDataState.vic_extension || ""}
+                // onChange={(e) => handleChange("vic_extension", e.target.value)}
+              />
+            </div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Contact Information
             </label>
+            <div>
+              <input
+                className="input"
+                type="number"
+                placeholder="Extension (e.g. Jr., III)"
+                // value={formDataState.vic_extension || ""}
+                // onChange={(e) => handleChange("vic_extension", e.target.value)}
+              />
+            </div>
           </div>
         )}
-      </div>
     </div>
   );
 }
