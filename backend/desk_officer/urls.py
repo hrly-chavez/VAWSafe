@@ -6,6 +6,8 @@ router = DefaultRouter()
 router.register(r"cities", CityViewSet)
 router.register(r"municipalities", MunicipalityViewSet)
 
+router.register(r"officials", OfficialViewSet, basename='official')
+
 urlpatterns = [
     #victim
     path("victims/", ViewVictim.as_view(), name="view_victim"),
@@ -16,5 +18,6 @@ urlpatterns = [
     path("sessions/", SessionListCreateView.as_view(), name="session-list-create"),
     path("sessions/<int:sess_id>/", SessionDetailView.as_view(), name="session-detail"),
     path("sessions/create_sched/", schedule_session, name="create-session"),
+    # path('', include(router.urls))
 
 ] + router.urls
