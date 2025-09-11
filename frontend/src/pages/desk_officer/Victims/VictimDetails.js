@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../../../api/axios";
 
-
 export default function VictimDetails() {
   const { vic_id } = useParams();
   const [victim, setVictim] = useState(null);
@@ -60,7 +59,9 @@ export default function VictimDetails() {
   return (
     <>
       <div className="flex flex-col min-h-screen bg-white">
-        <h1 className="text-2xl font-bold text-[#292D96] px-6 pt-6">Victim Details</h1>
+        <h1 className="text-2xl font-bold text-[#292D96] px-6 pt-6">
+          Victim Details
+        </h1>
         <div className="flex flex-1 gap-6 px-6 py-8 max-w-screen-xl mx-auto w-full">
           {/* Left: Profile Sidebar */}
           <div className="w-[300px] bg-white rounded-xl shadow p-4 border flex flex-col items-center">

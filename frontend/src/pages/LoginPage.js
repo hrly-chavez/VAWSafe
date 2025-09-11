@@ -78,7 +78,7 @@ const LoginPage = () => {
 
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
-  // Utility Functions for Login with Face 
+  // Utility Functions for Login with Face
   const captureBurstFrames = async () => {
     const frames = [];
 
@@ -88,7 +88,10 @@ const LoginPage = () => {
         break;
       }
 
-      if (!webcamRef.current || typeof webcamRef.current.getScreenshot !== "function") {
+      if (
+        !webcamRef.current ||
+        typeof webcamRef.current.getScreenshot !== "function"
+      ) {
         console.warn("Webcam not ready");
         break;
       }
@@ -138,15 +141,20 @@ const LoginPage = () => {
     });
 
     try {
-      const blinkRes = await fetch("http://localhost:8000/api/auth/blink-check/", {
-        method: "POST",
-        body: blinkForm,
-      });
+      const blinkRes = await fetch(
+        "http://localhost:8000/api/auth/blink-check/",
+        {
+          method: "POST",
+          body: blinkForm,
+        }
+      );
       if (loginCancelledRef.current) return;
       const blinkData = await blinkRes.json();
 
       if (!blinkRes.ok || !blinkData.blink) {
-        setMessage(blinkData.message || " No blink detected, please try again.");
+        setMessage(
+          blinkData.message || " No blink detected, please try again."
+        );
         setLoading(false);
         return;
       }
@@ -161,10 +169,13 @@ const LoginPage = () => {
         loginForm.append(`frame${j + 1}`, chosenBlob, `frame${j + 1}.jpg`);
       });
 
-      const loginRes = await fetch("http://localhost:8000/api/auth/face-login/", {
-        method: "POST",
-        body: loginForm,
-      });
+      const loginRes = await fetch(
+        "http://localhost:8000/api/auth/face-login/",
+        {
+          method: "POST",
+          body: loginForm,
+        }
+      );
       if (loginCancelledRef.current) return;
 
       const loginData = await loginRes.json();
@@ -182,11 +193,10 @@ const LoginPage = () => {
               username: loginData.username,
               role: loginData.role,
               name: loginData.name,
-              official_id: loginData.official_id
-            }
+              official_id: loginData.official_id,
+            },
           })
         );
-
 
         // ✅ Also set welcome card info
         setWelcomeData(loginData.user);
@@ -205,7 +215,6 @@ const LoginPage = () => {
         } else {
           navigate("/login"); // fallback
         }
-
       } else {
         setMessage(loginData.message || " Face verification failed.");
       }
@@ -237,11 +246,14 @@ const LoginPage = () => {
     setMessage("Logging in...");
 
     try {
-      const response = await fetch("http://localhost:8000/api/auth/manual-login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await fetch(
+        "http://localhost:8000/api/auth/manual-login/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        }
+      );
 
       const data = await response.json();
 
@@ -256,8 +268,8 @@ const LoginPage = () => {
               username: data.username,
               role: data.role,
               name: data.name,
-              official_id: data.official_id
-            }
+              official_id: data.official_id,
+            },
           })
         );
 
@@ -305,7 +317,9 @@ const LoginPage = () => {
                 {slides[currentSlide].desc}
               </p>
               <button
-                onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}
+                onClick={() =>
+                  setCurrentSlide((prev) => (prev + 1) % slides.length)
+                }
                 className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 rounded-lg shadow-lg font-semibold"
               >
                 Next

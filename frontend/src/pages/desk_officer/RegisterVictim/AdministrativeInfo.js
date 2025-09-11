@@ -78,21 +78,36 @@ export default function AdministrativeInfo({
             value={formDataState.report_type || ""}
             onChange={(e) => handleReportType(e.target.value)}
           >
-            <option value="">Select report type</option>
-            <option value="Reported by the victim-survivor">
+            <option value="victim-survivor">Select report type</option>
+            <option value="victim-survivor">
               Reported by the victim-survivor
             </option>
-            <option value="Reported by victim-survivor's companion and victim-survivor is present">
+            <option value="companion with victim-survivor">
               Reported by victim-survivor's companion and victim-survivor is
               present
             </option>
-            <option value="Reported by informant and victim-survivor is not present at reporting">
+            <option value="informant only">
               Reported by informant and victim-survivor is not present at
               reporting
             </option>
           </select>
         </div>
+
+        {/* popup depends on report type */}
+        {formDataState.report_type !== "victim-survivor" && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Name of Informant
+            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Relationship to victim-survivor
+            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Contact Information
+            </label>
+          </div>
+        )}
       </div>
-         </div>
+    </div>
   );
 }
