@@ -11,9 +11,3 @@ admin.site.register(VictimFaceSample)
 
 admin.site.register(Session)
 admin.site.register(IncidentInformation)
-
-admin.site.register(City)
-admin.site.register(Municipality)
-admin.site.register(Barangay)
-admin.site.register(Sitio)
-admin.site.register(Street)

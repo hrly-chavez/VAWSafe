@@ -2,21 +2,6 @@ from rest_framework import serializers
 from shared_model.models import *
 from datetime import date
 
-class CitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = City
-        fields = "__all__"
-
-class MunicipalitySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Municipality
-        fields = "__all__"
-
-class BarangaySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Barangay
-        fields = "__all__"
-
 # --- Lightweight list serializer ---
 class VictimListSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
