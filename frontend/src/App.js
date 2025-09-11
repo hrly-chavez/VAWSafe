@@ -17,7 +17,9 @@ import RegisterUser from "./pages/RegisterUser";
 import ManualLoginPage from "./pages/ManualLoginPage";
 
 //Desk officer
-const DeskOfficerPage = lazy(() => import("./pages/desk_officer/DeskOfficer/DeskOfficerPage"));
+const DeskOfficerPage = lazy(() =>
+  import("./pages/desk_officer/DeskOfficer/DeskOfficerPage")
+);
 const VictimFacial = lazy(() =>
   import("./pages/desk_officer/RegisterVictim/VictimFacial")
 );
@@ -32,6 +34,21 @@ const DOVictimDetail = lazy(() =>
 );
 const DOVictimSearch = lazy(() =>
   import("./pages/desk_officer/Victims/SearchVictim")
+);
+
+// nag add kog pages sa desk officer
+const DOSocialWorkers = lazy(() =>
+  import("./pages/desk_officer/SocialWorker/SocialWorker")
+);
+const DOServices = lazy(() => import("./pages/desk_officer/Services/Services"));
+const DOCaseRecords = lazy(() =>
+  import("./pages/desk_officer/CaseRecords/CaseRecords")
+);
+const DOAccountManagement = lazy(() =>
+  import("./pages/desk_officer/AccountManage/AccountManagement")
+);
+const DOPendingAccount = lazy(() =>
+  import("./pages/desk_officer/AccountManage/PendingAccount")
 );
 
 // Social Worker Pages (lazy loaded)
@@ -113,9 +130,39 @@ export default function App() {
                 element={<VictimFacial />}
               />
               <Route path={ROUTES.DESK_OFFICER_SESSION} element={<Session />} />
-              <Route path={ROUTES.DESK_OFFICER_VICTIMS} element={<DOVictims />} />
-              <Route path={ROUTES.DESK_OFFICER_VICTIM_DETAIL} element={<DOVictimDetail />} />
-              <Route path={ROUTES.DESK_OFFICER_VICTIM_SEARCH} element={<DOVictimSearch />} />
+              <Route
+                path={ROUTES.DESK_OFFICER_VICTIMS}
+                element={<DOVictims />}
+              />
+              <Route
+                path={ROUTES.DESK_OFFICER_VICTIM_DETAIL}
+                element={<DOVictimDetail />}
+              />
+              <Route
+                path={ROUTES.DESK_OFFICER_VICTIM_SEARCH}
+                element={<DOVictimSearch />}
+              />
+              {/* mga bagong route paths sa desk officer nga katung gi add */}
+              <Route
+                path={ROUTES.DESK_OFFICER_SOCIAL_WORKERS}
+                element={<DOSocialWorkers />}
+              />
+              <Route
+                path={ROUTES.DESK_OFFICER_SERVICES}
+                element={<DOServices />}
+              />
+              <Route
+                path={ROUTES.DESK_OFFICER_CASE_RECORDS}
+                element={<DOCaseRecords />}
+              />
+              <Route
+                path={ROUTES.DESK_OFFICER_ACCOUNT_MANAGEMENT}
+                element={<DOAccountManagement />}
+              />
+              <Route
+                path={ROUTES.DESK_OFFICER_PENDING_ACCOUNT}
+                element={<DOPendingAccount />}
+              />
             </Route>
 
             {/* DSWD group */}
