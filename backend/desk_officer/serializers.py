@@ -107,3 +107,14 @@ class OfficialSerializer(serializers.ModelSerializer):
             "city", "municipality", "barangay", "sitio", "street", "of_assigned_barangay"
         ]
 
+
+# class OfficialSerializer(serializers.ModelSerializer):
+#     full_name = serializers.ReadOnlyField()
+
+#     class Meta:
+#         model = Official
+#         fields = [
+#             "of_id", "full_name", "of_role", "of_contact", "of_photo",
+#             "city", "municipality", "barangay", "sitio", "street",
+#             "of_assigned_barangay", "status"  # 👈 Add this
+#         ]

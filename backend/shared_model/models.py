@@ -62,6 +62,16 @@ class Official(models.Model):
         ('VAWDesk', 'VAWDesk'),
         ('Social Worker', 'Social Worker'),
     ]
+
+    # this is the new models for the accept and reject official
+    # STATUS_CHOICES = [
+    #     ("pending", "Pending"),
+    #     ("approved", "Approved"),
+    #     ("rejected", "Rejected"),
+    # ]
+
+    # status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pending")
+    
     #change user nga dili modawat ug default ug null kay ako rha ni gi test para sa authorization ug authentication
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="official", null=True, blank=True)
     of_id = models.AutoField(primary_key=True)
@@ -234,12 +244,12 @@ class Perpetrator(models.Model):
     per_occupation = models.CharField(max_length=100, blank=True, null=True)
     per_religion = models.CharField(max_length=50, blank=True, null=True)
     per_relationship_category = models.CharField(max_length=50, blank=True, null=True) # should be relationship-to-victim?
-    # per_relationship_detail = models.CharField(max_length=100, blank=True, null=True)
-    # per_guardian_first_name = models.CharField(max_length=100, blank=True, null=True)
-    # per_guardian_middle_name = models.CharField(max_length=100, blank=True, null=True)
-    # per_guardian_last_name = models.CharField(max_length=100, blank=True, null=True)
-    # per_guardian_contact = models.CharField(max_length=50, blank=True, null=True)
-    # per_guardian_child_category = models.CharField(max_length=50, blank=True, null=True)
+    per_relationship_detail = models.CharField(max_length=100, blank=True, null=True)
+    per_guardian_first_name = models.CharField(max_length=100, blank=True, null=True)
+    per_guardian_middle_name = models.CharField(max_length=100, blank=True, null=True)
+    per_guardian_last_name = models.CharField(max_length=100, blank=True, null=True)
+    per_guardian_contact = models.CharField(max_length=50, blank=True, null=True)
+    per_guardian_child_category = models.CharField(max_length=50, blank=True, null=True)
     def __str__(self):
         return f"{self.per_last_name}, {self.per_first_name}"
   
@@ -314,6 +324,10 @@ class IncidentInformation(models.Model):
             raise ValidationError("Barangay must belong to the selected Municipality.")
         if self.municipality and self.city and self.municipality.city != self.city:
             raise ValidationError("Municipality must belong to the selected City.")
+
+    # violence_type 
+    # specific_violence_type
+    # others
 
     def __str__(self):
         return f"Incident {self.incident_id}"

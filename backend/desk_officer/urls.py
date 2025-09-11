@@ -20,6 +20,8 @@ urlpatterns = [
     path("sessions/<int:sess_id>/", SessionDetailView.as_view(), name="session-detail"),
     path("sessions/create_sched/", schedule_session, name="create-session"),
     # officials
+    # path("approve-official/", approve_official, name="approve-official"),
+    # path("reject-official/", reject_official, name="reject-official"),
     path("", include(router.urls)),
 ] 
 
