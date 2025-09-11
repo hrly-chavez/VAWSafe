@@ -14,26 +14,35 @@ export default function Schedule({ victim, incident, back, next }) {
   const handleSubmitSchedule = async () => {
     try {
       const payload = {
-        incident_id: incident?.incident_id, 
-        sess_next_sched: `${date}T${time}:00Z`, 
+        incident_id: incident?.incident_id,
+        sess_next_sched: `${date}T${time}:00Z`,
         sess_location: location,
         sess_type: sessionType,
       };
 
-      const res = await api.post("/api/desk_officer/sessions/create_sched/", payload);
+      const res = await api.post(
+        "/api/desk_officer/sessions/create_sched/",
+        payload
+      );
 
       // ✅ Format readable datetime
-      const readableDate = new Date(res.data.sess_next_sched).toLocaleString("en-US", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      });
+      const readableDate = new Date(res.data.sess_next_sched).toLocaleString(
+        "en-US",
+        {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }
+      );
 
       alert(` Session scheduled successfully!\nDate: ${readableDate}`);
       if (next) next();
     } catch (err) {
       if (err.response?.data) {
         console.error("Schedule error:", err.response.data);
-        alert("Failed to schedule session:\n" + JSON.stringify(err.response.data, null, 2));
+        alert(
+          "Failed to schedule session:\n" +
+            JSON.stringify(err.response.data, null, 2)
+        );
       } else {
         alert("Failed to schedule session: " + err.message);
       }
@@ -41,24 +50,25 @@ export default function Schedule({ victim, incident, back, next }) {
   };
 
   const handleStartSession = async () => {
-  try {
-    const payload = {
-      victim: victim?.vic_id,   // use your backend field names
-      incident_id: incident?.incident_id,
-      started_now: true,
-    };
+    try {
+      const payload = {
+        victim: victim?.vic_id, // use your backend field names
+        incident_id: incident?.incident_id,
+        started_now: true,
+      };
 
-    const res = await api.post("/api/desk_officer/sessions/", payload);
+      const res = await api.post("/api/desk_officer/sessions/", payload);
 
-    const session = res.data; // created session data from backend
+      const session = res.data; // created session data from backend
 
-    
-    navigate("/desk_officer/session/start", { state: { session, victim, incident } });
-  } catch (err) {
-    console.error("Start session error:", err);
-    alert(" Failed to start session");
-  }
-};
+      navigate("/desk_officer/session/start", {
+        state: { session, victim, incident },
+      });
+    } catch (err) {
+      console.error("Start session error:", err);
+      alert(" Failed to start session");
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6 mt-6">
@@ -67,10 +77,6 @@ export default function Schedule({ victim, incident, back, next }) {
       </h2>
 
       <div className="border rounded-lg p-4 bg-gray-50 space-y-4">
-        
-        <div className="grid grid-cols-3 gap-3">
-        </div>
-
         {/* Date & Time */}
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -96,9 +102,9 @@ export default function Schedule({ victim, incident, back, next }) {
         {/* Location */}
         <div>
           <label className="text-xs text-gray-600">Location Address</label>
-          <input 
-            type="text" 
-            className="w-full border rounded p-2" 
+          <input
+            type="text"
+            className="w-full border rounded p-2"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           />
@@ -107,7 +113,7 @@ export default function Schedule({ victim, incident, back, next }) {
         {/* Type */}
         <div>
           <label className="text-xs text-gray-600">Type of Session</label>
-          <select 
+          <select
             className="w-full border rounded p-2"
             value={sessionType}
             onChange={(e) => setSessionType(e.target.value)}
@@ -116,7 +122,17 @@ export default function Schedule({ victim, incident, back, next }) {
             <option value="Counseling">Counseling</option>
             <option value="Interview">Interview</option>
             <option value="Follow-up">Follow-up</option>
-            
+          </select>
+        </div>
+
+        <div>
+          <label className="text-xs text-gray-600">
+            Assigned Social Worker
+          </label>
+          <select className="w-full border rounded p-2">
+            <option>Social Worker 1</option>
+            <option>Social Worker 2</option>
+            <option>Social Worker 3</option>
           </select>
         </div>
       </div>
@@ -149,5 +165,3 @@ export default function Schedule({ victim, incident, back, next }) {
     </div>
   );
 }
-
-
