@@ -18,7 +18,7 @@ import ManualLoginPage from "./pages/ManualLoginPage";
 
 //Desk officer
 const DeskOfficerPage = lazy(() =>
-  import("./pages/desk_officer/DeskOfficer/DeskOfficerPage")
+  import("./pages/desk_officer/DeskOfficer/Dashboard")
 );
 const VictimFacial = lazy(() =>
   import("./pages/desk_officer/RegisterVictim/VictimFacial")
