@@ -1,4 +1,4 @@
-// src/App.js  (update as shown below)
+// src/App.js  
 import React, { Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,

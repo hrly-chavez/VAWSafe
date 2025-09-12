@@ -1,7 +1,7 @@
 // src/desk_officer/Session/StartSession.js
-import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
+import React, { useState, useRef, useEffect } from "react";
 
 export default function StartSession() {
   const { state } = useLocation();
@@ -10,10 +10,51 @@ export default function StartSession() {
   const incident = state?.incident;
   const navigate = useNavigate();
 
-  // Form state
+  // dropdown values
   const [mentalNote, setMentalNote] = useState("");
   const [physicalNote, setPhysicalNote] = useState("");
   const [financialNote, setFinancialNote] = useState("");
+
+  // for image upload
+  const [files, setFiles] = useState([]);
+  const [error, setError] = useState("");
+  const inputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const selected = Array.from(e.target.files);
+    const valid = [];
+
+    for (let file of selected) {
+      if (file.size > 10 * 1024 * 1024) {
+        setError(`❌ ${file.name} is larger than 10 MB`);
+        continue;
+      }
+      valid.push({
+        id: `${file.name}-${file.lastModified}`,
+        file,
+        preview: URL.createObjectURL(file),
+      });
+    }
+
+    if (valid.length) {
+      setError("");
+      setFiles((prev) => [...prev, ...valid]);
+    }
+
+    if (inputRef.current) inputRef.current.value = ""; // reset input
+  };
+
+  const handleRemove = (id) => {
+    setFiles((prev) => {
+      const fileToRemove = prev.find((f) => f.id === id);
+      if (fileToRemove) URL.revokeObjectURL(fileToRemove.preview);
+      return prev.filter((f) => f.id !== id);
+    });
+  };
+
+  useEffect(() => {
+    return () => files.forEach((f) => URL.revokeObjectURL(f.preview));
+  }, [files]);
 
   const handleSubmit = async () => {
     try {
@@ -24,12 +65,18 @@ export default function StartSession() {
         sess_status: "Done",
       };
 
-      await api.patch(`/api/desk_officer/sessions/${session.sess_id}/`, payload);
+      await api.patch(
+        `/api/desk_officer/sessions/${session.sess_id}/`,
+        payload
+      );
 
       alert(" Session submitted and marked as Done.");
       navigate("/desk_officer"); // redirect back to main desk officer page (adjust if needed)
     } catch (err) {
-      console.error("Error submitting session:", err.response?.data || err.message);
+      console.error(
+        "Error submitting session:",
+        err.response?.data || err.message
+      );
       alert(" Failed to submit session");
     }
   };
@@ -61,7 +108,9 @@ export default function StartSession() {
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-600">Victim Register No.</label>
+                <label className="text-xs text-gray-600">
+                  Victim Register No.
+                </label>
                 <input
                   type="text"
                   value={victim?.full_name || ""}
@@ -80,36 +129,85 @@ export default function StartSession() {
               </div>
             </div>
 
-            {/* Notes inputs */}
+            {/* physical status */}
             <div>
-              <label className="text-xs text-gray-600">Issues Discussed:</label>
+              <label className="text-xs text-gray-600">Physical Status:</label>
+              <select>
+                <option>With Bruises</option>
+                <option>No Bruises</option>
+              </select>
+            </div>
+
+            {/* mental status */}
+            <div>
+              <label className="text-xs text-gray-600">Mental Status:</label>
+              <select>
+                <option>Trauma</option>
+                <option>No Trauma</option>
+              </select>
+            </div>
+
+            {/* financial status */}
+            <div>
+              <label className="text-xs text-gray-600">Financial Status:</label>
+              <select>
+                <option>placeholder 1</option>
+                <option>placeholder 2</option>
+              </select>
+            </div>
+
+            {/* financial status */}
+            <div>
+              <label className="text-xs text-gray-600">Notes:</label>
               <textarea
                 className="w-full border rounded p-2"
-                rows="2"
+                rows="5"
                 placeholder="Type here..."
-                value={mentalNote}
-                onChange={(e) => setMentalNote(e.target.value)}
+                // value={financialNote}
+                // onChange={(e) => setFinancialNote(e.target.value)}
               />
             </div>
+
+            {/* evidence */}
+            {/* evidences upload */}
             <div>
-              <label className="text-xs text-gray-600">Interventions Done:</label>
-              <textarea
-                className="w-full border rounded p-2"
-                rows="2"
-                placeholder="Type here..."
-                value={physicalNote}
-                onChange={(e) => setPhysicalNote(e.target.value)}
+              <label className="text-xs text-gray-600">Upload Evidences:</label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                ref={inputRef}
+                onChange={handleFileChange}
+                className="block w-full mt-1 mb-2 text-sm text-gray-600 
+                     file:mr-2 file:py-1 file:px-3
+                     file:rounded-md file:border-0
+                     file:text-sm file:font-medium
+                     file:bg-blue-600 file:text-white
+                     hover:file:bg-blue-700 cursor-pointer"
               />
-            </div>
-            <div>
-              <label className="text-xs text-gray-600">Action Plan:</label>
-              <textarea
-                className="w-full border rounded p-2"
-                rows="2"
-                placeholder="Type here..."
-                value={financialNote}
-                onChange={(e) => setFinancialNote(e.target.value)}
-              />
+
+              {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+
+              {files.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {files.map((f) => (
+                    <div key={f.id} className="relative">
+                      <img
+                        src={f.preview}
+                        alt={f.file.name}
+                        className="w-full h-24 object-cover rounded border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemove(f.id)}
+                        className="absolute top-1 right-1 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded hover:bg-red-700"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

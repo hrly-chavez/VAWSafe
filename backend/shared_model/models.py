@@ -77,6 +77,7 @@ class Official(models.Model):
     of_id = models.AutoField(primary_key=True)
     of_fname = models.CharField(max_length=50)
     of_lname = models.CharField(max_length=50)
+    of_email = models.CharField(max_length=100, blank=True, null=True)
     of_m_initial = models.CharField(max_length=50, null=True, blank=True)
     of_suffix = models.CharField(max_length=50, null=True, blank=True)
     of_sex = models.CharField(max_length=1, null=True, blank=True)
@@ -104,7 +105,6 @@ class Official(models.Model):
     def full_name(self):
         middle = f"{self.of_m_initial or ''}."
         return f"{self.of_fname} {middle} {self.of_lname} {self.of_suffix or ''}".strip()
-
 
 class OfficialFaceSample(models.Model):
     official = models.ForeignKey(Official, on_delete=models.CASCADE, related_name='face_samples')
@@ -219,6 +219,10 @@ class Victim(models.Model):
 
     def __str__(self):
         return self.vic_last_name
+    @property
+    def full_name(self):
+        parts = [self.vic_first_name, self.vic_middle_name, self.vic_last_name, self.vic_extension]
+        return " ".join(filter(None, parts))
  
 class VictimFaceSample(models.Model):
     victim = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name="face_samples")
@@ -274,6 +278,7 @@ class IncidentInformation(models.Model):
         ('Others', 'Others'),
     ]
     incident_id = models.AutoField(primary_key=True)
+    incident_num = models.IntegerField(null=True,blank=True)
     incident_description = models.TextField()
     incident_date = models.DateField()
     incident_time = models.TimeField()
@@ -338,11 +343,11 @@ class CaseReport(models.Model):  #ADMINISTRATIVE INFORMATION
     handling_org = models.CharField(max_length=255,null=True, blank=True)
     office_address = models.CharField(max_length=255,null=True, blank=True)
     report_type = models.CharField(max_length=255,null=True, blank=True)
-
+    
     informant_name = models.CharField(max_length=255, null=True, blank=True)
-    informant_relationship = models.CharField(max_length=100, null=True, blank=True)
+    informant_relationship = models.CharField(max_length=255, null=True, blank=True)
     informant_contact = models.CharField(max_length=50, null=True, blank=True)
-
+    
     def __str__(self):
         return f"CaseReport for {self.victim.vic_last_name}, {self.victim.vic_first_name}"
     
