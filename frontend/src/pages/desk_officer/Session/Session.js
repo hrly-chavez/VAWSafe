@@ -79,6 +79,7 @@ export default function Sessions() {
               <th className="px-4 py-2 text-left">Schedule Date</th>
               <th className="px-4 py-2 text-left">Location</th>
               <th className="px-4 py-2 text-left">Session Type</th>
+              <th className="px-4 py-2 text-left">Assigned Social Worker</th> 
               <th className="px-4 py-2 text-left">Actions</th>
             </tr>
           </thead>
@@ -92,6 +93,7 @@ export default function Sessions() {
                   <td className="px-4 py-2">{formatDate(session.sess_next_sched)}</td>
                   <td className="px-4 py-2">{session.location || "—"}</td>
                   <td className="px-4 py-2">{session.sess_type || "—"}</td>
+                  <td className="px-4 py-2">{session.official_name || "Unassigned"}</td>
                   <td className="px-4 py-2 flex gap-2">
                     <button className="text-blue-700 bg-blue-100 px-3 py-1 rounded hover:bg-blue-200">
                       View

@@ -1,3 +1,4 @@
+//src/pages/desk_officer/Victims/VictimDetails.js
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../../../api/axios";
@@ -32,7 +33,11 @@ export default function VictimDetails() {
 
     if (vic_id) run();
   }, [vic_id]);
-
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const initialTab = params.get("tab");
+    if (initialTab) setActiveTab(initialTab);
+  }, []);
   // small helper to read whichever key exists (keeps UI from going blank if fields differ)
   const get = (obj, keys, fallback = "N/A") => {
     for (const k of keys) {
@@ -106,10 +111,14 @@ export default function VictimDetails() {
                 { key: "perpetrator", label: "Perpetrator Information" },
                 { key: "incident", label: "Incident Reports & Records" },
                 { key: "sessions", label: "Sessions" },
+                { key: "faces", label: "Face Samples" },
               ].map((tab) => (
                 <button
                   key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
+                  onClick={() => {
+                setActiveTab(tab.key);
+                window.history.replaceState(null, "", `?tab=${tab.key}`);
+              }}
                   className={`pb-2 text-sm font-medium ${activeTab === tab.key
                     ? "text-[#292D96] border-b-2 border-[#292D96]"
                     : "text-gray-500 hover:text-[#292D96]"
@@ -200,6 +209,32 @@ export default function VictimDetails() {
                   <p>Track session history, status, and assigned personnel.</p>
                 </div>
               )}
+              {activeTab === "faces" && (
+            <div>
+              <h4 className="text-lg font-semibold text-[#292D96] mb-4">
+                Victim Face Samples
+              </h4>
+              {victim.face_samples && victim.face_samples.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {victim.face_samples.map((sample, idx) => (
+                    <div
+                      key={idx}
+                      className="border rounded-lg shadow-sm bg-gray-50 p-2 flex flex-col items-center"
+                    >
+                      <img
+                        src={sample.photo}
+                        alt={`Face Sample ${idx + 1}`}
+                        className="w-full h-40 object-cover rounded"
+                      />
+                      <p className="text-xs text-gray-500 mt-2">Sample {idx + 1}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500">No face samples available.</p>
+              )}
+            </div>
+          )}
             </div>
           </div>
         </div>

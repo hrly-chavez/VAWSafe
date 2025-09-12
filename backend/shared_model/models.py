@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.conf import settings
 
-class City(models.Model):
+class Province(models.Model):  
     name = models.CharField(max_length=150, unique=True)
 
     def __str__(self):
@@ -10,15 +10,15 @@ class City(models.Model):
 
 class Municipality(models.Model):
     name = models.CharField(max_length=150)
-    city = models.ForeignKey(City, on_delete=models.CASCADE, related_name="municipalities")
+    province = models.ForeignKey(Province, on_delete=models.CASCADE, related_name="municipalities")
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["city", "name"], name="unique_municipality_per_city")
+            models.UniqueConstraint(fields=["province", "name"], name="unique_municipality_per_province")
         ]
 
     def __str__(self):
-        return f"{self.name}, {self.city.name}"
+        return f"{self.name}, {self.province.name}"
 
 class Barangay(models.Model):
     name = models.CharField(max_length=150)
@@ -78,7 +78,7 @@ class Official(models.Model):
     of_specialization = models.CharField(max_length=100, null=True, blank=True)
     of_photo = models.ImageField(upload_to='photos/', null=True, blank=True)
 
-    city = models.ForeignKey("City", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
+    province = models.ForeignKey("Province", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
     municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
     barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
     sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
@@ -195,7 +195,7 @@ class Victim(models.Model):
     vic_PWD_type = models.CharField(max_length=50, choices=PWD_CHOICES, default='None')
     vic_contact_number = models.CharField(max_length=15, blank=True, null=True)
     
-    city = models.ForeignKey("City", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
+    province = models.ForeignKey("province", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
     municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
     barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
     sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
@@ -283,7 +283,7 @@ class IncidentInformation(models.Model):
     of_id = models.ForeignKey(Official, on_delete=models.SET_NULL, related_name='handled_incidents',null=True, blank=True)
     perp_id = models.ForeignKey(Perpetrator, on_delete=models.SET_NULL,to_field='perp_id', related_name='related_incidents',null=True, blank=True)
 
-    city = models.ForeignKey("City", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
+    province = models.ForeignKey("province", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
     municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
     barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
     sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
@@ -331,7 +331,7 @@ class Session(models.Model):
     sess_updated_at = models.DateField(null=True, blank=True)
     sess_description = models.TextField(null=True, blank=True)  
     incident_id = models.ForeignKey(IncidentInformation,to_field='incident_id', on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
-    
+    assigned_official = models.ForeignKey("Official",on_delete=models.SET_NULL,related_name="assigned_sessions",null=True,blank=True)
 
     def __str__(self):
         victim_name = (

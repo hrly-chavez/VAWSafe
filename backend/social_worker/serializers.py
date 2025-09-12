@@ -55,10 +55,25 @@ class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class VictimDetailSerializer(serializers.ModelSerializer):
+    age = serializers.SerializerMethodField()
     face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
-    case_report = CaseReportSerializer(read_only=True)
-    incidents = IncidentWithPerpetratorSerializer(many=True, read_only=True)
 
     class Meta:
         model = Victim
-        fields = "__all__"
+        fields = [
+            "vic_id", "vic_first_name", "vic_middle_name", "vic_last_name", "vic_extension",
+            "vic_sex", "vic_birth_date", "vic_birth_place", "vic_civil_status",
+            "vic_educational_attainment", "vic_nationality", "vic_religion", "vic_contact_number",
+            "vic_photo", "age", "face_samples", 
+            "case_report", "incidents"
+        ]
+
+    def get_age(self, obj):
+        if obj.vic_birth_date:
+            today = date.today()
+            return (
+                today.year
+                - obj.vic_birth_date.year
+                - ((today.month, today.day) < (obj.vic_birth_date.month, obj.vic_birth_date.day))
+            )
+        return None
