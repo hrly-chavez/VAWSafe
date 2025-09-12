@@ -18,7 +18,7 @@ import ManualLoginPage from "./pages/ManualLoginPage";
 
 //Desk officer
 const DeskOfficerPage = lazy(() =>
-  import("./pages/desk_officer/DeskOfficer/DeskOfficerPage")
+  import("./pages/desk_officer/DeskOfficer/Dashboard")
 );
 const VictimFacial = lazy(() =>
   import("./pages/desk_officer/RegisterVictim/VictimFacial")
@@ -26,9 +26,13 @@ const VictimFacial = lazy(() =>
 const RegisterVictim = lazy(() =>
   import("./pages/desk_officer/RegisterVictim/RegisterVictim")
 );
-const Session = lazy(() => import("./pages/desk_officer/Session/Session"));
-const StartSession = lazy(() => import("./pages/desk_officer/Session/StartSession"));
-const DOVictims = lazy(() => import("./pages/desk_officer/Victims/Victims"));
+const Session = lazy(() => import("./pages/desk_officer/Session/Session")
+);
+const StartSession = lazy(() => import("./pages/desk_officer/Session/StartSession")
+);
+
+const DOVictims = lazy(() => import("./pages/desk_officer/Victims/Victims")
+);
 const DOVictimDetail = lazy(() =>
   import("./pages/desk_officer/Victims/VictimDetails")
 );
@@ -49,6 +53,9 @@ const DOAccountManagement = lazy(() =>
 );
 const DOPendingAccount = lazy(() =>
   import("./pages/desk_officer/AccountManage/PendingAccount")
+);
+const ViewOfficials = lazy(() => 
+  import("./pages/desk_officer/AccountManage/ViewOfficials")
 );
 
 // Social Worker Pages (lazy loaded)
@@ -143,7 +150,8 @@ export default function App() {
                 element={<DOVictimSearch />}
               />
               <Route 
-              path={ROUTES.DESK_OFFICER_START_SESSION} element={<StartSession />} 
+                path={ROUTES.DESK_OFFICER_START_SESSION} 
+                element={<StartSession />} 
               />
               {/* mga bagong route paths sa desk officer nga katung gi add */}
               <Route
@@ -166,8 +174,12 @@ export default function App() {
                 path={ROUTES.DESK_OFFICER_PENDING_ACCOUNT}
                 element={<DOPendingAccount />}
               />
+              <Route 
+                path={ROUTES.DESK_OFFICER_VIEW_OFFICIAL} 
+                element={<ViewOfficials />} 
+              />
             </Route>
-
+            
             {/* DSWD group */}
             <Route
               element={

@@ -20,4 +20,4 @@ urlpatterns = [
     path("sessions/create_sched/", create_session, name="create-session"),
     path("officials/social-workers/", list_social_workers, name="list-social-workers"),
 
-] 
+] + router.urls

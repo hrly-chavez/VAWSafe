@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import { XMarkIcon } from '@heroicons/react/24/solid';
 
@@ -19,22 +19,40 @@ const RegisterUser = ({ onClose }) => {
 
   const [sex, setSex] = useState("");
 
-  // Optional fields (commented for test run)
-  // const [of_m_initial, setMInitial] = useState("");
-  // const [of_suffix, setSuffix] = useState("");
-  // const [of_sex, setSex] = useState("");
-  // const [of_dob, setDob] = useState("");
-  // const [of_pob, setPob] = useState("");
-  // const [of_contact, setContact] = useState("");
-  // const [of_specialization, setSpecialization] = useState("");
+  const [cities, setCities] = useState([]);
+  const [municipalities, setMunicipalities] = useState([]);
+  const [barangays, setBarangays] = useState([]);
 
-  // Location hierarchy (commented for test run)
-  // const [city, setCity] = useState("");
-  // const [municipality, setMunicipality] = useState("");
-  // const [barangay, setBarangay] = useState("");
-  // const [sitio, setSitio] = useState("");
-  // const [street, setStreet] = useState("");
-  // const [of_assigned_barangay, setAssignedBarangay] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedMunicipality, setSelectedMunicipality] = useState("");
+  const [selectedBarangay, setSelectedBarangay] = useState("");
+
+  useEffect(() => {
+    axios.get("http://localhost:8000/api/desk_officer/cities/")
+      .then((res) => setCities(res.data))
+      .catch((err) => console.error("Failed to load cities:", err));
+  }, []);
+
+  useEffect(() => {
+    if (selectedCity) {
+      axios.get(`http://localhost:8000/api/desk_officer/cities/${selectedCity}/municipalities/`)
+        .then((res) => setMunicipalities(res.data))
+        .catch((err) => console.error("Failed to load municipalities:", err));
+    } else {
+      setMunicipalities([]);
+      setBarangays([]);
+    }
+  }, [selectedCity]);
+
+  useEffect(() => {
+    if (selectedMunicipality) {
+      axios.get(`http://localhost:8000/api/desk_officer/municipalities/${selectedMunicipality}/barangays/`)
+        .then((res) => setBarangays(res.data))
+        .catch((err) => console.error("Failed to load barangays:", err));
+    } else {
+      setBarangays([]);
+    }
+  }, [selectedMunicipality]);
 
   const [regErrors, setRegErrors] = useState({
     of_fname: "",
@@ -101,21 +119,9 @@ const RegisterUser = ({ onClose }) => {
     formData.append("of_fname", of_fname);
     formData.append("of_lname", of_lname);
     formData.append("of_role", of_role);
-
-    // Optional fields (commented for test run)
-    // formData.append("of_m_initial", of_m_initial);
-    // formData.append("of_suffix", of_suffix);
-    // formData.append("of_sex", of_sex);
-    // formData.append("of_dob", of_dob);
-    // formData.append("of_pob", of_pob);
-    // formData.append("of_contact", of_contact);
-    // formData.append("of_specialization", of_specialization);
-    // formData.append("city", city);
-    // formData.append("municipality", municipality);
-    // formData.append("barangay", barangay);
-    // formData.append("sitio", sitio);
-    // formData.append("street", street);
-    // formData.append("of_assigned_barangay", of_assigned_barangay);
+    formData.append("city", selectedCity);
+    formData.append("municipality", selectedMunicipality);
+    formData.append("barangay", selectedBarangay);
 
     for (let i = 0; i < photos.length; i++) {
       const blob = await fetch(photos[i]).then((res) => res.blob());
@@ -258,26 +264,46 @@ const RegisterUser = ({ onClose }) => {
 
               {/* Address */}
               <div className="flex flex-col">
-                <label className="font-medium text-sm mb-1">City</label>
-                <select className={inputStyle}>
+                <label className="font-medium text-sm mb-1">Province</label>
+                <select
+                  value={selectedCity}
+                  onChange={(e) => setSelectedCity(e.target.value)}
+                  className={inputStyle}
+                >
                   <option value="">Select City</option>
-                  <option value="Cebu City">Cebu City</option>
+                  {cities.map((city) => (
+                    <option key={city.id} value={city.id}>{city.name}</option>
+                  ))}
                 </select>
               </div>
 
               <div className="flex flex-col">
                 <label className="font-medium text-sm mb-1">Municipality</label>
-                <select className={inputStyle}>
+                <select
+                  value={selectedMunicipality}
+                  onChange={(e) => setSelectedMunicipality(e.target.value)}
+                  className={inputStyle}
+                  disabled={!selectedCity}
+                >
                   <option value="">Select Municipality</option>
-                  <option value="Minglanilla">Minglanilla</option>
+                  {municipalities.map((m) => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
                 </select>
               </div>
 
               <div className="flex flex-col">
                 <label className="font-medium text-sm mb-1">Barangay</label>
-                <select className={inputStyle}>
+                <select
+                  value={selectedBarangay}
+                  onChange={(e) => setSelectedBarangay(e.target.value)}
+                  className={inputStyle}
+                  disabled={!selectedMunicipality}
+                >
                   <option value="">Select Barangay</option>
-                  <option value="Tungkil">Tungkil</option>
+                  {barangays.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
                 </select>
               </div>
 

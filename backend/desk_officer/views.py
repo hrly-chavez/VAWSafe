@@ -319,6 +319,31 @@ def list_social_workers(request):
     ]
     return Response(data)
 
+# Approve and Reject Official
+# @api_view(["POST"])
+# def approve_official(request):
+#     of_id = request.data.get("of_id")
+#     try:
+#         official = Official.objects.get(pk=of_id)
+#         official.status = "approved"
+#         official.save()
+#         return Response({"success": True, "message": "Official approved."}, status=status.HTTP_200_OK)
+#     except Official.DoesNotExist:
+#         return Response({"success": False, "error": "Official not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+# @api_view(["POST"])
+# def reject_official(request):
+#     of_id = request.data.get("of_id")
+#     try:
+#         official = Official.objects.get(pk=of_id)
+#         official.status = "rejected"
+#         official.save()
+#         return Response({"success": True, "message": "Official rejected."}, status=status.HTTP_200_OK)
+#     except Official.DoesNotExist:
+#         return Response({"success": False, "error": "Official not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
 # Account Management
 class OfficialViewSet(ModelViewSet):
    queryset = Official.objects.all()

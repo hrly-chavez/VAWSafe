@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import {
@@ -10,7 +11,8 @@ import {
 export default function AccountManagement() {
   const [officials, setOfficials] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(""); 
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios.get("http://localhost:8000/api/desk_officer/officials/")
@@ -107,7 +109,10 @@ export default function AccountManagement() {
                     <td className="px-4 py-3 text-left">
                       <div className="flex items-center gap-2">
                         {/* View Button */}
-                        <button className="flex items-center gap-1 bg-[#292D96] text-white px-3 py-1 rounded text-sm shadow hover:bg-[#1f237d]">
+                        <button
+                          onClick={() => navigate(`/desk_officer/officials/${official.of_id}`)}
+                          className="flex items-center gap-1 bg-[#292D96] text-white px-3 py-1 rounded text-sm shadow hover:bg-[#1f237d]"
+                        >
                           <EyeIcon className="h-4 w-4" />
                           View
                         </button>
