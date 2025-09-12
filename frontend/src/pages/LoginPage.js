@@ -1,10 +1,17 @@
 // LoginPage.js
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import { useNavigate } from "react-router-dom";
 import "./LoginPage.css";
 import RegisterUser from "./RegisterUser";
-import { UserIcon, LockClosedIcon, ExclamationCircleIcon, CheckCircleIcon } from '@heroicons/react/24/solid';
+import {
+  UserIcon,
+  LockClosedIcon,
+  ExclamationCircleIcon,
+  CheckCircleIcon,
+  CameraIcon,
+  EyeIcon
+} from '@heroicons/react/24/solid';
 
 const LoginPage = () => {
 
@@ -49,7 +56,7 @@ const LoginPage = () => {
   // Welcome slides
   const slides = [
     {
-      title: "Welcome to VAWSAFE",
+      title: "Welcome to VAWSafe!",
       desc: " Empowering victims of violence with secure case monitoring and confidential support services.",
     },
     {
@@ -58,10 +65,23 @@ const LoginPage = () => {
     },
     {
       title: "How it works?",
-      desc: "VAWSAFE provides secure case monitoring, SOS alerts, and facial verification for safe and efficient support.",
+      desc: "VVAWSAFE allows officers to register and track cases, monitor victim progress, and use facial verification to ensure secure and accurate case handling.",
+    },
+    {
+      title: "For Authorized Professionals Only",
+      desc: "This website is strictly for DSWD VAW Desk Officers and Social Worker professionals. Unauthorized access is prohibited.",
     },
   ];
   const [currentSlide, setCurrentSlide] = useState(0);
+  const slideTimerRef = useRef(null);
+
+  useEffect(() => {
+    slideTimerRef.current = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
+    }, 5000); // every 5 seconds
+
+    return () => clearInterval(slideTimerRef.current);
+  }, []);
 
   const MAX_FRAMES = 10;
   const INTERVAL = 200;
@@ -109,7 +129,12 @@ const LoginPage = () => {
     setShowCamera(true);
     setShowCounter(true);
     setLoading(true);
-    setMessage("Please look at the camera to log in.");
+    setMessage(
+      <div className="flex items-center gap-2 text-white-600 text-lg">
+        <CameraIcon className="w-5 h-5" />
+        <span>Please look at the camera to log in.</span>
+      </div>
+    );
     setBlinkCaptured(false);
 
     // countdown
@@ -122,7 +147,12 @@ const LoginPage = () => {
     if (loginCancelledRef.current) return;
 
     setCountdown(null);
-    setMessage("Capturing frames... Please blink now!");
+    setMessage(
+      <div className="flex items-center gap-2 text-white-600 text-lg">
+        <EyeIcon className="w-5 h-5" />
+        <span>Capturing frames... Please blink now!</span>
+      </div>
+    );
 
     const frames = await captureBurstFrames();
     if (loginCancelledRef.current) return;
@@ -152,15 +182,18 @@ const LoginPage = () => {
       const blinkData = await blinkRes.json();
 
       if (!blinkRes.ok || !blinkData.blink) {
-        setMessage(
-          blinkData.message || " No blink detected, please try again."
-        );
+        setMessage(blinkData.message || " No blink detected, please try again.");
         setLoading(false);
         return;
       }
 
       setBlinkCaptured(true);
-      setMessage(" Blink captured  Now verifying face...");
+      setMessage(
+        <div className="flex items-center gap-2 text-green-600 text-lg">
+          <CheckCircleIcon className="w-5 h-5" />
+          <span>Blink captured. Now verifying face...</span>
+        </div>
+      );
 
       // Step 2: Send candidate frames to face-login
       const loginForm = new FormData();
@@ -183,6 +216,7 @@ const LoginPage = () => {
       setLoading(false);
 
       if (loginRes.ok && loginData.match) {
+        console.log("loginData.user:", loginData.user);
         //  Store JWT tokens and user info in localStorage for axios interceptor
         localStorage.setItem(
           "vawsafeAuth",
@@ -199,22 +233,28 @@ const LoginPage = () => {
         );
 
         // ✅ Also set welcome card info
-        setWelcomeData(loginData.user);
+        setWelcomeData({
+          name: loginData.name,
+          role: loginData.role,
+          username: loginData.username,
+          official_id: loginData.official_id,
+        });
         setShowWelcomeCard(true);
 
 
         const user = loginData;
-
-        // ✅ Redirect based on role
-        if (user.role === "DSWD") {
-          navigate("/dswd");
-        } else if (user.role === "VAWDesk") {
-          navigate("/desk_officer");
-        } else if (user.role === "Social Worker") {
-          navigate("/social_worker");
-        } else {
-          navigate("/login"); // fallback
-        }
+        setTimeout(() => {
+          // ✅ Redirect based on role
+          if (user.role === "DSWD") {
+            navigate("/dswd");
+          } else if (user.role === "VAWDesk") {
+            navigate("/desk_officer");
+          } else if (user.role === "Social Worker") {
+            navigate("/social_worker");
+          } else {
+            navigate("/login"); // fallback
+          }
+        }, 5000);
       } else {
         setMessage(loginData.message || " Face verification failed.");
       }
@@ -223,7 +263,9 @@ const LoginPage = () => {
       setMessage("Server error. Please try again.");
       setLoading(false);
     }
+
   };
+
 
   // Utility Functions for ManualLogin
   const handleManualLogin = async () => {
@@ -309,21 +351,29 @@ const LoginPage = () => {
         <div className="relative w-full max-w-6xl h-auto sm:h-[600px] grid grid-cols-1 sm:grid-cols-2 shadow-2xl rounded-2xl overflow-hidden bg-white/5 backdrop-blur-lg">
           {/* Left Welcome Section */}
           <div className="bg-[#2d0a3a]/30 text-white flex flex-col justify-center items-start px-6 sm:px-12 py-8">
-            <div key={currentSlide} className="slide-fade">
-              <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-6">
-                {slides[currentSlide].title}
-              </h1>
-              <p className="text-base sm:text-lg opacity-80 mb-6">
-                {slides[currentSlide].desc}
-              </p>
-              <button
-                onClick={() =>
-                  setCurrentSlide((prev) => (prev + 1) % slides.length)
-                }
-                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 rounded-lg shadow-lg font-semibold"
-              >
-                Next
-              </button>
+            <div key={currentSlide} className="transition-opacity duration-700 opacity-100">
+              <div key={currentSlide} className="fade-in-slide w-full max-w-4xl text-left">
+                <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-6 animate-slide-fade">
+                  {slides[currentSlide].title}
+                </h1>
+                <p className="text-base sm:text-lg opacity-80 mb-6 animate-fade-in">
+                  {slides[currentSlide].desc}
+                </p>
+                <button
+                  onClick={() => {
+                    setCurrentSlide((prev) => (prev + 1) % slides.length);
+
+                    // Optional: reset auto-slide timer if you're using one
+                    clearInterval(slideTimerRef.current);
+                    slideTimerRef.current = setInterval(() => {
+                      setCurrentSlide((prev) => (prev + 1) % slides.length);
+                    }, 5000);
+                  }}
+                  className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 rounded-lg shadow-lg font-semibold hover:scale-105 transition-transform"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
 
@@ -440,12 +490,12 @@ const LoginPage = () => {
                 {message && (
                   <p
                     className={`mt-4 text-sm font-medium ${loading
-                        ? "text-white animate-pulse"
-                        : blinkCaptured || message.includes("✅")
-                          ? "text-green-400"
-                          : message === "No blink detected. Please blink clearly."
-                            ? "text-red-400"
-                            : "text-white"
+                      ? "text-white animate-pulse"
+                      : blinkCaptured || (typeof message === "string" && message.includes("✅"))
+                        ? "text-green-400"
+                        : message === "No blink detected. Please blink clearly."
+                          ? "text-red-400"
+                          : "text-white"
                       }`}
                   >
                     {message}
@@ -456,7 +506,7 @@ const LoginPage = () => {
                 <div className="mt-6 flex flex-col sm:flex-row sm:gap-6 gap-4 items-center">
                   {!loading &&
                     (message === "No blink detected. Please blink clearly." ||
-                      message.includes("")) && (
+                      (typeof message === "string" && message.includes(""))) && (
                       <button
                         onClick={handleFaceLogin}
                         className="w-44 py-2 bg-red-500 text-white font-semibold rounded-lg shadow hover:bg-red-600 transition"
@@ -484,7 +534,7 @@ const LoginPage = () => {
                     <div className="bg-green-100 border border-green-400 rounded-lg p-6 shadow-xl text-green-900 w-full max-w-md text-center animate-fade-in">
                       <CheckCircleIcon className="h-6 w-6 text-green-500 mx-auto mb-2" />
                       <h3 className="text-lg font-semibold">
-                        Welcome, {welcomeData.fname} {welcomeData.lname}!
+                        Welcome, {welcomeData.name || `${welcomeData.fname} ${welcomeData.lname}`}
                       </h3>
                       <p className="text-sm mt-1">
                         You're now signed in as <strong>{welcomeData.role}</strong>. Let's get started.
