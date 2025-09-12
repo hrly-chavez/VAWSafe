@@ -264,7 +264,7 @@ const RegisterUser = ({ onClose }) => {
 
               {/* Address */}
               <div className="flex flex-col">
-                <label className="font-medium text-sm mb-1">City</label>
+                <label className="font-medium text-sm mb-1">Province</label>
                 <select
                   value={selectedCity}
                   onChange={(e) => setSelectedCity(e.target.value)}
