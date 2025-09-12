@@ -18,4 +18,5 @@ urlpatterns = [
     path("sessions/", SessionListCreateView.as_view(), name="session-list-create"),
     path("sessions/<int:sess_id>/", SessionDetailView.as_view(), name="session-detail"),
     path("sessions/create_sched/", create_session, name="create-session"),
+    path('', include(router.urls))
 ] 
