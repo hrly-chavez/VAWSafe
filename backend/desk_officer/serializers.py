@@ -2,9 +2,9 @@ from rest_framework import serializers
 from shared_model.models import *
 from datetime import date
 
-class CitySerializer(serializers.ModelSerializer):
+class ProvinceSerializer(serializers.ModelSerializer):
     class Meta:
-        model = City
+        model = Province
         fields = "__all__"
 
 class MunicipalitySerializer(serializers.ModelSerializer):
@@ -105,7 +105,8 @@ class SessionSerializer(serializers.ModelSerializer):
     victim_name = serializers.SerializerMethodField()
     case_no = serializers.SerializerMethodField() 
     location = serializers.SerializerMethodField()
-
+    official_name = serializers.SerializerMethodField()
+    
     class Meta:
         model = Session
         fields = "__all__"
@@ -138,6 +139,9 @@ class SessionSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         validated_data["sess_updated_at"] = date.today()
         return super().update(instance, validated_data)
+    def get_official_name(self, obj):
+        return obj.assigned_official.full_name if obj.assigned_official else None
+    
     
 
 # Account Management
@@ -149,7 +153,7 @@ class OfficialSerializer(serializers.ModelSerializer):
         model = Official
         fields = [
             "of_id", "full_name", "of_role", "of_contact", "of_photo",
-            "city", "municipality", "barangay", "sitio", "street", "of_assigned_barangay"
+            "province", "municipality", "barangay", "sitio", "street", "of_assigned_barangay"
         ]
 
 

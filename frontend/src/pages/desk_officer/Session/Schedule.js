@@ -1,8 +1,9 @@
 //src/pages/desk_officer/Session/Schedule.js
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import api from "../../../api/axios";
 import { CheckCircleIcon, PlayCircleIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
+import Select from "react-select";
 
 export default function Schedule({ victim, incident, back, next }) {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -10,6 +11,8 @@ export default function Schedule({ victim, incident, back, next }) {
   const [location, setLocation] = useState("");
   const [sessionType, setSessionType] = useState("");
   const navigate = useNavigate();
+  const [officials, setOfficials] = useState([]);
+  const [selectedOfficial, setSelectedOfficial] = useState("");
 
   const handleSubmitSchedule = async () => {
     try {
@@ -18,6 +21,7 @@ export default function Schedule({ victim, incident, back, next }) {
         sess_next_sched: `${date}T${time}:00Z`,
         sess_location: location,
         sess_type: sessionType,
+        assigned_official: selectedOfficial || null,
       };
 
       const res = await api.post(
@@ -48,6 +52,19 @@ export default function Schedule({ victim, incident, back, next }) {
       }
     }
   };
+   useEffect(() => {
+    api
+      .get("/api/desk_officer/officials/social-workers/")
+      .then((res) => {
+        // Transform API response for react-select
+        const options = res.data.map((o) => ({
+          value: o.of_id,
+          label: o.full_name,
+        }));
+        setOfficials(options);
+      })
+      .catch((err) => console.error("Failed to fetch officials", err));
+  }, []);
 
   const handleStartSession = async () => {
   try {
@@ -134,8 +151,23 @@ export default function Schedule({ victim, incident, back, next }) {
             <option>Social Worker 3</option>
           </select>
         </div>
+         {/* Assign Social Worker */}
+        <div>
+        <label className="text-xs text-gray-600 block mb-1">
+          Assign Social Worker
+        </label>
+        <Select
+          options={officials}
+          value={officials.find((opt) => opt.value === selectedOfficial) || null}
+          onChange={(selected) =>
+            setSelectedOfficial(selected ? selected.value : null)
+          }
+          placeholder="Search and select social worker..."
+          isClearable
+        />
       </div>
-
+      </div>
+     
       {/* Actions */}
       <div className="flex justify-end gap-4 pt-4">
         {back && (
