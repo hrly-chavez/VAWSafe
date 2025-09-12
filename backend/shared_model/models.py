@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.conf import settings
 
+# for address
 class Province(models.Model):  
     name = models.CharField(max_length=150, unique=True)
 
@@ -56,6 +57,7 @@ class Street(models.Model):
     def __str__(self):
         return f"{self.name}, {self.sitio.name}"
     
+# for system users
 class Official(models.Model):
     ROLE_CHOICES = [
         ('DSWD', 'DSWD'),
@@ -103,7 +105,8 @@ class OfficialFaceSample(models.Model):
 
     def __str__(self):
         return f"FaceSample for {self.official.full_name}"
-    
+
+# starting here is for forms
 class Victim(models.Model):
     CIVIL_STATUS_CHOICES = [
         ('SINGLE', 'Single'),
@@ -340,7 +343,8 @@ class Session(models.Model):
             else "No Victim"
         )
         return f"Session {self.sess_id} - Victim: {victim_name}" 
-    
+
+# for update changes
 class Session_Changelog(models.Model):
     sc_changed_timestamp = models.DateTimeField()
     sc_field_changed = models.CharField(max_length=100)
