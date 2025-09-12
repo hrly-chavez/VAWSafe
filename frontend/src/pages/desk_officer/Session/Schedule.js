@@ -141,17 +141,6 @@ export default function Schedule({ victim, incident, back, next }) {
             <option value="Follow-up">Follow-up</option>
           </select>
         </div>
-
-        <div>
-          <label className="text-xs text-gray-600">
-            Assigned Social Worker
-          </label>
-          <select className="w-full border rounded p-2">
-            <option>Social Worker 1</option>
-            <option>Social Worker 2</option>
-            <option>Social Worker 3</option>
-          </select>
-        </div>
          {/* Assign Social Worker */}
         <div>
         <label className="text-xs text-gray-600 block mb-1">
