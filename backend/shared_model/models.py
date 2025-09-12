@@ -63,18 +63,7 @@ class Official(models.Model):
         ('DSWD', 'DSWD'),
         ('VAWDesk', 'VAWDesk'),
         ('Social Worker', 'Social Worker'),
-    ]
-
-    # this is the new models for the accept and reject official
-    # STATUS_CHOICES = [
-    #     ("pending", "Pending"),
-    #     ("approved", "Approved"),
-    #     ("rejected", "Rejected"),
-    # ]
-
-    # status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="pending")
-    
-    #change user nga dili modawat ug default ug null kay ako rha ni gi test para sa authorization ug authentication
+    ]   
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="official", null=True, blank=True)
     of_id = models.AutoField(primary_key=True)
     of_fname = models.CharField(max_length=50)
@@ -347,6 +336,7 @@ class CaseReport(models.Model):  #ADMINISTRATIVE INFORMATION
     office_address = models.CharField(max_length=255,null=True, blank=True)
     report_type = models.CharField(max_length=255,null=True, blank=True)
     
+    #not used and do not use
     informant_name = models.CharField(max_length=255, null=True, blank=True)
     informant_relationship = models.CharField(max_length=255, null=True, blank=True)
     informant_contact = models.CharField(max_length=50, null=True, blank=True)

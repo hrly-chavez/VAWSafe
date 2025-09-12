@@ -19,7 +19,6 @@ class victim_list(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['Social Worker']
 
-
 class victim_detail(generics.RetrieveAPIView):
     queryset = Victim.objects.all()
     serializer_class = VictimDetailSerializer
@@ -28,6 +27,7 @@ class victim_detail(generics.RetrieveAPIView):
     allowed_roles = ['Social Worker']
 
 class search_victim_facial(APIView):
+
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
@@ -101,3 +101,25 @@ class search_victim_facial(APIView):
 
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['Social Worker']
+
+#========================================SESSIONS
+class scheduled_session_lists(generics.ListAPIView):
+    serializer_class = SocialWorkerSessionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, "official") and user.official.of_role == "Social Worker":
+            return Session.objects.filter(assigned_official=user.official)
+        # optionally: return empty if not a social worker
+        return Session.objects.none()
+    
+class scheduled_session_detail(generics.RetrieveAPIView):
+    serializer_class = SocialWorkerSessionDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, "official") and user.official.of_role == "Social Worker":
+            return Session.objects.filter(assigned_official=user.official)
+        return Session.objects.none()
