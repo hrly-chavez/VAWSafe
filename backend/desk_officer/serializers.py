@@ -48,9 +48,8 @@ class CaseReportSerializer(serializers.ModelSerializer):
         fields = [
             "handling_org", "office_address", "report_type",
             "informant_name", "informant_relationship", "informant_contact",
-            "created_at",
         ]
-        read_only_fields = ["created_at"]
+       
 
 class VictimSerializer(serializers.ModelSerializer):
     face_samples = VictimFaceSampleSerializer(many=True, read_only=True)

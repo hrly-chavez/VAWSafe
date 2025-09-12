@@ -8,6 +8,7 @@ export const ROUTES = {
   DESK_OFFICER_REGISTER_VICTIM: "/desk_officer/register_victim",
   DESK_OFFICER_VICTIM_FACIAL: "/desk_officer/victim_facial",
   DESK_OFFICER_SESSION: "/desk_officer/session",
+  DESK_OFFICER_START_SESSION: "/desk_officer/session/start",
 
   DESK_OFFICER_VICTIMS: "/desk_officer/victims",
   DESK_OFFICER_VICTIM_DETAIL: "/desk_officer/victims/:vic_id",
@@ -19,6 +20,7 @@ export const ROUTES = {
   DESK_OFFICER_CASE_RECORDS: "/desk_officer/case-records",
   DESK_OFFICER_ACCOUNT_MANAGEMENT: "/desk_officer/account-management",
   DESK_OFFICER_PENDING_ACCOUNT: "/desk_officer/pending-account",
+  DESK_OFFICER_VIEW_OFFICIAL: "/desk_officer/officials/:of_id",
 
   DSWD: "/dswd",
   DSWD_VAWC_VICTIMS: "/dswd/victims",

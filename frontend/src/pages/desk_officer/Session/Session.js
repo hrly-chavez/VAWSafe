@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Schedule from "./Schedule";
-import Form3 from "./Form3";
+import StartSession from "./StartSession";
 
 
 
@@ -43,23 +43,9 @@ export default function Sessions() {
   const renderForm = () => {
     switch (currentStep) {
       case 1:
-        return (
-          <Schedule
-            // formData={formData}
-            // setFormData={setFormData}
-            back={back}
-            next={next}
-          />
-        );
+        return <Schedule back={back} next={next} />;
       case 2:
-        return (
-          <Form3
-            // formData={formData}
-            // setFormData={setFormData}
-            back={back}
-            cancel={cancel}
-          />
-        );
+        return <StartSession back={back} cancel={cancel} />;
       default:
         return null;
     }

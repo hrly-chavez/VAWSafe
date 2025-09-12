@@ -2,12 +2,14 @@
 import { useState } from "react";
 import api from "../../../api/axios";
 import { CheckCircleIcon, PlayCircleIcon } from "@heroicons/react/24/solid";
+import { useNavigate } from "react-router-dom";
 
 export default function Schedule({ victim, incident, back, next }) {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [time, setTime] = useState(new Date().toTimeString().slice(0, 5));
   const [location, setLocation] = useState("");
   const [sessionType, setSessionType] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmitSchedule = async () => {
     try {
@@ -39,22 +41,24 @@ export default function Schedule({ victim, incident, back, next }) {
   };
 
   const handleStartSession = async () => {
-    try {
-      const payload = {
-        victim: victim?.id,
-        incident: incident?.id,
-        started_now: true,
-      };
+  try {
+    const payload = {
+      victim: victim?.vic_id,   // use your backend field names
+      incident_id: incident?.incident_id,
+      started_now: true,
+    };
 
-      await api.post("/api/desk_officer/sessions/", payload);
+    const res = await api.post("/api/desk_officer/sessions/", payload);
 
-      alert("▶ Session started.");
-      if (next) next();
-    } catch (err) {
-      console.error("Start session error:", err);
-      alert(" Failed to start session");
-    }
-  };
+    const session = res.data; // created session data from backend
+
+    
+    navigate("/desk_officer/session/start", { state: { session, victim, incident } });
+  } catch (err) {
+    console.error("Start session error:", err);
+    alert(" Failed to start session");
+  }
+};
 
   return (
     <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6 mt-6">
@@ -145,5 +149,3 @@ export default function Schedule({ victim, incident, back, next }) {
     </div>
   );
 }
-
-

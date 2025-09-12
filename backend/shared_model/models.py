@@ -339,6 +339,10 @@ class CaseReport(models.Model):  #ADMINISTRATIVE INFORMATION
     office_address = models.CharField(max_length=255,null=True, blank=True)
     report_type = models.CharField(max_length=255,null=True, blank=True)
 
+    informant_name = models.CharField(max_length=255, null=True, blank=True)
+    informant_relationship = models.CharField(max_length=100, null=True, blank=True)
+    informant_contact = models.CharField(max_length=50, null=True, blank=True)
+
     def __str__(self):
         return f"CaseReport for {self.victim.vic_last_name}, {self.victim.vic_first_name}"
     
