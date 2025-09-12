@@ -19,12 +19,12 @@ from shared_model.models import *
 from .serializers import *
 
 class CityViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = City.objects.all()
-    serializer_class = CitySerializer
+    queryset = Province.objects.all()
+    serializer_class = ProvinceSerializer
 
     @action(detail=True, methods=["get"])
     def municipalities(self, request, pk=None):
-        municipalities = Municipality.objects.filter(city_id=pk)
+        municipalities = Municipality.objects.filter(province_id=pk)
         return Response(MunicipalitySerializer(municipalities, many=True).data)
     permission_classes = [AllowAny]
 
@@ -310,6 +310,14 @@ def create_session(request):
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(["GET"])
+def list_social_workers(request):
+    workers = Official.objects.filter(of_role="Social Worker")
+    data = [
+        {"of_id": w.of_id, "full_name": w.full_name}
+        for w in workers
+    ]
+    return Response(data)
 
 # Account Management
 class OfficialViewSet(ModelViewSet):

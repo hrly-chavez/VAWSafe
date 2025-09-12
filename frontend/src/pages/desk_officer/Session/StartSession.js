@@ -1,7 +1,8 @@
 // src/desk_officer/Session/StartSession.js
-import { useState } from "react";
+import { useState, useEffect  } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
+import Select from "react-select";
 
 export default function StartSession() {
   const { state } = useLocation();
@@ -14,7 +15,9 @@ export default function StartSession() {
   const [mentalNote, setMentalNote] = useState("");
   const [physicalNote, setPhysicalNote] = useState("");
   const [financialNote, setFinancialNote] = useState("");
-
+  const [officials, setOfficials] = useState([]);
+  const [selectedOfficial, setSelectedOfficial] = useState(null);
+  
   const handleSubmit = async () => {
     try {
       const payload = {
@@ -22,6 +25,7 @@ export default function StartSession() {
         sess_physical_note: physicalNote,
         sess_financial_note: financialNote,
         sess_status: "Done",
+        assigned_official: selectedOfficial,
       };
 
       await api.patch(`/api/desk_officer/sessions/${session.sess_id}/`, payload);
@@ -33,6 +37,17 @@ export default function StartSession() {
       alert(" Failed to submit session");
     }
   };
+  useEffect(() => {
+  api.get("/api/desk_officer/officials/social-workers/")
+    .then((res) => {
+      const options = res.data.map((o) => ({
+        value: o.of_id,
+        label: o.full_name,
+      }));
+      setOfficials(options);
+    })
+    .catch((err) => console.error("Failed to fetch officials", err));
+}, []);
 
   return (
     <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
@@ -111,6 +126,18 @@ export default function StartSession() {
                 onChange={(e) => setFinancialNote(e.target.value)}
               />
             </div>
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Assisting Social Worker</label>
+            <Select
+              options={officials}
+              value={officials.find((opt) => opt.value === selectedOfficial) || null}
+              onChange={(selected) =>
+                setSelectedOfficial(selected ? selected.value : null)
+              }
+              placeholder="Search and select social worker..."
+              isClearable
+            />
           </div>
 
           {/* Action Buttons */}
