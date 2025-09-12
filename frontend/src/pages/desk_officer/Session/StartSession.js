@@ -3,7 +3,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
 import Select from "react-select";
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function StartSession() {
   const { state } = useLocation();
