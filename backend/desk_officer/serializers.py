@@ -64,7 +64,7 @@ class IncidentInformationSerializer(serializers.ModelSerializer):
     class Meta:
         model = IncidentInformation
         fields = "__all__"
-        read_only_fields = ["incident_id", "incident_num"]  # prevent frontend from setting it
+        read_only_fields = ["incident_id", "incident_num"]  
 
     def create(self, validated_data):
         victim = validated_data.get("vic_id")

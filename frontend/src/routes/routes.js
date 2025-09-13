@@ -16,7 +16,7 @@ export const ROUTES = {
   DESK_OFFICER_VICTIM_DETAIL: "/desk_officer/victims/:vic_id",
   DESK_OFFICER_VICTIM_SEARCH: "/desk_officer/victims/search",
 
-  // bagong gi add nako nga routes sa vaw desk officer
+  
   DESK_OFFICER_SOCIAL_WORKERS: "/desk_officer/social-workers",
   DESK_OFFICER_SERVICES: "/desk_officer/services",
   DESK_OFFICER_CASE_RECORDS: "/desk_officer/case-records",
@@ -35,21 +35,20 @@ export const ROUTES = {
   DSWD_SERVICES: "/dswd/services",
   DSWD_ACCOUNT_MANAGEMENT: "/dswd/account-management",
 
+  // SOCIAL WORKER
   SOCIAL_WORKER: "/social_worker",
   SOCIAL_WORKER_DASHBOARD: "/social_worker",
+    
   SOCIAL_WORKER_CASE_RECORDS: "/social_worker/case-records",
   SOCIAL_WORKER_SESSIONS: "/social_worker/sessions",
+  SOCIAL_WORKER_VIEW_SESSION: "/social_worker/sessions/:sess_id",
+
   SOCIAL_WORKER_SERVICES: "/social_worker/services",
+
   SOCIAL_WORKER_VICTIMS: "/social_worker/victims",
   SOCIAL_WORKER_VICTIM_DETAIL: "/social_worker/victims/:vic_id",
   SOCIAL_WORKER_SEARCH_FACIAL: "/social_worker/victims/search-facial",
-  // SOCIAL_WORKER: "/social_worker",
-  // SOCIAL_WORKER_DASHBOARD: "dashboard",
-  // SOCIAL_WORKER_CASE_RECORDS: "case-records",
-  // SOCIAL_WORKER_SESSIONS: "sessions",
-  // SOCIAL_WORKER_SERVICES: "services",
-  // SOCIAL_WORKER_VICTIMS: "victims",
-  // SOCIAL_WORKER_VICTIM_DETAIL: "victims/:vic_id",
-  // SOCIAL_WORKER_SEARCH_FACIAL: "victims/search-facial",
+ 
+
 
 };
