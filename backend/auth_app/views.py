@@ -55,6 +55,11 @@ class create_official(APIView):
 
         # create Django User (hashed password)
         user = User.objects.create_user(username=username, password=generated_password)
+        
+        # Auto-assign barangay to of_assigned_barangay
+        barangay_id = request.data.get("barangay")
+        if barangay_id:
+            serializer.validated_data["of_assigned_barangay_id"] = barangay_id
 
         # create Official record
         official = Official.objects.create(user=user, **serializer.validated_data)
@@ -121,7 +126,8 @@ class create_official(APIView):
             "username": username,
             "password": generated_password,
             "role": official.of_role,
-            "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None
+            "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
+            "assigned_barangay_name": official.of_assigned_barangay.name if official.of_assigned_barangay else None
         }, status=status.HTTP_201_CREATED)
 
 class face_login(APIView):
