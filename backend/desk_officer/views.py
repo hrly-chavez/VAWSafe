@@ -45,7 +45,6 @@ class ViewVictim (generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['VAWDesk']
     
-    
 class ViewDetail (generics.RetrieveAPIView):
     queryset = Victim.objects.all()
     serializer_class = VictimDetailSerializer

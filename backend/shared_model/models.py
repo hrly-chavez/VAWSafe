@@ -130,6 +130,13 @@ class Victim(models.Model):
         ('Does not want to identify', 'Does not want to identify'),
     ]
 
+    CHILD_CLASS = [
+        ("Orphan", "Orphan"),
+        ("Unaccompanied", "Unaccompanied"),
+        ("Separated", "Separated"),
+        ("Vulnerable", "Vulnerable"),
+    ]
+
     EDUCATIONAL_ATTAINMENT_CHOICES = [
         ('No Formal Education', 'No Formal Education'),
         ('Elementary Level/Graduate', 'Elementary Level/Graduate'),
@@ -172,10 +179,12 @@ class Victim(models.Model):
         ('Speech and Language Disability', 'Speech and Language Disability'),
         ('Visual Disability', 'Visual Disability'),
     ]
+    
     SEX_CHOICES = [
         ('Male', 'Male'),
         ('Female', 'Female'),
     ]
+    
     RELIGION_CHOICES = [
         ('Roman Catholic', 'Roman Catholic'),
         ('Islam', 'Islam'),
@@ -184,6 +193,7 @@ class Victim(models.Model):
         ('Iglesia ni Cristo', 'Iglesia ni Cristo'),
         ('Others', 'Others'),
     ]
+    
     vic_id = models.AutoField(primary_key=True)
     vic_last_name = models.CharField(max_length=100)
     vic_first_name = models.CharField(max_length=100)
@@ -191,8 +201,17 @@ class Victim(models.Model):
     vic_extension = models.CharField(max_length=10, blank=True, null=True)
     vic_sex = models.CharField(max_length=10, choices=SEX_CHOICES)
     vic_is_SOGIE = models.CharField(max_length=50, choices=SOGIE_CHOICES, default='No')
+    vic_specific_sogie = models.CharField(max_length=50, blank=True, null=True)
     vic_birth_date = models.DateField( null=True, blank=True)
     vic_birth_place = models.CharField(max_length=100, null=True, blank=True)
+
+    # if victime is minor, indicate guardian information and child class
+    vic_guardian_fname = models.CharField(max_length=100, blank=True, null=True)
+    vic_guardian_mname = models.CharField(max_length=100, blank=True, null=True)
+    vic_guardian_lname = models.CharField(max_length=100, blank=True, null=True)
+    vic_guardian_contact = models.CharField(max_length=100, blank=True, null=True)
+    vic_child_class = models.CharField(max_length=50, choices=CHILD_CLASS, default="Orphan")
+
     vic_civil_status = models.CharField(max_length=50, choices=CIVIL_STATUS_CHOICES, default='SINGLE')
     vic_educational_attainment = models.CharField(max_length=50, choices=EDUCATIONAL_ATTAINMENT_CHOICES, default='No Formal Education')
     vic_nationality = models.CharField(max_length=50, choices=NATIONALITY_CHOICES, default='Filipino')
@@ -202,6 +221,7 @@ class Victim(models.Model):
     vic_employment_status = models.CharField(max_length=50, choices=EMPLOYMENT_STATUS_CHOICES, default='Not Applicable')
     vic_migratory_status = models.CharField(max_length=50, choices=MIGRATORY_STATUS_CHOICES, default='Not Applicable')
     vic_religion = models.CharField(max_length=50, choices=RELIGION_CHOICES, default='Roman Catholic')
+    vic_current_address = models.CharField(max_length=100, default="Homeless")
     vic_is_displaced = models.BooleanField(default=False)
     vic_PWD_type = models.CharField(max_length=50, choices=PWD_CHOICES, default='None')
     vic_contact_number = models.CharField(max_length=15, blank=True, null=True)
