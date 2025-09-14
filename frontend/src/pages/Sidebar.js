@@ -173,10 +173,10 @@ export default function Sidebar() {
     if (role === "social worker") {
       return [
         { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/social_worker" },
+        { icon: "/images/heart.png", label: "VAWC Victims", path: "/social_worker/victims" },   
         { icon: "/images/case.png", label: "Case Records", path: "/social_worker/case-records" },
-        { icon: "/images/meeting.png", label: "Sessions", path: "/social_worker/sessions" },
+        { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/social_worker/sessions" },
         { icon: "/images/peace.png", label: "Services", path: "/social_worker/services" },
-        { icon: "/images/heart.png", label: "VAWC Victims", path: "/social_worker/victims" },
         { icon: "/images/logout.png", label: "Log Out", path: "/login", isLogout: true }
       ];
     }
@@ -200,7 +200,7 @@ export default function Sidebar() {
         { icon: "/images/heart.png", label: "VAWC Victims", path: "/desk_officer/victims" },
         { icon: "/images/customer.png", label: "Social Workers", path: "/desk_officer/social-workers" },
         { icon: "/images/peace.png", label: "Services", path: "/desk_officer/services" },
-        { icon: "/images/meeting.png", label: "Sessions", path: "/desk_officer/session" },
+        { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/desk_officer/session" },
         { icon: "/images/case.png", label: "Case Records", path: "/desk_officer/case-records" },
         {
           icon: "/images/account-settings.png",

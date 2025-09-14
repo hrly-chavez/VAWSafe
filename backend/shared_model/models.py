@@ -249,7 +249,7 @@ class Perpetrator(models.Model):
     def __str__(self):
         return f"{self.per_last_name}, {self.per_first_name}"
   
-class IncidentInformation(models.Model):   
+class IncidentInformation(models.Model):   #stands as CASE
     TYPE_OF_PLACE = [
         ('Conjugal Home', 'Conjugal Home'),
         ('Evacutaion Area', 'Evacutaion Area'),
@@ -328,7 +328,7 @@ class IncidentInformation(models.Model):
 
     def __str__(self):
         return f"Incident {self.incident_id}"
-    
+  
 class CaseReport(models.Model):  #ADMINISTRATIVE INFORMATION
     victim = models.OneToOneField(Victim, on_delete=models.CASCADE, related_name="case_report")
 

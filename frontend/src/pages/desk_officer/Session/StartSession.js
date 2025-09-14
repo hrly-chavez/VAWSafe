@@ -1,9 +1,10 @@
 // src/desk_officer/Session/StartSession.js
-
+import Modal from "react-modal";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
 import Select from "react-select";
 import { useState, useRef, useEffect } from "react";
+
 
 export default function StartSession() {
   const { state } = useLocation();
@@ -21,6 +22,17 @@ export default function StartSession() {
   const [files, setFiles] = useState([]);
   const [error, setError] = useState("");
   const inputRef = useRef(null);
+
+  // Modal states
+  const [showModal, setShowModal] = useState(false);
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [time, setTime] = useState(new Date().toTimeString().slice(0, 5));
+  const [location, setLocation] = useState("");
+  const [sessionType, setSessionType] = useState("");
+  const [nextOfficial, setNextOfficial] = useState(null);
+  const [officials, setOfficials] = useState([]);
+  const [selectedOfficial, setSelectedOfficial] = useState(null);
+   const nextSessionNum = (session?.sess_num || 0) + 1;
 
   const handleFileChange = (e) => {
     const selected = Array.from(e.target.files);
@@ -57,11 +69,10 @@ export default function StartSession() {
   useEffect(() => {
     return () => files.forEach((f) => URL.revokeObjectURL(f.preview));
   }, [files]);
-  const [officials, setOfficials] = useState([]);
-  const [selectedOfficial, setSelectedOfficial] = useState(null);
   
   const handleSubmit = async () => {
     try {
+      // 1) Mark current session as Done
       const payload = {
         sess_mental_note: mentalNote,
         sess_physical_note: physicalNote,
@@ -70,21 +81,36 @@ export default function StartSession() {
         assigned_official: selectedOfficial,
       };
 
-      await api.patch(
-        `/api/desk_officer/sessions/${session.sess_id}/`,
-        payload
-      );
+      await api.patch(`/api/desk_officer/sessions/${session.sess_id}/`, payload);
 
-      alert(" Session submitted and marked as Done.");
-      navigate("/desk_officer"); // redirect back to main desk officer page (adjust if needed)
+      // 2) Show modal 
+      setShowModal(true);
     } catch (err) {
-      console.error(
-        "Error submitting session:",
-        err.response?.data || err.message
-      );
-      alert(" Failed to submit session");
+      console.error("Error submitting session:", err.response?.data || err.message);
+      alert("Failed to submit session");
+    }
+  } 
+    const handleScheduleNextSession = async () => {
+    try {
+      const payload = {
+        incident_id: incident?.incident_id,
+        sess_next_sched: `${date}T${time}:00Z`,
+        sess_location: location,
+        sess_type: sessionType,
+        assigned_official: nextOfficial,
+      };
+
+      const res = await api.post("/api/desk_officer/sessions/", payload);
+
+      alert(`Next session scheduled!\nSession #${res.data.sess_num}`);
+      setShowModal(false);
+      navigate("/desk_officer");
+    } catch (err) {
+      console.error("Failed to schedule next session", err.response?.data || err.message);
+      alert("Failed to schedule next session");
     }
   };
+  
   useEffect(() => {
   api.get("/api/desk_officer/officials/social-workers/")
     .then((res) => {
@@ -239,6 +265,7 @@ export default function StartSession() {
             />
           </div>
 
+
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 mt-4">
             <button
@@ -250,6 +277,96 @@ export default function StartSession() {
           </div>
         </div>
       </div>
+
+      {/* ---- Modal ---- */}
+      <Modal
+        isOpen={showModal}
+        onRequestClose={() => setShowModal(false)}
+        className="max-w-lg mx-auto mt-20 bg-white p-6 rounded shadow"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center"
+      >
+        <h2 className="text-xl font-semibold mb-4">Schedule Next Session</h2>
+
+        <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
+          <p>
+            <strong>Victim:</strong> {victim?.full_name}
+          </p>
+          <p>
+            <strong>Case No.:</strong> {incident?.incident_num}
+          </p>
+          <p>
+            <strong>Next Session No.:</strong> {nextSessionNum}
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label>Date</label>
+            <input
+              type="date"
+              className="w-full border p-2 rounded"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </div>
+          <div>
+            <label>Time</label>
+            <input
+              type="time"
+              className="w-full border p-2 rounded"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+            />
+          </div>
+          <div>
+            <label>Location</label>
+            <input
+              type="text"
+              className="w-full border p-2 rounded"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            />
+          </div>
+          <div>
+            <label>Type of Session</label>
+            <select
+              className="w-full border p-2 rounded"
+              value={sessionType}
+              onChange={(e) => setSessionType(e.target.value)}
+            >
+              <option value="">Select</option>
+              <option value="Counseling">Counseling</option>
+              <option value="Interview">Interview</option>
+              <option value="Follow-up">Follow-up</option>
+            </select>
+          </div>
+          <div>
+            <label>Assign Social Worker</label>
+            <Select
+              options={officials}
+              value={officials.find((o) => o.value === nextOfficial) || null}
+              onChange={(opt) => setNextOfficial(opt ? opt.value : null)}
+              placeholder="Search..."
+              isClearable
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 mt-6">
+          <button
+            onClick={() => setShowModal(false)}
+            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleScheduleNextSession}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Save Next Session
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

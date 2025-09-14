@@ -14,10 +14,17 @@ from shared_model.permissions import IsRole
 
 
 class victim_list(generics.ListAPIView):
-    queryset = Victim.objects.all()
     serializer_class = VictimListSerializer
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['Social Worker']
+    
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, "official") and user.official.of_role == "Social Worker":
+            return Victim.objects.filter(
+                incidents__sessions__assigned_official=user.official
+            ).distinct()
+        return Victim.objects.none()
 
 class victim_detail(generics.RetrieveAPIView):
     queryset = Victim.objects.all()
