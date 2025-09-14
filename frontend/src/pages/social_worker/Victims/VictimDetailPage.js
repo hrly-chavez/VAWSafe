@@ -135,7 +135,7 @@ export default function VictimDetailPage() {
               { key: "victim", label: "Victim Information" },
               { key: "perpetrator", label: "Perpetrator Information" },
               { key: "incident", label: "Incident Reports & Records" },
-              { key: "sessions", label: "Sessions" },
+              { key: "Case", label: "Case" },
               { key: "faces", label: "Face Samples" },
             ].map((tab) => (
               <button
@@ -316,10 +316,10 @@ export default function VictimDetailPage() {
               </div>
             )}
 
-            {activeTab === "sessions" && (
+            {activeTab === "Case" && (
               <div>
                 <h4 className="text-lg font-semibold text-[#292D96] mb-2">
-                  Sessions
+                  Case
                 </h4>
                 <p>Track session history, status, and assigned personnel.</p>
               </div>
