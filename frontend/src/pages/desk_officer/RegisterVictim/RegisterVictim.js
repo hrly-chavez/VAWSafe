@@ -21,6 +21,15 @@ const VICTIM_FIELDS = [
   "vic_extension",
   "vic_sex",
   "vic_is_SOGIE",
+  "vic_specific_sogie",
+
+  // if victime is minor, indicate guardian information and child class
+  "vic_guardian_fname",
+  "vic_guardian_mname",
+  "vic_guardian_lname",
+  "vic_guardian_contact",
+  "vic_child_class",
+
   "vic_birth_date",
   "vic_birth_place",
   "vic_civil_status",
@@ -91,13 +100,19 @@ const hasAny = (state, keys) =>
 export default function RegisterVictim() {
   const navigate = useNavigate();
 
-  const [formDataState, setFormDataState] = useState({
-    vic_first_name: "",
-    vic_last_name: "",
-    vic_sex: "",
-    report_type: "",
-    victimPhotos: [], // 👈 store photos here
-  });
+  const buildInitialState = () => {
+    const base = {};
+    VICTIM_FIELDS.forEach((field) => {
+      base[field] = ""; // default empty
+    });
+    return {
+      ...base,
+      report_type: "", // extra fields not in VICTIM_FIELDS
+      victimPhotos: [],
+    };
+  };
+
+  const [formDataState, setFormDataState] = useState(buildInitialState);
 
   const victimPhotos = formDataState.victimPhotos || [];
 
