@@ -115,7 +115,7 @@ class OfficialFaceSample(models.Model):
         return f"FaceSample for {self.official.full_name}"
 
 # starting here is for forms
-class Victim(models.Model):
+class Victim(models.Model): #dapat pun-an of field na when ni na create ang victim
     CIVIL_STATUS_CHOICES = [
         ('SINGLE', 'Single'),
         ('MARRIED', 'Married'),
