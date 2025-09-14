@@ -278,7 +278,7 @@ class OfficialViewSet(ModelViewSet):
         return Official.objects.filter(
             of_role__in=["Social Worker", "VAWDesk"]
         ).exclude(
-            of_role="Social Worker", status="pending"
+            of_role="VAWDesk", status="pending"
         )
     
 class PendingOfficials(viewsets.ModelViewSet):
