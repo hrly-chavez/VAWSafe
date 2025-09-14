@@ -21,6 +21,15 @@ const VICTIM_FIELDS = [
   "vic_extension",
   "vic_sex",
   "vic_is_SOGIE",
+  "vic_specific_sogie",
+
+  // if victime is minor, indicate guardian information and child class
+  "vic_guardian_fname",
+  "vic_guardian_mname",
+  "vic_guardian_lname",
+  "vic_guardian_contact",
+  "vic_child_class",
+
   "vic_birth_date",
   "vic_birth_place",
   "vic_civil_status",
@@ -91,13 +100,19 @@ const hasAny = (state, keys) =>
 export default function RegisterVictim() {
   const navigate = useNavigate();
 
-  const [formDataState, setFormDataState] = useState({
-    vic_first_name: "",
-    vic_last_name: "",
-    vic_sex: "",
-    report_type: "",
-    victimPhotos: [], // 👈 store photos here
-  });
+  const buildInitialState = () => {
+    const base = {};
+    VICTIM_FIELDS.forEach((field) => {
+      base[field] = ""; // default empty
+    });
+    return {
+      ...base,
+      report_type: "", // extra fields not in VICTIM_FIELDS
+      victimPhotos: [],
+    };
+  };
+
+  const [formDataState, setFormDataState] = useState(buildInitialState);
 
   const victimPhotos = formDataState.victimPhotos || [];
 
@@ -290,24 +305,6 @@ export default function RegisterVictim() {
           )}
         </div>
 
-        {/* Perp Info */}
-        <div className="mb-4">
-          <button
-            onClick={() => toggleSection("perpInfo")}
-            className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
-          >
-            {openSections.perpInfo ? "▼" : "▶"} Alleged Perpetrator Information
-          </button>
-          {openSections.perpInfo && (
-            <div className="mt-4 border-l-4 border-blue-500 pl-4">
-              <PerpetratorInfo
-                formDataState={formDataState}
-                setFormDataState={setFormDataState}
-              />
-            </div>
-          )}
-        </div>
-
         {/* Incident Info */}
         <div className="mb-4">
           <button
@@ -319,6 +316,24 @@ export default function RegisterVictim() {
           {openSections.incidentInfo && (
             <div className="mt-4 border-l-4 border-blue-500 pl-4">
               <IncidentInfo
+                formDataState={formDataState}
+                setFormDataState={setFormDataState}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Perp Info */}
+        <div className="mb-4">
+          <button
+            onClick={() => toggleSection("perpInfo")}
+            className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
+          >
+            {openSections.perpInfo ? "▼" : "▶"} Alleged Perpetrator Information
+          </button>
+          {openSections.perpInfo && (
+            <div className="mt-4 border-l-4 border-blue-500 pl-4">
+              <PerpetratorInfo
                 formDataState={formDataState}
                 setFormDataState={setFormDataState}
               />
