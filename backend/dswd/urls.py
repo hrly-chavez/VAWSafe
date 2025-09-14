@@ -4,6 +4,8 @@ from .views import *
 router = DefaultRouter()
 
 router.register(r"officials", OfficialViewSet, basename='official')
+router.register(r'pending-officials', PendingOfficials, basename='pending-officials')
+
 urlpatterns = [
     #victim
     path("victims/", ViewVictim.as_view(), name="view_victim"),
@@ -18,4 +20,6 @@ urlpatterns = [
     #vawdesk officer
     path("vawdesk_officer/", ViewVAWDeskOfficer.as_view(), name="view_vawdesk_officer"),
     path("vawdesk_officer/<int:of_id>/", ViewVAWDeskOfficerDetail.as_view(), name="view_vawdesk_officer_detail"),
+
+    path('', include(router.urls)),
 ] + router.urls

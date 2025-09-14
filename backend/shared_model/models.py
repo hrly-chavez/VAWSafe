@@ -64,6 +64,12 @@ class Official(models.Model):
         ('VAWDesk', 'VAWDesk'),
         ('Social Worker', 'Social Worker'),
     ]   
+
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="official", null=True, blank=True)
     of_id = models.AutoField(primary_key=True)
     of_fname = models.CharField(max_length=50)
@@ -78,12 +84,15 @@ class Official(models.Model):
     of_role = models.CharField(max_length=50, choices=ROLE_CHOICES, blank=True, null=True)
     of_specialization = models.CharField(max_length=100, null=True, blank=True)
     of_photo = models.ImageField(upload_to='photos/', null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
 
     province = models.ForeignKey("Province", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
     municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
     barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
     sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
     street = models.ForeignKey("Street", on_delete=models.SET_NULL, null=True, blank=True, related_name="officials") 
+
+
 
     #where na baranggay assigned
     of_assigned_barangay = models.ForeignKey(Barangay, on_delete=models.PROTECT, related_name="assigned_officials", null=True, blank=True)

@@ -111,7 +111,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'vawsafe',
         'USER': 'postgres',
-        'PASSWORD': 'postgres', 
+        'PASSWORD': 'Caratao123', 
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -185,3 +185,12 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": False,
 }
+
+# Email settings
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "carataojoegie@gmail.com"        # your Gmail
+EMAIL_HOST_PASSWORD = "qvrt xcrf meek royf"  # 👈 from Step 2
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

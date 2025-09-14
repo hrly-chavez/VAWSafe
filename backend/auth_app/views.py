@@ -26,10 +26,234 @@ def get_tokens_for_user(user):
         "access": str(refresh.access_token),
     }
 
+# class create_official(APIView):
+#     """
+#     NOTE: this endpoint currently allows unauthenticated creation.
+#     In production you should restrict this to IsAdminUser / staff.
+#     """
+#     parser_classes = [MultiPartParser, FormParser]
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         serializer = OfficialSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Build unique username from fname+lname
+#         fname = request.data.get("of_fname", "").strip().lower()
+#         lname = request.data.get("of_lname", "").strip().lower()
+#         base_username = f"{fname}{lname}".replace(" ", "")
+#         username = base_username or get_random_string(8)
+
+#         # ensure uniqueness
+#         counter = 0
+#         while User.objects.filter(username=username).exists():
+#             counter += 1
+#             username = f"{base_username}{counter}"
+
+#         generated_password = get_random_string(length=12)
+
+#         # create Django User (hashed password)
+#         user = User.objects.create_user(username=username, password=generated_password)
+        
+#         # Auto-assign barangay to of_assigned_barangay
+#         barangay_id = request.data.get("barangay")
+#         if barangay_id:
+#             serializer.validated_data["of_assigned_barangay_id"] = barangay_id
+
+#         # create Official record
+#         official = Official.objects.create(user=user, **serializer.validated_data)
+
+#         # Photos - support of_photos[] or single of_photo
+#         photo_files = request.FILES.getlist("of_photos") or []
+#         if not photo_files:
+#             single_photo = request.FILES.get("of_photo")
+#             if single_photo:
+#                 photo_files = [single_photo]
+
+#         if photo_files:
+#             official.of_photo = photo_files[0]
+#             official.save()
+
+#         # Process embeddings (DeepFace) and save OfficialFaceSample rows
+#         created_count = 0
+#         for index, file in enumerate(photo_files):
+#             temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+#             try:
+#                 image = Image.open(file).convert("RGB")
+#                 image.save(temp_image, format="JPEG")
+#                 temp_image.flush()
+#                 temp_image.close()
+
+#                 embeddings = DeepFace.represent(
+#                     img_path=temp_image.name,
+#                     model_name="ArcFace",
+#                     enforce_detection=True
+#                 )
+
+#                 # Normalize DeepFace.represent output to list of floats
+#                 if isinstance(embeddings, list):
+#                     if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
+#                         embedding_vector = embeddings[0]["embedding"]
+#                     elif all(isinstance(x, float) for x in embeddings):
+#                         embedding_vector = embeddings
+#                     else:
+#                         raise ValueError("Unexpected list format from DeepFace.")
+#                 elif isinstance(embeddings, dict) and "embedding" in embeddings:
+#                     embedding_vector = embeddings["embedding"]
+#                 else:
+#                     raise ValueError("Unexpected format from DeepFace.represent()")
+
+#                 OfficialFaceSample.objects.create(
+#                     official=official,
+#                     photo=file,
+#                     embedding=embedding_vector
+#                 )
+#                 created_count += 1
+
+#             except Exception as e:
+#                 traceback.print_exc()
+#             finally:
+#                 if os.path.exists(temp_image.name):
+#                     os.remove(temp_image.name)
+
+#         if created_count == 0:
+#             return Response({"error": "Face registration failed. Please upload clearer photos."}, status=status.HTTP_400_BAD_REQUEST)
+
+#         return Response({
+#             "message": f"Registration successful. {created_count} face sample(s) saved.",
+#             "official_id": official.of_id,
+#             "username": username,
+#             "password": generated_password,
+#             "role": official.of_role,
+#             "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
+#             "assigned_barangay_name": official.of_assigned_barangay.name if official.of_assigned_barangay else None
+#         }, status=status.HTTP_201_CREATED)
+
+# class create_official(APIView):
+#     """
+#     Registration endpoint:
+#     - Social Worker -> immediately creates a Django User
+#     - VAWDesk -> stored as pending (no user account yet), requires DSWD approval
+#     """
+#     parser_classes = [MultiPartParser, FormParser]
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         serializer = OfficialSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#         role = serializer.validated_data.get("of_role", "").strip()
+
+#         user = None
+#         username = None
+#         generated_password = None
+
+#         if role == "Social Worker":
+#             # ✅ Generate username + password for Social Worker
+#             fname = request.data.get("of_fname", "").strip().lower()
+#             lname = request.data.get("of_lname", "").strip().lower()
+#             base_username = f"{fname}{lname}".replace(" ", "")
+#             username = base_username or get_random_string(8)
+
+#             # Ensure uniqueness
+#             counter = 0
+#             while User.objects.filter(username=username).exists():
+#                 counter += 1
+#                 username = f"{base_username}{counter}"
+
+#             generated_password = get_random_string(length=12)
+#             user = User.objects.create_user(username=username, password=generated_password)
+
+#         # For VAWDesk -> don't create a User yet (set status pending)
+#         official = Official.objects.create(
+#             user=user,
+#             status="pending" if role == "VAWDesk" else "active",  # 👈 add status field in model
+#             **serializer.validated_data
+#         )
+
+#         # Handle photos (optional for VAWDesk)
+#         photo_files = request.FILES.getlist("of_photos") or []
+#         if not photo_files:
+#             single_photo = request.FILES.get("of_photo")
+#             if single_photo:
+#                 photo_files = [single_photo]
+
+#         if photo_files:
+#             official.of_photo = photo_files[0]
+#             official.save()
+
+#         if role == "Social Worker":
+#             # Process embeddings only for Social Workers
+#             created_count = 0
+#             for index, file in enumerate(photo_files):
+#                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+#                 try:
+#                     image = Image.open(file).convert("RGB")
+#                     image.save(temp_image, format="JPEG")
+#                     temp_image.flush()
+#                     temp_image.close()
+
+#                     embeddings = DeepFace.represent(
+#                         img_path=temp_image.name,
+#                         model_name="ArcFace",
+#                         enforce_detection=True
+#                     )
+
+#                     if isinstance(embeddings, list):
+#                         if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
+#                             embedding_vector = embeddings[0]["embedding"]
+#                         elif all(isinstance(x, float) for x in embeddings):
+#                             embedding_vector = embeddings
+#                         else:
+#                             raise ValueError("Unexpected list format from DeepFace.")
+#                     elif isinstance(embeddings, dict) and "embedding" in embeddings:
+#                         embedding_vector = embeddings["embedding"]
+#                     else:
+#                         raise ValueError("Unexpected format from DeepFace.represent()")
+
+#                     OfficialFaceSample.objects.create(
+#                         official=official,
+#                         photo=file,
+#                         embedding=embedding_vector
+#                     )
+#                     created_count += 1
+
+#                 except Exception as e:
+#                     traceback.print_exc()
+#                 finally:
+#                     if os.path.exists(temp_image.name):
+#                         os.remove(temp_image.name)
+
+#             if created_count == 0:
+#                 return Response({"error": "Face registration failed. Please upload clearer photos."},
+#                                 status=status.HTTP_400_BAD_REQUEST)
+
+#             return Response({
+#                 "message": f"Social Worker registered. {created_count} face sample(s) saved.",
+#                 "official_id": official.of_id,
+#                 "username": username,
+#                 "password": generated_password,
+#                 "role": official.of_role,
+#                 "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
+#                 "assigned_barangay_name": official.of_assigned_barangay.name if official.of_assigned_barangay else None
+#             }, status=status.HTTP_201_CREATED)
+
+#         # If VAWDesk -> no credentials yet
+#         return Response({
+#             "message": "VAWDesk registration submitted. Awaiting DSWD approval.",
+#             "official_id": official.of_id,
+#             "role": official.of_role,
+#             "status": official.status
+#         }, status=status.HTTP_202_ACCEPTED)
+
+# views.py
 class create_official(APIView):
     """
-    NOTE: this endpoint currently allows unauthenticated creation.
-    In production you should restrict this to IsAdminUser / staff.
+    Registration endpoint:
+    - Social Worker -> immediately creates a Django User + face embeddings
+    - VAWDesk -> stored as pending (no user account yet), requires DSWD approval
     """
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [AllowAny]
@@ -39,32 +263,34 @@ class create_official(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Build unique username from fname+lname
-        fname = request.data.get("of_fname", "").strip().lower()
-        lname = request.data.get("of_lname", "").strip().lower()
-        base_username = f"{fname}{lname}".replace(" ", "")
-        username = base_username or get_random_string(8)
+        role = serializer.validated_data.get("of_role", "").strip()
+        user = None
+        username = None
+        generated_password = None
 
-        # ensure uniqueness
-        counter = 0
-        while User.objects.filter(username=username).exists():
-            counter += 1
-            username = f"{base_username}{counter}"
+        # ✅ Social Worker: immediately create User
+        if role == "Social Worker":
+            fname = request.data.get("of_fname", "").strip().lower()
+            lname = request.data.get("of_lname", "").strip().lower()
+            base_username = f"{fname}{lname}".replace(" ", "")
+            username = base_username or get_random_string(8)
 
-        generated_password = get_random_string(length=12)
+            counter = 0
+            while User.objects.filter(username=username).exists():
+                counter += 1
+                username = f"{base_username}{counter}"
 
-        # create Django User (hashed password)
-        user = User.objects.create_user(username=username, password=generated_password)
-        
-        # Auto-assign barangay to of_assigned_barangay
-        barangay_id = request.data.get("barangay")
-        if barangay_id:
-            serializer.validated_data["of_assigned_barangay_id"] = barangay_id
+            generated_password = get_random_string(length=12)
+            user = User.objects.create_user(username=username, password=generated_password)
 
-        # create Official record
-        official = Official.objects.create(user=user, **serializer.validated_data)
+        # ✅ Create the official (VAWDesk defaults to pending)
+        official = Official.objects.create(
+            user=user,
+            status="pending" if role == "VAWDesk" else "approved",
+            **serializer.validated_data
+        )
 
-        # Photos - support of_photos[] or single of_photo
+        # Collect uploaded photos
         photo_files = request.FILES.getlist("of_photos") or []
         if not photo_files:
             single_photo = request.FILES.get("of_photo")
@@ -72,63 +298,82 @@ class create_official(APIView):
                 photo_files = [single_photo]
 
         if photo_files:
-            official.of_photo = photo_files[0]
+            official.of_photo = photo_files[0]  # set profile photo
             official.save()
 
-        # Process embeddings (DeepFace) and save OfficialFaceSample rows
-        created_count = 0
-        for index, file in enumerate(photo_files):
-            temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
-            try:
-                image = Image.open(file).convert("RGB")
-                image.save(temp_image, format="JPEG")
-                temp_image.flush()
-                temp_image.close()
+        # ✅ Social Worker: process embeddings immediately
+        if role == "Social Worker":
+            created_count = 0
+            for index, file in enumerate(photo_files):
+                temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+                try:
+                    image = Image.open(file).convert("RGB")
+                    image.save(temp_image, format="JPEG")
+                    temp_image.flush()
+                    temp_image.close()
 
-                embeddings = DeepFace.represent(
-                    img_path=temp_image.name,
-                    model_name="ArcFace",
-                    enforce_detection=True
-                )
+                    embeddings = DeepFace.represent(
+                        img_path=temp_image.name,
+                        model_name="ArcFace",
+                        enforce_detection=True
+                    )
 
-                # Normalize DeepFace.represent output to list of floats
-                if isinstance(embeddings, list):
-                    if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
-                        embedding_vector = embeddings[0]["embedding"]
-                    elif all(isinstance(x, float) for x in embeddings):
-                        embedding_vector = embeddings
+                    if isinstance(embeddings, list):
+                        if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
+                            embedding_vector = embeddings[0]["embedding"]
+                        elif all(isinstance(x, float) for x in embeddings):
+                            embedding_vector = embeddings
+                        else:
+                            raise ValueError("Unexpected list format from DeepFace.")
+                    elif isinstance(embeddings, dict) and "embedding" in embeddings:
+                        embedding_vector = embeddings["embedding"]
                     else:
-                        raise ValueError("Unexpected list format from DeepFace.")
-                elif isinstance(embeddings, dict) and "embedding" in embeddings:
-                    embedding_vector = embeddings["embedding"]
-                else:
-                    raise ValueError("Unexpected format from DeepFace.represent()")
+                        raise ValueError("Unexpected format from DeepFace.represent()")
 
+                    OfficialFaceSample.objects.create(
+                        official=official,
+                        photo=file,
+                        embedding=embedding_vector
+                    )
+                    created_count += 1
+
+                except Exception as e:
+                    traceback.print_exc()
+                finally:
+                    if os.path.exists(temp_image.name):
+                        os.remove(temp_image.name)
+
+            if created_count == 0:
+                return Response({"error": "Face registration failed. Please upload clearer photos."},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            return Response({
+                "message": f"Social Worker registered. {created_count} face sample(s) saved.",
+                "official_id": official.of_id,
+                "username": username,
+                "password": generated_password,
+                "role": official.of_role,
+                "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
+                "assigned_barangay_name": official.of_assigned_barangay.name if official.of_assigned_barangay else None
+            }, status=status.HTTP_201_CREATED)
+
+        # ✅ VAWDesk: save photos only (no embeddings yet)
+        if role == "VAWDesk":
+            for file in photo_files:
                 OfficialFaceSample.objects.create(
                     official=official,
                     photo=file,
-                    embedding=embedding_vector
+                    embedding=None  # embeddings will be generated upon approval
                 )
-                created_count += 1
 
-            except Exception as e:
-                traceback.print_exc()
-            finally:
-                if os.path.exists(temp_image.name):
-                    os.remove(temp_image.name)
+            return Response({
+                "message": "VAWDesk registration submitted. Awaiting DSWD approval.",
+                "official_id": official.of_id,
+                "role": official.of_role,
+                "status": official.status
+            }, status=status.HTTP_202_ACCEPTED)
 
-        if created_count == 0:
-            return Response({"error": "Face registration failed. Please upload clearer photos."}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({
-            "message": f"Registration successful. {created_count} face sample(s) saved.",
-            "official_id": official.of_id,
-            "username": username,
-            "password": generated_password,
-            "role": official.of_role,
-            "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
-            "assigned_barangay_name": official.of_assigned_barangay.name if official.of_assigned_barangay else None
-        }, status=status.HTTP_201_CREATED)
 
 class face_login(APIView):
     parser_classes = [MultiPartParser, FormParser]
