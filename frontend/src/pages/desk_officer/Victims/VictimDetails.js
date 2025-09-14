@@ -10,6 +10,16 @@ export default function VictimDetails() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("victim");
 
+  const calculateAge = (birthDate) => {
+    if (!birthDate) return "—";
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+  };
+
 
   useEffect(() => {
     const run = async () => {
@@ -61,6 +71,16 @@ export default function VictimDetails() {
       .join(" ")
     : "";
 
+  const fullAddress = victim
+    ? [
+      get(victim, ["street_name"]),
+      get(victim, ["sitio_name"]),
+      get(victim, ["barangay_name"]),
+      get(victim, ["municipality_name"]),
+      get(victim, ["province_name"]),
+    ].filter(Boolean).join(", ")
+    : "—";
+    
   return (
     <>
       <div className="flex flex-col min-h-screen bg-white">
@@ -89,7 +109,7 @@ export default function VictimDetails() {
 
               {[
                 { label: "Case No.", value: get(victim?.case_report, ["case_no", "case_number"]) },
-                { label: "Intake Form Date", value: get(victim?.case_report, ["intake_date", "form_date"]) },
+                { label: "Intake Form Date", value: get(victim?.case_report, ["intake_date", "form_date", "created_at"]) },
                 { label: "Handling Organization", value: get(victim?.case_report, ["handling_org", "organization"]) },
                 { label: "Case Manager", value: get(victim?.case_report, ["case_manager", "manager_name"]) },
                 { label: "Position", value: get(victim?.case_report, ["manager_position", "position"]) },
@@ -116,9 +136,9 @@ export default function VictimDetails() {
                 <button
                   key={tab.key}
                   onClick={() => {
-                setActiveTab(tab.key);
-                window.history.replaceState(null, "", `?tab=${tab.key}`);
-              }}
+                    setActiveTab(tab.key);
+                    window.history.replaceState(null, "", `?tab=${tab.key}`);
+                  }}
                   className={`pb-2 text-sm font-medium ${activeTab === tab.key
                     ? "text-[#292D96] border-b-2 border-[#292D96]"
                     : "text-gray-500 hover:text-[#292D96]"
@@ -141,7 +161,7 @@ export default function VictimDetails() {
                       { label: "SOGIE", value: get(victim, ["vic_sogie", "sogie"]) },
                       { label: "Date of Birth", value: get(victim, ["vic_birth_date", "birth_date"]) },
                       { label: "Birth Place", value: get(victim, ["vic_birth_place", "birth_place", "place"]) },
-                      { label: "Age", value: get(victim, ["age"]) },
+                      { label: "Age", value: calculateAge(get(victim, ["vic_birth_date", "birth_date"])) },
                       { label: "Civil Status", value: get(victim, ["vic_civil_status", "civil_status"]) },
                       { label: "Educational Attainment", value: get(victim, ["vic_education", "education"]) },
                       { label: "Nationality", value: get(victim, ["vic_nationality", "nationality"]) },
@@ -150,6 +170,9 @@ export default function VictimDetails() {
                       { label: "Monthly Income", value: get(victim, ["vic_monthly_income", "monthly_income"]) },
                       { label: "Religion", value: get(victim, ["vic_religion", "religion"]) },
                       { label: "Contact No.", value: get(victim, ["vic_contact", "contact"]) },
+                      { label: "PWD Category", value: get(victim, ["vic_pwd_category", "pwd_category"]) },
+                      { label: "Migratory Status", value: get(victim, ["vic_migratory_status", "migratory_status"]) },
+                      { label: "Employment Status", value: get(victim, ["vic_employment_status", "employment_status"]) },
                     ].map((item, index) => (
                       <div key={index} className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm">
                         <p className="text-xs text-gray-500 mb-1">{item.label}</p>
@@ -159,11 +182,31 @@ export default function VictimDetails() {
                     ))}
                   </div>
 
+                  {/* ✅ INSERT YOUR GUARDIAN BLOCK HERE */}
+                  {victim && victim.is_minor && (
+                    <>
+                      <h5 className="text-md font-semibold text-yellow-700 mt-6 mb-2">Guardian Information</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {[
+                          { label: "Guardian First Name", value: get(victim, ["guardian_first_name"]) },
+                          { label: "Guardian Middle Name", value: get(victim, ["guardian_middle_name"]) },
+                          { label: "Guardian Last Name", value: get(victim, ["guardian_last_name"]) },
+                          { label: "Guardian Contact", value: get(victim, ["guardian_contact"]) },
+                        ].map((item, index) => (
+                          <div key={`guardian-${index}`} className="bg-yellow-50 rounded-md px-4 py-3 border shadow-sm">
+                            <p className="text-xs text-yellow-700 mb-1">{item.label}</p>
+                            <p className="text-sm font-medium text-yellow-900">{item.value || "—"}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+
                   {/* Full Address in its own row */}
                   <div className="mt-4">
                     <div className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm">
                       <p className="text-xs text-gray-500 mb-1">Full Address</p>
-                      <p className="text-sm font-medium text-gray-800">{get(victim, ["vic_address", "address"]) || "—"}</p>
+                      <p className="text-sm font-medium text-gray-800">{fullAddress}</p>
                     </div>
                   </div>
                 </div>
@@ -210,31 +253,31 @@ export default function VictimDetails() {
                 </div>
               )}
               {activeTab === "faces" && (
-            <div>
-              <h4 className="text-lg font-semibold text-[#292D96] mb-4">
-                Victim Face Samples
-              </h4>
-              {victim.face_samples && victim.face_samples.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {victim.face_samples.map((sample, idx) => (
-                    <div
-                      key={idx}
-                      className="border rounded-lg shadow-sm bg-gray-50 p-2 flex flex-col items-center"
-                    >
-                      <img
-                        src={sample.photo}
-                        alt={`Face Sample ${idx + 1}`}
-                        className="w-full h-40 object-cover rounded"
-                      />
-                      <p className="text-xs text-gray-500 mt-2">Sample {idx + 1}</p>
+                <div>
+                  <h4 className="text-lg font-semibold text-[#292D96] mb-4">
+                    Victim Face Samples
+                  </h4>
+                  {victim.face_samples && victim.face_samples.length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {victim.face_samples.map((sample, idx) => (
+                        <div
+                          key={idx}
+                          className="border rounded-lg shadow-sm bg-gray-50 p-2 flex flex-col items-center"
+                        >
+                          <img
+                            src={sample.photo}
+                            alt={`Face Sample ${idx + 1}`}
+                            className="w-full h-40 object-cover rounded"
+                          />
+                          <p className="text-xs text-gray-500 mt-2">Sample {idx + 1}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  ) : (
+                    <p className="text-gray-500">No face samples available.</p>
+                  )}
                 </div>
-              ) : (
-                <p className="text-gray-500">No face samples available.</p>
               )}
-            </div>
-          )}
             </div>
           </div>
         </div>

@@ -2,7 +2,7 @@ import tempfile, os, traceback, json
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
-from rest_framework import status, generics
+from rest_framework import status, generics, permissions
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -350,3 +350,16 @@ class OfficialViewSet(ModelViewSet):
    permission_classes = [AllowAny]  # 👈 disables auth only for this view
 
 
+# View field for Social Worker Accounts
+class SocialWorkerListView(generics.ListAPIView):
+    permission_classes = [AllowAny]  # 👈 make public
+    serializer_class = OfficialSerializer
+
+    def get_queryset(self):
+        return Official.objects.filter(of_role__iexact="Social Worker").order_by("-of_id")
+
+class AssignBarangayView(generics.UpdateAPIView):
+    permission_classes = [AllowAny]  # 👈 make public
+    serializer_class = OfficialSerializer
+    queryset = Official.objects.filter(of_role__iexact="Social Worker")
+    lookup_field = "of_id"

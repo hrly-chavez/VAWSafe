@@ -94,7 +94,6 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import SearchVictimFacial from "./SearchVictimFacial";
 import "./Victims.css";
-import Navbar from "../../Navbar";
 import api from "../../../api/axios";
 
 export default function Victims() {
