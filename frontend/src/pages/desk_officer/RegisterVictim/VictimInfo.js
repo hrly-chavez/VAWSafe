@@ -523,7 +523,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
           </select>
         </div>
 
-        {/* Migratory Status & Religion */}
+        {/* migratory status */}
         <div className="flex flex-col">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Migratory Status
@@ -545,6 +545,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
           </select>
         </div>
 
+        {/* religion */}
         <div className="flex flex-col">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Religion
@@ -564,68 +565,64 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
           </select>
         </div>
 
-        {/* Contact */}
+        {/* pwd status */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Contact Number
+            PWD Type
           </label>
-          <input
-            className="input"
-            type="text"
-            placeholder="e.g. 09123456789"
-            value={formDataState.vic_contact_number || ""}
-            onChange={(e) => handleChange("vic_contact_number", e.target.value)}
-          />
+
+          <select
+            className="input w-full"
+            value={formDataState.vic_PWD_type || ""}
+            onChange={(e) => handleChange("vic_PWD_type", e.target.value)}
+          >
+            <option value="">PWD Status</option>
+            <option value="None">None</option>
+            <option value="Deaf or Hard of Hearing">
+              Deaf or Hard of Hearing
+            </option>
+            <option value="Intellectual Disability">
+              Intellectual Disability
+            </option>
+            <option value="Learning Disability">Learning Disability</option>
+            <option value="Mental Disability">Mental Disability</option>
+            <option value="Orthopedic Disability">Orthopedic Disability</option>
+            <option value="Physical Disability">Physical Disability</option>
+            <option value="Psychological Disability">
+              Psychological Disability
+            </option>
+            <option value="Speech and Language Disability">
+              Speech and Language Disability
+            </option>
+            <option value="Visual Disability">Visual Disability</option>
+          </select>
         </div>
       </div>
 
-      {/* Displacement and Conditional PWD Status */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        {/* Checkbox for Displacement */}
-        <div className="flex items-center space-x-2">
-          <label className="text-sm text-gray-700">
-            Is the client internally displaced?
-          </label>
-          <input
-            type="checkbox"
-            checked={!!formDataState.vic_is_displaced}
-            onChange={(e) => handleChange("vic_is_displaced", e.target.checked)}
-          />
-        </div>
+      {/* Checkbox for Displacement */}
+      <div className="flex items-center space-x-2 py-3">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Is the client internally displaced?
+        </label>
+        <input
+          type="checkbox"
+          checked={!!formDataState.vic_is_displaced}
+          onChange={(e) => handleChange("vic_is_displaced", e.target.checked)}
+        />
+      </div>
 
-        {/* Conditionally Rendered PWD Dropdown */}
-        {formDataState.vic_is_displaced && (
-          <div>
-            <label className="block text-sm text-gray-700 mb-1">PWD Type</label>
-            <select
-              className="input w-full"
-              value={formDataState.vic_PWD_type || ""}
-              onChange={(e) => handleChange("vic_PWD_type", e.target.value)}
-            >
-              <option value="">PWD Status</option>
-              <option value="None">None</option>
-              <option value="Deaf or Hard of Hearing">
-                Deaf or Hard of Hearing
-              </option>
-              <option value="Intellectual Disability">
-                Intellectual Disability
-              </option>
-              <option value="Learning Disability">Learning Disability</option>
-              <option value="Mental Disability">Mental Disability</option>
-              <option value="Orthopedic Disability">
-                Orthopedic Disability
-              </option>
-              <option value="Physical Disability">Physical Disability</option>
-              <option value="Psychological Disability">
-                Psychological Disability
-              </option>
-              <option value="Speech and Language Disability">
-                Speech and Language Disability
-              </option>
-              <option value="Visual Disability">Visual Disability</option>
-            </select>
-          </div>
-        )}
+      {/* Contact */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Contact Number
+        </label>
+        <input
+          className="input"
+          type="text"
+          placeholder="e.g. 09123456789"
+          value={formDataState.vic_contact_number || ""}
+          onChange={(e) => handleChange("vic_contact_number", e.target.value)}
+        />
       </div>
     </div>
   );

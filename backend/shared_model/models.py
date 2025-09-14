@@ -245,6 +245,14 @@ class VictimFaceSample(models.Model):
         return f"FaceSample for {self.victim.vic_first_name} {self.victim.vic_last_name}"
 
 class Perpetrator(models.Model):
+    RELATIONSHIP_TO_VICTIM = [
+        ('Personal/Family', 'Personal/Family'),
+        ('Persons of Authority', 'Persons of Authority'),
+        ('State Actor', 'State Actor'),
+        ('Non-State Actor', 'Non-State Actor'),
+        ('Others', 'Others'),
+    ]
+
     perp_id = models.AutoField(primary_key=True)
     per_first_name = models.CharField(max_length=100)
     per_middle_name = models.CharField(max_length=100, blank=True, null=True)
@@ -255,21 +263,42 @@ class Perpetrator(models.Model):
     ], blank=True, null=True)
     per_birth_date = models.DateField(blank=True, null=True)
     per_birth_place = models.CharField(max_length=255, blank=True, null=True)
-    per_contact = models.IntegerField(null=True,blank=True)
-    per_nationality = models.CharField(max_length=50, blank=True, null=True)
-    per_occupation = models.CharField(max_length=100, blank=True, null=True)
-    per_religion = models.CharField(max_length=50, blank=True, null=True)
-    per_relationship_category = models.CharField(max_length=50, blank=True, null=True) # should be relationship-to-victim?
-    per_relationship_detail = models.CharField(max_length=100, blank=True, null=True)
+    
+    # if perpetrator is minor, indicate guardian information and child class
     per_guardian_first_name = models.CharField(max_length=100, blank=True, null=True)
     per_guardian_middle_name = models.CharField(max_length=100, blank=True, null=True)
     per_guardian_last_name = models.CharField(max_length=100, blank=True, null=True)
     per_guardian_contact = models.CharField(max_length=50, blank=True, null=True)
     per_guardian_child_category = models.CharField(max_length=50, blank=True, null=True)
+    
+    per_nationality = models.CharField(max_length=50, blank=True, null=True)
+    per_main_occupation = models.CharField(max_length=100, blank=True, null=True)
+    per_religion = models.CharField(max_length=50, blank=True, null=True)
+    per_current_address = models.CharField(max_length=100, default="Homeless")
+
+    # relationship to victim
+    per_relationship_type = models.CharField(max_length=50, choices=RELATIONSHIP_TO_VICTIM blank=True, null=True)
+    per_relationship_subtype = models.CharField(max_length=100, blank=True, null=True)
+    
+    per_contact = models.IntegerField(null=True,blank=True)
+
     def __str__(self):
         return f"{self.per_last_name}, {self.per_first_name}"
   
-class IncidentInformation(models.Model):   
+class IncidentInformation(models.Model):
+    VIOLENCE_TYPE = [
+        ('Intimate partner violence against women and their children', 'Intimate partner violence against women and their children'),
+        ('Rape', 'Rape'),
+        ('Trafficking in persons', 'Trafficking in persons'),
+        ('Sexual harassment', 'Sexual harassment'),
+        ('Child abuse, exploitation, and discrimination', 'Child abuse, exploitation, and discrimination'),
+        ('Gender-based Streets and Public Spaces Sexual Harassment', 'Gender-based Streets and Public Spaces Sexual Harassment'),
+        ('Photo and video voyeurism', 'Photo and video voyeurism'),
+        ('Child pornography', 'Child pornography'),
+        ('Acts of lasciviousness', 'Acts of lasciviousness'),
+        ('Concubinage', 'Concubinage'),
+    ]
+
     TYPE_OF_PLACE = [
         ('Conjugal Home', 'Conjugal Home'),
         ('Evacutaion Area', 'Evacutaion Area'),
@@ -291,11 +320,15 @@ class IncidentInformation(models.Model):
     ]
     incident_id = models.AutoField(primary_key=True)
     incident_num = models.IntegerField(null=True,blank=True)
-    incident_description = models.TextField()
-    incident_date = models.DateField()
-    incident_time = models.TimeField()
+    
+    violence_type = models.CharField(max_length=100, choices=VIOLENCE_TYPE, null=True, blank=True)
+    violence_subtype = models.CharField(max_length=100, null=True, blank=True)
+    
+    incident_description = models.TextField(blank=True, null=True)
+    incident_date = models.DateField(blank=True, null=True)
+    incident_time = models.TimeField(blank=True, null=True)
     incident_location = models.CharField(max_length=255, blank=True, null=True) # Specific landmark (like near jollibee)
-    type_of_place = models.CharField(max_length=50, choices=TYPE_OF_PLACE)
+    type_of_place = models.CharField(max_length=50, choices=TYPE_OF_PLACE, blank=True, null=True)
     is_via_electronic_means = models.BooleanField(default=False)
     electronic_means = models.CharField(max_length=50, blank=True, null=True)
     is_conflict_area = models.BooleanField(default=False)
@@ -341,10 +374,6 @@ class IncidentInformation(models.Model):
             raise ValidationError("Barangay must belong to the selected Municipality.")
         if self.municipality and self.city and self.municipality.city != self.city:
             raise ValidationError("Municipality must belong to the selected City.")
-
-    # violence_type 
-    # specific_violence_type
-    # others
 
     def __str__(self):
         return f"Incident {self.incident_id}"
