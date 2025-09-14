@@ -350,4 +350,5 @@ class OfficialViewSet(ModelViewSet):
    serializer_class = OfficialSerializer
    permission_classes = [AllowAny]  # 👈 disables auth only for this view
 
-
+   def get_queryset(self):
+        return Official.objects.filter(of_role="Social Worker")

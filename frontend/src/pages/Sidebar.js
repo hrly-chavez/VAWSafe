@@ -188,7 +188,13 @@ export default function Sidebar() {
         { icon: "/images/customer.png", label: "Social Workers", path: "/dswd/social-workers" },
         { icon: "/images/founder.png", label: "VAW Desk Officer", path: "/dswd/vawdesk-officer" },
         { icon: "/images/peace.png", label: "Services", path: "/dswd/services" },
-        { icon: "/images/account-settings.png", label: "Account Management", path: "/dswd/account-management" },
+        // { icon: "/images/account-settings.png", label: "Account Management", path: "/dswd/account-management" },
+        { icon: "/images/account-settings.png", label: "Account Management", 
+          children: [
+            { label: "User Management", path: "/dswd/account-management"},
+            { label: "Pending Account", path: "/dswd/account-management/pending"}
+          ]
+        },
         { icon: "/images/logout.png", label: "Log Out", path: "/login", isLogout: true }
       ];
     }

@@ -38,9 +38,9 @@ export default function DSWDSocialWorkers() {
 
   return (
     <>
-      <div className="flex min-h-screen bg-white">
-        <div className="flex-1 px-6 py-6 m-5 bg-white rounded-[20px] shadow-[0_2px_6px_0_rgba(0,0,0,0.1),0_-2px_6px_0_rgba(0,0,0,0.1)]">
-          <h2 className="text-2xl font-semibold font-[Poppins] tracking-tight text-[#292D96]">
+      {/* <div className="flex min-h-screen"> */}
+        <div className="w-full px-6">
+          <h2 className="text-xl font-bold text-[#292D96] pt-6">
             Social Workers
           </h2>
 
@@ -66,17 +66,7 @@ export default function DSWDSocialWorkers() {
                   />
                 </div>
 
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#292D96] px-4 py-2 text-sm font-medium text-white hover:opacity-95 active:opacity-90"
-                >
-                  <img
-                    src="/images/add (1).png"
-                    alt="Add"
-                    className="h-4 w-4 object-contain"
-                  />
-                  Add
-                </button>
+                
               </div>
             </div>
           </div>
@@ -141,7 +131,7 @@ export default function DSWDSocialWorkers() {
             )}
           </div>
         </div>
-      </div>
+      {/* </div> */}
     </>
   );
 }

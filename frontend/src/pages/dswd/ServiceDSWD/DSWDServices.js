@@ -101,7 +101,7 @@ export default function DSWDServices() {
                     className="h-10 w-64 rounded-lg border border-neutral-300 bg-white px-3 pr-10 text-sm text-neutral-900 placeholder:text-neutral-400 outline-none focus:border-neutral-400"
                   />
                   <img
-                    src="./images/loupe.png"
+                    src="../images/search-interface-symbol.png"
                     alt="Search"
                     className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 opacity-70"
                   />

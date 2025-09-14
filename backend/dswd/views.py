@@ -19,13 +19,71 @@ from django.views.decorators.cache import never_cache
 # Create your views here.
 #Add @never_cache to sensitive view functions, or create middleware. Example for viewset:
 @method_decorator(never_cache, name='dispatch')
-class ViewVictim (generics.ListAPIView):
+# class ViewVictim (generics.ListAPIView):
+#     queryset = Victim.objects.all()
+#     serializer_class = VictimListSerializer
+#     permission_classes = [IsAuthenticated, IsRole]
+#     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
+#     # permission_classes = [AllowAny] #gamita lang ni sya if ganahan mo makakita sa value kay tungod ni sa settingskatung JWTAuthentication 
+    
+class ViewVictim(generics.ListAPIView):
     queryset = Victim.objects.all()
     serializer_class = VictimListSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
-    # permission_classes = [AllowAny] #gamita lang ni sya if ganahan mo makakita sa value kay tungod ni sa settingskatung JWTAuthentication 
-    
+    allowed_roles = ['DSWD']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        vic_sex = self.request.query_params.get("vic_sex")
+        province = self.request.query_params.get("province")
+        municipality = self.request.query_params.get("municipality")
+        barangay = self.request.query_params.get("barangay")
+
+        if vic_sex and vic_sex != "All":
+            queryset = queryset.filter(vic_sex=vic_sex)
+
+        if province and province != "All":
+            queryset = queryset.filter(province_id=province)
+
+        if municipality and municipality != "All":
+            queryset = queryset.filter(municipality_id=municipality)
+
+        if barangay and barangay != "All":
+            queryset = queryset.filter(barangay_id=barangay)
+
+        return queryset
+
+class ProvinceList(generics.ListAPIView):
+    queryset = Province.objects.all()
+    serializer_class = ProvinceSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']
+
+class MunicipalityList(generics.ListAPIView):
+    serializer_class = MunicipalitySerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']
+
+    def get_queryset(self):
+        province_id = self.request.query_params.get("province")
+        queryset = Municipality.objects.all()
+        if province_id:
+            queryset = queryset.filter(province_id=province_id)
+        return queryset
+
+class BarangayList(generics.ListAPIView):
+    serializer_class = BarangaySerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']
+
+    def get_queryset(self):
+        municipality_id = self.request.query_params.get("municipality")
+        queryset = Barangay.objects.all()
+        if municipality_id:
+            queryset = queryset.filter(municipality_id=municipality_id)
+        return queryset
+
 class ViewDetail (generics.RetrieveAPIView):
     queryset = Victim.objects.all()
     serializer_class = VictimDetailSerializer
@@ -118,11 +176,9 @@ class ViewSocialWorker(generics.ListAPIView):
               .order_by("of_lname", "of_fname"))
         q = self.request.query_params.get("q")
         if q:
-            # simple search by name/Brgy/specialization/contact
             return qs.filter(
                 (models.Q(of_fname__icontains=q) |
                  models.Q(of_lname__icontains=q) |
-                 models.Q(of_brgy_assigned__icontains=q) |
                  models.Q(of_specialization__icontains=q) |
                  models.Q(of_contact__icontains=q))
             )
@@ -170,11 +226,9 @@ class ViewVAWDeskOfficer(generics.ListAPIView):
               .order_by("of_lname", "of_fname"))
         q = self.request.query_params.get("q")
         if q:
-            # simple search by name/Brgy/specialization/contact
             return qs.filter(
                 (models.Q(of_fname__icontains=q) |
                  models.Q(of_lname__icontains=q) |
-                 models.Q(of_brgy_assigned__icontains=q) |
                  models.Q(of_specialization__icontains=q) |
                  models.Q(of_contact__icontains=q))
             )
@@ -209,3 +263,10 @@ class ViewVAWDeskOfficerDetail(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
     
+class OfficialViewSet(ModelViewSet):
+   queryset = Official.objects.all()
+   serializer_class = OfficialSerializer
+   permission_classes = [AllowAny]  # 👈 disables auth only for this view
+
+   def get_queryset(self):
+        return Official.objects.filter(of_role__in=["Social Worker", "VAWDesk"])
