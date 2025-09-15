@@ -16,35 +16,59 @@ const RegisterUser = ({ onClose, defaultRole }) => {
   const [of_fname, setFname] = useState("");
   const [of_lname, setLname] = useState("");
   const [of_email, setEmail] = useState("");
-  const [of_role, setRole] = useState(defaultRole || "");
+  const [of_role, setRole] = useState(defaultRole || ""); // will update if DSWD missing
 
   const [sex, setSex] = useState("");
 
-  const [cities, setCities] = useState([]);
+  const [provinces, setProvinces] = useState([]);
   const [municipalities, setMunicipalities] = useState([]);
   const [barangays, setBarangays] = useState([]);
 
-  const [selectedCity, setSelectedCity] = useState("");
+  // const [selectedCity, setSelectedCity] = useState("");
+  const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedMunicipality, setSelectedMunicipality] = useState("");
   const [selectedBarangay, setSelectedBarangay] = useState("");
 
-  useEffect(() => {
-    axios.get("http://localhost:8000/api/desk_officer/cities/")
-      .then((res) => setCities(res.data))
-      .catch((err) => console.error("Failed to load cities:", err));
-  }, []);
+  const [dswdExists, setDswdExists] = useState(true); // assume true by default
 
+  // Check if DSWD exists on mount
   useEffect(() => {
-    if (selectedCity) {
-      axios.get(`http://localhost:8000/api/desk_officer/cities/${selectedCity}/municipalities/`)
+    const checkDSWD = async () => {
+      try {
+        const res = await axios.get("http://localhost:8000/api/auth/check-dswd/");
+        if (!res.data.dswd_exists) {
+          setRole("DSWD");
+          setDswdExists(false);
+        } else {
+          setRole(defaultRole || "VAWDesk");
+        }
+      } catch (err) {
+        console.error("Failed to check DSWD existence:", err);
+      }
+    };
+    checkDSWD();
+  }, [defaultRole]);
+
+  // Fetch provinces
+useEffect(() => {
+  axios.get("http://localhost:8000/api/desk_officer/provinces/")
+    .then((res) => setProvinces(res.data))   // <-- store provinces
+    .catch((err) => console.error("Failed to load provinces:", err));
+}, []);
+
+  // Fetch municipalities based on selected province
+  useEffect(() => {
+    if (selectedProvince) {
+      axios.get(`http://localhost:8000/api/desk_officer/provinces/${selectedProvince}/municipalities/`)
         .then((res) => setMunicipalities(res.data))
         .catch((err) => console.error("Failed to load municipalities:", err));
     } else {
       setMunicipalities([]);
       setBarangays([]);
     }
-  }, [selectedCity]);
+  }, [selectedProvince]);
 
+  // Fetch barangays based on selected municipality
   useEffect(() => {
     if (selectedMunicipality) {
       axios.get(`http://localhost:8000/api/desk_officer/municipalities/${selectedMunicipality}/barangays/`)
@@ -91,7 +115,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const newErrors = { of_fname: "", of_lname: "", of_role: "", photos: "" };
+    const newErrors = { of_fname: "", of_lname: "", of_role: "", of_email: "", photos: "" };
     let hasError = false;
 
     if (!of_fname.trim()) {
@@ -127,7 +151,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
     formData.append("of_lname", of_lname);
     formData.append("of_email", of_email);
     formData.append("of_role", of_role);
-    formData.append("city", selectedCity);
+    formData.append("province", selectedProvince);
     formData.append("municipality", selectedMunicipality);
     formData.append("barangay", selectedBarangay);
 
@@ -150,18 +174,23 @@ const RegisterUser = ({ onClose, defaultRole }) => {
       const data = await response.json();
 
       if (of_role === "VAWDesk") {
-        // ✅ Show pending approval message
-        setStatus("Your account is pending approval from DSWD.");
-        setCredentials(null); // no credentials yet
+          setStatus("Your VAWDesk account is pending approval from DSWD.");
+          setCredentials(null);
+      } else if (of_role === "DSWD") {
+          setStatus("DSWD account created successfully!");
+          setCredentials({
+              username: data.username,
+              password: data.password,
+              role: data.role,
+          });
       } else {
-        // ✅ Social Worker or others: show generated credentials
-        setStatus("Registration successful!");
-        setCredentials({
-          username: data.username,
-          password: data.password,
-          role: data.role,
-          assigned_barangay_name: data.assigned_barangay_name,
-        });
+          setStatus("Registration successful!");
+          setCredentials({
+              username: data.username,
+              password: data.password,
+              role: data.role,
+              assigned_barangay_name: data.assigned_barangay_name,
+          });
       }
 
       // Reset form
@@ -169,7 +198,8 @@ const RegisterUser = ({ onClose, defaultRole }) => {
       setFname("");
       setLname("");
       setEmail("");
-      setRole(defaultRole || "");
+      if (!dswdExists) setRole("DSWD"); // keep role DSWD if first-time
+      else setRole(defaultRole || "VAWDesk");
       setCurrentIndex(0);
 
     } catch (err) {
@@ -178,7 +208,6 @@ const RegisterUser = ({ onClose, defaultRole }) => {
     } finally {
       setLoading(false);
     }
-
   };
 
   return (
@@ -276,31 +305,42 @@ const RegisterUser = ({ onClose, defaultRole }) => {
                 <input type="text" placeholder="09123456789" className={inputStyle} />
               </div>
 
-              {defaultRole ? (
-                // 👇 Show static text if role is fixed
+              {dswdExists ? (
+                // Allow selection if DSWD exists
+                defaultRole ? (
+                  <div className="flex flex-col">
+                    <label className="font-medium text-sm mb-1">Role</label>
+                    <input
+                      type="text"
+                      value={of_role}
+                      readOnly
+                      className="px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-gray-700"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col">
+                    <label className="font-medium text-sm mb-1">Role</label>
+                    <select
+                      value={of_role}
+                      onChange={(e) => setRole(e.target.value)}
+                      className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    >
+                      <option value="">Select Role</option>
+                      <option value="VAWDesk">VAWDesk</option>
+                      <option value="Social Worker">Social Worker</option>
+                    </select>
+                  </div>
+                )
+              ) : (
+                // Force DSWD role if first-time
                 <div className="flex flex-col">
                   <label className="font-medium text-sm mb-1">Role</label>
                   <input
                     type="text"
-                    value={of_role}
+                    value="DSWD"
                     readOnly
                     className="px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-gray-700"
                   />
-                </div>
-              ) : (
-                // 👇 Show dropdown only if role is not fixed
-                <div className="flex flex-col">
-                  <label className="font-medium text-sm mb-1">Role</label>
-                  <select
-                    value={of_role}
-                    onChange={(e) => setRole(e.target.value)}
-                    className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                  >
-                    <option value="">Select Role</option>
-                    <option value="DSWD">DSWD</option>
-                    <option value="VAWDesk">VAWDesk</option>
-                    <option value="Social Worker">Social Worker</option>
-                  </select>
                 </div>
               )}
 
@@ -313,13 +353,13 @@ const RegisterUser = ({ onClose, defaultRole }) => {
               <div className="flex flex-col">
                 <label className="font-medium text-sm mb-1">Province</label>
                 <select
-                  value={selectedCity}
-                  onChange={(e) => setSelectedCity(e.target.value)}
+                  value={selectedProvince}
+                  onChange={(e) => setSelectedProvince(e.target.value)}
                   className={inputStyle}
                 >
-                  <option value="">Select City</option>
-                  {cities.map((city) => (
-                    <option key={city.id} value={city.id}>{city.name}</option>
+                  <option value="">Select Province</option>
+                  {provinces.map((province) => (
+                    <option key={province.id} value={province.id}>{province.name}</option>
                   ))}
                 </select>
               </div>
@@ -330,7 +370,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
                   value={selectedMunicipality}
                   onChange={(e) => setSelectedMunicipality(e.target.value)}
                   className={inputStyle}
-                  disabled={!selectedCity}
+                  disabled={!selectedProvince}
                 >
                   <option value="">Select Municipality</option>
                   {municipalities.map((m) => (
@@ -414,7 +454,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
             </div>
 
             {/* Credential Display */}
-            {credentials && credentials.username && (
+            {credentials && credentials.username && (of_role === "Social Worker" || of_role === "DSWD") && (
               <div className="mt-4 p-4 border border-green-500 bg-green-100 text-green-900 rounded-lg shadow">
                 <h4 className="font-bold mb-2">Generated Credentials:</h4>
                 <p><strong>Username:</strong> {credentials.username}</p>
