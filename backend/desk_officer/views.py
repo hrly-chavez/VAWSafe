@@ -248,6 +248,17 @@ def register_victim(request):
                                 status=status.HTTP_400_BAD_REQUEST)
             incident = i_ser.save()
 
+        # 4.5) Evidences (optional)
+        evidence_files = request.FILES.getlist("evidences")  # matches frontend FormData key
+        if incident and evidence_files:
+            for file in evidence_files:
+                Evidence.objects.create(
+                    incident=incident,
+                    file=file
+                )
+
+
+
         # 5) Perpetrator (optional)
         perpetrator = None
         perpetrator_data = parse_json_field("perpetrator")

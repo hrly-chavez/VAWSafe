@@ -10,6 +10,7 @@ admin.site.register(Victim)
 admin.site.register(VictimFaceSample)
 
 admin.site.register(IncidentInformation)
+admin.site.register(Evidence)
 admin.site.register(Perpetrator)
 
 admin.site.register(Session)

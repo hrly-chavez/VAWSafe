@@ -152,10 +152,7 @@ class SessionSerializer(serializers.ModelSerializer):
     def get_official_name(self, obj):
         return obj.assigned_official.full_name if obj.assigned_official else None
     
-    
-
 # Account Management
-
 class OfficialSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
     assigned_barangay_name = serializers.CharField(
@@ -170,6 +167,10 @@ class OfficialSerializer(serializers.ModelSerializer):
             "of_assigned_barangay", "assigned_barangay_name"
         ]
 
+class EvidenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Evidence
+        fields = "__all__"
 
 # class OfficialSerializer(serializers.ModelSerializer):
 #     full_name = serializers.ReadOnlyField()

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 
-export default function Evidences() {
-  const [files, setFiles] = useState([]);
+export default function Evidences({ files, setFiles }) {
+  // const [files, setFiles] = useState([]);
   const [error, setError] = useState("");
   const inputRef = useRef(null);
 
