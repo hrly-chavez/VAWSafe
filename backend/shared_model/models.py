@@ -171,7 +171,7 @@ class Victim(models.Model): #dapat pun-an of field na when ni na create ang vict
         ('None', 'None'),
         ('Deaf or Hard of Hearing', 'Deaf or Hard of Hearing'),
         ('Intellectual Disability', 'Intellectual Disability'),
-        ('Learning DIsability', 'Learning DIsability'),
+        ('Learning Disability', 'Learning Disability'),
         ('Mental Disability', 'Menatl Disability'),
         ('Orthopedic Disability', 'Orthopedic Disability'),
         ('Physical Disability', 'Physical Disability'),
@@ -259,7 +259,7 @@ class Perpetrator(models.Model):
         ('Persons of Authority', 'Persons of Authority'),
         ('State Actor', 'State Actor'),
         ('Non-State Actor', 'Non-State Actor'),
-        ('Stranger/Unkown', 'Stranger/Unkown'),
+        ('Stranger/Unknown', 'Stranger/Unknown'),
     ]
 
     perp_id = models.AutoField(primary_key=True)
