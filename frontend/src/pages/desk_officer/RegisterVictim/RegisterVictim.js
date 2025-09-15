@@ -22,6 +22,8 @@ const VICTIM_FIELDS = [
   "vic_sex",
   "vic_is_SOGIE",
   "vic_specific_sogie",
+  "vic_birth_date",
+  "vic_birth_place",
 
   // if victime is minor, indicate guardian information and child class
   "vic_guardian_fname",
@@ -30,8 +32,6 @@ const VICTIM_FIELDS = [
   "vic_guardian_contact",
   "vic_child_class",
 
-  "vic_birth_date",
-  "vic_birth_place",
   "vic_civil_status",
   "vic_educational_attainment",
   "vic_nationality",
@@ -41,11 +41,14 @@ const VICTIM_FIELDS = [
   "vic_employment_status",
   "vic_migratory_status",
   "vic_religion",
+  "vic_current_address",
   "vic_is_displaced",
   "vic_PWD_type",
   "vic_contact_number",
 ];
+
 const REQUIRED_VICTIM_KEYS = ["vic_first_name", "vic_last_name", "vic_sex"];
+
 const CASE_REPORT_KEYS = [
   "handling_org",
   "office_address",
@@ -54,7 +57,10 @@ const CASE_REPORT_KEYS = [
   "informant_relationship",
   "informant_contact",
 ];
+
 const INCIDENT_KEYS = [
+  "violence_type",
+  "violence_subtype",
   "incident_description",
   "incident_date",
   "incident_time",
@@ -66,6 +72,7 @@ const INCIDENT_KEYS = [
   "conflict_area",
   "is_calamity_area",
 ];
+
 const PERP_KEYS = [
   "per_first_name",
   "per_middle_name",
@@ -73,22 +80,25 @@ const PERP_KEYS = [
   "per_sex",
   "per_birth_date",
   "per_birth_place",
+
   "per_guardian_first_name",
   "per_guardian_middle_name",
   "per_guardian_last_name",
   "per_guardian_contact",
   "per_guardian_child_category",
+
   "per_nationality",
   "per_nationality_other",
   "per_occupation",
   "per_religion",
   "per_religion_other",
-  "per_relationship_category",
-  "per_relationship_detail",
-  "per_actor_type",
-  "per_state_actor_detail",
-  "per_security_branch",
-  "per_non_state_actor_detail",
+  "per_relationship_type",
+  "per_relationship_subtype",
+
+  // "per_actor_type",
+  // "per_state_actor_detail",
+  // "per_security_branch",
+  // "per_non_state_actor_detail",
 ];
 
 const hasAny = (state, keys) =>
@@ -100,19 +110,20 @@ const hasAny = (state, keys) =>
 export default function RegisterVictim() {
   const navigate = useNavigate();
 
-  const buildInitialState = () => {
-    const base = {};
-    VICTIM_FIELDS.forEach((field) => {
-      base[field] = ""; // default empty
-    });
-    return {
-      ...base,
-      report_type: "", // extra fields not in VICTIM_FIELDS
-      victimPhotos: [],
-    };
-  };
+  // helper: turn list of keys → { key: "" }
+  const makeInitialState = (keys) =>
+    keys.reduce((acc, key) => {
+      acc[key] = ""; // default empty string
+      return acc;
+    }, {});
 
-  const [formDataState, setFormDataState] = useState(buildInitialState);
+  const [formDataState, setFormDataState] = useState({
+    ...makeInitialState(VICTIM_FIELDS),
+    ...makeInitialState(INCIDENT_KEYS),
+    ...makeInitialState(PERP_KEYS),
+    victimPhotos: [], // extra fields you want
+    evidences: [],
+  });
 
   const victimPhotos = formDataState.victimPhotos || [];
 
