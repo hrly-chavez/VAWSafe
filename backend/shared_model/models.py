@@ -250,7 +250,7 @@ class Perpetrator(models.Model):
         ('Persons of Authority', 'Persons of Authority'),
         ('State Actor', 'State Actor'),
         ('Non-State Actor', 'Non-State Actor'),
-        ('Others', 'Others'),
+        ('Stranger/Unkown', 'Stranger/Unkown'),
     ]
 
     perp_id = models.AutoField(primary_key=True)
@@ -277,7 +277,7 @@ class Perpetrator(models.Model):
     per_current_address = models.CharField(max_length=100, default="Homeless")
 
     # relationship to victim
-    per_relationship_type = models.CharField(max_length=50, choices=RELATIONSHIP_TO_VICTIM blank=True, null=True)
+    per_relationship_type = models.CharField(max_length=50, choices=RELATIONSHIP_TO_VICTIM, blank=True, null=True)
     per_relationship_subtype = models.CharField(max_length=100, blank=True, null=True)
     
     per_contact = models.IntegerField(null=True,blank=True)

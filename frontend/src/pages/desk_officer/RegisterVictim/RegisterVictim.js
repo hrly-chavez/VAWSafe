@@ -80,22 +80,25 @@ const PERP_KEYS = [
   "per_sex",
   "per_birth_date",
   "per_birth_place",
+
   "per_guardian_first_name",
   "per_guardian_middle_name",
   "per_guardian_last_name",
   "per_guardian_contact",
   "per_guardian_child_category",
+
   "per_nationality",
   "per_nationality_other",
   "per_occupation",
   "per_religion",
   "per_religion_other",
-  "per_relationship_category",
-  "per_relationship_detail",
-  "per_actor_type",
-  "per_state_actor_detail",
-  "per_security_branch",
-  "per_non_state_actor_detail",
+  "per_relationship_type",
+  "per_relationship_subtype",
+
+  // "per_actor_type",
+  // "per_state_actor_detail",
+  // "per_security_branch",
+  // "per_non_state_actor_detail",
 ];
 
 const hasAny = (state, keys) =>
@@ -117,6 +120,7 @@ export default function RegisterVictim() {
   const [formDataState, setFormDataState] = useState({
     ...makeInitialState(VICTIM_FIELDS),
     ...makeInitialState(INCIDENT_KEYS),
+    ...makeInitialState(PERP_KEYS),
     victimPhotos: [], // extra fields you want
     evidences: [],
   });
