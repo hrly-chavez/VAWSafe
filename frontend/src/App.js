@@ -98,6 +98,12 @@ const DSWDServices = lazy(() =>
 const DSWDAccountManagement = lazy(() =>
   import("./pages/dswd/AccountManagement/DSWDAccountManagement")
 );
+const DSWDViewOfficials = lazy(() =>
+  import("./pages/dswd/AccountManagement/ViewOfficials")
+);
+const DSWDPendingAccount = lazy(() => 
+  import("./pages/dswd/AccountManagement/PendingAccount")
+); 
 
 export default function App() {
   return (
@@ -215,6 +221,14 @@ export default function App() {
               <Route
                 path={ROUTES.DSWD_ACCOUNT_MANAGEMENT}
                 element={<DSWDAccountManagement />}
+              />
+              <Route
+                path={ROUTES.DSWD_VIEW_OFFICIALS}
+                element={<DSWDViewOfficials />}
+              />
+              <Route 
+                path={ROUTES.DSWD_PENDING_ACCOUNT}
+                element={<DSWDPendingAccount />}
               />
             </Route>
 

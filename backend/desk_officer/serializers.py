@@ -64,7 +64,17 @@ class IncidentInformationSerializer(serializers.ModelSerializer):
     class Meta:
         model = IncidentInformation
         fields = "__all__"
-        read_only_fields = ["incident_id", "incident_num"]  
+        read_only_fields = ["incident_id", "incident_num"]
+        extra_kwargs = {
+            "incident_date": {"required": False, "allow_null": True},
+            "incident_time": {"required": False, "allow_null": True},
+            # "incident_location": {"required": False, "allow_blank": True},
+            # "violence_type": {"required": False, "allow_blank": True},
+            # "violence_subtype": {"required": False, "allow_blank": True},
+            # "type_of_place": {"required": False, "allow_blank": True},
+            # "electronic_means": {"required": False, "allow_blank": True},
+            # "conflict_area": {"required": False, "allow_blank": True},
+        }
 
     def create(self, validated_data):
         victim = validated_data.get("vic_id")
@@ -142,10 +152,7 @@ class SessionSerializer(serializers.ModelSerializer):
     def get_official_name(self, obj):
         return obj.assigned_official.full_name if obj.assigned_official else None
     
-    
-
 # Account Management
-
 class OfficialSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
 
@@ -156,6 +163,10 @@ class OfficialSerializer(serializers.ModelSerializer):
             "province", "municipality", "barangay", "sitio", "street", "of_assigned_barangay"
         ]
 
+class EvidenceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Evidence
+        fields = "__all__"
 
 # class OfficialSerializer(serializers.ModelSerializer):
 #     full_name = serializers.ReadOnlyField()

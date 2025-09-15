@@ -13,8 +13,8 @@ export default function VictimInfo({
       today.getFullYear() -
       birth.getFullYear() -
       (today.getMonth() < birth.getMonth() ||
-      (today.getMonth() === birth.getMonth() &&
-        today.getDate() < birth.getDate())
+        (today.getMonth() === birth.getMonth() &&
+          today.getDate() < birth.getDate())
         ? 1
         : 0);
     return age < 18;
@@ -276,26 +276,11 @@ export default function VictimInfo({
           </select>
         </div>
 
-        {/* Occupation & Income */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            className="input"
-            type="text"
-            placeholder="Main Occupation"
-            value={formDataState.vic_main_occupation || ""}
-            onChange={(e) => handleChange("vic_main_occupation", e.target.value)}
-          />
-          <input
-            className="input"
-            type="number"
-            placeholder="Monthly Income"
-            value={formDataState.vic_monthly_income || ""}
-            onChange={(e) => handleChange("vic_monthly_income", e.target.value)}
-          />
-        </div>
-
-        {/* Migratory, Religion, PWD */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* migratory status */}
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Migratory Status
+          </label>
           <select
             className="input"
             value={formDataState.vic_migratory_status || ""}
@@ -312,42 +297,32 @@ export default function VictimInfo({
             <option value="Not Applicable">Not Applicable</option>
           </select>
 
-          <select
-            className="input"
-            value={formDataState.vic_religion || ""}
-            onChange={(e) => handleChange("vic_religion", e.target.value)}
-          >
-            <option value="">Religion</option>
-            <option value="Roman Catholic">Roman Catholic</option>
-            <option value="Islam">Islam</option>
-            <option value="Evangelicals">Evangelicals</option>
-            <option value="Protestant">Protestant</option>
-            <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
-            <option value="Others">Others</option>
-          </select>
-        </div>
+          {/* religion */}
+          <div className="flex flex-col">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Religion
+            </label>
+            <select
+              className="input"
+              value={formDataState.vic_religion || ""}
+              onChange={(e) => handleChange("vic_religion", e.target.value)}
+            >
+              <option value="">Religion</option>
+              <option value="Roman Catholic">Roman Catholic</option>
+              <option value="Islam">Islam</option>
+              <option value="Evangelicals">Evangelicals</option>
+              <option value="Protestant">Protestant</option>
+              <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
+              <option value="Others">Others</option>
+            </select>
+          </div>
 
-        {/* Displacement and Conditional PWD Status */}
-      </div>
-
-      {/* Displacement and Conditional PWD Status */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        {/* Checkbox for Displacement */}
-        <div className="flex items-center space-x-2">
-          <label className="text-sm text-gray-700">
-            Is the client internally displaced?
-          </label>
-          <input
-            type="checkbox"
-            checked={!!formDataState.vic_is_displaced}
-            onChange={(e) => handleChange("vic_is_displaced", e.target.checked)}
-          />
-        </div>
-
-        {/* Conditionally Rendered PWD Dropdown */}
-        {formDataState.vic_is_displaced && (
+          {/* pwd status */}
           <div>
-            <label className="block text-sm text-gray-700 mb-1">PWD Type</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              PWD Type
+            </label>
+
             <select
               className="input w-full"
               value={formDataState.vic_PWD_type || ""}
@@ -363,9 +338,7 @@ export default function VictimInfo({
               </option>
               <option value="Learning Disability">Learning Disability</option>
               <option value="Mental Disability">Mental Disability</option>
-              <option value="Orthopedic Disability">
-                Orthopedic Disability
-              </option>
+              <option value="Orthopedic Disability">Orthopedic Disability</option>
               <option value="Physical Disability">Physical Disability</option>
               <option value="Psychological Disability">
                 Psychological Disability
@@ -376,21 +349,47 @@ export default function VictimInfo({
               <option value="Visual Disability">Visual Disability</option>
             </select>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Contact */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Contact Number
-        </label>
-        <input
-          className="input w-full"
-          type="text"
-          placeholder="Contact Number"
-          value={formDataState.vic_contact_number || ""}
-          onChange={(e) => handleChange("vic_contact_number", e.target.value)}
-        />
+        {/* Checkbox for Displacement */}
+        <div className="flex items-center space-x-2 py-3">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Is the client internally displaced?
+          </label>
+          <input
+            type="checkbox"
+            checked={!!formDataState.vic_is_displaced}
+            onChange={(e) => handleChange("vic_is_displaced", e.target.checked)}
+          />
+        </div>
+
+        {/* Contact */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Contact Number
+          </label>
+          <input
+            className="input"
+            type="text"
+            placeholder="e.g. 09123456789"
+            value={formDataState.vic_contact_number || ""}
+            onChange={(e) => handleChange("vic_contact_number", e.target.value)}
+          />
+        </div>
+
+        {/* Contact */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Contact Number
+          </label>
+          <input
+            className="input w-full"
+            type="text"
+            placeholder="Contact Number"
+            value={formDataState.vic_contact_number || ""}
+            onChange={(e) => handleChange("vic_contact_number", e.target.value)}
+          />
+        </div>
       </div>
     </div>
   );

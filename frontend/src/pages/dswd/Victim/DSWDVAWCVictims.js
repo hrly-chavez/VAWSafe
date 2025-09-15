@@ -10,16 +10,57 @@ export default function DSWDVAWCVictims() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showSearchModal, setShowSearchModal] = useState(false);
+
+  // filters
+  const [gender, setGender] = useState("All");
+  const [province, setProvince] = useState("All");
+  const [municipality, setMunicipality] = useState("All");
+  const [barangay, setBarangay] = useState("All");
+
+   // location data
+  const [provinces, setProvinces] = useState([]);
+  const [municipalities, setMunicipalities] = useState([]);
+  const [barangays, setBarangays] = useState([]);
+
   const navigate = useNavigate();
+
+  // fetch provinces once
+  useEffect(() => {
+    api.get("/api/dswd/provinces/").then((res) => setProvinces(res.data));
+  }, []);
+
+  // fetch municipalities when province changes
+  useEffect(() => {
+    if (province !== "All") {
+      api.get("/api/dswd/municipalities/", { params: { province } })
+        .then((res) => setMunicipalities(res.data));
+      setMunicipality("All"); // reset selection
+      setBarangay("All");
+      setBarangays([]);
+    }
+  }, [province]);
+
+  // fetch barangays when municipality changes
+  useEffect(() => {
+    if (municipality !== "All") {
+      api.get("/api/dswd/barangays/", { params: { municipality } })
+        .then((res) => setBarangays(res.data));
+      setBarangay("All");
+    }
+  }, [municipality]);
 
   useEffect(() => {
     const fetchVictims = async () => {
       try {
         setLoading(true);
 
-        const res = await api.get("/api/dswd/victims/");
+        const params = {};
+        if (gender !== "All") params.vic_sex = gender;
+        if (province !== "All") params.province = province;
+        if (municipality !== "All") params.municipality = municipality;
+        if (barangay !== "All") params.barangay = barangay;
 
-        // If backend returns an array, use it; otherwise fallback to empty array
+        const res = await api.get("/api/dswd/victims/", { params });
         setVictims(Array.isArray(res.data) ? res.data : []);
       } catch (e) {
         console.error(e);
@@ -30,131 +71,186 @@ export default function DSWDVAWCVictims() {
     };
 
     fetchVictims();
-  }, []);
+  }, [gender, province, municipality, barangay]); // re-fetch when filters change
 
   return (
     <>
+      <div className="w-full px-6">
+        {/* Title */}
+        <h2 className="text-xl font-bold text-[#292D96] pt-6">
+          VAWC Victims
+        </h2>
 
-      <div className="flex min-h-screen bg-white">
-
-        <div className="flex-1 px-6 py-6 m-5 bg-white rounded-[20px] h-[400px] shadow-[0_2px_6px_0_rgba(0,0,0,0.1),0_-2px_6px_0_rgba(0,0,0,0.1)]">
-          {/* Title + top filters */}
-          <h2 className="text-2xl font-semibold font-[Poppins] tracking-tight text-[#292D96]">VAWC Victims</h2>
-
-          <div className="mt-3">
-            <div className="flex flex-col md:flex-row md:items-center justify-between">
-              <p className="text-sm font-medium text-[#292D96]">List of VAWC Victims</p>
-
-              <div className="flex flex-wrap items-end gap-4">
-                {/* Gender */}
-                <div className="flex flex-col">
-                  <label htmlFor="gender" className="mb-1 text-sm font-medium text-neutral-800">
-                    Gender
-                  </label>
-                  <select
-                    id="gender"
-                    name="gender"
-                    className="h-10 w-48 rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900 outline-none ring-0 focus:border-neutral-400 focus:outline-none"
-                    defaultValue="All"
-                    // disabled
-                  >
-                    <option>All</option>
-                    <option>Male</option>
-                    <option>Female</option>
-                    <option>Others</option>
-                  </select>
-                </div>
-
-                {/* Type of Violence */}
-                <div className="flex flex-col">
-                  <label htmlFor="type" className="mb-1 text-sm font-medium text-neutral-800">
-                    Place / Barangay
-                  </label>
-                  <select
-                    id="type"
-                    name="type"
-                    className="h-10 w-56 rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900 outline-none ring-0 focus:border-neutral-400 focus:outline-none"
-                    defaultValue="All"
-                    // disabled
-                  >
-                    <option>All</option>
-                  </select>
-                </div>
-              </div>
+        <div className="mt-6 w-full flex justify-between items-end flex-wrap gap-4">
+          {/* Left side: filters */}
+          <div className="flex flex-wrap items-end gap-4">
+            {/* Gender */}
+            <div className="flex flex-col">
+              <label
+                htmlFor="gender"
+                className="mb-1 text-sm font-medium text-neutral-800"
+              >
+                Gender
+              </label>
+              {/* Gender */}
+              <select value={gender} onChange={(e) => setGender(e.target.value)}
+                className="h-10 w-48 rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900 outline-none ring-0 focus:border-neutral-400 focus:outline-none"
+                >
+                <option>All</option>
+                <option>Male</option>
+                <option>Female</option>
+              </select>
+            </div>
+            <div className="flex flex-col">
+              <label
+                htmlFor="type"
+                className="mb-1 text-sm font-medium text-neutral-800"
+              >
+                Province
+              </label>
+              {/* Province */}
+              <select value={province} onChange={(e) => setProvince(e.target.value)}
+                className="h-10 w-48 rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900 outline-none ring-0 focus:border-neutral-400 focus:outline-none"
+                >
+                <option>All</option>
+                {provinces.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col">
+              <label
+                htmlFor="type"
+                className="mb-1 text-sm font-medium text-neutral-800"
+              >
+                Municipality
+              </label>
+              <select
+                value={municipality}
+                onChange={(e) => setMunicipality(e.target.value)}
+                disabled={province === "All"}
+                className="h-10 w-48 rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900 outline-none ring-0 focus:border-neutral-400 focus:outline-none"
+              >
+                <option>All</option>
+                {municipalities.map((m) => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col">
+              <label
+                htmlFor="type"
+                className="mb-1 text-sm font-medium text-neutral-800"
+              >
+                Place / Barangay
+              </label>
+              {/* Barangay */}
+              <select
+                value={barangay}
+                onChange={(e) => setBarangay(e.target.value)}
+                disabled={municipality === "All"}
+                className="h-10 w-48 rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900 outline-none ring-0 focus:border-neutral-400 focus:outline-none"
+              >
+                <option>All</option>
+                {barangays.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
             </div>
           </div>
 
-          {/* Row two: search + perpetrator filter */}
-          <div className="mt-4 flex flex-col items-start gap-[30px] md:flex-row md:items-end justify-between">
-            {/* Search box */}
-            <div className="relative">
-              <button onClick={() => setShowSearchModal(true)} className="bg-[#10b981] px-3 py-2 text-white rounded-[10px] transition duration-200 hover:bg-[#059669]">
-                Search Victim
-              </button>
-            </div>
-
+          {/* Right side: search button */}
+          <div className="flex flex-col">
+            <label className="mb-1 text-sm font-medium text-transparent">Search</label>
+            <button
+              onClick={() => setShowSearchModal(true)}
+              className="h-10 bg-[#10b981] px-4 text-white rounded-[10px] transition duration-200 hover:bg-[#059669]"
+            >
+              Search Victim
+            </button>
           </div>
-
-          {/* Table container (fixed size + scroll, sticky header) */}
-          <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-4 shadow-lg">
-            <div className="max-h-[480px] overflow-auto rounded-xl">
-              <table className="w-full table-auto border-collapse">
-                <thead className="sticky top-0 z-10 bg-neutral-50">
-                  <tr className="text-left text-sm font-semibold text-neutral-700">
-                    <th className="px-4 py-3">Victim No.</th>
-                    <th className="px-4 py-3">Victim Name</th>
-                    <th className="px-4 py-3">Gender</th>
-                    <th className="px-4 py-3">Place / Barangay</th>
-                    <th className="px-4 py-3">Intake Form</th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-neutral-200 text-sm text-neutral-800">
-                  {loading && (
-                    <tr><td className="px-4 py-6 text-neutral-500" colSpan={6}>Loading victims…</td></tr>
-                  )}
-
-                  {!loading && error && (
-                    <tr><td className="px-4 py-6 text-red-600" colSpan={6}>{error}</td></tr>
-                  )}
-
-                  {!loading && !error && victims.length === 0 && (
-                    <tr><td className="px-4 py-6 text-neutral-500" colSpan={6}>No victims found.</td></tr>
-                  )}
-
-                  {!loading &&
-                    !error &&
-                    victims.map((v) => {
-                      const fullName = [
-                        v.vic_first_name,
-                        v.vic_middle_name || "",
-                        v.vic_last_name,
-                        v.vic_extension || "",
-                      ]
-                        .filter(Boolean)
-                        .join(" ");
-
-                      return (
-                        <tr key={v.vic_id} className="hover:bg-neutral-50">
-                          <td className="px-4 py-3">{v.vic_id}</td>
-                          <td className="px-4 py-3">{fullName}</td>
-                          <td className="px-4 py-3">{v.vic_sex || "—"}</td>
-                          <td className="px-4 py-3">{v.vic_birth_place}</td>
-                          <td className="px-4 py-3">
-                            <Link to={`/dswd/victims/${v.vic_id}`} className="bg-[#10b981] px-2 py-1 rounded-[10px] text-white transition duration-200 hover:bg-[#059669] mr-2">View</Link>
-                            <button className="bg-[#f1c40f] px-2 py-1 rounded-[10px] text-white transition duration-200 hover:bg-[#caa40d] mr-2">Edit</button>
-                            <button className="bg-[#e74c3c] px-2 py-1 rounded-[10px] text-white transition duration-200 hover:bg-[#b33a2d]">Delete</button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
         </div>
-      </div>
+
+
+        {/* Table container (fixed size + scroll, sticky header) */}
+        <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-4 shadow-lg">
+          <div className="max-h-[480px] overflow-auto rounded-xl">
+            <table className="w-full table-auto border-collapse">
+              <thead className="sticky top-0 z-10 bg-neutral-50">
+                <tr className="text-left text-sm font-semibold text-neutral-700">
+                  <th className="px-4 py-3">Victim No.</th>
+                  <th className="px-4 py-3">Victim Name</th>
+                  <th className="px-4 py-3">Gender</th>
+                  <th className="px-4 py-3">Place / Barangay</th>
+                  <th className="px-4 py-3">Intake Form</th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-neutral-200 text-sm text-neutral-800">
+                {loading && (
+                  <tr>
+                    <td className="px-4 py-6 text-neutral-500" colSpan={6}>
+                      Loading victims…
+                    </td>
+                  </tr>
+                )}
+
+                {!loading && error && (
+                  <tr>
+                    <td className="px-4 py-6 text-red-600" colSpan={6}>
+                      {error}
+                    </td>
+                  </tr>
+                )}
+
+                {!loading && !error && victims.length === 0 && (
+                  <tr>
+                    <td className="px-4 py-6 text-neutral-500" colSpan={6}>
+                      No victims found.
+                    </td>
+                  </tr>
+                )}
+
+                {!loading &&
+                  !error &&
+                  victims.map((v) => {
+                    const fullName = [
+                      v.vic_first_name,
+                      v.vic_middle_name || "",
+                      v.vic_last_name,
+                      v.vic_extension || "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ");
+
+                    return (
+                      <tr key={v.vic_id} className="hover:bg-neutral-50">
+                        <td className="px-4 py-3">{v.vic_id}</td>
+                        <td className="px-4 py-3">{fullName}</td>
+                        <td className="px-4 py-3">{v.vic_sex || "—"}</td>
+                        <td className="px-4 py-3">{v.vic_birth_place}</td>
+                        <td className="px-4 py-3">
+                          <Link
+                            to={`/dswd/victims/${v.vic_id}`}
+                            className="bg-[#10b981] px-2 py-1 rounded-[10px] text-white transition duration-200 hover:bg-[#059669] mr-2"
+                          >
+                            View
+                          </Link>
+                          <button className="bg-[#f1c40f] px-2 py-1 rounded-[10px] text-white transition duration-200 hover:bg-[#caa40d] mr-2">
+                            Edit
+                          </button>
+                          <button className="bg-[#e74c3c] px-2 py-1 rounded-[10px] text-white transition duration-200 hover:bg-[#b33a2d]">
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div >
 
       {/* Modal injected here */}
       {showSearchModal && (

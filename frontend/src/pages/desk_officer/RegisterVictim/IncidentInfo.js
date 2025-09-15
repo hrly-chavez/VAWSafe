@@ -1,9 +1,52 @@
 //src/pages/desk_officer/RegisterVictim/IncidentInfo.js
-export default function IncidentInfo({
-  formDataState,
-  setFormDataState,
+export default function IncidentInfo({ formDataState, setFormDataState }) {
+  const VIOLENCE_OPTIONS = {
+    "Intimate partner violence against women and their children": [
+      "Physical",
+      "Sexual",
+      "Psychological",
+      "Economic",
+    ],
+    Rape: [
+      "Rape by sexual intercourse",
+      "Rape by sexual assault",
+      "Incest",
+      "Statutory Rape",
+      "Marital Rape",
+    ],
+    "Trafficking in persons": [
+      "Sexual exploitation",
+      "Online sexual exploitation",
+      "Forced Labor",
+      "Sale or removal of organs",
+      "Prostitution",
+    ],
+    "Sexual harassment": [
+      "Verbal",
+      "Physical",
+      "Use of objects, pictures, letters, or notes with sexual underpinnings",
+    ],
+    "Child abuse, exploitation, and discrimination": [
+      "Engage, facilitate, promote or attempt to commit child prostitution",
+      "Sexual Intercourse or lascivious conduct",
+    ],
+    "Gender-based Streets and Public Spaces Sexual Harassment": [
+      "Catcalling/Wolf-whistling",
+      "Misogynistic, transphobic, homophobic, sexist slurs",
+      "Public Masturbation/Flashing of private parts",
+      "Groping",
+      "Offensive Body Gestures",
+      "Intrusive gazing/Leering",
+      "Stalking/Cyberstalking",
+      "Uploading and sharing of photos/videos/information",
+      "Impersonating identities",
+    ],
+    "Photo and video voyeurism": [],
+    "Child pornography": [],
+    "Acts of lasciviousness": [],
+    Concubinage: [],
+  };
 
-}) {
   const handleChange = (field, value) => {
     setFormDataState((prev) => ({
       ...prev,
@@ -42,18 +85,59 @@ export default function IncidentInfo({
         Incident Information
       </h2>
 
-      {/* Incident Description */}
+      {/* Violence Type */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Type Of Violence
+        </label>
+        <select
+          className="input"
+          value={formDataState.violence_type || ""}
+          onChange={(e) => handleChange("violence_type", e.target.value)}
+        >
+          <option value="">Select</option>
+          {Object.keys(VIOLENCE_OPTIONS).map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Violence Subtype */}
+      {formDataState.violence_type &&
+        VIOLENCE_OPTIONS[formDataState.violence_type]?.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Violence Subtype
+            </label>
+            <select
+              className="input"
+              value={formDataState.violence_subtype || ""}
+              onChange={(e) => handleChange("violence_subtype", e.target.value)}
+            >
+              <option value="">Select</option>
+              {VIOLENCE_OPTIONS[formDataState.violence_type].map((subtype) => (
+                <option key={subtype} value={subtype}>
+                  {subtype}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+      {/* details of the incident */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Details of the Incident
         </label>
-        <input
+        <textarea
           type="text"
           placeholder="e.g. Physical altercation at workplace"
+          rows={3}
           className="input w-full"
-          value={formDataState.incident_description || ""}
           onChange={(e) => handleChange("incident_description", e.target.value)}
-        />
+        ></textarea>
       </div>
 
       {/* Date & Time */}
@@ -117,12 +201,14 @@ export default function IncidentInfo({
         </select>
       </div>
 
+      <div></div>
+
       {/* Electronic Means */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Was it perpetrated via electronic means?
-        </label>
-        <div className="flex items-center space-x-3">
+      <div className="grid grid-cols-2">
+        <div className="flex items-center space-x-3 py-3">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Was it perpetrated via electronic means?
+          </label>
           <input
             type="checkbox"
             checked={!!formDataState.is_via_electronic_means}
@@ -130,11 +216,12 @@ export default function IncidentInfo({
           />
           <span className="text-sm text-gray-600">Yes</span>
         </div>
+
         {formDataState.is_via_electronic_means && (
           <input
             type="text"
             placeholder="Specify electronic means"
-            className="input w-full mt-2"
+            className="input w-full"
             value={formDataState.electronic_means || ""}
             onChange={(e) => handleChange("electronic_means", e.target.value)}
           />
@@ -142,11 +229,11 @@ export default function IncidentInfo({
       </div>
 
       {/* Conflict Area */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Did it happen in a conflict area?
-        </label>
-        <div className="flex items-center space-x-3">
+      <div className="grid grid-cols-2">
+        <div className="flex items-center space-x-3 py-3">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Did it happen in a conflict area?
+          </label>
           <input
             type="checkbox"
             checked={!!formDataState.is_conflict_area}
@@ -154,9 +241,10 @@ export default function IncidentInfo({
           />
           <span className="text-sm text-gray-600">Yes</span>
         </div>
+
         {formDataState.is_conflict_area && (
           <select
-            className="input w-full mt-2"
+            className="input w-full"
             value={formDataState.conflict_area || ""}
             onChange={(e) => handleChange("conflict_area", e.target.value)}
           >
@@ -172,11 +260,11 @@ export default function IncidentInfo({
       </div>
 
       {/* Calamity Area */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Did it happen in a calamity area?
-        </label>
-        <div className="flex items-center space-x-3">
+      <div className="grid grid-cols-2">
+        <div className="flex items-center space-x-3 py-3">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Did it happen in a calamity area?
+          </label>
           <input
             type="checkbox"
             checked={!!formDataState.is_calamity_area}
@@ -184,9 +272,10 @@ export default function IncidentInfo({
           />
           <span className="text-sm text-gray-600">Yes</span>
         </div>
+
         {formDataState.is_calamity_area && (
           <select
-            className="input w-full mt-2"
+            className="input w-full"
             value={formDataState.calamity_type || ""}
             onChange={(e) => handleChange("calamity_type", e.target.value)}
           >

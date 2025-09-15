@@ -248,6 +248,17 @@ def register_victim(request):
                                 status=status.HTTP_400_BAD_REQUEST)
             incident = i_ser.save()
 
+        # 4.5) Evidences (optional)
+        evidence_files = request.FILES.getlist("evidences")  # matches frontend FormData key
+        if incident and evidence_files:
+            for file in evidence_files:
+                Evidence.objects.create(
+                    incident=incident,
+                    file=file
+                )
+
+
+
         # 5) Perpetrator (optional)
         perpetrator = None
         perpetrator_data = parse_json_field("perpetrator")
@@ -349,4 +360,19 @@ class OfficialViewSet(ModelViewSet):
    serializer_class = OfficialSerializer
    permission_classes = [AllowAny]  # 👈 disables auth only for this view
 
+   def get_queryset(self):
+        return Official.objects.filter(of_role="Social Worker")
 
+# View field for Social Worker Accounts
+class SocialWorkerListView(generics.ListAPIView):
+    permission_classes = [AllowAny]  # 👈 make public
+    serializer_class = OfficialSerializer
+
+    def get_queryset(self):
+        return Official.objects.filter(of_role__iexact="Social Worker").order_by("-of_id")
+
+class AssignBarangayView(generics.UpdateAPIView):
+    permission_classes = [AllowAny]  # 👈 make public
+    serializer_class = OfficialSerializer
+    queryset = Official.objects.filter(of_role__iexact="Social Worker")
+    lookup_field = "of_id"

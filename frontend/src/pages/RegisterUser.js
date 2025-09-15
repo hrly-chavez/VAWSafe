@@ -3,7 +3,7 @@ import { useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import { XMarkIcon } from '@heroicons/react/24/solid';
 
-const RegisterUser = ({ onClose }) => {
+const RegisterUser = ({ onClose, defaultRole }) => {
   const MAX_PHOTOS = 3;
   const webcamRef = useRef(null);
 
@@ -15,7 +15,8 @@ const RegisterUser = ({ onClose }) => {
   // Personal Info (core fields)
   const [of_fname, setFname] = useState("");
   const [of_lname, setLname] = useState("");
-  const [of_role, setRole] = useState("");
+  const [of_email, setEmail] = useState("");
+  const [of_role, setRole] = useState(defaultRole || "");
 
   const [sex, setSex] = useState("");
 
@@ -58,6 +59,7 @@ const RegisterUser = ({ onClose }) => {
     of_fname: "",
     of_lname: "",
     of_role: "",
+    of_email: "",
     photos: "",
   });
   const [loading, setLoading] = useState(false);
@@ -102,6 +104,11 @@ const RegisterUser = ({ onClose }) => {
       hasError = true;
     }
 
+    if (!of_email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(of_email)) {
+      newErrors.of_email = "Please provide a valid email address.";
+      hasError = true;
+    }
+
     if (!of_role.trim()) {
       newErrors.of_role = "Please choose a role.";
       hasError = true;
@@ -118,6 +125,7 @@ const RegisterUser = ({ onClose }) => {
     const formData = new FormData();
     formData.append("of_fname", of_fname);
     formData.append("of_lname", of_lname);
+    formData.append("of_email", of_email);
     formData.append("of_role", of_role);
     formData.append("city", selectedCity);
     formData.append("municipality", selectedMunicipality);
@@ -141,24 +149,36 @@ const RegisterUser = ({ onClose }) => {
 
       const data = await response.json();
 
-      setStatus("Registration successful!");
-      setCredentials({
-        username: data.username,
-        password: data.password,
-        role: data.role,
-      });
+      if (of_role === "VAWDesk") {
+        // ✅ Show pending approval message
+        setStatus("Your account is pending approval from DSWD.");
+        setCredentials(null); // no credentials yet
+      } else {
+        // ✅ Social Worker or others: show generated credentials
+        setStatus("Registration successful!");
+        setCredentials({
+          username: data.username,
+          password: data.password,
+          role: data.role,
+          assigned_barangay_name: data.assigned_barangay_name,
+        });
+      }
 
+      // Reset form
       setPhotos([]);
       setFname("");
       setLname("");
-      setRole("DSWD");
+      setEmail("");
+      setRole(defaultRole || "");
       setCurrentIndex(0);
+
     } catch (err) {
       console.error("Registration error:", err);
       setStatus("Registration failed. Please check the input or camera.");
     } finally {
       setLoading(false);
     }
+
   };
 
   return (
@@ -204,6 +224,19 @@ const RegisterUser = ({ onClose }) => {
                 />
               </div>
 
+              {/* Email */}
+              <div className="flex flex-col">
+                <label className="font-medium text-sm mb-1">Email</label>
+                <input
+                  type="email"
+                  placeholder="example@email.com"
+                  value={of_email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={inputStyle}
+                />
+                {regErrors.of_email && <p className="text-red-500 text-sm">{regErrors.of_email}</p>}
+              </div>
+
               <div className="flex flex-col">
                 <label className="font-medium text-sm mb-1">Middle Initial</label>
                 <input type="text" placeholder="Middle Inital" className={inputStyle} />
@@ -243,19 +276,33 @@ const RegisterUser = ({ onClose }) => {
                 <input type="text" placeholder="09123456789" className={inputStyle} />
               </div>
 
-              <div className="flex flex-col">
-                <label className="font-medium text-sm mb-1">Role</label>
-                <select
-                  value={of_role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className={inputStyle}
-                >
-                  <option value="">Select Role</option>
-                  <option value="DSWD">DSWD</option>
-                  <option value="VAWDesk">VAWDesk</option>
-                  <option value="Social Worker">Social Worker</option>
-                </select>
-              </div>
+              {defaultRole ? (
+                // 👇 Show static text if role is fixed
+                <div className="flex flex-col">
+                  <label className="font-medium text-sm mb-1">Role</label>
+                  <input
+                    type="text"
+                    value={of_role}
+                    readOnly
+                    className="px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-gray-700"
+                  />
+                </div>
+              ) : (
+                // 👇 Show dropdown only if role is not fixed
+                <div className="flex flex-col">
+                  <label className="font-medium text-sm mb-1">Role</label>
+                  <select
+                    value={of_role}
+                    onChange={(e) => setRole(e.target.value)}
+                    className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  >
+                    <option value="">Select Role</option>
+                    <option value="DSWD">DSWD</option>
+                    <option value="VAWDesk">VAWDesk</option>
+                    <option value="Social Worker">Social Worker</option>
+                  </select>
+                </div>
+              )}
 
               <div className="flex flex-col">
                 <label className="font-medium text-sm mb-1">Specialization</label>
@@ -381,6 +428,14 @@ const RegisterUser = ({ onClose }) => {
                 <p><strong>Username:</strong> {credentials.username}</p>
                 <p><strong>Password:</strong> {credentials.password}</p>
                 <p><strong>Role:</strong> {credentials.role}</p>
+              </div>
+            )}
+
+            {/* Pending approval message for VAWDesk */}
+            {status && of_role === "VAWDesk" && (
+              <div className="mt-4 p-4 border border-yellow-500 bg-yellow-100 text-yellow-900 rounded-lg shadow">
+                <h4 className="font-bold mb-2">Notice:</h4>
+                <p>{status}</p>
               </div>
             )}
           </form>

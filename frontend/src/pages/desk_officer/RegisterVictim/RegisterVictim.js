@@ -14,38 +14,13 @@ import CaptureVictimFacial from "./VictimFacial";
 import SchedulePage from "../Session/Schedule";
 import Evidences from "./Evidences";
 
-const VICTIM_FIELDS = [
-  "vic_first_name",
-  "vic_middle_name",
-  "vic_last_name",
-  "vic_extension",
-  "vic_sex",
-  "vic_is_SOGIE",
-  "vic_specific_sogie",
+// imported constants
+import { VICTIM_FIELDS } from "./helpers/form-keys";
+import { INCIDENT_KEYS } from "./helpers/form-keys";
+import { PERP_KEYS } from "./helpers/form-keys";
 
-  // if victime is minor, indicate guardian information and child class
-  "vic_guardian_fname",
-  "vic_guardian_mname",
-  "vic_guardian_lname",
-  "vic_guardian_contact",
-  "vic_child_class",
-
-  "vic_birth_date",
-  "vic_birth_place",
-  "vic_civil_status",
-  "vic_educational_attainment",
-  "vic_nationality",
-  "vic_ethnicity",
-  "vic_main_occupation",
-  "vic_monthly_income",
-  "vic_employment_status",
-  "vic_migratory_status",
-  "vic_religion",
-  "vic_is_displaced",
-  "vic_PWD_type",
-  "vic_contact_number",
-];
 const REQUIRED_VICTIM_KEYS = ["vic_first_name", "vic_last_name", "vic_sex"];
+
 const CASE_REPORT_KEYS = [
   "handling_org",
   "office_address",
@@ -53,42 +28,6 @@ const CASE_REPORT_KEYS = [
   "informant_name",
   "informant_relationship",
   "informant_contact",
-];
-const INCIDENT_KEYS = [
-  "incident_description",
-  "incident_date",
-  "incident_time",
-  "incident_location",
-  "type_of_place",
-  "is_via_electronic_means",
-  "electronic_means",
-  "is_conflict_area",
-  "conflict_area",
-  "is_calamity_area",
-];
-const PERP_KEYS = [
-  "per_first_name",
-  "per_middle_name",
-  "per_last_name",
-  "per_sex",
-  "per_birth_date",
-  "per_birth_place",
-  "per_guardian_first_name",
-  "per_guardian_middle_name",
-  "per_guardian_last_name",
-  "per_guardian_contact",
-  "per_guardian_child_category",
-  "per_nationality",
-  "per_nationality_other",
-  "per_occupation",
-  "per_religion",
-  "per_religion_other",
-  "per_relationship_category",
-  "per_relationship_detail",
-  "per_actor_type",
-  "per_state_actor_detail",
-  "per_security_branch",
-  "per_non_state_actor_detail",
 ];
 
 const hasAny = (state, keys) =>
@@ -98,21 +37,24 @@ const hasAny = (state, keys) =>
   );
 
 export default function RegisterVictim() {
+  const [evidenceFiles, setEvidenceFiles] = useState([]);
+
   const navigate = useNavigate();
 
-  const buildInitialState = () => {
-    const base = {};
-    VICTIM_FIELDS.forEach((field) => {
-      base[field] = ""; // default empty
-    });
-    return {
-      ...base,
-      report_type: "", // extra fields not in VICTIM_FIELDS
-      victimPhotos: [],
-    };
-  };
+  // helper: turn list of keys → { key: "" }
+  const makeInitialState = (keys) =>
+    keys.reduce((acc, key) => {
+      acc[key] = ""; // default empty string
+      return acc;
+    }, {});
 
-  const [formDataState, setFormDataState] = useState(buildInitialState);
+  const [formDataState, setFormDataState] = useState({
+    ...makeInitialState(VICTIM_FIELDS),
+    ...makeInitialState(INCIDENT_KEYS),
+    ...makeInitialState(PERP_KEYS),
+    victimPhotos: [], // extra fields you want
+    evidences: [],
+  });
 
   const victimPhotos = formDataState.victimPhotos || [];
 
@@ -197,7 +139,9 @@ export default function RegisterVictim() {
         fd.append("incident", JSON.stringify(incidentPayload));
       if (perpetratorPayload)
         fd.append("perpetrator", JSON.stringify(perpetratorPayload));
+
       victimPhotos.forEach((file) => fd.append("photos", file));
+      evidenceFiles.forEach((f) => fd.append("evidences", f.file));
 
       // ✅ axios request
       const res = await api.post("/api/desk_officer/victims/register/", fd);
@@ -351,7 +295,7 @@ export default function RegisterVictim() {
           </button>
           {openSections.evidences && (
             <div className="mt-4 border-l-4 border-blue-500 pl-4">
-              <Evidences />
+              <Evidences files={evidenceFiles} setFiles={setEvidenceFiles} />
             </div>
           )}
         </div>

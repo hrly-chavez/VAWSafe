@@ -9,8 +9,11 @@ admin.site.register(OfficialFaceSample)
 admin.site.register(Victim)
 admin.site.register(VictimFaceSample)
 
-admin.site.register(Session)
 admin.site.register(IncidentInformation)
+admin.site.register(Evidence)
+admin.site.register(Perpetrator)
+
+admin.site.register(Session)
 
 admin.site.register(Province)
 admin.site.register(Municipality)

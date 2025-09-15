@@ -557,7 +557,8 @@ const LoginPage = () => {
 
       {/* Register Modal */}
       {showRegisterModal && (
-        <RegisterUser onClose={() => setShowRegisterModal(false)} />
+        <RegisterUser onClose={() => setShowRegisterModal(false)}
+        defaultRole="VAWDesk" />
       )}
     </div>
   );

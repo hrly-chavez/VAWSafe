@@ -34,6 +34,8 @@ export const ROUTES = {
   DSWD_VAWDESK_OFFICER_DETAILS: "/dswd/vawdesk-officer/:of_id",
   DSWD_SERVICES: "/dswd/services",
   DSWD_ACCOUNT_MANAGEMENT: "/dswd/account-management",
+  DSWD_VIEW_OFFICIALS: "/dswd/account-management/:of_id",
+  DSWD_PENDING_ACCOUNT: "/dswd/account-management/pending",
 
   // SOCIAL WORKER
   SOCIAL_WORKER: "/social_worker",

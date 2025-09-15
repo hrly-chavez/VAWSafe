@@ -163,3 +163,27 @@ class VAWDeskOfficerListSerializer(serializers.ModelSerializer):
             parts.append(obj.of_suffix)
         return " ".join(parts)
     
+class OfficialSerializer(serializers.ModelSerializer):
+    full_name = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Official
+        fields = [
+            "of_id", "full_name", "of_role", "of_contact", "of_photo",
+            "province", "municipality", "barangay", "sitio", "street", "of_assigned_barangay", "status"
+        ]
+
+class ProvinceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Province
+        fields = "__all__"
+
+class MunicipalitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Municipality
+        fields = "__all__"
+
+class BarangaySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Barangay
+        fields = "__all__"

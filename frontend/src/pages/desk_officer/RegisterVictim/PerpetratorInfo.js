@@ -1,5 +1,28 @@
 // src/components/PerpetratorInfo.js
 import { useEffect } from "react";
+import { NATIONALITIES } from "./helpers/Nationalities";
+
+const RELATIONSHIP_TO_VICTIM_TYPE = {
+  "Personal/Family": [
+    "Current spouse/partner",
+    "Former spouse/partner",
+    "Current fiance/dating relationship",
+    "Neighbors/peers/coworkers/classmates",
+    "Immediate family members",
+    "Stepfamily members",
+  ],
+  "Persons of Authority": [
+    "Employer/manager/supervisor",
+    "Agent of the employer",
+    "Teacher/Instructor/professor",
+    "Coach/trainer",
+    "Religious leaders/workers",
+    "Community leaders/workers",
+  ],
+  "State Actor": ["Government official", "Military", "Police", "Paramilitary"],
+  "Non-State Actor": ["Insurgent", "Rebel", "Violent extremist", "Militia"],
+  "Stranger/Unknown": [],
+};
 
 export default function PerpetratorInfo({
   formDataState,
@@ -153,9 +176,36 @@ export default function PerpetratorInfo({
               value={formDataState.guardian_contact || ""}
               onChange={(e) => handleChange("guardian_contact", e.target.value)}
             />
+            <input
+              className="input"
+              type="text"
+              placeholder="Guardian's Child Category (e.g. Biological Parent)"
+              value={formDataState.per_guardian_child_category || ""}
+              onChange={(e) =>
+                handleChange("per_guardian_child_category", e.target.value)
+              }
+            />
           </div>
         </>
       )}
+
+      {/* Nationality */}
+      <div className="flex flex-col">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Nationality
+        </label>
+        <select
+          className="input"
+          onChange={(e) => handleChange("per_nationality", e.target.value)}
+        >
+          <option value="">Select Nationality</option>
+          {NATIONALITIES.map((nat) => (
+            <option key={nat} value={nat}>
+              {nat}
+            </option>
+          ))}
+        </select>
+      </div>
 
       {/* Occupation */}
       <div>
@@ -189,6 +239,69 @@ export default function PerpetratorInfo({
           <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
           <option value="Others">Others</option>
         </select>
+      </div>
+
+      {/* Contact */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Contact Number
+          </label>
+          <input
+            className="input"
+            type="text"
+            placeholder="e.g. 09123456789"
+            value={formDataState.per_contact || ""}
+            onChange={(e) => handleChange("per_contact", e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* relationship to victim type */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Relationship Category
+          </label>
+          <select
+            className="input"
+            onChange={(e) =>
+              handleChange("per_relationship_type", e.target.value)
+            }
+          >
+            <option>Select</option>
+            {Object.keys(RELATIONSHIP_TO_VICTIM_TYPE).map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {formDataState.per_relationship_type &&
+          RELATIONSHIP_TO_VICTIM_TYPE[formDataState.per_relationship_type]
+            ?.length > 0 && (
+            <div className="flex flex-col">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Relationship Detail
+              </label>
+              <select
+                className="input"
+                onChange={(e) =>
+                  handleChange("per_relationship_subtype", e.target.value)
+                }
+              >
+                <option>Select</option>
+                {RELATIONSHIP_TO_VICTIM_TYPE[
+                  formDataState.per_relationship_type
+                ].map((subtype) => (
+                  <option key={subtype} value={subtype}>
+                    {subtype}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
       </div>
 
       {/* Actions (if needed) */}

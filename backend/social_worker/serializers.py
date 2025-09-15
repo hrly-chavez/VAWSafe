@@ -118,30 +118,6 @@ class SocialWorkerSessionSerializer(serializers.ModelSerializer):
     def get_location(self, obj):
         return obj.sess_location or None
 
-
-# class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):
-#     victim = VictimSerializer(source="incident_id.vic_id", read_only=True)
-#     incident = IncidentWithPerpetratorSerializer(source="incident_id", read_only=True)
-#     case_report = CaseReportSerializer(source="incident_id.case_report", read_only=True)
-#     official_name = serializers.CharField(source="assigned_official.full_name", read_only=True)
-
-#     class Meta:
-#         model = Session
-#         fields = [
-#             "sess_id",
-#             "sess_num",
-#             "sess_status",
-#             "sess_next_sched",
-#             "sess_date_today",
-#             "sess_location",
-#             "sess_type",
-#             "sess_description",
-#             "victim",
-#             "incident",
-#             "case_report",
-#             "official_name",
-#         ]
-
 class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):
     victim = VictimSerializer(source="incident_id.vic_id", read_only=True)
     incident = IncidentWithPerpetratorSerializer(source="incident_id", read_only=True)
