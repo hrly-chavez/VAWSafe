@@ -449,3 +449,16 @@ class Session_Changelog(models.Model):
     def __str__(self):
         return f"Change in {self.sc_field_changed} on {self.sc_changed_timestamp}"
 
+# newly added
+class Evidence(models.Model):
+    incident = models.ForeignKey(
+        "IncidentInformation",
+        on_delete=models.CASCADE,
+        related_name="evidences"
+    )
+    file = models.FileField(upload_to="incident_evidences/")
+    description = models.TextField(blank=True, null=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Evidence {self.id} for Incident {self.incident_id}"

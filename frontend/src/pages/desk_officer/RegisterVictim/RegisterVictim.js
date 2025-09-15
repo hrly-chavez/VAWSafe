@@ -37,6 +37,8 @@ const hasAny = (state, keys) =>
   );
 
 export default function RegisterVictim() {
+  const [evidenceFiles, setEvidenceFiles] = useState([]);
+
   const navigate = useNavigate();
 
   // helper: turn list of keys → { key: "" }
@@ -137,7 +139,9 @@ export default function RegisterVictim() {
         fd.append("incident", JSON.stringify(incidentPayload));
       if (perpetratorPayload)
         fd.append("perpetrator", JSON.stringify(perpetratorPayload));
+
       victimPhotos.forEach((file) => fd.append("photos", file));
+      evidenceFiles.forEach((f) => fd.append("evidences", f.file));
 
       // ✅ axios request
       const res = await api.post("/api/desk_officer/victims/register/", fd);
@@ -291,7 +295,7 @@ export default function RegisterVictim() {
           </button>
           {openSections.evidences && (
             <div className="mt-4 border-l-4 border-blue-500 pl-4">
-              <Evidences />
+              <Evidences files={evidenceFiles} setFiles={setEvidenceFiles} />
             </div>
           )}
         </div>
