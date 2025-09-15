@@ -1,10 +1,9 @@
 //frontend/src/pages/desk_officer/RegisterVictim/VictimInfo.js
-import { useState, useEffect } from "react";
-import axios from "axios";
-
-export default function VictimInfo({ formDataState, setFormDataState }) {
-  const [showGuardian, setShowGuardian] = useState(false);
-
+import { useEffect } from "react";
+export default function VictimInfo({
+  formDataState,
+  setFormDataState,
+}) {
   // Utility to calculate if victim is minor
   function isMinor(birthDate) {
     if (!birthDate) return false;
@@ -21,16 +20,6 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
     return age < 18;
   }
 
-  const [cities, setCities] = useState([]);
-  const [municipalities, setMunicipalities] = useState([]);
-  const [barangays, setBarangays] = useState([]);
-
-  const [selectedCity, setSelectedCity] = useState("");
-  const [selectedMunicipality, setSelectedMunicipality] = useState("");
-  const [selectedBarangay, setSelectedBarangay] = useState("");
-  const [sitio, setSitio] = useState("");
-  const [street, setStreet] = useState("");
-
   // Auto-update is_minor when birth date changes
   useEffect(() => {
     const minor = isMinor(formDataState.vic_birth_date);
@@ -43,79 +32,6 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
       [field]: value,
     }));
   };
-
-  useEffect(() => {
-    axios
-      .get("http://localhost:8000/api/desk_officer/cities/")
-      .then((res) => setCities(res.data))
-      .catch((err) => console.error("Failed to load cities:", err));
-  }, []);
-
-  useEffect(() => {
-    if (selectedCity) {
-      axios
-        .get(
-          `http://localhost:8000/api/desk_officer/cities/${selectedCity}/municipalities/`
-        )
-        .then((res) => setMunicipalities(res.data))
-        .catch((err) => console.error("Failed to load municipalities:", err));
-    } else {
-      setMunicipalities([]);
-      setBarangays([]);
-    }
-  }, [selectedCity]);
-
-  useEffect(() => {
-    if (selectedMunicipality) {
-      axios
-        .get(
-          `http://localhost:8000/api/desk_officer/municipalities/${selectedMunicipality}/barangays/`
-        )
-        .then((res) => setBarangays(res.data))
-        .catch((err) => console.error("Failed to load barangays:", err));
-    } else {
-      setBarangays([]);
-    }
-  }, [selectedMunicipality]);
-
-  useEffect(() => {
-    const cityName = cities.find((c) => c.id === parseInt(selectedCity))?.name;
-    const municipalityName = municipalities.find(
-      (m) => m.id === parseInt(selectedMunicipality)
-    )?.name;
-    const barangayName = barangays.find(
-      (b) => b.id === parseInt(selectedBarangay)
-    )?.name;
-
-    const parts = [
-      street.trim(),
-      sitio.trim(),
-      barangayName,
-      municipalityName,
-      cityName,
-    ].filter(Boolean);
-
-    const fullAddress = parts.join(", ");
-
-    setFormDataState((prev) => ({
-      ...prev,
-      victim_full_address: fullAddress,
-      province: selectedCity, // 👈 this is the actual foreign key ID
-      municipality: selectedMunicipality,
-      barangay: selectedBarangay,
-      sitio: sitio, // if this is a free-text field, backend must accept it
-      street: street, // same here
-    }));
-  }, [
-    selectedCity,
-    selectedMunicipality,
-    selectedBarangay,
-    sitio,
-    street,
-    cities,
-    municipalities,
-    barangays,
-  ]);
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-md space-y-6">
@@ -188,25 +104,10 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             </option>
           </select>
         </div>
-
-        {formDataState.vic_is_SOGIE == "Yes" && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Specify:
-            </label>
-            <input
-              className="input"
-              type="text"
-              onChange={(e) =>
-                handleChange("vic_specific_sogie", e.target.value)
-              }
-            />
-          </div>
-        )}
       </div>
 
       {/* Birth Details */}
-      <div className="flex flex-col">
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Birth Details
         </label>
@@ -335,178 +236,30 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
           </select>
         </div>
 
-        {/* Victim Address */}
-        {/* Province */}
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Province
-          </label>
-          <select
-            value={selectedCity}
-            onChange={(e) => setSelectedCity(e.target.value)}
-            className="input"
-          >
-            <option value="" disabled hidden>
-              Select Province
-            </option>
-            {cities.map((city) => (
-              <option key={city.id} value={city.id}>
-                {city.name}
-              </option>
-            ))}
-          </select>
-        </div>
 
-        {/* Municipality */}
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Municipality
-          </label>
-          <select
-            value={selectedMunicipality}
-            onChange={(e) => setSelectedMunicipality(e.target.value)}
-            className="input"
-            disabled={!selectedCity}
-          >
-            <option value="" disabled hidden>
-              Select Municipality
-            </option>
-            {municipalities.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Barangay */}
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Barangay
-          </label>
-          <select
-            value={selectedBarangay}
-            onChange={(e) => setSelectedBarangay(e.target.value)}
-            className="input"
-            disabled={!selectedMunicipality}
-          >
-            <option value="" disabled hidden>
-              Select Barangay
-            </option>
-            {barangays.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Sitio */}
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Sitio <span className="text-gray-400">(optional)</span>
-          </label>
-          <input
-            type="text"
-            placeholder="Sitio Example"
-            className="input"
-            value={sitio}
-            onChange={(e) => setSitio(e.target.value)}
-          />
-        </div>
-
-        {/* Street */}
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Street <span className="text-gray-400">(optional)</span>
-          </label>
-          <input
-            type="text"
-            placeholder="Example Street Name"
-            className="input w-f"
-            value={street}
-            onChange={(e) => setStreet(e.target.value)}
-          />
-        </div>
-
-        {/* Full Address */}
-        <div className="flex flex-col md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Victim's Full Address
-          </label>
-          <input
-            type="text"
-            value={formDataState.victim_full_address || ""}
-            readOnly
-            className="input bg-gray-100 text-gray-700"
-            placeholder="Auto-generated based on selected location"
-          />
-        </div>
-
-        {/* Nationality */}
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Nationality
-          </label>
+        {/* Nationality & Ethnicity */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <select
             className="input"
             value={formDataState.vic_nationality || ""}
             onChange={(e) => handleChange("vic_nationality", e.target.value)}
           >
-            <option value="">Select Nationality</option>
+            <option value="">Nationality</option>
             <option value="Filipino">Filipino</option>
             <option value="Others">Others</option>
           </select>
-        </div>
 
-        {/* Ethnicity */}
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Ethnicity
-          </label>
           <input
             className="input"
             type="text"
-            placeholder="e.g. Cebuano, Tagalog, Ilocano"
+            placeholder="Ethnicity"
             value={formDataState.vic_ethnicity || ""}
             onChange={(e) => handleChange("vic_ethnicity", e.target.value)}
           />
         </div>
 
-        {/* Occupation & Income */}
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Main Occupation
-          </label>
-          <input
-            className="input"
-            type="text"
-            placeholder="e.g. Farmer, Vendor"
-            value={formDataState.vic_main_occupation || ""}
-            onChange={(e) =>
-              handleChange("vic_main_occupation", e.target.value)
-            }
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Monthly Income
-          </label>
-          <input
-            className="input"
-            type="number"
-            placeholder="e.g. 10000"
-            value={formDataState.vic_monthly_income || ""}
-            onChange={(e) => handleChange("vic_monthly_income", e.target.value)}
-          />
-        </div>
-
         {/* Employment Status */}
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Employment Status
-          </label>
+        <div className="mt-4">
           <select
             className="input w-full"
             value={formDataState.vic_employment_status || ""}
@@ -514,7 +267,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
               handleChange("vic_employment_status", e.target.value)
             }
           >
-            <option value="">Select Employment Status</option>
+            <option value="">Employment Status</option>
             <option value="Employed">Employed</option>
             <option value="Self-employed">Self-employed</option>
             <option value="Informal Sector">Informal Sector</option>
@@ -523,11 +276,26 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
           </select>
         </div>
 
-        {/* Migratory Status & Religion */}
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Migratory Status
-          </label>
+        {/* Occupation & Income */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
+            className="input"
+            type="text"
+            placeholder="Main Occupation"
+            value={formDataState.vic_main_occupation || ""}
+            onChange={(e) => handleChange("vic_main_occupation", e.target.value)}
+          />
+          <input
+            className="input"
+            type="number"
+            placeholder="Monthly Income"
+            value={formDataState.vic_monthly_income || ""}
+            onChange={(e) => handleChange("vic_monthly_income", e.target.value)}
+          />
+        </div>
+
+        {/* Migratory, Religion, PWD */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <select
             className="input"
             value={formDataState.vic_migratory_status || ""}
@@ -535,7 +303,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
               handleChange("vic_migratory_status", e.target.value)
             }
           >
-            <option value="">Select Migratory Status</option>
+            <option value="">Migratory Status</option>
             <option value="Current OFW">Current OFW</option>
             <option value="Former/Returning OFW">Former/Returning OFW</option>
             <option value="Seeking employment abroad">
@@ -543,18 +311,13 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             </option>
             <option value="Not Applicable">Not Applicable</option>
           </select>
-        </div>
 
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Religion
-          </label>
           <select
             className="input"
             value={formDataState.vic_religion || ""}
             onChange={(e) => handleChange("vic_religion", e.target.value)}
           >
-            <option value="">Select Religion</option>
+            <option value="">Religion</option>
             <option value="Roman Catholic">Roman Catholic</option>
             <option value="Islam">Islam</option>
             <option value="Evangelicals">Evangelicals</option>
@@ -564,19 +327,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
           </select>
         </div>
 
-        {/* Contact */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Contact Number
-          </label>
-          <input
-            className="input"
-            type="text"
-            placeholder="e.g. 09123456789"
-            value={formDataState.vic_contact_number || ""}
-            onChange={(e) => handleChange("vic_contact_number", e.target.value)}
-          />
-        </div>
+        {/* Displacement and Conditional PWD Status */}
       </div>
 
       {/* Displacement and Conditional PWD Status */}
@@ -626,6 +377,20 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             </select>
           </div>
         )}
+      </div>
+
+      {/* Contact */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Contact Number
+        </label>
+        <input
+          className="input w-full"
+          type="text"
+          placeholder="Contact Number"
+          value={formDataState.vic_contact_number || ""}
+          onChange={(e) => handleChange("vic_contact_number", e.target.value)}
+        />
       </div>
     </div>
   );

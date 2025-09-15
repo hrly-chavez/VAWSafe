@@ -21,9 +21,6 @@ export default function AdministrativeInfo({
   const [selectedMunicipality, setSelectedMunicipality] = useState("");
   const [selectedBarangay, setSelectedBarangay] = useState("");
 
-  const [sitio, setSitio] = useState("");
-  const [street, setStreet] = useState("");
-
   useEffect(() => {
     axios.get("http://localhost:8000/api/desk_officer/cities/")
       .then((res) => setCities(res.data))
@@ -50,23 +47,6 @@ export default function AdministrativeInfo({
       setBarangays([]);
     }
   }, [selectedMunicipality]);
-
-  useEffect(() => {
-    const cityName = cities.find(c => c.id === parseInt(selectedCity))?.name;
-    const municipalityName = municipalities.find(m => m.id === parseInt(selectedMunicipality))?.name;
-    const barangayName = barangays.find(b => b.id === parseInt(selectedBarangay))?.name;
-
-    const parts = [
-      street.trim(),
-      sitio.trim(),
-      barangayName,
-      municipalityName,
-      cityName
-    ].filter(Boolean);
-
-    const fullAddress = parts.join(", ");
-    handleChange("handling_org_full_address", fullAddress);
-  }, [selectedCity, selectedMunicipality, selectedBarangay, sitio, street, cities, municipalities, barangays]);
 
   const handleReportType = (value) => {
     // If the victim is the reporter, clear informant fields
@@ -162,37 +142,12 @@ export default function AdministrativeInfo({
 
         <div className="flex flex-col">
           <label className="font-medium text-sm mb-1">Sitio</label>
-          <input
-            type="text"
-            placeholder="Sitio Example"
-            className={inputStyle}
-            value={sitio}
-            onChange={(e) => setSitio(e.target.value)}
-          />
+          <input type="text" placeholder="Sitio Example" className={inputStyle} />
         </div>
 
         <div className="flex flex-col">
           <label className="font-medium text-sm mb-1">Street</label>
-          <input
-            type="text"
-            placeholder="Example Street Name"
-            className={inputStyle}
-            value={street}
-            onChange={(e) => setStreet(e.target.value)}
-          />
-        </div>
-
-        <div className="md:col-span-2">
-          <div className="flex flex-col md:col-span-2">
-            <label className="font-medium text-sm mb-1">Handling Organization Full Address</label>
-            <input
-              type="text"
-              value={formDataState.handling_org_full_address || ""}
-              readOnly
-              placeholder="Auto-generated based on selected location"
-              className={`${inputStyle} bg-gray-100 text-gray-700`}
-            />
-          </div>
+          <input type="text" placeholder="Example Street Name" className={inputStyle} />
         </div>
 
         {/* Report Type */}

@@ -146,7 +146,6 @@ const RegisterUser = ({ onClose }) => {
         username: data.username,
         password: data.password,
         role: data.role,
-        assigned_barangay_name: data.assigned_barangay_name,
       });
 
       setPhotos([]);
@@ -317,6 +316,14 @@ const RegisterUser = ({ onClose }) => {
                 <label className="font-medium text-sm mb-1">Street</label>
                 <input type="text" placeholder="Example Street Name" className={inputStyle} />
               </div>
+
+              <div className="flex flex-col">
+                <label className="font-medium text-sm mb-1">Assigned Barangay</label>
+                <select className={inputStyle}>
+                  <option value="">Select Assigned Barangay</option>
+                  <option value="Tungkil">Tungkil</option>
+                </select>
+              </div>
             </div>
 
             {/* Face Capture Section */}
@@ -374,7 +381,6 @@ const RegisterUser = ({ onClose }) => {
                 <p><strong>Username:</strong> {credentials.username}</p>
                 <p><strong>Password:</strong> {credentials.password}</p>
                 <p><strong>Role:</strong> {credentials.role}</p>
-                <p><strong>Assigned Barangay:</strong> {credentials.assigned_barangay_name || "Not assigned"}</p>
               </div>
             )}
           </form>

@@ -153,13 +153,6 @@ export default function PerpetratorInfo({
               value={formDataState.guardian_contact || ""}
               onChange={(e) => handleChange("guardian_contact", e.target.value)}
             />
-            <input
-              className="input"
-              type="text"
-              placeholder="Guardian's Child Category (e.g. Biological Parent)"
-              value={formDataState.per_guardian_child_category || ""}
-              onChange={(e) => handleChange("per_guardian_child_category", e.target.value)}
-            />
           </div>
         </>
       )}
@@ -196,59 +189,6 @@ export default function PerpetratorInfo({
           <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
           <option value="Others">Others</option>
         </select>
-      </div>
-
-      {/* Contact */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
-          <input
-            className="input"
-            type="text"
-            placeholder="e.g. 09123456789"
-            value={formDataState.per_contact || ""}
-            onChange={(e) => handleChange("per_contact", e.target.value)}
-          />
-        </div>
-
-        {/* Nationality */}
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nationality</label>
-          <select
-            className="input"
-            value={formDataState.per_nationality || ""}
-            onChange={(e) => handleChange("per_nationality", e.target.value)}
-          >
-            <option value="">Select Nationality</option>
-            <option value="Filipino">Filipino</option>
-            <option value="Others">Others</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Perpetrator relationship - victim */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Relationship Category</label>
-          <input
-            className="input"
-            type="text"
-            placeholder="e.g. Family, Acquaintance"
-            value={formDataState.per_relationship_category || ""}
-            onChange={(e) => handleChange("per_relationship_category", e.target.value)}
-          />
-        </div>
-
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Relationship Detail</label>
-          <input
-            className="input"
-            type="text"
-            placeholder="e.g. Uncle, Neighbor"
-            value={formDataState.per_relationship_detail || ""}
-            onChange={(e) => handleChange("per_relationship_detail", e.target.value)}
-          />
-        </div>
       </div>
 
       {/* Actions (if needed) */}

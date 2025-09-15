@@ -148,16 +148,12 @@ class SessionSerializer(serializers.ModelSerializer):
 
 class OfficialSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
-    assigned_barangay_name = serializers.CharField(
-        source="of_assigned_barangay.name", read_only=True
-    )
 
     class Meta:
         model = Official
         fields = [
             "of_id", "full_name", "of_role", "of_contact", "of_photo",
-            "province", "municipality", "barangay", "sitio", "street",
-            "of_assigned_barangay", "assigned_barangay_name"
+            "province", "municipality", "barangay", "sitio", "street", "of_assigned_barangay"
         ]
 
 
@@ -171,7 +167,3 @@ class OfficialSerializer(serializers.ModelSerializer):
 #             "city", "municipality", "barangay", "sitio", "street",
 #             "of_assigned_barangay", "status"  # 👈 Add this
 #         ]
-
-
-
-# Social Worker fetch account
