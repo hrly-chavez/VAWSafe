@@ -1,5 +1,5 @@
 //frontend/src/pages/desk_officer/RegisterVictim/VictimInfo.js
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 export default function VictimInfo({
   formDataState,
   setFormDataState,
@@ -32,6 +32,8 @@ export default function VictimInfo({
       [field]: value,
     }));
   };
+
+  const [showGuardian, setShowGuardian] = useState(false);
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-md space-y-6">

@@ -138,7 +138,7 @@ export default function VictimDetails() {
                     {[
                       { label: "Full Name", value: fullName },
                       { label: "Sex", value: get(victim, ["vic_sex", "sex", "gender"]) },
-                      { label: "SOGIE", value: get(victim, ["vic_sogie", "sogie"]) },
+                      { label: "SOGIE", value: get(victim, ["vic_specific_sogie", "sogie"]) },
                       { label: "Date of Birth", value: get(victim, ["vic_birth_date", "birth_date"]) },
                       { label: "Birth Place", value: get(victim, ["vic_birth_place", "birth_place", "place"]) },
                       { label: "Age", value: get(victim, ["age"]) },
