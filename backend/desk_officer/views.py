@@ -18,25 +18,27 @@ from django.db import transaction
 from shared_model.models import *
 from .serializers import *
 
-class CityViewSet(viewsets.ReadOnlyModelViewSet):
+class ProvinceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Province.objects.all()
     serializer_class = ProvinceSerializer
+    permission_classes = [AllowAny]
 
     @action(detail=True, methods=["get"])
     def municipalities(self, request, pk=None):
         municipalities = Municipality.objects.filter(province_id=pk)
         return Response(MunicipalitySerializer(municipalities, many=True).data)
-    permission_classes = [AllowAny]
+
 
 class MunicipalityViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Municipality.objects.all()
     serializer_class = MunicipalitySerializer
+    permission_classes = [AllowAny]
 
     @action(detail=True, methods=["get"])
     def barangays(self, request, pk=None):
         barangays = Barangay.objects.filter(municipality_id=pk)
         return Response(BarangaySerializer(barangays, many=True).data)
-    permission_classes = [AllowAny]
+
 
 # victim functions
 class ViewVictim (generics.ListAPIView):

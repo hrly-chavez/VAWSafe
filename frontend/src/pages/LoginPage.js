@@ -21,6 +21,10 @@ const LoginPage = () => {
   //Register Modal Show
   const [showRegisterModal, setShowRegisterModal] = useState(false);
 
+  //modal para matic open register user nga modal if way dswd account
+  const [autoDSWDRegister, setAutoDSWDRegister] = useState(false);
+
+
   // UI states
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -337,6 +341,24 @@ const LoginPage = () => {
     }
   };
 
+  useEffect(() => {
+    const checkDSWD = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/api/auth/check-dswd/");
+        const data = await res.json();
+        if (!data.dswd_exists) {
+          // Automatically trigger RegisterUser modal for DSWD
+          setAutoDSWDRegister(true);
+          setShowRegisterModal(true);
+        }
+      } catch (err) {
+        console.error("Failed to check DSWD:", err);
+      }
+    };
+
+    checkDSWD();
+  }, []);
+
   return (
     <div
       className="min-h-screen relative"
@@ -557,8 +579,13 @@ const LoginPage = () => {
 
       {/* Register Modal */}
       {showRegisterModal && (
-        <RegisterUser onClose={() => setShowRegisterModal(false)}
-        defaultRole="VAWDesk" />
+        <RegisterUser
+          onClose={() => {
+            setShowRegisterModal(false);
+            setAutoDSWDRegister(false); // reset after closing modal
+          }}
+          defaultRole={autoDSWDRegister ? "DSWD" : "VAWDesk"}
+        />
       )}
     </div>
   );

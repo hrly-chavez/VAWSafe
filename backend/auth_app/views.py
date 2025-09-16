@@ -12,6 +12,8 @@ from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken
 from shared_model.models import Official, OfficialFaceSample
 from .serializers import OfficialSerializer, OfficialFaceSampleSerializer
+from rest_framework.decorators import api_view, permission_classes
+
 from deepface import DeepFace
 from PIL import Image
 from django.utils.crypto import get_random_string
@@ -25,6 +27,12 @@ def get_tokens_for_user(user):
         "refresh": str(refresh),
         "access": str(refresh.access_token),
     }
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def check_dswd_exists(request):
+    exists = Official.objects.filter(of_role="DSWD").exists()  # use your field name
+    return Response({"dswd_exists": exists})
 
 # class create_official(APIView):
 #     """
@@ -249,11 +257,137 @@ def get_tokens_for_user(user):
 #         }, status=status.HTTP_202_ACCEPTED)
 
 # views.py
+# class create_official(APIView):
+#     """
+#     Registration endpoint:
+#     - Social Worker -> immediately creates a Django User + face embeddings
+#     - VAWDesk -> stored as pending (no user account yet), requires DSWD approval
+#     """
+#     parser_classes = [MultiPartParser, FormParser]
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         serializer = OfficialSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#         role = serializer.validated_data.get("of_role", "").strip()
+#         user = None
+#         username = None
+#         generated_password = None
+
+#         # ✅ Social Worker: immediately create User
+#         if role == "Social Worker":
+#             fname = request.data.get("of_fname", "").strip().lower()
+#             lname = request.data.get("of_lname", "").strip().lower()
+#             base_username = f"{fname}{lname}".replace(" ", "")
+#             username = base_username or get_random_string(8)
+
+#             counter = 0
+#             while User.objects.filter(username=username).exists():
+#                 counter += 1
+#                 username = f"{base_username}{counter}"
+
+#             generated_password = get_random_string(length=12)
+#             user = User.objects.create_user(username=username, password=generated_password)
+
+#         # ✅ Create the official (VAWDesk defaults to pending)
+#         official = Official.objects.create(
+#             user=user,
+#             status="pending" if role == "VAWDesk" else "approved",
+#             **serializer.validated_data
+#         )
+
+#         # Collect uploaded photos
+#         photo_files = request.FILES.getlist("of_photos") or []
+#         if not photo_files:
+#             single_photo = request.FILES.get("of_photo")
+#             if single_photo:
+#                 photo_files = [single_photo]
+
+#         if photo_files:
+#             official.of_photo = photo_files[0]  # set profile photo
+#             official.save()
+
+#         # ✅ Social Worker: process embeddings immediately
+#         if role == "Social Worker":
+#             created_count = 0
+#             for index, file in enumerate(photo_files):
+#                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+#                 try:
+#                     image = Image.open(file).convert("RGB")
+#                     image.save(temp_image, format="JPEG")
+#                     temp_image.flush()
+#                     temp_image.close()
+
+#                     embeddings = DeepFace.represent(
+#                         img_path=temp_image.name,
+#                         model_name="ArcFace",
+#                         enforce_detection=True
+#                     )
+
+#                     if isinstance(embeddings, list):
+#                         if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
+#                             embedding_vector = embeddings[0]["embedding"]
+#                         elif all(isinstance(x, float) for x in embeddings):
+#                             embedding_vector = embeddings
+#                         else:
+#                             raise ValueError("Unexpected list format from DeepFace.")
+#                     elif isinstance(embeddings, dict) and "embedding" in embeddings:
+#                         embedding_vector = embeddings["embedding"]
+#                     else:
+#                         raise ValueError("Unexpected format from DeepFace.represent()")
+
+#                     OfficialFaceSample.objects.create(
+#                         official=official,
+#                         photo=file,
+#                         embedding=embedding_vector
+#                     )
+#                     created_count += 1
+
+#                 except Exception as e:
+#                     traceback.print_exc()
+#                 finally:
+#                     if os.path.exists(temp_image.name):
+#                         os.remove(temp_image.name)
+
+#             if created_count == 0:
+#                 return Response({"error": "Face registration failed. Please upload clearer photos."},
+#                                 status=status.HTTP_400_BAD_REQUEST)
+
+#             return Response({
+#                 "message": f"Social Worker registered. {created_count} face sample(s) saved.",
+#                 "official_id": official.of_id,
+#                 "username": username,
+#                 "password": generated_password,
+#                 "role": official.of_role,
+#                 "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
+#                 "assigned_barangay_name": official.of_assigned_barangay.name if official.of_assigned_barangay else None
+#             }, status=status.HTTP_201_CREATED)
+
+#         # ✅ VAWDesk: save photos only (no embeddings yet)
+#         if role == "VAWDesk":
+#             for file in photo_files:
+#                 OfficialFaceSample.objects.create(
+#                     official=official,
+#                     photo=file,
+#                     embedding=None  # embeddings will be generated upon approval
+#                 )
+
+#             return Response({
+#                 "message": "VAWDesk registration submitted. Awaiting DSWD approval.",
+#                 "official_id": official.of_id,
+#                 "role": official.of_role,
+#                 "status": official.status
+#             }, status=status.HTTP_202_ACCEPTED)
+
+
 class create_official(APIView):
     """
     Registration endpoint:
     - Social Worker -> immediately creates a Django User + face embeddings
     - VAWDesk -> stored as pending (no user account yet), requires DSWD approval
+    - DSWD -> allowed only if no DSWD exists yet; creates User + face embeddings
     """
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [AllowAny]
@@ -268,8 +402,17 @@ class create_official(APIView):
         username = None
         generated_password = None
 
-        # ✅ Social Worker: immediately create User
-        if role == "Social Worker":
+        # -----------------------
+        # DSWD Registration Logic
+        # -----------------------
+        if role == "DSWD":
+            # Check if any DSWD exists
+            if Official.objects.filter(of_role="DSWD").exists():
+                return Response(
+                    {"error": "A DSWD account already exists. Cannot create another automatically."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Proceed with creation (approved immediately)
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
             base_username = f"{fname}{lname}".replace(" ", "")
@@ -282,15 +425,47 @@ class create_official(APIView):
 
             generated_password = get_random_string(length=12)
             user = User.objects.create_user(username=username, password=generated_password)
+            status_value = "approved"
 
-        # ✅ Create the official (VAWDesk defaults to pending)
+        # -----------------------
+        # Social Worker
+        # -----------------------
+        elif role == "Social Worker":
+            fname = request.data.get("of_fname", "").strip().lower()
+            lname = request.data.get("of_lname", "").strip().lower()
+            base_username = f"{fname}{lname}".replace(" ", "")
+            username = base_username or get_random_string(8)
+
+            counter = 0
+            while User.objects.filter(username=username).exists():
+                counter += 1
+                username = f"{base_username}{counter}"
+
+            generated_password = get_random_string(length=12)
+            user = User.objects.create_user(username=username, password=generated_password)
+            status_value = "approved"
+
+        # -----------------------
+        # VAWDesk
+        # -----------------------
+        elif role == "VAWDesk":
+            status_value = "pending"
+
+        else:
+            return Response({"error": f"Invalid role: {role}"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # -----------------------
+        # Create Official
+        # -----------------------
         official = Official.objects.create(
             user=user,
-            status="pending" if role == "VAWDesk" else "approved",
+            status=status_value,
             **serializer.validated_data
         )
 
-        # Collect uploaded photos
+        # -----------------------
+        # Handle uploaded photos
+        # -----------------------
         photo_files = request.FILES.getlist("of_photos") or []
         if not photo_files:
             single_photo = request.FILES.get("of_photo")
@@ -298,11 +473,13 @@ class create_official(APIView):
                 photo_files = [single_photo]
 
         if photo_files:
-            official.of_photo = photo_files[0]  # set profile photo
+            official.of_photo = photo_files[0]
             official.save()
 
-        # ✅ Social Worker: process embeddings immediately
-        if role == "Social Worker":
+        # -----------------------
+        # Process face embeddings
+        # -----------------------
+        if role in ["Social Worker", "DSWD"]:
             created_count = 0
             for index, file in enumerate(photo_files):
                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
@@ -344,11 +521,13 @@ class create_official(APIView):
                         os.remove(temp_image.name)
 
             if created_count == 0:
-                return Response({"error": "Face registration failed. Please upload clearer photos."},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "Face registration failed. Please upload clearer photos."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             return Response({
-                "message": f"Social Worker registered. {created_count} face sample(s) saved.",
+                "message": f"{role} registered. {created_count} face sample(s) saved.",
                 "official_id": official.of_id,
                 "username": username,
                 "password": generated_password,
@@ -357,13 +536,15 @@ class create_official(APIView):
                 "assigned_barangay_name": official.of_assigned_barangay.name if official.of_assigned_barangay else None
             }, status=status.HTTP_201_CREATED)
 
-        # ✅ VAWDesk: save photos only (no embeddings yet)
+        # -----------------------
+        # VAWDesk: save photos only
+        # -----------------------
         if role == "VAWDesk":
             for file in photo_files:
                 OfficialFaceSample.objects.create(
                     official=official,
                     photo=file,
-                    embedding=None  # embeddings will be generated upon approval
+                    embedding=None
                 )
 
             return Response({
