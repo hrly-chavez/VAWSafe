@@ -241,12 +241,26 @@ def register_victim(request):
                                 status=status.HTTP_400_BAD_REQUEST)
             case_report = c_ser.save(victim=victim)
 
-        # 4) IncidentInformation (optional)
+        # 4) Perpetrator (optional)
+        perpetrator = None
+        perpetrator_data = parse_json_field("perpetrator")
+        if perpetrator_data:
+            p_ser = PerpetratorSerializer(data=perpetrator_data)
+            if not p_ser.is_valid():
+                print("[perpetrator] errors:", p_ser.errors)
+                return Response({"success": False, "errors": p_ser.errors},
+                                status=status.HTTP_400_BAD_REQUEST)
+            perpetrator = p_ser.save()
+
+        # 5) IncidentInformation (optional)
         incident = None
         incident_data = parse_json_field("incident")
         if incident_data:
             # FK field name on your model is vic_id (not "victim")
             incident_data["vic_id"] = victim.pk  # or victim.vic_id
+
+            if perpetrator:
+                incident_data["perp_id"] = perpetrator.pk
        
             for key in ("is_via_electronic_means", "is_conflict_area", "is_calamity_area"):
                 if key in incident_data:
@@ -259,7 +273,7 @@ def register_victim(request):
                                 status=status.HTTP_400_BAD_REQUEST)
             incident = i_ser.save()
 
-        # 4.5) Evidences (optional)
+        # 5.5) Evidences (optional)
         evidence_files = request.FILES.getlist("evidences")  # matches frontend FormData key
         if incident and evidence_files:
             for file in evidence_files:
@@ -268,16 +282,7 @@ def register_victim(request):
                     file=file
                 )
 
-        # 5) Perpetrator (optional)
-        perpetrator = None
-        perpetrator_data = parse_json_field("perpetrator")
-        if perpetrator_data:
-            p_ser = PerpetratorSerializer(data=perpetrator_data)
-            if not p_ser.is_valid():
-                print("[perpetrator] errors:", p_ser.errors)
-                return Response({"success": False, "errors": p_ser.errors},
-                                status=status.HTTP_400_BAD_REQUEST)
-            perpetrator = p_ser.save()
+        
 
         return Response({
             "success": True,
