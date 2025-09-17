@@ -247,8 +247,7 @@ def register_victim(request):
         if incident_data:
             # FK field name on your model is vic_id (not "victim")
             incident_data["vic_id"] = victim.pk  # or victim.vic_id
-
-            
+       
             for key in ("is_via_electronic_means", "is_conflict_area", "is_calamity_area"):
                 if key in incident_data:
                     incident_data[key] = to_bool(incident_data[key])
@@ -268,8 +267,6 @@ def register_victim(request):
                     incident=incident,
                     file=file
                 )
-
-
 
         # 5) Perpetrator (optional)
         perpetrator = None
@@ -304,12 +301,10 @@ class SessionListCreateView(generics.ListCreateAPIView):
         # Only return sessions that are Pending or Ongoing
         return Session.objects.filter(sess_status__in=['Pending', 'Ongoing']).order_by('-sess_next_sched')
 
-
 class SessionDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Session.objects.all()
     serializer_class = SessionSerializer
     lookup_field = "sess_id"
-
 
 @api_view(["POST"])
 def create_session(request):

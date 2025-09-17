@@ -68,12 +68,6 @@ class IncidentInformationSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "incident_date": {"required": False, "allow_null": True},
             "incident_time": {"required": False, "allow_null": True},
-            # "incident_location": {"required": False, "allow_blank": True},
-            # "violence_type": {"required": False, "allow_blank": True},
-            # "violence_subtype": {"required": False, "allow_blank": True},
-            # "type_of_place": {"required": False, "allow_blank": True},
-            # "electronic_means": {"required": False, "allow_blank": True},
-            # "conflict_area": {"required": False, "allow_blank": True},
         }
 
     def create(self, validated_data):

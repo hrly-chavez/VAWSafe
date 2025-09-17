@@ -327,6 +327,7 @@ class IncidentInformation(models.Model):
         ('Rido', 'Rido'),
         ('Others', 'Others'),
     ]
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
     incident_id = models.AutoField(primary_key=True)
     incident_num = models.IntegerField(null=True,blank=True)
     
