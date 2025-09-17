@@ -10,6 +10,10 @@ export default function VictimDetails() {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("victim");
 
+  // test
+  const [incidents, setIncidents] = useState([]);
+  const [selectedIncident, setSelectedIncident] = useState(null);
+
   const calculateAge = (birthDate) => {
     if (!birthDate) return "—";
     const today = new Date();
@@ -20,6 +24,19 @@ export default function VictimDetails() {
     return age;
   };
 
+  useEffect(() => {
+    const fetchIncidents = async () => {
+      try {
+        const res = await api.get(`/api/desk_officer/case/${vic_id}/`);
+        setIncidents(res.data);
+      } catch (err) {
+        console.error("Failed to fetch incidents", err);
+      }
+    };
+    fetchIncidents();
+  }, [activeTab, vic_id]);
+
+  console.log(incidents);
 
   useEffect(() => {
     const run = async () => {
@@ -43,11 +60,13 @@ export default function VictimDetails() {
 
     if (vic_id) run();
   }, [vic_id]);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const initialTab = params.get("tab");
     if (initialTab) setActiveTab(initialTab);
   }, []);
+
   // small helper to read whichever key exists (keeps UI from going blank if fields differ)
   const get = (obj, keys, fallback = "N/A") => {
     for (const k of keys) {
@@ -58,29 +77,31 @@ export default function VictimDetails() {
 
   const fullName = victim
     ? [
-      get(
-        victim,
-        ["vic_first_name", "first_name", "fname", "given_name"],
-        ""
-      ),
-      get(victim, ["vic_middle_name", "middle_name", "mname"], ""),
-      get(victim, ["vic_last_name", "last_name", "lname", "surname"], ""),
-      get(victim, ["vic_extension", "name_suffix"], ""),
-    ]
-      .filter(Boolean)
-      .join(" ")
+        get(
+          victim,
+          ["vic_first_name", "first_name", "fname", "given_name"],
+          ""
+        ),
+        get(victim, ["vic_middle_name", "middle_name", "mname"], ""),
+        get(victim, ["vic_last_name", "last_name", "lname", "surname"], ""),
+        get(victim, ["vic_extension", "name_suffix"], ""),
+      ]
+        .filter(Boolean)
+        .join(" ")
     : "";
 
   const fullAddress = victim
     ? [
-      get(victim, ["street_name"]),
-      get(victim, ["sitio_name"]),
-      get(victim, ["barangay_name"]),
-      get(victim, ["municipality_name"]),
-      get(victim, ["province_name"]),
-    ].filter(Boolean).join(", ")
+        get(victim, ["street_name"]),
+        get(victim, ["sitio_name"]),
+        get(victim, ["barangay_name"]),
+        get(victim, ["municipality_name"]),
+        get(victim, ["province_name"]),
+      ]
+        .filter(Boolean)
+        .join(", ")
     : "—";
-    
+
   return (
     <>
       <div className="flex flex-col min-h-screen bg-white">
@@ -99,24 +120,63 @@ export default function VictimDetails() {
 
             {/* Name & ID */}
             <div className="text-center w-full">
-              <h2 className="text-xl font-semibold text-[#292D96]">{fullName || "N/A"}</h2>
-              <p className="text-sm text-gray-500 mt-1">Victim ID: {get(victim, ["vic_id", "id"])}</p>
+              <h2 className="text-xl font-semibold text-[#292D96]">
+                {fullName || "N/A"}
+              </h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Victim ID: {get(victim, ["vic_id", "id"])}
+              </p>
             </div>
 
             {/* Case Info Container */}
             <div className="mt-6 w-full space-y-3">
-              <h3 className="text-base font-semibold text-[#292D96] mb-1">Case Information</h3>
+              <h3 className="text-base font-semibold text-[#292D96] mb-1">
+                Case Information
+              </h3>
 
               {[
-                { label: "Case No.", value: get(victim?.case_report, ["case_no", "case_number"]) },
-                { label: "Intake Form Date", value: get(victim?.case_report, ["intake_date", "form_date", "created_at"]) },
-                { label: "Handling Organization", value: get(victim?.case_report, ["handling_org", "organization"]) },
-                { label: "Case Manager", value: get(victim?.case_report, ["case_manager", "manager_name"]) },
-                { label: "Position", value: get(victim?.case_report, ["manager_position", "position"]) },
+                {
+                  label: "Case No.",
+                  value: get(victim?.case_report, ["case_no", "case_number"]),
+                },
+                {
+                  label: "Intake Form Date",
+                  value: get(victim?.case_report, [
+                    "intake_date",
+                    "form_date",
+                    "created_at",
+                  ]),
+                },
+                {
+                  label: "Handling Organization",
+                  value: get(victim?.case_report, [
+                    "handling_org",
+                    "organization",
+                  ]),
+                },
+                {
+                  label: "Case Manager",
+                  value: get(victim?.case_report, [
+                    "case_manager",
+                    "manager_name",
+                  ]),
+                },
+                {
+                  label: "Position",
+                  value: get(victim?.case_report, [
+                    "manager_position",
+                    "position",
+                  ]),
+                },
               ].map((item, index) => (
-                <div key={index} className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm">
+                <div
+                  key={index}
+                  className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm"
+                >
                   <p className="text-xs text-gray-500 mb-1">{item.label}</p>
-                  <p className="text-sm font-medium text-gray-800">{item.value || "—"}</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {item.value || "—"}
+                  </p>
                 </div>
               ))}
             </div>
@@ -139,10 +199,11 @@ export default function VictimDetails() {
                     setActiveTab(tab.key);
                     window.history.replaceState(null, "", `?tab=${tab.key}`);
                   }}
-                  className={`pb-2 text-sm font-medium ${activeTab === tab.key
-                    ? "text-[#292D96] border-b-2 border-[#292D96]"
-                    : "text-gray-500 hover:text-[#292D96]"
-                    }`}
+                  className={`pb-2 text-sm font-medium ${
+                    activeTab === tab.key
+                      ? "text-[#292D96] border-b-2 border-[#292D96]"
+                      : "text-gray-500 hover:text-[#292D96]"
+                  }`}
                 >
                   {tab.label}
                 </button>
@@ -153,49 +214,147 @@ export default function VictimDetails() {
             <div className="text-sm text-gray-800">
               {activeTab === "victim" && (
                 <div>
-                  <h4 className="text-lg font-semibold text-[#292D96] mb-4">Victim Information</h4>
+                  <h4 className="text-lg font-semibold text-[#292D96] mb-4">
+                    Victim Information
+                  </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {[
                       { label: "Full Name", value: fullName },
-                      { label: "Sex", value: get(victim, ["vic_sex", "sex", "gender"]) },
-                      { label: "SOGIE", value: get(victim, ["vic_sogie", "sogie"]) },
-                      { label: "Date of Birth", value: get(victim, ["vic_birth_date", "birth_date"]) },
-                      { label: "Birth Place", value: get(victim, ["vic_birth_place", "birth_place", "place"]) },
-                      { label: "Age", value: calculateAge(get(victim, ["vic_birth_date", "birth_date"])) },
-                      { label: "Civil Status", value: get(victim, ["vic_civil_status", "civil_status"]) },
-                      { label: "Educational Attainment", value: get(victim, ["vic_education", "education"]) },
-                      { label: "Nationality", value: get(victim, ["vic_nationality", "nationality"]) },
-                      { label: "Ethnicity", value: get(victim, ["vic_ethnicity", "ethnicity"]) },
-                      { label: "Occupation", value: get(victim, ["vic_occupation", "occupation"]) },
-                      { label: "Monthly Income", value: get(victim, ["vic_monthly_income", "monthly_income"]) },
-                      { label: "Religion", value: get(victim, ["vic_religion", "religion"]) },
-                      { label: "Contact No.", value: get(victim, ["vic_contact", "contact"]) },
-                      { label: "PWD Category", value: get(victim, ["vic_pwd_category", "pwd_category"]) },
-                      { label: "Migratory Status", value: get(victim, ["vic_migratory_status", "migratory_status"]) },
-                      { label: "Employment Status", value: get(victim, ["vic_employment_status", "employment_status"]) },
+                      {
+                        label: "Sex",
+                        value: get(victim, ["vic_sex", "sex", "gender"]),
+                      },
+                      {
+                        label: "SOGIE",
+                        value: get(victim, ["vic_specific_sogie"]),
+                      },
+                      {
+                        label: "Date of Birth",
+                        value: get(victim, ["vic_birth_ date", "birth_date"]),
+                      },
+                      {
+                        label: "Birth Place",
+                        value: get(victim, [
+                          "vic_birth_place",
+                          "birth_place",
+                          "place",
+                        ]),
+                      },
+                      {
+                        label: "Age",
+                        value: calculateAge(
+                          get(victim, ["vic_birth_date", "birth_date"])
+                        ),
+                      },
+                      {
+                        label: "Civil Status",
+                        value: get(victim, [
+                          "vic_civil_status",
+                          "civil_status",
+                        ]),
+                      },
+                      {
+                        label: "Educational Attainment",
+                        value: get(victim, ["vic_education", "education"]),
+                      },
+                      {
+                        label: "Nationality",
+                        value: get(victim, ["vic_nationality", "nationality"]),
+                      },
+                      {
+                        label: "Ethnicity",
+                        value: get(victim, ["vic_ethnicity", "ethnicity"]),
+                      },
+                      {
+                        label: "Occupation",
+                        value: get(victim, ["vic_occupation", "occupation"]),
+                      },
+                      {
+                        label: "Monthly Income",
+                        value: get(victim, [
+                          "vic_monthly_income",
+                          "monthly_income",
+                        ]),
+                      },
+                      {
+                        label: "Religion",
+                        value: get(victim, ["vic_religion", "religion"]),
+                      },
+                      {
+                        label: "Contact No.",
+                        value: get(victim, ["vic_contact", "contact"]),
+                      },
+                      {
+                        label: "PWD Category",
+                        value: get(victim, [
+                          "vic_pwd_category",
+                          "pwd_category",
+                        ]),
+                      },
+                      {
+                        label: "Migratory Status",
+                        value: get(victim, [
+                          "vic_migratory_status",
+                          "migratory_status",
+                        ]),
+                      },
+                      {
+                        label: "Employment Status",
+                        value: get(victim, [
+                          "vic_employment_status",
+                          "employment_status",
+                        ]),
+                      },
                     ].map((item, index) => (
-                      <div key={index} className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm">
-                        <p className="text-xs text-gray-500 mb-1">{item.label}</p>
-                        <p className="text-sm font-medium text-gray-800">{item.value || "—"}</p>
+                      <div
+                        key={index}
+                        className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm"
+                      >
+                        <p className="text-xs text-gray-500 mb-1">
+                          {item.label}
+                        </p>
+                        <p className="text-sm font-medium text-gray-800">
+                          {item.value || "—"}
+                        </p>
                       </div>
-
                     ))}
                   </div>
 
                   {/* ✅ INSERT YOUR GUARDIAN BLOCK HERE */}
                   {victim && victim.is_minor && (
                     <>
-                      <h5 className="text-md font-semibold text-yellow-700 mt-6 mb-2">Guardian Information</h5>
+                      <h5 className="text-md font-semibold text-yellow-700 mt-6 mb-2">
+                        Guardian Information
+                      </h5>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {[
-                          { label: "Guardian First Name", value: get(victim, ["guardian_first_name"]) },
-                          { label: "Guardian Middle Name", value: get(victim, ["guardian_middle_name"]) },
-                          { label: "Guardian Last Name", value: get(victim, ["guardian_last_name"]) },
-                          { label: "Guardian Contact", value: get(victim, ["guardian_contact"]) },
+                          {
+                            label: "Guardian First Name",
+                            value: get(victim, ["guardian_first_name"]),
+                          },
+                          {
+                            label: "Guardian Middle Name",
+                            value: get(victim, ["guardian_middle_name"]),
+                          },
+                          {
+                            label: "Guardian Last Name",
+                            value: get(victim, ["guardian_last_name"]),
+                          },
+                          {
+                            label: "Guardian Contact",
+                            value: get(victim, ["guardian_contact"]),
+                          },
                         ].map((item, index) => (
-                          <div key={`guardian-${index}`} className="bg-yellow-50 rounded-md px-4 py-3 border shadow-sm">
-                            <p className="text-xs text-yellow-700 mb-1">{item.label}</p>
-                            <p className="text-sm font-medium text-yellow-900">{item.value || "—"}</p>
+                          <div
+                            key={`guardian-${index}`}
+                            className="bg-yellow-50 rounded-md px-4 py-3 border shadow-sm"
+                          >
+                            <p className="text-xs text-yellow-700 mb-1">
+                              {item.label}
+                            </p>
+                            <p className="text-sm font-medium text-yellow-900">
+                              {item.value || "—"}
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -206,7 +365,9 @@ export default function VictimDetails() {
                   <div className="mt-4">
                     <div className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm">
                       <p className="text-xs text-gray-500 mb-1">Full Address</p>
-                      <p className="text-sm font-medium text-gray-800">{fullAddress}</p>
+                      <p className="text-sm font-medium text-gray-800">
+                        {fullAddress}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -214,26 +375,81 @@ export default function VictimDetails() {
 
               {activeTab === "perpetrator" && (
                 <div>
-                  <h4 className="text-lg font-semibold text-[#292D96] mb-4">Perpetrator Information</h4>
+                  <h4 className="text-lg font-semibold text-[#292D96] mb-4">
+                    Perpetrator Information
+                  </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {[
                       {
                         label: "Full Name",
                         value: [
-                          get(victim?.incidents?.[0]?.perpetrator, ["per_first_name", "first_name"], ""),
-                          get(victim?.incidents?.[0]?.perpetrator, ["per_last_name", "last_name"], "")
-                        ].filter(Boolean).join(" ")
+                          get(
+                            victim?.incidents?.[0]?.perpetrator,
+                            ["per_first_name", "first_name"],
+                            ""
+                          ),
+                          get(
+                            victim?.incidents?.[0]?.perpetrator,
+                            ["per_last_name", "last_name"],
+                            ""
+                          ),
+                        ]
+                          .filter(Boolean)
+                          .join(" "),
                       },
-                      { label: "Sex", value: get(victim?.incidents?.[0]?.perpetrator, ["per_sex", "sex"]) },
-                      { label: "Date of Birth", value: get(victim?.incidents?.[0]?.perpetrator, ["per_birth_date", "birth_date"]) },
-                      { label: "Birth Place", value: get(victim?.incidents?.[0]?.perpetrator, ["per_birth_place", "birth_place"]) },
-                      { label: "Nationality", value: get(victim?.incidents?.[0]?.perpetrator, ["per_nationality", "nationality"]) },
-                      { label: "Occupation", value: get(victim?.incidents?.[0]?.perpetrator, ["per_occupation", "occupation"]) },
-                      { label: "Religion", value: get(victim?.incidents?.[0]?.perpetrator, ["per_religion", "religion"]) },
+                      {
+                        label: "Sex",
+                        value: get(victim?.incidents?.[0]?.perpetrator, [
+                          "per_sex",
+                          "sex",
+                        ]),
+                      },
+                      {
+                        label: "Date of Birth",
+                        value: get(victim?.incidents?.[0]?.perpetrator, [
+                          "per_birth_date",
+                          "birth_date",
+                        ]),
+                      },
+                      {
+                        label: "Birth Place",
+                        value: get(victim?.incidents?.[0]?.perpetrator, [
+                          "per_birth_place",
+                          "birth_place",
+                        ]),
+                      },
+                      {
+                        label: "Nationality",
+                        value: get(victim?.incidents?.[0]?.perpetrator, [
+                          "per_nationality",
+                          "nationality",
+                        ]),
+                      },
+                      {
+                        label: "Occupation",
+                        value: get(victim?.incidents?.[0]?.perpetrator, [
+                          "per_occupation",
+                          "occupation",
+                        ]),
+                      },
+                      {
+                        label: "Religion",
+                        value: get(victim?.incidents?.[0]?.perpetrator, [
+                          "per_religion",
+                          "religion",
+                        ]),
+                      },
                     ].map((item, index) => (
-                      <div key={index} className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm">
-                        <p className="text-xs text-gray-500 mb-1">{item.label}</p>
-                        <p className="text-sm font-medium text-gray-800">{item.value || "—"}</p>
+                      <div
+                        key={index}
+                        className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm"
+                      >
+                        <p className="text-xs text-gray-500 mb-1">
+                          {item.label}
+                        </p>
+                        <p className="text-sm font-medium text-gray-800">
+                          {item.value || "—"}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -241,15 +457,76 @@ export default function VictimDetails() {
               )}
               {activeTab === "incident" && (
                 <div>
-                  <h4 className="text-lg font-semibold text-[#292D96] mb-2">Incident Reports & Records</h4>
+                  <h4 className="text-lg font-semibold text-[#292D96] mb-2">
+                    Incident Reports & Records
+                  </h4>
                   <p>Review incident descriptions, locations, and evidence.</p>
                 </div>
               )}
 
               {activeTab === "Case" && (
                 <div>
-                  <h4 className="text-lg font-semibold text-[#292D96] mb-2">Case</h4>
-                  <p>Track session history, status, and assigned personnel.</p>
+                  <h4 className="text-lg font-semibold text-[#292D96] mb-2">
+                    Case
+                  </h4>
+
+                  {incidents.length === 0 ? (
+                    <p className="text-gray-500">No cases found.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {incidents.map((incident) => (
+                        <div
+                          key={incident.id}
+                          onClick={() => setSelectedIncident(incident)}
+                          className="cursor-pointer p-3 border rounded-md bg-white shadow-sm hover:bg-blue-50 transition"
+                        >
+                          <p className="font-medium text-gray-800">
+                            Case No: {incident.incident_num}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            Status: {incident.status || "N/A"}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Modal */}
+                  {selectedIncident && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                      <div className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6 relative">
+                        <button
+                          onClick={() => setSelectedIncident(null)}
+                          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                        >
+                          ✕
+                        </button>
+                        <h3 className="text-xl font-bold mb-4 text-[#292D96]">
+                          Case Details
+                        </h3>
+                        <div className="space-y-2">
+                          <p>
+                            <span className="font-semibold">Case No:</span>{" "}
+                            {selectedIncident.incident_num}
+                          </p>
+                          <p>
+                            <span className="font-semibold">Status:</span>{" "}
+                            {selectedIncident.status || "N/A"}
+                          </p>
+                          <p>
+                            <span className="font-semibold">Description:</span>{" "}
+                            {selectedIncident.description || "N/A"}
+                          </p>
+                          <p>
+                            <span className="font-semibold">Date:</span>{" "}
+                            {new Date(
+                              selectedIncident.created_at
+                            ).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               {activeTab === "faces" && (
@@ -269,7 +546,9 @@ export default function VictimDetails() {
                             alt={`Face Sample ${idx + 1}`}
                             className="w-full h-40 object-cover rounded"
                           />
-                          <p className="text-xs text-gray-500 mt-2">Sample {idx + 1}</p>
+                          <p className="text-xs text-gray-500 mt-2">
+                            Sample {idx + 1}
+                          </p>
                         </div>
                       ))}
                     </div>

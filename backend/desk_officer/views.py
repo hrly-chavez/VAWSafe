@@ -129,6 +129,16 @@ class search_victim_facial(APIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['VAWDesk']
 
+class VictimIncidentsView(generics.ListAPIView):
+    serializer_class = IncidentInformationSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['VAWDesk']
+
+    def get_queryset(self):
+        vic_id = self.kwargs.get("vic_id")
+        # If Victim's PK is vic_id, filter like this:
+        return IncidentInformation.objects.filter(vic_id__pk=vic_id)
+
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
 @transaction.atomic
