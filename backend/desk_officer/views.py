@@ -138,7 +138,7 @@ class VictimIncidentsView(generics.ListAPIView):
     def get_queryset(self):
         vic_id = self.kwargs.get("vic_id")
         # If Victim's PK is vic_id, filter like this:
-        return IncidentInformation.objects.filter(vic_id__pk=vic_id)
+        return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by('incident_num')
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])

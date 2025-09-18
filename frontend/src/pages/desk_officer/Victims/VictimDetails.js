@@ -689,11 +689,16 @@ export default function VictimDetails() {
                             </div>
 
                             {/* Description */}
-                            <div className="mb-4 p-3 bg-white rounded-md shadow-sm">
-                              <p className="font-medium mb-2">Description:</p>
-                              <p className="whitespace-pre-wrap">
-                                {selectedIncident.incident_description || "N/A"}
-                              </p>
+                            <div className="mb-4 p-4 bg-white rounded-md shadow-sm">
+                              <div className="flex">
+                                <span className="font-medium w-36 flex-shrink-0 text-gray-700">
+                                  Description:
+                                </span>
+                                <span className="text-gray-800 break-words whitespace-pre-wrap text-justify">
+                                  {selectedIncident.incident_description ||
+                                    "N/A"}
+                                </span>
+                              </div>
                             </div>
 
                             {/* Other Incident Details */}
