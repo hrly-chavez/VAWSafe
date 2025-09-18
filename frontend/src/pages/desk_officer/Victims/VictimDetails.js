@@ -61,6 +61,8 @@ export default function VictimDetails() {
     if (vic_id) run();
   }, [vic_id]);
 
+  // console.log(victim?.incidents?.[0]?.perpetrator);
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const initialTab = params.get("tab");
@@ -464,6 +466,7 @@ export default function VictimDetails() {
                 </div>
               )}
 
+              {/* case tab */}
               {activeTab === "Case" && (
                 <div>
                   <h4 className="text-lg font-semibold text-[#292D96] mb-2">
@@ -484,6 +487,12 @@ export default function VictimDetails() {
                             Case No: {incident.incident_num}
                           </p>
                           <p className="text-sm text-gray-600">
+                            Date Created:{" "}
+                            {incident.created_at
+                              ? new Date(incident.created_at).toLocaleString()
+                              : "N/A"}
+                          </p>
+                          <p className="text-sm text-gray-600">
                             Status: {incident.status || "N/A"}
                           </p>
                         </div>
@@ -491,50 +500,261 @@ export default function VictimDetails() {
                     </div>
                   )}
 
-                  {/* Modal */}
+                  {/* Case Modal */}
                   {selectedIncident && (
                     <div
-                      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-                      onClick={() => setSelectedIncident(null)} // close when overlay clicked
+                      className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+                      onClick={() => setSelectedIncident(null)}
                     >
                       <div
-                        className="bg-white rounded-lg shadow-lg max-w-lg w-full p-6 relative"
-                        onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside modal
+                        className="bg-white rounded-2xl shadow-xl max-w-3xl w-full relative max-h-[90vh] overflow-y-auto"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <button
-                          onClick={() => setSelectedIncident(null)}
-                          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-                        >
-                          ✕
-                        </button>
-                        <h3 className="text-xl font-bold mb-4 text-[#292D96]">
-                          Case Details
-                        </h3>
-                        <div className="space-y-2">
-                          <p>
-                            <span className="font-semibold">Case No:</span>{" "}
-                            {selectedIncident.incident_num}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Status:</span>{" "}
-                            {selectedIncident.status || "N/A"}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Description:</span>{" "}
-                            {selectedIncident.description || "N/A"}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Date:</span>{" "}
-                            {new Date(
-                              selectedIncident.created_at
-                            ).toLocaleString()}
-                          </p>
+                        {/* Sticky Header + Close */}
+                        <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-4 border-b shadow-sm">
+                          <h2 className="text-2xl font-bold text-[#292D96]">
+                            Case Details
+                          </h2>
+                          <button
+                            onClick={() => setSelectedIncident(null)}
+                            className="text-gray-400 hover:text-gray-700 transition"
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        {/* Scrollable Content */}
+                        <div className="p-6 space-y-6">
+                          {/* Case Info */}
+                          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <h3 className="font-semibold text-gray-700 mb-4 text-lg">
+                              Case Info
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <p className="flex gap-2">
+                                <span className="font-medium w-36">
+                                  Case No:
+                                </span>
+                                <span>{selectedIncident.incident_num}</span>
+                              </p>
+                              <p className="flex gap-2">
+                                <span className="font-medium w-36">
+                                  Status:
+                                </span>
+                                <span>{selectedIncident.status || "N/A"}</span>
+                              </p>
+                              <p className="flex gap-2">
+                                <span className="font-medium w-36">
+                                  Created At:
+                                </span>
+                                <span>
+                                  {new Date(
+                                    selectedIncident.created_at
+                                  ).toLocaleString()}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Perpetrator Info */}
+                          {selectedIncident.perp_id && (
+                            <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                              <h3 className="font-semibold text-gray-700 mb-4 text-lg">
+                                Perpetrator Details
+                              </h3>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <p className="flex gap-2">
+                                  <span className="font-medium w-36">
+                                    Full Name:
+                                  </span>
+                                  <span>
+                                    {selectedIncident.perp_id.per_first_name}{" "}
+                                    {selectedIncident.perp_id.per_last_name}
+                                  </span>
+                                </p>
+                                <p className="flex gap-2">
+                                  <span className="font-medium w-36">Sex:</span>
+                                  <span>
+                                    {selectedIncident.perp_id.per_sex}
+                                  </span>
+                                </p>
+                                <p className="flex gap-2">
+                                  <span className="font-medium w-36">
+                                    Birth Date:
+                                  </span>
+                                  <span>
+                                    {selectedIncident.perp_id.per_birth_date}
+                                  </span>
+                                </p>
+                                <p className="flex gap-2">
+                                  <span className="font-medium w-36">
+                                    Birth Place:
+                                  </span>
+                                  <span>
+                                    {selectedIncident.perp_id.per_birth_place}
+                                  </span>
+                                </p>
+                                <p className="flex gap-2">
+                                  <span className="font-medium w-36">
+                                    Nationality:
+                                  </span>
+                                  <span>
+                                    {selectedIncident.perp_id.per_nationality}
+                                  </span>
+                                </p>
+                                <p className="flex gap-2">
+                                  <span className="font-medium w-36">
+                                    Occupation:
+                                  </span>
+                                  <span>
+                                    {
+                                      selectedIncident.perp_id
+                                        .per_main_occupation
+                                    }
+                                  </span>
+                                </p>
+                                <p className="flex gap-2">
+                                  <span className="font-medium w-36">
+                                    Religion:
+                                  </span>
+                                  <span>
+                                    {selectedIncident.perp_id.per_religion}
+                                  </span>
+                                </p>
+                                <p className="flex gap-2">
+                                  <span className="font-medium w-36">
+                                    Current Address:
+                                  </span>
+                                  <span>
+                                    {
+                                      selectedIncident.perp_id
+                                        .per_current_address
+                                    }
+                                  </span>
+                                </p>
+                                <p className="flex gap-2">
+                                  <span className="font-medium w-36">
+                                    Relationship:
+                                  </span>
+                                  <span>
+                                    {
+                                      selectedIncident.perp_id
+                                        .per_relationship_type
+                                    }
+                                  </span>
+                                </p>
+                                {selectedIncident.perp_id
+                                  .per_relationship_type !==
+                                  "Stranger/Unknown" && (
+                                  <p className="flex gap-2">
+                                    <span className="font-medium w-36">
+                                      Specific Relationship:
+                                    </span>
+                                    <span>
+                                      {
+                                        selectedIncident.perp_id
+                                          .per_relationship_subtype
+                                      }
+                                    </span>
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Incident Info */}
+                          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                            <h3 className="font-semibold text-gray-700 mb-4 text-lg">
+                              Incident Details
+                            </h3>
+
+                            {/* Violence Info */}
+                            <div className="mb-4 p-3 bg-white rounded-md shadow-sm">
+                              <p className="flex gap-2 mb-2">
+                                <span className="font-medium w-36">
+                                  Violence Type:
+                                </span>
+                                <span>
+                                  {selectedIncident.violence_type || "N/A"}
+                                </span>
+                              </p>
+                              <p className="flex gap-2">
+                                <span className="font-medium w-36">
+                                  Violence Subtype:
+                                </span>
+                                <span>
+                                  {selectedIncident.violence_subtype || "N/A"}
+                                </span>
+                              </p>
+                            </div>
+
+                            {/* Description */}
+                            <div className="mb-4 p-3 bg-white rounded-md shadow-sm">
+                              <p className="font-medium mb-2">Description:</p>
+                              <p className="whitespace-pre-wrap">
+                                {selectedIncident.incident_description || "N/A"}
+                              </p>
+                            </div>
+
+                            {/* Other Incident Details */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <p className="flex gap-2">
+                                <span className="font-medium w-36">
+                                  Date of Incident:
+                                </span>
+                                <span>
+                                  {selectedIncident.incident_date || "N/A"}
+                                </span>
+                              </p>
+                              <p className="flex gap-2">
+                                <span className="font-medium w-36">
+                                  Time of Incident:
+                                </span>
+                                <span>
+                                  {selectedIncident.incident_time || "N/A"}
+                                </span>
+                              </p>
+                              <p className="flex gap-2">
+                                <span className="font-medium w-36">
+                                  Place of Incident:
+                                </span>
+                                <span>
+                                  {selectedIncident.incident_location || "N/A"}
+                                </span>
+                              </p>
+                              <p className="flex gap-2">
+                                <span className="font-medium w-36">
+                                  Type of Place:
+                                </span>
+                                <span>
+                                  {selectedIncident.type_of_place || "N/A"}
+                                </span>
+                              </p>
+                              <p className="flex gap-2">
+                                <span className="font-medium w-36">
+                                  Electronic Means:
+                                </span>
+                                <span>
+                                  {selectedIncident.electronic_means || "N/A"}
+                                </span>
+                              </p>
+                              <p className="flex gap-2">
+                                <span className="font-medium w-36">
+                                  Conflict Area:
+                                </span>
+                                <span>
+                                  {selectedIncident.conflict_area || "N/A"}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
                   )}
                 </div>
               )}
+
               {activeTab === "faces" && (
                 <div>
                   <h4 className="text-lg font-semibold text-[#292D96] mb-4">

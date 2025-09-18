@@ -311,7 +311,6 @@ class IncidentInformation(models.Model):
     TYPE_OF_PLACE = [
         ('Conjugal Home', 'Conjugal Home'),
         ('Evacutaion Area', 'Evacutaion Area'),
-        ('Evacuation Area', 'Evacuation Area'), 
         ('Malls/Hotels', 'Malls/Hotels'),
         ('Perpetrator\'s Home', 'Perpetrator\'s Home'),
         ('Public Utility Vehicle', 'Public Utility Vehicle'),
@@ -328,6 +327,7 @@ class IncidentInformation(models.Model):
         ('Others', 'Others'),
     ]
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    status = models.CharField(max_length=10, default="Ongoing")
     incident_id = models.AutoField(primary_key=True)
     incident_num = models.IntegerField(null=True,blank=True)
     

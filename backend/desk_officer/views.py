@@ -129,6 +129,7 @@ class search_victim_facial(APIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['VAWDesk']
 
+# retrieve all information related to case
 class VictimIncidentsView(generics.ListAPIView):
     serializer_class = IncidentInformationSerializer
     permission_classes = [IsAuthenticated, IsRole]
