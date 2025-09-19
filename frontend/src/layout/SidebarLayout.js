@@ -14,10 +14,12 @@ export default function SidebarLayout() {
       {/* Content below Navbar */}
       <div className="pt-[70px] flex">
         {/* Sidebar (scrolls with page) */}
-        <Sidebar />
+        <aside className="sticky top-[70px] h-[calc(100vh-70px)] w-[220px] bg-[#2F2F4F] text-white font-poppins shadow-lg z-10 overflow-hidden">
+          <Sidebar />
+        </aside>
 
         {/* Main Content (scrolls with sidebar) */}
-        <main className="flex-1 px-6 py-4">
+        <main className="flex-1 px-6 py-4 overflow-auto max-h-[calc(100vh-70px)]">
           <Outlet />
         </main>
       </div>
