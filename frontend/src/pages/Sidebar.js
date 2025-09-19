@@ -208,14 +208,14 @@ export default function Sidebar() {
         { icon: "/images/peace.png", label: "Services", path: "/desk_officer/services" },
         { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/desk_officer/session" },
         { icon: "/images/case.png", label: "Case Records", path: "/desk_officer/case-records" },
-        {
-          icon: "/images/account-settings.png",
-          label: "Account Services",
-          children: [
-            { label: "User Management", path: "/desk_officer/account-management" },
-            { label: "Pending Account", path: "/desk_officer/pending-account" }
-          ]
-        },
+        // {
+        //   icon: "/images/account-settings.png",
+        //   label: "Account Services",
+        //   children: [
+        //     { label: "User Management", path: "/desk_officer/account-management" },
+        //     { label: "Pending Account", path: "/desk_officer/pending-account" }
+        //   ]
+        // },
         { icon: "/images/logout.png", label: "Log Out", path: "/login", isLogout: true }
       ];
     }

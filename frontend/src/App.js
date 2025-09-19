@@ -44,19 +44,23 @@ const DOVictimSearch = lazy(() =>
 const DOSocialWorkers = lazy(() =>
   import("./pages/desk_officer/SocialWorker/SocialWorker")
 );
-const DOServices = lazy(() => import("./pages/desk_officer/Services/Services"));
+const ViewOfficials = lazy(() => 
+  import("./pages/desk_officer/SocialWorker/ViewOfficials")
+);
+const DOAccountManagement = lazy(() =>
+  import("./pages/desk_officer/SocialWorker/AccountManagement")
+);
+const DOServices = lazy(() => 
+  import("./pages/desk_officer/Services/Services")
+);
 const DOCaseRecords = lazy(() =>
   import("./pages/desk_officer/CaseRecords/CaseRecords")
 );
-const DOAccountManagement = lazy(() =>
-  import("./pages/desk_officer/AccountManage/AccountManagement")
-);
-const DOPendingAccount = lazy(() =>
-  import("./pages/desk_officer/AccountManage/PendingAccount")
-);
-const ViewOfficials = lazy(() => 
-  import("./pages/desk_officer/AccountManage/ViewOfficials")
-);
+
+// const DOPendingAccount = lazy(() =>
+//   import("./pages/desk_officer/AccountManage/PendingAccount")
+// );
+
 
 // Social Worker Pages (lazy loaded)
 const DashboardPage = lazy(() =>import("./pages/social_worker/Dashboard/Dashboard"));
@@ -170,10 +174,10 @@ export default function App() {
                 path={ROUTES.DESK_OFFICER_ACCOUNT_MANAGEMENT}
                 element={<DOAccountManagement />}
               />
-              <Route
+              {/* <Route
                 path={ROUTES.DESK_OFFICER_PENDING_ACCOUNT}
                 element={<DOPendingAccount />}
-              />
+              /> */}
               <Route 
                 path={ROUTES.DESK_OFFICER_VIEW_OFFICIAL} 
                 element={<ViewOfficials />} 
