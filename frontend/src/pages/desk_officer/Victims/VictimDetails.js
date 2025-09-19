@@ -13,6 +13,7 @@ export default function VictimDetails() {
   // test
   const [incidents, setIncidents] = useState([]);
   const [selectedIncident, setSelectedIncident] = useState(null);
+  const [selectedSession, setSelectedSession] = useState(null);
 
   const calculateAge = (birthDate) => {
     if (!birthDate) return "—";
@@ -191,9 +192,7 @@ export default function VictimDetails() {
               {[
                 { key: "victim", label: "Victim Information" },
                 { key: "perpetrator", label: "Perpetrator Information" },
-                { key: "incident", label: "Incident Reports & Records" },
                 { key: "Case", label: "Case" },
-                { key: "faces", label: "Face Samples" },
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -457,14 +456,6 @@ export default function VictimDetails() {
                   </div>
                 </div>
               )}
-              {activeTab === "incident" && (
-                <div>
-                  <h4 className="text-lg font-semibold text-[#292D96] mb-2">
-                    Incident Reports & Records
-                  </h4>
-                  <p>Review incident descriptions, locations, and evidence.</p>
-                </div>
-              )}
 
               {/* case tab */}
               {activeTab === "Case" && (
@@ -479,318 +470,348 @@ export default function VictimDetails() {
                     <div className="space-y-2">
                       {incidents.map((incident) => (
                         <div
-                          key={incident.id}
-                          onClick={() => setSelectedIncident(incident)}
-                          className="cursor-pointer p-3 border rounded-md bg-white shadow-sm hover:bg-blue-50 transition"
+                          key={incident.incident_id ?? incident.id}
+                          className="border rounded-md bg-white shadow-sm"
                         >
-                          <p className="font-medium text-gray-800">
-                            Case No: {incident.incident_num}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Date Created:{" "}
-                            {incident.created_at
-                              ? new Date(incident.created_at).toLocaleString()
-                              : "N/A"}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Status: {incident.status || "N/A"}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Case Modal */}
-                  {selectedIncident && (
-                    <div
-                      className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
-                      onClick={() => setSelectedIncident(null)}
-                    >
-                      <div
-                        className="bg-white rounded-2xl shadow-xl max-w-3xl w-full relative max-h-[90vh] overflow-y-auto"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {/* Sticky Header + Close */}
-                        <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-4 border-b shadow-sm">
-                          <h2 className="text-2xl font-bold text-[#292D96]">
-                            Case Details
-                          </h2>
-                          <button
-                            onClick={() => setSelectedIncident(null)}
-                            className="text-gray-400 hover:text-gray-700 transition"
+                          {/* Case card */}
+                          <div
+                            onClick={() => setSelectedIncident(incident)}
+                            className="cursor-pointer p-3 hover:bg-blue-50 transition"
                           >
-                            ✕
-                          </button>
-                        </div>
-
-                        {/* Scrollable Content */}
-                        <div className="p-6 space-y-6">
-                          {/* Case Info */}
-                          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                            <h3 className="font-semibold text-gray-700 mb-4 text-lg">
-                              Case Info
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <p className="flex gap-2">
-                                <span className="font-medium w-36">
-                                  Case No:
-                                </span>
-                                <span>{selectedIncident.incident_num}</span>
-                              </p>
-                              <p className="flex gap-2">
-                                <span className="font-medium w-36">
-                                  Status:
-                                </span>
-                                <span>{selectedIncident.status || "N/A"}</span>
-                              </p>
-                              <p className="flex gap-2">
-                                <span className="font-medium w-36">
-                                  Created At:
-                                </span>
-                                <span>
-                                  {new Date(
-                                    selectedIncident.created_at
-                                  ).toLocaleString()}
-                                </span>
-                              </p>
-                            </div>
+                            <p className="font-medium text-gray-800">
+                              Case No: {incident.incident_num}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Date Created:{" "}
+                              {incident.created_at
+                                ? new Date(incident.created_at).toLocaleString()
+                                : "N/A"}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Status: {incident.status || "N/A"}
+                            </p>
                           </div>
 
-                          {/* Perpetrator Info */}
-                          {selectedIncident.perp_id && (
-                            <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                              <h3 className="font-semibold text-gray-700 mb-4 text-lg">
-                                Perpetrator Details
-                              </h3>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <p className="flex gap-2">
-                                  <span className="font-medium w-36">
-                                    Full Name:
-                                  </span>
-                                  <span>
-                                    {selectedIncident.perp_id.per_first_name}{" "}
-                                    {selectedIncident.perp_id.per_last_name}
-                                  </span>
-                                </p>
-                                <p className="flex gap-2">
-                                  <span className="font-medium w-36">Sex:</span>
-                                  <span>
-                                    {selectedIncident.perp_id.per_sex}
-                                  </span>
-                                </p>
-                                <p className="flex gap-2">
-                                  <span className="font-medium w-36">
-                                    Birth Date:
-                                  </span>
-                                  <span>
-                                    {selectedIncident.perp_id.per_birth_date}
-                                  </span>
-                                </p>
-                                <p className="flex gap-2">
-                                  <span className="font-medium w-36">
-                                    Birth Place:
-                                  </span>
-                                  <span>
-                                    {selectedIncident.perp_id.per_birth_place}
-                                  </span>
-                                </p>
-                                <p className="flex gap-2">
-                                  <span className="font-medium w-36">
-                                    Nationality:
-                                  </span>
-                                  <span>
-                                    {selectedIncident.perp_id.per_nationality}
-                                  </span>
-                                </p>
-                                <p className="flex gap-2">
-                                  <span className="font-medium w-36">
-                                    Occupation:
-                                  </span>
-                                  <span>
-                                    {
-                                      selectedIncident.perp_id
-                                        .per_main_occupation
-                                    }
-                                  </span>
-                                </p>
-                                <p className="flex gap-2">
-                                  <span className="font-medium w-36">
-                                    Religion:
-                                  </span>
-                                  <span>
-                                    {selectedIncident.perp_id.per_religion}
-                                  </span>
-                                </p>
-                                <p className="flex gap-2">
-                                  <span className="font-medium w-36">
-                                    Current Address:
-                                  </span>
-                                  <span>
-                                    {
-                                      selectedIncident.perp_id
-                                        .per_current_address
-                                    }
-                                  </span>
-                                </p>
-                                <p className="flex gap-2">
-                                  <span className="font-medium w-36">
-                                    Relationship:
-                                  </span>
-                                  <span>
-                                    {
-                                      selectedIncident.perp_id
-                                        .per_relationship_type
-                                    }
-                                  </span>
-                                </p>
-                                {selectedIncident.perp_id
-                                  .per_relationship_type !==
-                                  "Stranger/Unknown" && (
-                                  <p className="flex gap-2">
-                                    <span className="font-medium w-36">
-                                      Specific Relationship:
-                                    </span>
-                                    <span>
-                                      {
-                                        selectedIncident.perp_id
-                                          .per_relationship_subtype
-                                      }
-                                    </span>
-                                  </p>
-                                )}
+                          {/* Sessions tree */}
+                          {incident.sessions &&
+                            incident.sessions.length > 0 && (
+                              <div className="ml-6 border-l-2 border-gray-200 pl-4 py-2 space-y-2">
+                                <h5 className="font-semibold text-gray-700 mb-2 text-sm">
+                                  Sessions
+                                </h5>
+
+                                {incident.sessions.map((session) => (
+                                  <div
+                                    key={session.sess_id ?? session.id}
+                                    // stopPropagation so clicking a session doesn’t trigger case modal
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedSession(session);
+                                    }}
+                                    className="p-2 bg-gray-50 rounded-md shadow-sm hover:bg-gray-100 cursor-pointer transition"
+                                  >
+                                    <p className="text-sm font-medium text-gray-700">
+                                      Session #
+                                      {session.sess_num ?? session.sess_id}
+                                    </p>
+                                    <p className="text-sm text-gray-500">
+                                      Type: {session.sess_type || "N/A"}
+                                    </p>
+                                    <p className="text-sm text-gray-500">
+                                      Status: {session.sess_status || "N/A"}
+                                    </p>
+                                    <p className="text-sm text-gray-500">
+                                      Date:{" "}
+                                      {session.sess_next_sched
+                                        ? new Date(
+                                            session.sess_next_sched
+                                          ).toLocaleString()
+                                        : session.sess_date_today
+                                        ? new Date(
+                                            session.sess_date_today
+                                          ).toLocaleString()
+                                        : "N/A"}
+                                    </p>
+                                  </div>
+                                ))}
                               </div>
-                            </div>
-                          )}
-
-                          {/* Incident Info */}
-                          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                            <h3 className="font-semibold text-gray-700 mb-4 text-lg">
-                              Incident Details
-                            </h3>
-
-                            {/* Violence Info */}
-                            <div className="mb-4 p-3 bg-white rounded-md shadow-sm">
-                              <p className="flex gap-2 mb-2">
-                                <span className="font-medium w-36">
-                                  Violence Type:
-                                </span>
-                                <span>
-                                  {selectedIncident.violence_type || "N/A"}
-                                </span>
-                              </p>
-                              <p className="flex gap-2">
-                                <span className="font-medium w-36">
-                                  Violence Subtype:
-                                </span>
-                                <span>
-                                  {selectedIncident.violence_subtype || "N/A"}
-                                </span>
-                              </p>
-                            </div>
-
-                            {/* Description */}
-                            <div className="mb-4 p-4 bg-white rounded-md shadow-sm">
-                              <div className="flex">
-                                <span className="font-medium w-36 flex-shrink-0 text-gray-700">
-                                  Description:
-                                </span>
-                                <span className="text-gray-800 break-words whitespace-pre-wrap text-justify">
-                                  {selectedIncident.incident_description ||
-                                    "N/A"}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Other Incident Details */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <p className="flex gap-2">
-                                <span className="font-medium w-36">
-                                  Date of Incident:
-                                </span>
-                                <span>
-                                  {selectedIncident.incident_date || "N/A"}
-                                </span>
-                              </p>
-                              <p className="flex gap-2">
-                                <span className="font-medium w-36">
-                                  Time of Incident:
-                                </span>
-                                <span>
-                                  {selectedIncident.incident_time || "N/A"}
-                                </span>
-                              </p>
-                              <p className="flex gap-2">
-                                <span className="font-medium w-36">
-                                  Place of Incident:
-                                </span>
-                                <span>
-                                  {selectedIncident.incident_location || "N/A"}
-                                </span>
-                              </p>
-                              <p className="flex gap-2">
-                                <span className="font-medium w-36">
-                                  Type of Place:
-                                </span>
-                                <span>
-                                  {selectedIncident.type_of_place || "N/A"}
-                                </span>
-                              </p>
-                              <p className="flex gap-2">
-                                <span className="font-medium w-36">
-                                  Electronic Means:
-                                </span>
-                                <span>
-                                  {selectedIncident.electronic_means || "N/A"}
-                                </span>
-                              </p>
-                              <p className="flex gap-2">
-                                <span className="font-medium w-36">
-                                  Conflict Area:
-                                </span>
-                                <span>
-                                  {selectedIncident.conflict_area || "N/A"}
-                                </span>
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === "faces" && (
-                <div>
-                  <h4 className="text-lg font-semibold text-[#292D96] mb-4">
-                    Victim Face Samples
-                  </h4>
-                  {victim.face_samples && victim.face_samples.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {victim.face_samples.map((sample, idx) => (
-                        <div
-                          key={idx}
-                          className="border rounded-lg shadow-sm bg-gray-50 p-2 flex flex-col items-center"
-                        >
-                          <img
-                            src={sample.photo}
-                            alt={`Face Sample ${idx + 1}`}
-                            className="w-full h-40 object-cover rounded"
-                          />
-                          <p className="text-xs text-gray-500 mt-2">
-                            Sample {idx + 1}
-                          </p>
+                            )}
                         </div>
                       ))}
                     </div>
-                  ) : (
-                    <p className="text-gray-500">No face samples available.</p>
                   )}
                 </div>
               )}
             </div>
           </div>
         </div>
+
+        {/* modals go here */}
+        {/* Case Modal */}
+        {selectedIncident && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+            onClick={() => setSelectedIncident(null)}
+          >
+            <div
+              className="bg-white rounded-2xl shadow-xl max-w-3xl w-full relative max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Sticky Header + Close */}
+              <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-4 border-b shadow-sm">
+                <h2 className="text-2xl font-bold text-[#292D96]">
+                  Case Details
+                </h2>
+                <button
+                  onClick={() => setSelectedIncident(null)}
+                  className="text-gray-400 hover:text-gray-700 transition"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="p-6 space-y-6">
+                {/* Case Info */}
+                <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                  <h3 className="font-semibold text-gray-700 mb-4 text-lg">
+                    Case Info
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <p className="flex gap-2">
+                      <span className="font-medium w-36">Case No:</span>
+                      <span>{selectedIncident.incident_num}</span>
+                    </p>
+                    <p className="flex gap-2">
+                      <span className="font-medium w-36">Status:</span>
+                      <span>{selectedIncident.status || "N/A"}</span>
+                    </p>
+                    <p className="flex gap-2">
+                      <span className="font-medium w-36">Created At:</span>
+                      <span>
+                        {new Date(selectedIncident.created_at).toLocaleString()}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Perpetrator Info */}
+                {selectedIncident.perp_id && (
+                  <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <h3 className="font-semibold text-gray-700 mb-4 text-lg">
+                      Perpetrator Details
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <p className="flex gap-2">
+                        <span className="font-medium w-36">Full Name:</span>
+                        <span>
+                          {selectedIncident.perp_id.per_first_name}{" "}
+                          {selectedIncident.perp_id.per_last_name}
+                        </span>
+                      </p>
+                      <p className="flex gap-2">
+                        <span className="font-medium w-36">Sex:</span>
+                        <span>{selectedIncident.perp_id.per_sex}</span>
+                      </p>
+                      <p className="flex gap-2">
+                        <span className="font-medium w-36">Birth Date:</span>
+                        <span>{selectedIncident.perp_id.per_birth_date}</span>
+                      </p>
+                      <p className="flex gap-2">
+                        <span className="font-medium w-36">Birth Place:</span>
+                        <span>{selectedIncident.perp_id.per_birth_place}</span>
+                      </p>
+                      <p className="flex gap-2">
+                        <span className="font-medium w-36">Nationality:</span>
+                        <span>{selectedIncident.perp_id.per_nationality}</span>
+                      </p>
+                      <p className="flex gap-2">
+                        <span className="font-medium w-36">Occupation:</span>
+                        <span>
+                          {selectedIncident.perp_id.per_main_occupation}
+                        </span>
+                      </p>
+                      <p className="flex gap-2">
+                        <span className="font-medium w-36">Religion:</span>
+                        <span>{selectedIncident.perp_id.per_religion}</span>
+                      </p>
+                      <p className="flex gap-2">
+                        <span className="font-medium w-36">
+                          Current Address:
+                        </span>
+                        <span>
+                          {selectedIncident.perp_id.per_current_address}
+                        </span>
+                      </p>
+                      <p className="flex gap-2">
+                        <span className="font-medium w-36">Relationship:</span>
+                        <span>
+                          {selectedIncident.perp_id.per_relationship_type}
+                        </span>
+                      </p>
+                      {selectedIncident.perp_id.per_relationship_type !==
+                        "Stranger/Unknown" && (
+                        <p className="flex gap-2">
+                          <span className="font-medium w-36">
+                            Specific Relationship:
+                          </span>
+                          <span>
+                            {selectedIncident.perp_id.per_relationship_subtype}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Incident Info */}
+                <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                  <h3 className="font-semibold text-gray-700 mb-4 text-lg">
+                    Incident Details
+                  </h3>
+
+                  {/* Violence Info */}
+                  <div className="mb-4 p-3 bg-white rounded-md shadow-sm">
+                    <p className="flex gap-2 mb-2">
+                      <span className="font-medium w-36">Violence Type:</span>
+                      <span>{selectedIncident.violence_type || "N/A"}</span>
+                    </p>
+                    <p className="flex gap-2">
+                      <span className="font-medium w-36">
+                        Violence Subtype:
+                      </span>
+                      <span>{selectedIncident.violence_subtype || "N/A"}</span>
+                    </p>
+                  </div>
+
+                  {/* Description */}
+                  <div className="mb-4 p-4 bg-white rounded-md shadow-sm">
+                    <div className="flex">
+                      <span className="font-medium w-36 flex-shrink-0 text-gray-700">
+                        Description:
+                      </span>
+                      <span className="text-gray-800 break-words whitespace-pre-wrap text-justify">
+                        {selectedIncident.incident_description || "N/A"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Other Incident Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <p className="flex gap-2">
+                      <span className="font-medium w-36">
+                        Date of Incident:
+                      </span>
+                      <span>{selectedIncident.incident_date || "N/A"}</span>
+                    </p>
+                    <p className="flex gap-2">
+                      <span className="font-medium w-36">
+                        Time of Incident:
+                      </span>
+                      <span>{selectedIncident.incident_time || "N/A"}</span>
+                    </p>
+                    <p className="flex gap-2">
+                      <span className="font-medium w-36">
+                        Place of Incident:
+                      </span>
+                      <span>{selectedIncident.incident_location || "N/A"}</span>
+                    </p>
+                    <p className="flex gap-2">
+                      <span className="font-medium w-36">Type of Place:</span>
+                      <span>{selectedIncident.type_of_place || "N/A"}</span>
+                    </p>
+                    <p className="flex gap-2">
+                      <span className="font-medium w-36">
+                        Electronic Means:
+                      </span>
+                      <span>{selectedIncident.electronic_means || "N/A"}</span>
+                    </p>
+                    <p className="flex gap-2">
+                      <span className="font-medium w-36">Conflict Area:</span>
+                      <span>{selectedIncident.conflict_area || "N/A"}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Session Modal */}
+        {selectedSession && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+            onClick={() => setSelectedSession(null)}
+          >
+            <div
+              className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedSession(null)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition"
+              >
+                ✕
+              </button>
+
+              <h2 className="text-2xl font-bold text-[#292D96] mb-4 text-center">
+                Session Details
+              </h2>
+
+              <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                  <p>
+                    <span className="font-medium">Session No:</span>{" "}
+                    {selectedSession.sess_num ?? selectedSession.sess_id}
+                  </p>
+                  <p>
+                    <span className="font-medium">Type:</span>{" "}
+                    {selectedSession.sess_type || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-medium">Status:</span>{" "}
+                    {selectedSession.sess_status || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-medium">Scheduled:</span>{" "}
+                    {selectedSession.sess_next_sched
+                      ? new Date(
+                          selectedSession.sess_next_sched
+                        ).toLocaleString()
+                      : selectedSession.sess_date_today
+                      ? new Date(
+                          selectedSession.sess_date_today
+                        ).toLocaleString()
+                      : "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-medium">Location:</span>{" "}
+                    {selectedSession.sess_location || "N/A"}
+                  </p>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
+                  <h3 className="font-semibold text-gray-700 mb-2 text-lg">
+                    Notes
+                  </h3>
+                  <p>
+                    <span className="font-medium">Mental Note:</span>{" "}
+                    {selectedSession.sess_mental_note || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-medium">Physical Note:</span>{" "}
+                    {selectedSession.sess_physical_note || "N/A"}
+                  </p>
+                  <p>
+                    <span className="font-medium">Financial Note:</span>{" "}
+                    {selectedSession.sess_financial_note || "N/A"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Back Button Below Right Section */}
         <div className="max-w-screen-xl mx-auto w-full px-6 pb-8 flex justify-end">
           <Link
