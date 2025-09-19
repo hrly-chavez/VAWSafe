@@ -7,16 +7,15 @@ export const ROUTES = {
   // desk officer pages
   DESK_OFFICER: "/desk_officer",
   DESK_OFFICER_REGISTER_VICTIM: "/desk_officer/register_victim",
+  DESK_OFFICER_BPO_APPLICATION: "/desk_officer/bpo-application",
   DESK_OFFICER_VICTIM_FACIAL: "/desk_officer/victim_facial",
   DESK_OFFICER_SESSION: "/desk_officer/session",
   DESK_OFFICER_START_SESSION: "/desk_officer/session/start",
 
-  
   DESK_OFFICER_VICTIMS: "/desk_officer/victims",
   DESK_OFFICER_VICTIM_DETAIL: "/desk_officer/victims/:vic_id",
   DESK_OFFICER_VICTIM_SEARCH: "/desk_officer/victims/search",
 
-  
   DESK_OFFICER_SOCIAL_WORKERS: "/desk_officer/social-workers",
   DESK_OFFICER_SERVICES: "/desk_officer/services",
   DESK_OFFICER_CASE_RECORDS: "/desk_officer/case-records",
@@ -40,7 +39,7 @@ export const ROUTES = {
   // SOCIAL WORKER
   SOCIAL_WORKER: "/social_worker",
   SOCIAL_WORKER_DASHBOARD: "/social_worker",
-    
+
   SOCIAL_WORKER_CASE_RECORDS: "/social_worker/case-records",
   SOCIAL_WORKER_SESSIONS: "/social_worker/sessions",
   SOCIAL_WORKER_VIEW_SESSION: "/social_worker/sessions/:sess_id",
@@ -50,7 +49,4 @@ export const ROUTES = {
   SOCIAL_WORKER_VICTIMS: "/social_worker/victims",
   SOCIAL_WORKER_VICTIM_DETAIL: "/social_worker/victims/:vic_id",
   SOCIAL_WORKER_SEARCH_FACIAL: "/social_worker/victims/search-facial",
- 
-
-
 };
