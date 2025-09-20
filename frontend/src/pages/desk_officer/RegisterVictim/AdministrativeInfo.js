@@ -21,18 +21,22 @@ export default function AdministrativeInfo({
   const [selectedMunicipality, setSelectedMunicipality] = useState("");
   const [selectedBarangay, setSelectedBarangay] = useState("");
 
-  const [sitio, setSitio] = useState("");
   const [street, setStreet] = useState("");
+  const [sitio, setSitio] = useState("");
 
   useEffect(() => {
-    axios.get("http://localhost:8000/api/desk_officer/cities/")
+    axios
+      .get("http://localhost:8000/api/desk_officer/cities/")
       .then((res) => setCities(res.data))
       .catch((err) => console.error("Failed to load cities:", err));
   }, []);
 
   useEffect(() => {
     if (selectedCity) {
-      axios.get(`http://localhost:8000/api/desk_officer/cities/${selectedCity}/municipalities/`)
+      axios
+        .get(
+          `http://localhost:8000/api/desk_officer/cities/${selectedCity}/municipalities/`
+        )
         .then((res) => setMunicipalities(res.data))
         .catch((err) => console.error("Failed to load municipalities:", err));
     } else {
@@ -43,7 +47,10 @@ export default function AdministrativeInfo({
 
   useEffect(() => {
     if (selectedMunicipality) {
-      axios.get(`http://localhost:8000/api/desk_officer/municipalities/${selectedMunicipality}/barangays/`)
+      axios
+        .get(
+          `http://localhost:8000/api/desk_officer/municipalities/${selectedMunicipality}/barangays/`
+        )
         .then((res) => setBarangays(res.data))
         .catch((err) => console.error("Failed to load barangays:", err));
     } else {
@@ -52,21 +59,34 @@ export default function AdministrativeInfo({
   }, [selectedMunicipality]);
 
   useEffect(() => {
-    const cityName = cities.find(c => c.id === parseInt(selectedCity))?.name;
-    const municipalityName = municipalities.find(m => m.id === parseInt(selectedMunicipality))?.name;
-    const barangayName = barangays.find(b => b.id === parseInt(selectedBarangay))?.name;
+    const cityName = cities.find((c) => c.id === parseInt(selectedCity))?.name;
+    const municipalityName = municipalities.find(
+      (m) => m.id === parseInt(selectedMunicipality)
+    )?.name;
+    const barangayName = barangays.find(
+      (b) => b.id === parseInt(selectedBarangay)
+    )?.name;
 
     const parts = [
       street.trim(),
       sitio.trim(),
       barangayName,
       municipalityName,
-      cityName
+      cityName,
     ].filter(Boolean);
 
     const fullAddress = parts.join(", ");
     handleChange("handling_org_full_address", fullAddress);
-  }, [selectedCity, selectedMunicipality, selectedBarangay, sitio, street, cities, municipalities, barangays]);
+  }, [
+    selectedCity,
+    selectedMunicipality,
+    selectedBarangay,
+    sitio,
+    street,
+    cities,
+    municipalities,
+    barangays,
+  ]);
 
   const handleReportType = (value) => {
     // If the victim is the reporter, clear informant fields
@@ -83,7 +103,8 @@ export default function AdministrativeInfo({
     }
   };
 
-  const inputStyle = "px-4 py-2 rounded-lg bg-white border border-gray-300 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400";
+  const inputStyle =
+    "px-4 py-2 rounded-lg bg-white border border-gray-300 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400";
 
   const onTrimmed = (field) => (e) =>
     handleChange(field, e.target.value.trimStart());
@@ -109,8 +130,12 @@ export default function AdministrativeInfo({
             value={formDataState.handling_org || ""}
             onChange={(e) => handleChange("handling_org", e.target.value)}
           >
-            <option value="" disabled>Select organization</option>
-            <option value="DSWD">Department of Social Welfare and Development (DSWD)</option>
+            <option value="" disabled>
+              Select organization
+            </option>
+            <option value="DSWD">
+              Department of Social Welfare and Development (DSWD)
+            </option>
             <option value="VAWDesk">Barangay VAW Desk</option>
           </select>
         </div>
@@ -123,9 +148,13 @@ export default function AdministrativeInfo({
             onChange={(e) => setSelectedCity(e.target.value)}
             className={inputStyle}
           >
-            <option value="" disabled hidden>Select Province</option>
+            <option value="" disabled hidden>
+              Select Province
+            </option>
             {cities.map((city) => (
-              <option key={city.id} value={city.id}>{city.name}</option>
+              <option key={city.id} value={city.id}>
+                {city.name}
+              </option>
             ))}
           </select>
         </div>
@@ -138,9 +167,13 @@ export default function AdministrativeInfo({
             className={inputStyle}
             disabled={!selectedCity}
           >
-            <option value="" disabled hidden>Select Municipality</option>
+            <option value="" disabled hidden>
+              Select Municipality
+            </option>
             {municipalities.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
             ))}
           </select>
         </div>
@@ -153,22 +186,20 @@ export default function AdministrativeInfo({
             className={inputStyle}
             disabled={!selectedMunicipality}
           >
-            <option value="" disabled hidden>Select Barangay</option>
+            <option value="" disabled hidden>
+              Select Barangay
+            </option>
             {barangays.map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
             ))}
           </select>
         </div>
 
         <div className="flex flex-col">
           <label className="font-medium text-sm mb-1">Sitio</label>
-          <input
-            type="text"
-            placeholder="Sitio Example"
-            className={inputStyle}
-            value={sitio}
-            onChange={(e) => setSitio(e.target.value)}
-          />
+          <input type="text" placeholder="Sitio Example" className={inputStyle} />
         </div>
 
         <div className="flex flex-col">
@@ -184,7 +215,9 @@ export default function AdministrativeInfo({
 
         <div className="md:col-span-2">
           <div className="flex flex-col md:col-span-2">
-            <label className="font-medium text-sm mb-1">Handling Organization Full Address</label>
+            <label className="font-medium text-sm mb-1">
+              Handling Organization Full Address
+            </label>
             <input
               type="text"
               value={formDataState.handling_org_full_address || ""}
@@ -205,7 +238,7 @@ export default function AdministrativeInfo({
             value={formDataState.report_type || ""}
             onChange={(e) => handleReportType(e.target.value)}
           >
-            <option value="">Select report type</option>
+            <option>Select report type</option>
             <option value="victim-survivor">
               Reported by the victim-survivor
             </option>
@@ -220,6 +253,7 @@ export default function AdministrativeInfo({
           </select>
         </div>
       </div>
+
       {/* popup depends on report type */}
       {formDataState.report_type !== "victim-survivor" &&
         formDataState.report_type !== "" && (

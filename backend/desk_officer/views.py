@@ -2,7 +2,7 @@ import tempfile, os, traceback, json
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
-from rest_framework import status, generics, permissions
+from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -129,6 +129,17 @@ class search_victim_facial(APIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['VAWDesk']
 
+# retrieve all information related to case
+class VictimIncidentsView(generics.ListAPIView):
+    serializer_class = IncidentInformationSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['VAWDesk']
+
+    def get_queryset(self):
+        vic_id = self.kwargs.get("vic_id")
+        # If Victim's PK is vic_id, filter like this:
+        return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by('incident_num')
+
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
 @transaction.atomic
@@ -231,14 +242,27 @@ def register_victim(request):
                                 status=status.HTTP_400_BAD_REQUEST)
             case_report = c_ser.save(victim=victim)
 
-        # 4) IncidentInformation (optional)
+        # 4) Perpetrator (optional)
+        perpetrator = None
+        perpetrator_data = parse_json_field("perpetrator")
+        if perpetrator_data:
+            p_ser = PerpetratorSerializer(data=perpetrator_data)
+            if not p_ser.is_valid():
+                print("[perpetrator] errors:", p_ser.errors)
+                return Response({"success": False, "errors": p_ser.errors},
+                                status=status.HTTP_400_BAD_REQUEST)
+            perpetrator = p_ser.save()
+
+        # 5) IncidentInformation (optional)
         incident = None
         incident_data = parse_json_field("incident")
         if incident_data:
             # FK field name on your model is vic_id (not "victim")
             incident_data["vic_id"] = victim.pk  # or victim.vic_id
 
-            
+            if perpetrator:
+                incident_data["perp_id"] = perpetrator.pk
+       
             for key in ("is_via_electronic_means", "is_conflict_area", "is_calamity_area"):
                 if key in incident_data:
                     incident_data[key] = to_bool(incident_data[key])
@@ -250,7 +274,7 @@ def register_victim(request):
                                 status=status.HTTP_400_BAD_REQUEST)
             incident = i_ser.save()
 
-        # 4.5) Evidences (optional)
+        # 5.5) Evidences (optional)
         evidence_files = request.FILES.getlist("evidences")  # matches frontend FormData key
         if incident and evidence_files:
             for file in evidence_files:
@@ -259,18 +283,7 @@ def register_victim(request):
                     file=file
                 )
 
-
-
-        # 5) Perpetrator (optional)
-        perpetrator = None
-        perpetrator_data = parse_json_field("perpetrator")
-        if perpetrator_data:
-            p_ser = PerpetratorSerializer(data=perpetrator_data)
-            if not p_ser.is_valid():
-                print("[perpetrator] errors:", p_ser.errors)
-                return Response({"success": False, "errors": p_ser.errors},
-                                status=status.HTTP_400_BAD_REQUEST)
-            perpetrator = p_ser.save()
+        
 
         return Response({
             "success": True,
@@ -294,12 +307,10 @@ class SessionListCreateView(generics.ListCreateAPIView):
         # Only return sessions that are Pending or Ongoing
         return Session.objects.filter(sess_status__in=['Pending', 'Ongoing']).order_by('-sess_next_sched')
 
-
 class SessionDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Session.objects.all()
     serializer_class = SessionSerializer
     lookup_field = "sess_id"
-
 
 @api_view(["POST"])
 def create_session(request):

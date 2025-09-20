@@ -51,7 +51,6 @@ class CaseReportSerializer(serializers.ModelSerializer):
             
         ]
         
-
 class VictimSerializer(serializers.ModelSerializer):
     face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
     case_report = CaseReportSerializer(read_only=True)
@@ -60,57 +59,11 @@ class VictimSerializer(serializers.ModelSerializer):
         model = Victim
         fields = "__all__"
 
-class IncidentInformationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = IncidentInformation
-        fields = "__all__"
-        read_only_fields = ["incident_id", "incident_num"]
-        extra_kwargs = {
-            "incident_date": {"required": False, "allow_null": True},
-            "incident_time": {"required": False, "allow_null": True},
-            # "incident_location": {"required": False, "allow_blank": True},
-            # "violence_type": {"required": False, "allow_blank": True},
-            # "violence_subtype": {"required": False, "allow_blank": True},
-            # "type_of_place": {"required": False, "allow_blank": True},
-            # "electronic_means": {"required": False, "allow_blank": True},
-            # "conflict_area": {"required": False, "allow_blank": True},
-        }
-
-    def create(self, validated_data):
-        victim = validated_data.get("vic_id")
-
-        # get last case number for this victim
-        last_num = (
-            IncidentInformation.objects.filter(vic_id=victim)
-            .order_by("-incident_num")
-            .values_list("incident_num", flat=True)
-            .first()
-        )
-        validated_data["incident_num"] = (last_num or 0) + 1
-
-        return super().create(validated_data)
-
 class PerpetratorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Perpetrator
         fields = "__all__"
 
-class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
-    perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)
-
-    class Meta:
-        model = IncidentInformation
-        fields = "__all__"
-
-class VictimDetailSerializer(serializers.ModelSerializer):
-    face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
-    case_report = CaseReportSerializer(read_only=True)
-    incidents = IncidentWithPerpetratorSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Victim
-        fields = "__all__"
-        
 class SessionSerializer(serializers.ModelSerializer):
     victim_name = serializers.SerializerMethodField()
     case_no = serializers.SerializerMethodField() 
@@ -151,20 +104,64 @@ class SessionSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
     def get_official_name(self, obj):
         return obj.assigned_official.full_name if obj.assigned_official else None
+
+
+class IncidentInformationSerializer(serializers.ModelSerializer):
+    vic_id = VictimSerializer(read_only=True)   # nested victim
+    perp_id = PerpetratorSerializer(read_only=True)  # nested perpetrator
+    sessions = SessionSerializer(many=True, read_only=True)  # related sessions
+
+    class Meta:
+        model = IncidentInformation
+        fields = "__all__"
+        read_only_fields = ["incident_id", "incident_num"]
+        extra_kwargs = {
+            "incident_date": {"required": False, "allow_null": True},
+            "incident_time": {"required": False, "allow_null": True},
+        }
+
+    def create(self, validated_data):
+        victim = validated_data.get("vic_id")
+
+        # get last case number for this victim
+        last_num = (
+            IncidentInformation.objects.filter(vic_id=victim)
+            .order_by("-incident_num")
+            .values_list("incident_num", flat=True)
+            .first()
+        )
+        validated_data["incident_num"] = (last_num or 0) + 1
+
+        return super().create(validated_data)
+
+
+
+class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
+    perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)
+
+    class Meta:
+        model = IncidentInformation
+        fields = "__all__"
+
+class VictimDetailSerializer(serializers.ModelSerializer):
+    face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
+    case_report = CaseReportSerializer(read_only=True)
+    incidents = IncidentWithPerpetratorSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Victim
+        fields = "__all__"
+        
     
 # Account Management
 class OfficialSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
-    assigned_barangay_name = serializers.CharField(
-        source="of_assigned_barangay.name", read_only=True
-    )
 
     class Meta:
         model = Official
         fields = [
             "of_id", "full_name", "of_role", "of_contact", "of_photo",
-            "province", "municipality", "barangay", "sitio", "street",
-            "of_assigned_barangay", "assigned_barangay_name"
+            "province", "municipality", "barangay", "sitio", "street", "of_assigned_barangay"
         ]
 
 class EvidenceSerializer(serializers.ModelSerializer):
@@ -182,7 +179,3 @@ class EvidenceSerializer(serializers.ModelSerializer):
 #             "city", "municipality", "barangay", "sitio", "street",
 #             "of_assigned_barangay", "status"  # 👈 Add this
 #         ]
-
-
-
-# Social Worker fetch account
