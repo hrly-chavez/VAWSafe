@@ -15,7 +15,7 @@ from django.contrib.auth.models import User
 from rest_framework.decorators import action
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
-
+from PIL import Image
 
 
 from django.utils.decorators import method_decorator
