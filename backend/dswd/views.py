@@ -1,5 +1,4 @@
 from shared_model.models import *
-from rest_framework import generics, permissions
 from rest_framework import generics, viewsets
 import os, tempfile, traceback
 from rest_framework.views import APIView
@@ -22,6 +21,8 @@ from django.core.mail import send_mail
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 
+
+# Create your views here.
 #Add @never_cache to sensitive view functions, or create middleware. Example for viewset:
 @method_decorator(never_cache, name='dispatch')
 # class ViewVictim (generics.ListAPIView):
@@ -268,94 +269,6 @@ class ViewVAWDeskOfficerDetail(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
     
-
-#====================================SESSIONS========================================
-# ---- Questions ----
-class QuestionListCreate(generics.ListCreateAPIView): 
-    # Populate the Questions table
-    queryset = Question.objects.all().order_by("-created_at")
-    serializer_class = QuestionSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def perform_create(self, serializer):
-        official = getattr(self.request.user, "official", None)
-        serializer.save(created_by=official)
-
-
-class QuestionDetail(generics.RetrieveUpdateDestroyAPIView):
-    # GET = Single Question
-    # PUT/PATCH = Update Question
-    # DELETE = Deactivate Question
-    queryset = Question.objects.all()
-    serializer_class = QuestionSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-class QuestionBulkCreate(generics.CreateAPIView):
-    serializer_class = BulkQuestionSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        created = serializer.save()
-        return Response(QuestionSerializer(created, many=True).data, status=201)
-
-
-class QuestionChoices(APIView): 
-    # Categories + Answer Types for dropdowns
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get(self, request, *args, **kwargs):
-        return Response({
-            "categories": [c[0] for c in Question.QUESTION_CATEGORIES],
-            "answer_types": [a[0] for a in Question.ANSWER_TYPES],
-        })
-
-
-# ---- SessionTypeQuestion ----
-class SessionTypeQuestionListCreate(generics.ListCreateAPIView):
-    queryset = SessionTypeQuestion.objects.all()
-    serializer_class = SessionTypeQuestionSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-class BulkAssignView(APIView):
-    # Bulk assign multiple Questions to multiple sessions/types
-    permission_classes = [permissions.IsAuthenticated]
-
-    def post(self, request, *args, **kwargs):
-        serializer = BulkAssignSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        questions = serializer.validated_data["questions"]
-        session_numbers = serializer.validated_data["session_numbers"]
-        session_types = serializer.validated_data["session_types"]
-
-        created = []
-        for q_id in questions:
-            for num in session_numbers:
-                for st_id in session_types:
-                    mapping, _ = SessionTypeQuestion.objects.get_or_create(
-                        session_number=num,
-                        session_type_id=st_id,
-                        question_id=q_id,
-                    )
-                    created.append(mapping)
-
-        return Response(SessionTypeQuestionSerializer(created, many=True).data, status=201)
- 
-
-class SessionTypeQuestionDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = SessionTypeQuestion.objects.all()
-    serializer_class = SessionTypeQuestionSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-
-# ---- SessionType (for dropdowns) ----
-class SessionTypeList(generics.ListAPIView):
-    queryset = SessionType.objects.all()
-    serializer_class = SessionTypeSerializer
-    permission_classes = [permissions.IsAuthenticated]
 class OfficialViewSet(ModelViewSet):
    queryset = Official.objects.all()
    serializer_class = OfficialSerializer

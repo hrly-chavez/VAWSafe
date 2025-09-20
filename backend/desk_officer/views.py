@@ -299,7 +299,7 @@ def register_victim(request):
         return Response({"success": False, "error": str(e)},
                         status=status.HTTP_400_BAD_REQUEST)
 
-#=======================================================================SESSION FUNCTIONS
+#SESSION FUNCTIONS
 class SessionListCreateView(generics.ListCreateAPIView):
     serializer_class = SessionSerializer
 
@@ -341,17 +341,6 @@ def list_social_workers(request):
         for w in workers
     ]
     return Response(data)
-
-@api_view(["GET"])
-def list_session_types(request):
-    types = SessionType.objects.all()
-    serializer = SessionTypeSerializer(types, many=True)
-    return Response(serializer.data)
-#=======================================================================
-
-
-
-
 
 # Approve and Reject Official
 # @api_view(["POST"])

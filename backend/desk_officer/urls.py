@@ -24,6 +24,5 @@ urlpatterns = [
     path("sessions/<int:sess_id>/", SessionDetailView.as_view(), name="session-detail"),
     path("sessions/create_sched/", create_session, name="create-session"),
     path("officials/social-workers/", list_social_workers, name="list-social-workers"),
-    path("session-types/", list_session_types, name="list-session-types"),
 
 ] + router.urls
