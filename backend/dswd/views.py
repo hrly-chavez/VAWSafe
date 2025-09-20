@@ -389,3 +389,17 @@ class PendingOfficials(viewsets.ModelViewSet):
         except Exception as e:
             traceback.print_exc()
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class ServicesListCreateView(generics.ListCreateAPIView):
+    serializer_class = ServicesSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']
+
+    def get_queryset(self):
+        queryset = Services.objects.all()
+        category = self.request.query_params.get("category", None)
+
+        # only filter if not "All" and not empty
+        if category and category != "All":
+            queryset = queryset.filter(category=category)
+        return queryset

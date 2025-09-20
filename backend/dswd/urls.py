@@ -21,5 +21,7 @@ urlpatterns = [
     path("vawdesk_officer/", ViewVAWDeskOfficer.as_view(), name="view_vawdesk_officer"),
     path("vawdesk_officer/<int:of_id>/", ViewVAWDeskOfficerDetail.as_view(), name="view_vawdesk_officer_detail"),
 
+    path("services/", ServicesListCreateView.as_view(), name="services-list-create"),
+
     path('', include(router.urls)),
 ] + router.urls

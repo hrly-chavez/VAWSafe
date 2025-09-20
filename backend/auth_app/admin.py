@@ -20,3 +20,6 @@ admin.site.register(Municipality)
 admin.site.register(Barangay)
 admin.site.register(Sitio)
 admin.site.register(Street)
+
+admin.site.register(Address)
+admin.site.register(Services)
