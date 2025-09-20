@@ -9,7 +9,8 @@ export default function Schedule({ victim, incident, back, next }) {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [time, setTime] = useState(new Date().toTimeString().slice(0, 5));
   const [location, setLocation] = useState("");
-  const [sessionType, setSessionType] = useState("");
+  const [sessionTypes, setSessionTypes] = useState([]);
+  const [selectedTypes, setSelectedTypes] = useState([]);
   const navigate = useNavigate();
   const [officials, setOfficials] = useState([]);
   const [selectedOfficial, setSelectedOfficial] = useState("");
@@ -20,7 +21,7 @@ export default function Schedule({ victim, incident, back, next }) {
         incident_id: incident?.incident_id,
         sess_next_sched: `${date}T${time}:00Z`,
         sess_location: location,
-        sess_type: sessionType,
+        sess_type: selectedTypes.map((t) => t.value),
         assigned_official: selectedOfficial || null,
       };
 
@@ -29,13 +30,10 @@ export default function Schedule({ victim, incident, back, next }) {
         payload
       );
 
-      // ✅ Format readable datetime
+      // Format readable datetime
       const readableDate = new Date(res.data.sess_next_sched).toLocaleString(
         "en-US",
-        {
-          dateStyle: "medium",
-          timeStyle: "short",
-        }
+        {dateStyle: "medium", timeStyle: "short",}
       );
 
       alert(` Session scheduled successfully!\nDate: ${readableDate}`);
@@ -52,6 +50,20 @@ export default function Schedule({ victim, incident, back, next }) {
       }
     }
   };
+  // Load session types from API
+useEffect(() => {
+  api
+    .get("/api/desk_officer/session-types/") 
+    .then((res) => {
+      const options = res.data.map((t) => ({
+        value: t.id,
+        label: t.name,
+      }));
+      setSessionTypes(options);
+    })
+    .catch((err) => console.error("Failed to fetch session types", err));
+}, []);
+
    useEffect(() => {
     api
       .get("/api/desk_officer/officials/social-workers/")
@@ -69,20 +81,20 @@ export default function Schedule({ victim, incident, back, next }) {
   const handleStartSession = async () => {
   try {
     const payload = {
-      victim: victim?.vic_id,   // use your backend field names
       incident_id: incident?.incident_id,
       started_now: true,
+      sess_type: [],
     };
 
     const res = await api.post("/api/desk_officer/sessions/", payload);
 
-    const session = res.data; // created session data from backend
+    const session = res.data;
 
     
     navigate("/desk_officer/session/start", { state: { session, victim, incident } });
   } catch (err) {
     console.error("Start session error:", err);
-    alert(" Failed to start session");
+    alert("Failed to start session");
   }
 };
 
@@ -125,20 +137,18 @@ export default function Schedule({ victim, incident, back, next }) {
             onChange={(e) => setLocation(e.target.value)}
           />
         </div>
-
-        {/* Type */}
+        {/* Type of Session */}
         <div>
-          <label className="text-xs text-gray-600">Type of Session</label>
-          <select
-            className="w-full border rounded p-2"
-            value={sessionType}
-            onChange={(e) => setSessionType(e.target.value)}
-          >
-            <option value="">Select Type</option>
-            <option value="Counseling">Counseling</option>
-            <option value="Interview">Interview</option>
-            <option value="Follow-up">Follow-up</option>
-          </select>
+          <label className="text-xs text-gray-600 block mb-1">
+            Type of Session (you can pick multiple)
+          </label>
+          <Select
+            options={sessionTypes}
+            isMulti
+            value={selectedTypes}
+            onChange={setSelectedTypes}
+            placeholder="Select session types..."
+          />
         </div>
          {/* Assign Social Worker */}
         <div>

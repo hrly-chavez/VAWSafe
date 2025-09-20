@@ -1,11 +1,6 @@
 // src/App.js
 import React, { Suspense, lazy } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import {BrowserRouter as Router,Routes,Route,Navigate,} from "react-router-dom";
 import { ROUTES } from "./routes/routes";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -18,52 +13,20 @@ import ManualLoginPage from "./pages/ManualLoginPage";
 import ResetPasswordPage from "./pages/ResetPassword";
 
 //Desk officer
-const DeskOfficerPage = lazy(() =>
-  import("./pages/desk_officer/DeskOfficer/Dashboard")
-);
-const VictimFacial = lazy(() =>
-  import("./pages/desk_officer/RegisterVictim/VictimFacial")
-);
-const RegisterVictim = lazy(() =>
-  import("./pages/desk_officer/RegisterVictim/RegisterVictim")
-);
-const BPOAppliction = lazy(() =>
-  import("./pages/desk_officer/RegisterVictim/BPOApplication")
-);
+const DeskOfficerPage = lazy(() =>import("./pages/desk_officer/DeskOfficer/Dashboard"));
+const VictimFacial = lazy(() =>import("./pages/desk_officer/RegisterVictim/VictimFacial"));
+const RegisterVictim = lazy(() =>import("./pages/desk_officer/RegisterVictim/RegisterVictim"));
 const Session = lazy(() => import("./pages/desk_officer/Session/Session"));
-const StartSession = lazy(() =>
-  import("./pages/desk_officer/Session/StartSession")
-);
-
+const StartSession = lazy(() => import("./pages/desk_officer/Session/StartSession"));
 const DOVictims = lazy(() => import("./pages/desk_officer/Victims/Victims"));
-const DOVictimDetail = lazy(() =>
-  import("./pages/desk_officer/Victims/VictimDetails")
-);
-const DOVictimSearch = lazy(() =>
-  import("./pages/desk_officer/Victims/SearchVictim")
-);
-
-// nag add kog pages sa desk officer
-const DOSocialWorkers = lazy(() =>
-  import("./pages/desk_officer/SocialWorker/SocialWorker")
-);
-const ViewOfficials = lazy(() => 
-  import("./pages/desk_officer/SocialWorker/ViewOfficials")
-);
-const DOAccountManagement = lazy(() =>
-  import("./pages/desk_officer/SocialWorker/AccountManagement")
-);
-const DOServices = lazy(() => 
-  import("./pages/desk_officer/Services/Services")
-);
-const DOCaseRecords = lazy(() =>
-  import("./pages/desk_officer/CaseRecords/CaseRecords")
-);
-
-// const DOPendingAccount = lazy(() =>
-//   import("./pages/desk_officer/AccountManage/PendingAccount")
-// );
-
+const DOVictimDetail = lazy(() =>import("./pages/desk_officer/Victims/VictimDetails"));
+const DOVictimSearch = lazy(() =>import("./pages/desk_officer/Victims/SearchVictim"));
+const DOSocialWorkers = lazy(() =>import("./pages/desk_officer/SocialWorker/SocialWorker"));
+const DOServices = lazy(() => import("./pages/desk_officer/Services/Services"));
+const DOCaseRecords = lazy(() =>import("./pages/desk_officer/CaseRecords/CaseRecords"));
+const DOAccountManagement = lazy(() =>import("./pages/desk_officer/AccountManage/AccountManagement"));
+const DOPendingAccount = lazy(() =>import("./pages/desk_officer/AccountManage/PendingAccount"));
+const ViewOfficials = lazy(() => import("./pages/desk_officer/AccountManage/ViewOfficials"));
 
 // Social Worker Pages (lazy loaded)
 const DashboardPage = lazy(() =>
@@ -86,40 +49,17 @@ const ViewSessions = lazy(() =>
 );
 
 //DSWD
-const DSWDDashboard = lazy(() =>
-  import("./pages/dswd/Dashboard/DSWDDashboard")
-);
-const DSWDVAWCVictims = lazy(() =>
-  import("./pages/dswd/Victim/DSWDVAWCVictims")
-);
-const DSWDVictimDetail = lazy(() =>
-  import("./pages/dswd/Victim/VictimDetails")
-);
+const DSWDDashboard = lazy(() =>import("./pages/dswd/Dashboard/DSWDDashboard"));
+const DSWDVAWCVictims = lazy(() =>import("./pages/dswd/Victim/DSWDVAWCVictims"));
+const DSWDVictimDetail = lazy(() =>import("./pages/dswd/Victim/VictimDetails"));
 const DSWDSearchVictim = lazy(() => import("./pages/dswd/Victim/SearchVictim"));
-const DSWDSocialWorkers = lazy(() =>
-  import("./pages/dswd/SocialWorker/DSWDSocialWorkers")
-);
-const DSWDSocialWorkerDetail = lazy(() =>
-  import("./pages/dswd/SocialWorker/SocialWorkerDetails")
-);
-const DSWD_VAWDESK_OFFICER = lazy(() =>
-  import("./pages/dswd/VawDeskOfficer/DSWDVawDeskOfficer")
-);
-const DSWD_VAWDESK_OFFICER_Detail = lazy(() =>
-  import("./pages/dswd/VawDeskOfficer/VAWDeskOfficerDetail")
-);
-const DSWDServices = lazy(() =>
-  import("./pages/dswd/ServiceDSWD/DSWDServices")
-);
-const DSWDAccountManagement = lazy(() =>
-  import("./pages/dswd/AccountManagement/DSWDAccountManagement")
-);
-const DSWDViewOfficials = lazy(() =>
-  import("./pages/dswd/AccountManagement/ViewOfficials")
-);
-const DSWDPendingAccount = lazy(() =>
-  import("./pages/dswd/AccountManagement/PendingAccount")
-);
+const DSWDSocialWorkers = lazy(() =>import("./pages/dswd/SocialWorker/DSWDSocialWorkers"));
+const DSWDSocialWorkerDetail = lazy(() =>import("./pages/dswd/SocialWorker/SocialWorkerDetails"));
+const DSWD_VAWDESK_OFFICER = lazy(() =>import("./pages/dswd/VawDeskOfficer/DSWDVawDeskOfficer"));
+const DSWD_VAWDESK_OFFICER_Detail = lazy(() =>import("./pages/dswd/VawDeskOfficer/VAWDeskOfficerDetail"));
+const DSWDServices = lazy(() =>import("./pages/dswd/ServiceDSWD/DSWDServices"));
+const DSWDAccountManagement = lazy(() =>import("./pages/dswd/AccountManagement/DSWDAccountManagement"));
+const DSWDQuestions = lazy(() =>import('./pages/dswd/Questions/Questions'));
 
 export default function App() {
   return (
@@ -239,62 +179,24 @@ export default function App() {
                 element={<DSWD_VAWDESK_OFFICER_Detail />}
               />
               <Route path={ROUTES.DSWD_SERVICES} element={<DSWDServices />} />
-              <Route
-                path={ROUTES.DSWD_ACCOUNT_MANAGEMENT}
-                element={<DSWDAccountManagement />}
-              />
-              <Route
-                path={ROUTES.DSWD_VIEW_OFFICIALS}
-                element={<DSWDViewOfficials />}
-              />
-              <Route
-                path={ROUTES.DSWD_PENDING_ACCOUNT}
-                element={<DSWDPendingAccount />}
-              />
+              <Route path={ROUTES.DSWD_ACCOUNT_MANAGEMENT}element={<DSWDAccountManagement />}/>
+              <Route path={ROUTES.DSWD_QUESTIONS} element={<DSWDQuestions />} />
             </Route>
 
             {/* SOCIAL WORKER group */}
-            <Route
-              element={
-                <ProtectedRoute roles={["Social Worker"]}>
+            <Route element={<ProtectedRoute roles={["Social Worker"]}>
                   <SidebarLayout />
-                </ProtectedRoute>
-              }
-            >
-              <Route
-                path={ROUTES.SOCIAL_WORKER_DASHBOARD}
-                element={<DashboardPage />}
-              />
-              <Route
-                path={ROUTES.SOCIAL_WORKER_CASE_RECORDS}
-                element={<CaseRecords />}
-              />
-              <Route
-                path={ROUTES.SOCIAL_WORKER_SESSIONS}
-                element={<Sessions />}
-              />
-              <Route
-                path={ROUTES.SOCIAL_WORKER_SERVICES}
-                element={<Services />}
-              />
-              <Route
-                path={ROUTES.SOCIAL_WORKER_VICTIMS}
-                element={<Victims />}
-              />
-              <Route
-                path={ROUTES.SOCIAL_WORKER_VICTIM_DETAIL}
-                element={<VictimDetailPage />}
-              />
-              <Route
-                path={ROUTES.SOCIAL_WORKER_SEARCH_FACIAL}
-                element={<SearchVictimFacial />}
-              />
-              <Route
-                path={ROUTES.SOCIAL_WORKER_VIEW_SESSION}
-                element={<ViewSessions />}
-              />
+                </ProtectedRoute>}>
+              <Route path={ROUTES.SOCIAL_WORKER_DASHBOARD} element={<DashboardPage />}/>
+              <Route path={ROUTES.SOCIAL_WORKER_CASE_RECORDS} element={<CaseRecords />}/>
+              <Route path={ROUTES.SOCIAL_WORKER_SESSIONS} element={<Sessions />}/>
+              <Route path={ROUTES.SOCIAL_WORKER_SERVICES} element={<Services />}/>
+              <Route path={ROUTES.SOCIAL_WORKER_VICTIMS} element={<Victims />}/>
+              <Route path={ROUTES.SOCIAL_WORKER_VICTIM_DETAIL} element={<VictimDetailPage />}/>
+              <Route path={ROUTES.SOCIAL_WORKER_SEARCH_FACIAL} element={<SearchVictimFacial />}/>
+              <Route path={ROUTES.SOCIAL_WORKER_VIEW_SESSION} element={<ViewSessions />}/>
             </Route>
-
+                
             <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
           </Routes>
         </Suspense>
