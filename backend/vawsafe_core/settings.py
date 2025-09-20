@@ -194,3 +194,8 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "carataojoegie@gmail.com"        # your Gmail
 EMAIL_HOST_PASSWORD = "qvrt xcrf meek royf"  # 👈 from Step 2
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+# settings.py
+FRONTEND_URL = "http://localhost:3000"  # or your deployed React frontend URL
+DEFAULT_FROM_EMAIL = "carataojoegie@gmail.com"  # or your system email
