@@ -24,6 +24,7 @@ export const ROUTES = {
   // DESK_OFFICER_PENDING_ACCOUNT: "/desk_officer/pending-account",
   DESK_OFFICER_VIEW_OFFICIAL: "/desk_officer/officials/:of_id",
 
+  //DSWD
   DSWD: "/dswd",
   DSWD_VAWC_VICTIMS: "/dswd/victims",
   DSWD_VICTIM_DETAIL: "/dswd/victims/:vic_id",
@@ -36,6 +37,7 @@ export const ROUTES = {
   DSWD_ACCOUNT_MANAGEMENT: "/dswd/account-management",
   DSWD_VIEW_OFFICIALS: "/dswd/account-management/:of_id",
   DSWD_PENDING_ACCOUNT: "/dswd/account-management/pending",
+  DSWD_QUESTIONS: "/dswd/questions",
 
   // SOCIAL WORKER
   SOCIAL_WORKER: "/social_worker",
