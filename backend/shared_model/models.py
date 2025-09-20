@@ -56,7 +56,19 @@ class Street(models.Model):
 
     def __str__(self):
         return f"{self.name}, {self.sitio.name}"
-    
+
+# all purpose address save all[?]
+class Address(models.Model):
+    province = models.ForeignKey("Province", on_delete=models.PROTECT, null=True, blank=True)
+    municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, null=True, blank=True)
+    barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, null=True, blank=True)
+    sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, null=True, blank=True)
+    street = models.ForeignKey("Street", on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        parts = [str(x) for x in [self.street, self.sitio, self.barangay, self.municipality, self.province] if x]
+        return ", ".join(parts)
+
 # for system users
 class Official(models.Model):
     ROLE_CHOICES = [
@@ -91,8 +103,6 @@ class Official(models.Model):
     barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
     sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
     street = models.ForeignKey("Street", on_delete=models.SET_NULL, null=True, blank=True, related_name="officials") 
-
-
 
     #where na baranggay assigned
     of_assigned_barangay = models.ForeignKey(Barangay, on_delete=models.PROTECT, related_name="assigned_officials", null=True, blank=True)
@@ -463,3 +473,20 @@ class Evidence(models.Model):
 
     def __str__(self):
         return f"Evidence {self.id} for Incident {self.incident_id}"
+
+class Services(models.Model):
+    '''
+    assigned_place refers to which barangay the service can be acquired
+    REASONING: lahi lahi man ug lugar ang barangay nya dili baya pareho tanan service location
+    
+    service_address refers to where the specific service is located
+    '''
+    assigned_place = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_place")
+    service_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="service_address")
+
+    name = models.CharField(max_length=100, default="service") 
+    contact_person = models.CharField(max_length=100, default="contact person")
+    contact_number = models.CharField(max_length=100, default="contact number")
+
+class BPOApplication(models.Model):
+    print('hello world')
