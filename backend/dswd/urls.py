@@ -13,4 +13,16 @@ urlpatterns = [
     #vawdesk officer
     path("vawdesk_officer/", ViewVAWDeskOfficer.as_view(), name="view_vawdesk_officer"),
     path("vawdesk_officer/<int:of_id>/", ViewVAWDeskOfficerDetail.as_view(), name="view_vawdesk_officer_detail"),
+      
+     # Questions library
+    path("questions/", QuestionListCreate.as_view(), name="question-list-create"),
+    path("questions/choices/", QuestionChoices.as_view(), name="question-choices"),
+    path("questions/<int:pk>/", QuestionDetail.as_view(), name="question-detail"),
+    path("questions/bulk/", QuestionBulkCreate.as_view(), name="question-bulk-create"),
+    path("questions/bulk-assign/", BulkAssignView.as_view(), name="question-bulk-assign"),
+    # SessionTypeQuestion mappings
+    path("session-type-questions/", SessionTypeQuestionListCreate.as_view(), name="sessiontypequestion-list-create"),
+    path("session-type-questions/<int:pk>/", SessionTypeQuestionDetail.as_view(), name="sessiontypequestion-detail"),
+    # Session types (dropdown support)
+    path("session-types/", SessionTypeList.as_view(), name="sessiontype-list"),
 ]
