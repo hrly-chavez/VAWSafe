@@ -323,7 +323,7 @@ export default function RegisterVictim() {
               className="flex items-center gap-2 px-6 py-2 rounded-md bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold shadow hover:from-red-600 hover:to-red-700 transition-all"
             >
               <XCircleIcon className="h-5 w-5 text-white" />
-              Cancel Form
+              Cancel
             </button>
             <button
               onClick={handleSubmit}
@@ -335,7 +335,7 @@ export default function RegisterVictim() {
               }`}
             >
               <CheckCircleIcon className="h-5 w-5 text-white" />
-              {loading ? "Submitting..." : "Submit Form"}
+              {loading ? "Registering..." : "Register"}
             </button>
           </div>
         )}
