@@ -1,11 +1,6 @@
 // src/App.js  
 import React, { Suspense, lazy } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import {BrowserRouter as Router,Routes,Route,Navigate,} from "react-router-dom";
 import { ROUTES } from "./routes/routes";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -17,46 +12,20 @@ import RegisterUser from "./pages/RegisterUser";
 import ManualLoginPage from "./pages/ManualLoginPage";
 
 //Desk officer
-const DeskOfficerPage = lazy(() =>
-  import("./pages/desk_officer/DeskOfficer/Dashboard")
-);
-const VictimFacial = lazy(() =>
-  import("./pages/desk_officer/RegisterVictim/VictimFacial")
-);
-const RegisterVictim = lazy(() =>
-  import("./pages/desk_officer/RegisterVictim/RegisterVictim")
-);
-const Session = lazy(() => import("./pages/desk_officer/Session/Session")
-);
-const StartSession = lazy(() => import("./pages/desk_officer/Session/StartSession")
-);
-
-const DOVictims = lazy(() => import("./pages/desk_officer/Victims/Victims")
-);
-const DOVictimDetail = lazy(() =>
-  import("./pages/desk_officer/Victims/VictimDetails")
-);
-const DOVictimSearch = lazy(() =>
-  import("./pages/desk_officer/Victims/SearchVictim")
-);
-
-// nag add kog pages sa desk officer
-const DOSocialWorkers = lazy(() =>
-  import("./pages/desk_officer/SocialWorker/SocialWorker")
-);
+const DeskOfficerPage = lazy(() =>import("./pages/desk_officer/DeskOfficer/Dashboard"));
+const VictimFacial = lazy(() =>import("./pages/desk_officer/RegisterVictim/VictimFacial"));
+const RegisterVictim = lazy(() =>import("./pages/desk_officer/RegisterVictim/RegisterVictim"));
+const Session = lazy(() => import("./pages/desk_officer/Session/Session"));
+const StartSession = lazy(() => import("./pages/desk_officer/Session/StartSession"));
+const DOVictims = lazy(() => import("./pages/desk_officer/Victims/Victims"));
+const DOVictimDetail = lazy(() =>import("./pages/desk_officer/Victims/VictimDetails"));
+const DOVictimSearch = lazy(() =>import("./pages/desk_officer/Victims/SearchVictim"));
+const DOSocialWorkers = lazy(() =>import("./pages/desk_officer/SocialWorker/SocialWorker"));
 const DOServices = lazy(() => import("./pages/desk_officer/Services/Services"));
-const DOCaseRecords = lazy(() =>
-  import("./pages/desk_officer/CaseRecords/CaseRecords")
-);
-const DOAccountManagement = lazy(() =>
-  import("./pages/desk_officer/AccountManage/AccountManagement")
-);
-const DOPendingAccount = lazy(() =>
-  import("./pages/desk_officer/AccountManage/PendingAccount")
-);
-const ViewOfficials = lazy(() => 
-  import("./pages/desk_officer/AccountManage/ViewOfficials")
-);
+const DOCaseRecords = lazy(() =>import("./pages/desk_officer/CaseRecords/CaseRecords"));
+const DOAccountManagement = lazy(() =>import("./pages/desk_officer/AccountManage/AccountManagement"));
+const DOPendingAccount = lazy(() =>import("./pages/desk_officer/AccountManage/PendingAccount"));
+const ViewOfficials = lazy(() => import("./pages/desk_officer/AccountManage/ViewOfficials"));
 
 // Social Worker Pages (lazy loaded)
 const DashboardPage = lazy(() =>import("./pages/social_worker/Dashboard/Dashboard"));
@@ -70,34 +39,17 @@ const ViewSessions = lazy(() =>import("./pages/social_worker/Sessions/ViewSessio
 
 
 //DSWD
-const DSWDDashboard = lazy(() =>
-  import("./pages/dswd/Dashboard/DSWDDashboard")
-);
-const DSWDVAWCVictims = lazy(() =>
-  import("./pages/dswd/Victim/DSWDVAWCVictims")
-);
-const DSWDVictimDetail = lazy(() =>
-  import("./pages/dswd/Victim/VictimDetails")
-);
+const DSWDDashboard = lazy(() =>import("./pages/dswd/Dashboard/DSWDDashboard"));
+const DSWDVAWCVictims = lazy(() =>import("./pages/dswd/Victim/DSWDVAWCVictims"));
+const DSWDVictimDetail = lazy(() =>import("./pages/dswd/Victim/VictimDetails"));
 const DSWDSearchVictim = lazy(() => import("./pages/dswd/Victim/SearchVictim"));
-const DSWDSocialWorkers = lazy(() =>
-  import("./pages/dswd/SocialWorker/DSWDSocialWorkers")
-);
-const DSWDSocialWorkerDetail = lazy(() =>
-  import("./pages/dswd/SocialWorker/SocialWorkerDetails")
-);
-const DSWD_VAWDESK_OFFICER = lazy(() =>
-  import("./pages/dswd/VawDeskOfficer/DSWDVawDeskOfficer")
-);
-const DSWD_VAWDESK_OFFICER_Detail = lazy(() =>
-  import("./pages/dswd/VawDeskOfficer/VAWDeskOfficerDetail")
-);
-const DSWDServices = lazy(() =>
-  import("./pages/dswd/ServiceDSWD/DSWDServices")
-);
-const DSWDAccountManagement = lazy(() =>
-  import("./pages/dswd/AccountManagement/DSWDAccountManagement")
-);
+const DSWDSocialWorkers = lazy(() =>import("./pages/dswd/SocialWorker/DSWDSocialWorkers"));
+const DSWDSocialWorkerDetail = lazy(() =>import("./pages/dswd/SocialWorker/SocialWorkerDetails"));
+const DSWD_VAWDESK_OFFICER = lazy(() =>import("./pages/dswd/VawDeskOfficer/DSWDVawDeskOfficer"));
+const DSWD_VAWDESK_OFFICER_Detail = lazy(() =>import("./pages/dswd/VawDeskOfficer/VAWDeskOfficerDetail"));
+const DSWDServices = lazy(() =>import("./pages/dswd/ServiceDSWD/DSWDServices"));
+const DSWDAccountManagement = lazy(() =>import("./pages/dswd/AccountManagement/DSWDAccountManagement"));
+const DSWDQuestions = lazy(() =>import('./pages/dswd/Questions/Questions'));
 
 export default function App() {
   return (
@@ -175,47 +127,20 @@ export default function App() {
             </Route>
             
             {/* DSWD group */}
-            <Route
-              element={
-                <ProtectedRoute roles={["DSWD"]}>
-                  <SidebarLayout />
-                </ProtectedRoute>
-              }
-            >
+            <Route element={ <ProtectedRoute roles={["DSWD"]}>
+              <SidebarLayout />
+                </ProtectedRoute>}>
               <Route path={ROUTES.DSWD} element={<DSWDDashboard />} />
-              <Route
-                path={ROUTES.DSWD_VAWC_VICTIMS}
-                element={<DSWDVAWCVictims />}
-              />
-              <Route
-                path={ROUTES.DSWD_VICTIM_DETAIL}
-                element={<DSWDVictimDetail />}
-              />
-              <Route
-                path={ROUTES.DSWD_SEARCH_VICTIM}
-                element={<DSWDSearchVictim />}
-              />
-              <Route
-                path={ROUTES.DSWD_SOCIAL_WORKERS}
-                element={<DSWDSocialWorkers />}
-              />
-              <Route
-                path={ROUTES.DSWD_SOCIAL_WORKERS_DETAILS}
-                element={<DSWDSocialWorkerDetail />}
-              />
-              <Route
-                path={ROUTES.DSWD_VAWDESK_OFFICER}
-                element={<DSWD_VAWDESK_OFFICER />}
-              />
-              <Route
-                path={ROUTES.DSWD_VAWDESK_OFFICER_DETAILS}
-                element={<DSWD_VAWDESK_OFFICER_Detail />}
-              />
+              <Route path={ROUTES.DSWD_VAWC_VICTIMS}element={<DSWDVAWCVictims />}/>
+              <Route path={ROUTES.DSWD_VICTIM_DETAIL} element={<DSWDVictimDetail />}/>
+              <Route path={ROUTES.DSWD_SEARCH_VICTIM} element={<DSWDSearchVictim />}/>
+              <Route path={ROUTES.DSWD_SOCIAL_WORKERS} element={<DSWDSocialWorkers />}/>
+              <Route path={ROUTES.DSWD_SOCIAL_WORKERS_DETAILS} element={<DSWDSocialWorkerDetail />}/>
+              <Route path={ROUTES.DSWD_VAWDESK_OFFICER}element={<DSWD_VAWDESK_OFFICER />}/>
+              <Route path={ROUTES.DSWD_VAWDESK_OFFICER_DETAILS}element={<DSWD_VAWDESK_OFFICER_Detail />}/>
               <Route path={ROUTES.DSWD_SERVICES} element={<DSWDServices />} />
-              <Route
-                path={ROUTES.DSWD_ACCOUNT_MANAGEMENT}
-                element={<DSWDAccountManagement />}
-              />
+              <Route path={ROUTES.DSWD_ACCOUNT_MANAGEMENT}element={<DSWDAccountManagement />}/>
+              <Route path={ROUTES.DSWD_QUESTIONS} element={<DSWDQuestions />} />
             </Route>
 
             {/* SOCIAL WORKER group */}
