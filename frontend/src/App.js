@@ -15,6 +15,7 @@ import Unauthorized from "./pages/Unauthorized";
 import LoginPage from "./pages/LoginPage";
 import RegisterUser from "./pages/RegisterUser";
 import ManualLoginPage from "./pages/ManualLoginPage";
+import ResetPasswordPage from "./pages/ResetPassword";
 
 //Desk officer
 const DeskOfficerPage = lazy(() =>
@@ -117,6 +118,7 @@ export default function App() {
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
             <Route path={ROUTES.MANUAL_LOGIN} element={<ManualLoginPage />} />
             <Route path={ROUTES.REGISTER} element={<RegisterUser />} />
+            <Route path={ROUTES.RESET_PASSWORD} element={<ResetPasswordPage />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
 
             {/* DESK OFFICER group (Sidebar + protected) */}

@@ -3,6 +3,7 @@ export const ROUTES = {
   LOGIN: "/login",
   MANUAL_LOGIN: "/login/manual",
   REGISTER: "/register",
+  RESET_PASSWORD: "/reset-password/:uid/:token",
 
   // desk officer pages
   DESK_OFFICER: "/desk_officer",
