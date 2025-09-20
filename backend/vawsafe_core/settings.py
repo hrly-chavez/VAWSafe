@@ -182,8 +182,10 @@ CORS_ALLOW_HEADERS = [
 from datetime import timedelta
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    # "ACCESS_TOKEN_LIFETIME": timedelta(seconds=30),  # just for test
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-    "ROTATE_REFRESH_TOKENS": False,
+    "ROTATE_REFRESH_TOKENS": True, # kani kay basta ma expire ang access mo renew both access ug refresh more secure
+    # "ROTATE_REFRESH_TOKENS": False, #kani sya kay basta ma expire ang access kay mo renew new access pero same refresh less secure
 }
 
 # Email settings
