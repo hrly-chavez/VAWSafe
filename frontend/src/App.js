@@ -1,4 +1,4 @@
-// src/App.js  
+// src/App.js
 import React, { Suspense, lazy } from "react";
 import {
   BrowserRouter as Router,
@@ -26,13 +26,15 @@ const VictimFacial = lazy(() =>
 const RegisterVictim = lazy(() =>
   import("./pages/desk_officer/RegisterVictim/RegisterVictim")
 );
-const Session = lazy(() => import("./pages/desk_officer/Session/Session")
+const BPOAppliction = lazy(() =>
+  import("./pages/desk_officer/RegisterVictim/BPOApplication")
 );
-const StartSession = lazy(() => import("./pages/desk_officer/Session/StartSession")
+const Session = lazy(() => import("./pages/desk_officer/Session/Session"));
+const StartSession = lazy(() =>
+  import("./pages/desk_officer/Session/StartSession")
 );
 
-const DOVictims = lazy(() => import("./pages/desk_officer/Victims/Victims")
-);
+const DOVictims = lazy(() => import("./pages/desk_officer/Victims/Victims"));
 const DOVictimDetail = lazy(() =>
   import("./pages/desk_officer/Victims/VictimDetails")
 );
@@ -63,15 +65,24 @@ const DOCaseRecords = lazy(() =>
 
 
 // Social Worker Pages (lazy loaded)
-const DashboardPage = lazy(() =>import("./pages/social_worker/Dashboard/Dashboard"));
-const CaseRecords = lazy(() =>import("./pages/social_worker/CaseRecords/CaseRecords"));
+const DashboardPage = lazy(() =>
+  import("./pages/social_worker/Dashboard/Dashboard")
+);
+const CaseRecords = lazy(() =>
+  import("./pages/social_worker/CaseRecords/CaseRecords")
+);
 const Sessions = lazy(() => import("./pages/social_worker/Sessions/Sessions"));
 const Services = lazy(() => import("./pages/social_worker/Services/Services"));
 const Victims = lazy(() => import("./pages/social_worker/Victims/Victims"));
-const VictimDetailPage = lazy(() => import("./pages/social_worker/Victims/VictimDetailPage"));
-const SearchVictimFacial = lazy(() =>import("./pages/social_worker/Victims/SearchVictimFacial"));
-const ViewSessions = lazy(() =>import("./pages/social_worker/Sessions/ViewSessions"));
-
+const VictimDetailPage = lazy(() =>
+  import("./pages/social_worker/Victims/VictimDetailPage")
+);
+const SearchVictimFacial = lazy(() =>
+  import("./pages/social_worker/Victims/SearchVictimFacial")
+);
+const ViewSessions = lazy(() =>
+  import("./pages/social_worker/Sessions/ViewSessions")
+);
 
 //DSWD
 const DSWDDashboard = lazy(() =>
@@ -105,9 +116,9 @@ const DSWDAccountManagement = lazy(() =>
 const DSWDViewOfficials = lazy(() =>
   import("./pages/dswd/AccountManagement/ViewOfficials")
 );
-const DSWDPendingAccount = lazy(() => 
+const DSWDPendingAccount = lazy(() =>
   import("./pages/dswd/AccountManagement/PendingAccount")
-); 
+);
 
 export default function App() {
   return (
@@ -137,6 +148,10 @@ export default function App() {
                 element={<RegisterVictim />}
               />
               <Route
+                path={ROUTES.DESK_OFFICER_BPO_APPLICATION}
+                element={<BPOAppliction />}
+              />
+              <Route
                 path={ROUTES.DESK_OFFICER_VICTIM_FACIAL}
                 element={<VictimFacial />}
               />
@@ -153,9 +168,9 @@ export default function App() {
                 path={ROUTES.DESK_OFFICER_VICTIM_SEARCH}
                 element={<DOVictimSearch />}
               />
-              <Route 
-                path={ROUTES.DESK_OFFICER_START_SESSION} 
-                element={<StartSession />} 
+              <Route
+                path={ROUTES.DESK_OFFICER_START_SESSION}
+                element={<StartSession />}
               />
               {/* mga bagong route paths sa desk officer nga katung gi add */}
               <Route
@@ -183,7 +198,7 @@ export default function App() {
                 element={<ViewOfficials />} 
               />
             </Route>
-            
+
             {/* DSWD group */}
             <Route
               element={
@@ -230,26 +245,54 @@ export default function App() {
                 path={ROUTES.DSWD_VIEW_OFFICIALS}
                 element={<DSWDViewOfficials />}
               />
-              <Route 
+              <Route
                 path={ROUTES.DSWD_PENDING_ACCOUNT}
                 element={<DSWDPendingAccount />}
               />
             </Route>
 
             {/* SOCIAL WORKER group */}
-            <Route element={<ProtectedRoute roles={["Social Worker"]}>
+            <Route
+              element={
+                <ProtectedRoute roles={["Social Worker"]}>
                   <SidebarLayout />
-                </ProtectedRoute>}>
-              <Route path={ROUTES.SOCIAL_WORKER_DASHBOARD} element={<DashboardPage />}/>
-              <Route path={ROUTES.SOCIAL_WORKER_CASE_RECORDS} element={<CaseRecords />}/>
-              <Route path={ROUTES.SOCIAL_WORKER_SESSIONS} element={<Sessions />}/>
-              <Route path={ROUTES.SOCIAL_WORKER_SERVICES} element={<Services />}/>
-              <Route path={ROUTES.SOCIAL_WORKER_VICTIMS} element={<Victims />}/>
-              <Route path={ROUTES.SOCIAL_WORKER_VICTIM_DETAIL} element={<VictimDetailPage />}/>
-              <Route path={ROUTES.SOCIAL_WORKER_SEARCH_FACIAL} element={<SearchVictimFacial />}/>
-              <Route path={ROUTES.SOCIAL_WORKER_VIEW_SESSION} element={<ViewSessions />}/>
+                </ProtectedRoute>
+              }
+            >
+              <Route
+                path={ROUTES.SOCIAL_WORKER_DASHBOARD}
+                element={<DashboardPage />}
+              />
+              <Route
+                path={ROUTES.SOCIAL_WORKER_CASE_RECORDS}
+                element={<CaseRecords />}
+              />
+              <Route
+                path={ROUTES.SOCIAL_WORKER_SESSIONS}
+                element={<Sessions />}
+              />
+              <Route
+                path={ROUTES.SOCIAL_WORKER_SERVICES}
+                element={<Services />}
+              />
+              <Route
+                path={ROUTES.SOCIAL_WORKER_VICTIMS}
+                element={<Victims />}
+              />
+              <Route
+                path={ROUTES.SOCIAL_WORKER_VICTIM_DETAIL}
+                element={<VictimDetailPage />}
+              />
+              <Route
+                path={ROUTES.SOCIAL_WORKER_SEARCH_FACIAL}
+                element={<SearchVictimFacial />}
+              />
+              <Route
+                path={ROUTES.SOCIAL_WORKER_VIEW_SESSION}
+                element={<ViewSessions />}
+              />
             </Route>
-                
+
             <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
           </Routes>
         </Suspense>
