@@ -2,73 +2,56 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../../../api/axios";
+import CaseTreeModal from "./CaseTreeModal";
+import SessionDetails from "./SessionDetails";
 
 export default function VictimDetails() {
   const { vic_id } = useParams();
   const [victim, setVictim] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState("victim");
-
-  // test
-  const [incidents, setIncidents] = useState([]);
+  const [incidentList, setIncidentList] = useState([]);
   const [selectedIncident, setSelectedIncident] = useState(null);
-  const [selectedSession, setSelectedSession] = useState(null);
-
-  const calculateAge = (birthDate) => {
-    if (!birthDate) return "—";
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const m = today.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
-    return age;
-  };
+  const [showModal, setShowModal] = useState(false);
+  const [openSessionIndex, setOpenSessionIndex] = useState(null);
+  const [selectedSessionIndex, setSelectedSessionIndex] = useState(null);
 
   useEffect(() => {
-    const fetchIncidents = async () => {
-      try {
-        const res = await api.get(`/api/desk_officer/case/${vic_id}/`);
-        setIncidents(res.data);
-      } catch (err) {
-        console.error("Failed to fetch incidents", err);
-      }
+    document.body.style.overflow = showModal ? "hidden" : "auto";
+    return () => {
+      document.body.style.overflow = "auto";
     };
-    fetchIncidents();
-  }, [activeTab, vic_id]);
-
-  console.log(incidents);
+  }, [showModal]);
 
   useEffect(() => {
-    const run = async () => {
-      setLoading(true);
-      setError("");
-
+    const fetchVictim = async () => {
       try {
-        const res = await api.get(`api/desk_officer/victims/${vic_id}/`);
+        const res = await api.get(`/api/desk_officer/victims/${vic_id}/`);
         const data = Array.isArray(res.data) ? res.data[0] : res.data;
         setVictim(data || null);
       } catch (err) {
-        setError(
-          err?.response?.status
-            ? `Error ${err.response.status}`
-            : "Request failed"
-        );
+        setError(err?.response?.status ? `Error ${err.response.status}` : "Request failed");
       } finally {
         setLoading(false);
       }
     };
 
-    if (vic_id) run();
+    const fetchIncidents = async () => {
+      try {
+        const res = await api.get(`/api/desk_officer/case/${vic_id}/`);
+        if (Array.isArray(res.data)) {
+          setIncidentList(res.data); // store all incidents
+        }
+      } catch (err) {
+        console.error("Failed to fetch incidents", err);
+      }
+    };
+
+    if (vic_id) {
+      fetchVictim();
+      fetchIncidents();
+    }
   }, [vic_id]);
-
-  // console.log(victim?.incidents?.[0]?.perpetrator);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const initialTab = params.get("tab");
-    if (initialTab) setActiveTab(initialTab);
-  }, []);
 
   // small helper to read whichever key exists (keeps UI from going blank if fields differ)
   const get = (obj, keys, fallback = "N/A") => {
@@ -80,748 +63,195 @@ export default function VictimDetails() {
 
   const fullName = victim
     ? [
-        get(
-          victim,
-          ["vic_first_name", "first_name", "fname", "given_name"],
-          ""
-        ),
-        get(victim, ["vic_middle_name", "middle_name", "mname"], ""),
-        get(victim, ["vic_last_name", "last_name", "lname", "surname"], ""),
-        get(victim, ["vic_extension", "name_suffix"], ""),
-      ]
-        .filter(Boolean)
-        .join(" ")
+      get(
+        victim,
+        ["vic_first_name", "first_name", "fname", "given_name"],
+        ""
+      ),
+      get(victim, ["vic_middle_name", "middle_name", "mname"], ""),
+      get(victim, ["vic_last_name", "last_name", "lname", "surname"], ""),
+      get(victim, ["vic_extension", "name_suffix"], ""),
+    ]
+      .filter(Boolean)
+      .join(" ")
     : "";
 
-  const fullAddress = victim
-    ? [
-        get(victim, ["street_name"]),
-        get(victim, ["sitio_name"]),
-        get(victim, ["barangay_name"]),
-        get(victim, ["municipality_name"]),
-        get(victim, ["province_name"]),
-      ]
-        .filter(Boolean)
-        .join(", ")
-    : "—";
+  const isMinor = victim?.vic_child_class != null;
+
 
   return (
-    <>
-      <div className="flex flex-col min-h-screen bg-white">
-        <h1 className="text-2xl font-bold text-[#292D96] px-6 pt-6">
-          Victim Details
-        </h1>
-        <div className="flex flex-1 gap-6 px-6 py-8 max-w-screen-xl mx-auto w-full">
-          {/* Left: Profile Sidebar */}
-          <div className="w-[300px] bg-white rounded-xl shadow p-4 border flex flex-col items-center">
-            {/* Profile Photo */}
-            <img
-              src={get(victim, ["vic_photo", "photo_url", "photo"], "")}
-              alt="Victim"
-              className="h-[180px] w-[180px] object-cover rounded-md mb-4 border"
-            />
+    <div className="min-h-screen bg-white relative">
+      {/* Background Banner */}
+      <div
+        className="h-[200px] w-full bg-cover bg-center absolute top-0 left-0 z-0"
+        style={{ backgroundImage: "url('/images/DSWD1.jpg')" }}
+      />
 
-            {/* Name & ID */}
-            <div className="text-center w-full">
-              <h2 className="text-xl font-semibold text-[#292D96]">
-                {fullName || "N/A"}
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Victim ID: {get(victim, ["vic_id", "id"])}
-              </p>
-            </div>
+      <div className="relative z-10 pt-[120px] px-6 max-w-screen-lg mx-auto space-y-10">
+        {/* Profile Photo */}
+        <div className="flex justify-center">
+          <img
+            src={get(victim, ["vic_photo", "photo_url", "photo"], "")}
+            alt="Victim"
+            className="h-[220px] w-[220px] object-cover rounded-full border-4 border-white shadow-xl"
+          />
+        </div>
 
-            {/* Case Info Container */}
-            <div className="mt-6 w-full space-y-3">
-              <h3 className="text-base font-semibold text-[#292D96] mb-1">
-                Case Information
-              </h3>
+        {/* Name & ID */}
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-[#292D96]">{fullName || "N/A"}</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Victim ID: {get(victim, ["vic_id", "id"], "—")}
+          </p>
+        </div>
 
-              {[
-                {
-                  label: "Case No.",
-                  value: get(victim?.case_report, ["case_no", "case_number"]),
-                },
-                {
-                  label: "Intake Form Date",
-                  value: get(victim?.case_report, [
-                    "intake_date",
-                    "form_date",
-                    "created_at",
-                  ]),
-                },
-                {
-                  label: "Handling Organization",
-                  value: get(victim?.case_report, [
-                    "handling_org",
-                    "organization",
-                  ]),
-                },
-                {
-                  label: "Case Manager",
-                  value: get(victim?.case_report, [
-                    "case_manager",
-                    "manager_name",
-                  ]),
-                },
-                {
-                  label: "Position",
-                  value: get(victim?.case_report, [
-                    "manager_position",
-                    "position",
-                  ]),
-                },
-              ].map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm"
-                >
-                  <p className="text-xs text-gray-500 mb-1">{item.label}</p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {item.value || "—"}
-                  </p>
-                </div>
-              ))}
-            </div>
+        {/* Victim Information Box */}
+        <div className="bg-white border rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-[#292D96] mb-4">Victim Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { label: "Sex", value: get(victim, ["vic_sex", "sex", "gender"]) },
+              { label: "Gender and Sexual Identity", value: get(victim, ["vic_specific_sogie"]) },
+              { label: "Birth Date", value: get(victim, ["vic_birth_date"]) },
+              { label: "Birth Place", value: get(victim, ["vic_birth_place"]) },
+              { label: "Nationality", value: get(victim, ["vic_nationality"]) },
+              { label: "Religion", value: get(victim, ["vic_religion"]) },
+              { label: "Civil Status", value: get(victim, ["vic_civil_status"]) },
+              { label: "Educational Attainment", value: get(victim, ["vic_educational_attainment"]) },
+              { label: "Employment Status", value: get(victim, ["vic_employment_status"]) },
+              { label: "Main Occupation", value: get(victim, ["vic_main_occupation"]) },
+              { label: "Monthly Income", value: get(victim, ["vic_monthly_income"]) },
+              { label: "PWD Type", value: get(victim, ["vic_PWD_type"]) },
+              { label: "Migratory Status", value: get(victim, ["vic_migratory_status"]) },
+              { label: "Contact Number", value: get(victim, ["vic_contact_number"]) },
+            ].map((item, index) => (
+              <div key={index} className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm">
+                <p className="text-xs text-gray-500 mb-1">{item.label}</p>
+                <p className="text-sm font-medium text-gray-800">{item.value || "—"}</p>
+              </div>
+            ))}
           </div>
-
-          {/* Right: Tabbed Content */}
-          <div className="flex-1 bg-white rounded-xl shadow p-6 border">
-            {/* Tab Menu */}
-            <div className="flex space-x-6 border-b mb-6">
-              {[
-                { key: "victim", label: "Victim Information" },
-                { key: "perpetrator", label: "Perpetrator Information" },
-                { key: "Case", label: "Case" },
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => {
-                    setActiveTab(tab.key);
-                    window.history.replaceState(null, "", `?tab=${tab.key}`);
-                  }}
-                  className={`pb-2 text-sm font-medium ${
-                    activeTab === tab.key
-                      ? "text-[#292D96] border-b-2 border-[#292D96]"
-                      : "text-gray-500 hover:text-[#292D96]"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Tab Content */}
-            <div className="text-sm text-gray-800">
-              {activeTab === "victim" && (
-                <div>
-                  <h4 className="text-lg font-semibold text-[#292D96] mb-4">
-                    Victim Information
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[
-                      { label: "Full Name", value: fullName },
-                      {
-                        label: "Sex",
-                        value: get(victim, ["vic_sex", "sex", "gender"]),
-                      },
-                      {
-                        label: "SOGIE",
-                        value: get(victim, ["vic_specific_sogie"]),
-                      },
-                      {
-                        label: "Date of Birth",
-                        value: get(victim, ["vic_birth_ date", "birth_date"]),
-                      },
-                      {
-                        label: "Birth Place",
-                        value: get(victim, [
-                          "vic_birth_place",
-                          "birth_place",
-                          "place",
-                        ]),
-                      },
-                      {
-                        label: "Age",
-                        value: calculateAge(
-                          get(victim, ["vic_birth_date", "birth_date"])
-                        ),
-                      },
-                      {
-                        label: "Civil Status",
-                        value: get(victim, [
-                          "vic_civil_status",
-                          "civil_status",
-                        ]),
-                      },
-                      {
-                        label: "Educational Attainment",
-                        value: get(victim, ["vic_education", "education"]),
-                      },
-                      {
-                        label: "Nationality",
-                        value: get(victim, ["vic_nationality", "nationality"]),
-                      },
-                      {
-                        label: "Ethnicity",
-                        value: get(victim, ["vic_ethnicity", "ethnicity"]),
-                      },
-                      {
-                        label: "Occupation",
-                        value: get(victim, ["vic_occupation", "occupation"]),
-                      },
-                      {
-                        label: "Monthly Income",
-                        value: get(victim, [
-                          "vic_monthly_income",
-                          "monthly_income",
-                        ]),
-                      },
-                      {
-                        label: "Religion",
-                        value: get(victim, ["vic_religion", "religion"]),
-                      },
-                      {
-                        label: "Contact No.",
-                        value: get(victim, ["vic_contact", "contact"]),
-                      },
-                      {
-                        label: "PWD Category",
-                        value: get(victim, [
-                          "vic_pwd_category",
-                          "pwd_category",
-                        ]),
-                      },
-                      {
-                        label: "Migratory Status",
-                        value: get(victim, [
-                          "vic_migratory_status",
-                          "migratory_status",
-                        ]),
-                      },
-                      {
-                        label: "Employment Status",
-                        value: get(victim, [
-                          "vic_employment_status",
-                          "employment_status",
-                        ]),
-                      },
-                    ].map((item, index) => (
-                      <div
-                        key={index}
-                        className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm"
-                      >
-                        <p className="text-xs text-gray-500 mb-1">
-                          {item.label}
-                        </p>
-                        <p className="text-sm font-medium text-gray-800">
-                          {item.value || "—"}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* ✅ INSERT YOUR GUARDIAN BLOCK HERE */}
-                  {victim && victim.is_minor && (
-                    <>
-                      <h5 className="text-md font-semibold text-yellow-700 mt-6 mb-2">
-                        Guardian Information
-                      </h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {[
-                          {
-                            label: "Guardian First Name",
-                            value: get(victim, ["guardian_first_name"]),
-                          },
-                          {
-                            label: "Guardian Middle Name",
-                            value: get(victim, ["guardian_middle_name"]),
-                          },
-                          {
-                            label: "Guardian Last Name",
-                            value: get(victim, ["guardian_last_name"]),
-                          },
-                          {
-                            label: "Guardian Contact",
-                            value: get(victim, ["guardian_contact"]),
-                          },
-                        ].map((item, index) => (
-                          <div
-                            key={`guardian-${index}`}
-                            className="bg-yellow-50 rounded-md px-4 py-3 border shadow-sm"
-                          >
-                            <p className="text-xs text-yellow-700 mb-1">
-                              {item.label}
-                            </p>
-                            <p className="text-sm font-medium text-yellow-900">
-                              {item.value || "—"}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
-
-                  {/* Full Address in its own row */}
-                  <div className="mt-4">
-                    <div className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm">
-                      <p className="text-xs text-gray-500 mb-1">Full Address</p>
-                      <p className="text-sm font-medium text-gray-800">
-                        {fullAddress}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "perpetrator" && (
-                <div>
-                  <h4 className="text-lg font-semibold text-[#292D96] mb-4">
-                    Perpetrator Information
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[
-                      {
-                        label: "Full Name",
-                        value: [
-                          get(
-                            victim?.incidents?.[0]?.perpetrator,
-                            ["per_first_name", "first_name"],
-                            ""
-                          ),
-                          get(
-                            victim?.incidents?.[0]?.perpetrator,
-                            ["per_last_name", "last_name"],
-                            ""
-                          ),
-                        ]
-                          .filter(Boolean)
-                          .join(" "),
-                      },
-                      {
-                        label: "Sex",
-                        value: get(victim?.incidents?.[0]?.perpetrator, [
-                          "per_sex",
-                          "sex",
-                        ]),
-                      },
-                      {
-                        label: "Date of Birth",
-                        value: get(victim?.incidents?.[0]?.perpetrator, [
-                          "per_birth_date",
-                          "birth_date",
-                        ]),
-                      },
-                      {
-                        label: "Birth Place",
-                        value: get(victim?.incidents?.[0]?.perpetrator, [
-                          "per_birth_place",
-                          "birth_place",
-                        ]),
-                      },
-                      {
-                        label: "Nationality",
-                        value: get(victim?.incidents?.[0]?.perpetrator, [
-                          "per_nationality",
-                          "nationality",
-                        ]),
-                      },
-                      {
-                        label: "Occupation",
-                        value: get(victim?.incidents?.[0]?.perpetrator, [
-                          "per_occupation",
-                          "occupation",
-                        ]),
-                      },
-                      {
-                        label: "Religion",
-                        value: get(victim?.incidents?.[0]?.perpetrator, [
-                          "per_religion",
-                          "religion",
-                        ]),
-                      },
-                    ].map((item, index) => (
-                      <div
-                        key={index}
-                        className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm"
-                      >
-                        <p className="text-xs text-gray-500 mb-1">
-                          {item.label}
-                        </p>
-                        <p className="text-sm font-medium text-gray-800">
-                          {item.value || "—"}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* case tab */}
-              {activeTab === "Case" && (
-                <div>
-                  <h4 className="text-lg font-semibold text-[#292D96] mb-2">
-                    Case
-                  </h4>
-
-                  {incidents.length === 0 ? (
-                    <p className="text-gray-500">No cases found.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {incidents.map((incident) => (
-                        <div
-                          key={incident.incident_id ?? incident.id}
-                          className="border rounded-md bg-white shadow-sm"
-                        >
-                          {/* Case card */}
-                          <div
-                            onClick={() => setSelectedIncident(incident)}
-                            className="cursor-pointer p-3 hover:bg-blue-50 transition"
-                          >
-                            <p className="font-medium text-gray-800">
-                              Case No: {incident.incident_num}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Date Created:{" "}
-                              {incident.created_at
-                                ? new Date(incident.created_at).toLocaleString()
-                                : "N/A"}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Status: {incident.status || "N/A"}
-                            </p>
-                          </div>
-
-                          {/* Sessions tree */}
-                          {incident.sessions &&
-                            incident.sessions.length > 0 && (
-                              <div className="ml-6 border-l-2 border-gray-200 pl-4 py-2 space-y-2">
-                                <h5 className="font-semibold text-gray-700 mb-2 text-sm">
-                                  Sessions
-                                </h5>
-
-                                {incident.sessions.map((session) => (
-                                  <div
-                                    key={session.sess_id ?? session.id}
-                                    // stopPropagation so clicking a session doesn’t trigger case modal
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedSession(session);
-                                    }}
-                                    className="p-2 bg-gray-50 rounded-md shadow-sm hover:bg-gray-100 cursor-pointer transition"
-                                  >
-                                    <p className="text-sm font-medium text-gray-700">
-                                      Session #
-                                      {session.sess_num ?? session.sess_id}
-                                    </p>
-                                    <p className="text-sm text-gray-500">
-                                      Type: {session.sess_type || "N/A"}
-                                    </p>
-                                    <p className="text-sm text-gray-500">
-                                      Status: {session.sess_status || "N/A"}
-                                    </p>
-                                    <p className="text-sm text-gray-500">
-                                      Date:{" "}
-                                      {session.sess_next_sched
-                                        ? new Date(
-                                            session.sess_next_sched
-                                          ).toLocaleString()
-                                        : session.sess_date_today
-                                        ? new Date(
-                                            session.sess_date_today
-                                          ).toLocaleString()
-                                        : "N/A"}
-                                    </p>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+          {/* Full Address Block */}
+          <div className="mt-6">
+            <p className="text-xs text-gray-500 mb-1">Full Address</p>
+            <p className="text-sm font-medium text-gray-800 bg-gray-50 border rounded-md p-3 whitespace-pre-wrap break-words">
+              {get(victim, ["vic_current_address"], "—")}
+            </p>
           </div>
         </div>
 
-        {/* modals go here */}
-        {/* Case Modal */}
-        {selectedIncident && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
-            onClick={() => setSelectedIncident(null)}
-          >
-            <div
-              className="bg-white rounded-2xl shadow-xl max-w-3xl w-full relative max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Sticky Header + Close */}
-              <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-4 border-b shadow-sm">
-                <h2 className="text-2xl font-bold text-[#292D96]">
-                  Case Details
-                </h2>
+        {isMinor && (
+          <div className="mt-8 bg-white border rounded-xl shadow-lg p-6">
+            <h3 className="text-lg font-semibold text-[#292D96] mb-4">Minor Classification & Guardian Info</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { label: "Child Classification", value: get(victim, ["vic_child_class"]) },
+                { label: "Guardian First Name", value: get(victim, ["vic_guardian_fname"]) },
+                { label: "Guardian Middle Name", value: get(victim, ["vic_guardian_mname"]) },
+                { label: "Guardian Last Name", value: get(victim, ["vic_guardian_lname"]) },
+                { label: "Guardian Contact", value: get(victim, ["vic_guardian_contact"]) },
+              ].map((item, index) => (
+                <div key={index} className="bg-gray-50 rounded-md px-4 py-3 border shadow-sm">
+                  <p className="text-xs text-gray-500 mb-1">{item.label}</p>
+                  <p className="text-sm font-medium text-gray-800">{item.value || "—"}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+
+        <h3 className="text-lg font-semibold text-[#292D96] mb-4">Case Information</h3>
+        {incidentList.map((incident, index) => (
+          <div key={index} className="border rounded-md p-4 shadow-sm bg-gray-50">
+
+            {/* Case Info + Buttons */}
+            <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <p>
+                  <span className="font-medium text-gray-800">Case No:</span>{" "}
+                  {incident.incident_num || "—"}
+                </p>
+              </div>
+
+              <div className="flex gap-3">
                 <button
-                  onClick={() => setSelectedIncident(null)}
-                  className="text-gray-400 hover:text-gray-700 transition"
+                  onClick={() => {
+                    setSelectedIncident(incident);
+                    setShowModal(true);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
                 >
-                  ✕
+                  View Case Details
+                </button>
+
+                <button
+                  onClick={() => {
+                    const isSame = openSessionIndex === index;
+                    setOpenSessionIndex(isSame ? null : index);
+                    setSelectedSessionIndex(null); // reset session view
+                  }}
+                  className="inline-flex items-center gap-2 rounded-md border border-green-600 text-green-600 px-3 py-1.5 text-sm font-medium hover:bg-green-600 hover:text-white transition"
+                >
+                  {openSessionIndex === index ? "Hide Sessions" : "View Sessions"}
                 </button>
               </div>
-
-              {/* Scrollable Content */}
-              <div className="p-6 space-y-6">
-                {/* Case Info */}
-                <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                  <h3 className="font-semibold text-gray-700 mb-4 text-lg">
-                    Case Info
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <p className="flex gap-2">
-                      <span className="font-medium w-36">Case No:</span>
-                      <span>{selectedIncident.incident_num}</span>
-                    </p>
-                    <p className="flex gap-2">
-                      <span className="font-medium w-36">Status:</span>
-                      <span>{selectedIncident.status || "N/A"}</span>
-                    </p>
-                    <p className="flex gap-2">
-                      <span className="font-medium w-36">Created At:</span>
-                      <span>
-                        {new Date(selectedIncident.created_at).toLocaleString()}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-
-                {/* Perpetrator Info */}
-                {selectedIncident.perp_id && (
-                  <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                    <h3 className="font-semibold text-gray-700 mb-4 text-lg">
-                      Perpetrator Details
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <p className="flex gap-2">
-                        <span className="font-medium w-36">Full Name:</span>
-                        <span>
-                          {selectedIncident.perp_id.per_first_name}{" "}
-                          {selectedIncident.perp_id.per_last_name}
-                        </span>
-                      </p>
-                      <p className="flex gap-2">
-                        <span className="font-medium w-36">Sex:</span>
-                        <span>{selectedIncident.perp_id.per_sex}</span>
-                      </p>
-                      <p className="flex gap-2">
-                        <span className="font-medium w-36">Birth Date:</span>
-                        <span>{selectedIncident.perp_id.per_birth_date}</span>
-                      </p>
-                      <p className="flex gap-2">
-                        <span className="font-medium w-36">Birth Place:</span>
-                        <span>{selectedIncident.perp_id.per_birth_place}</span>
-                      </p>
-                      <p className="flex gap-2">
-                        <span className="font-medium w-36">Nationality:</span>
-                        <span>{selectedIncident.perp_id.per_nationality}</span>
-                      </p>
-                      <p className="flex gap-2">
-                        <span className="font-medium w-36">Occupation:</span>
-                        <span>
-                          {selectedIncident.perp_id.per_main_occupation}
-                        </span>
-                      </p>
-                      <p className="flex gap-2">
-                        <span className="font-medium w-36">Religion:</span>
-                        <span>{selectedIncident.perp_id.per_religion}</span>
-                      </p>
-                      <p className="flex gap-2">
-                        <span className="font-medium w-36">
-                          Current Address:
-                        </span>
-                        <span>
-                          {selectedIncident.perp_id.per_current_address}
-                        </span>
-                      </p>
-                      <p className="flex gap-2">
-                        <span className="font-medium w-36">Relationship:</span>
-                        <span>
-                          {selectedIncident.perp_id.per_relationship_type}
-                        </span>
-                      </p>
-                      {selectedIncident.perp_id.per_relationship_type !==
-                        "Stranger/Unknown" && (
-                        <p className="flex gap-2">
-                          <span className="font-medium w-36">
-                            Specific Relationship:
-                          </span>
-                          <span>
-                            {selectedIncident.perp_id.per_relationship_subtype}
-                          </span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Incident Info */}
-                <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                  <h3 className="font-semibold text-gray-700 mb-4 text-lg">
-                    Incident Details
-                  </h3>
-
-                  {/* Violence Info */}
-                  <div className="mb-4 p-3 bg-white rounded-md shadow-sm">
-                    <p className="flex gap-2 mb-2">
-                      <span className="font-medium w-36">Violence Type:</span>
-                      <span>{selectedIncident.violence_type || "N/A"}</span>
-                    </p>
-                    <p className="flex gap-2">
-                      <span className="font-medium w-36">
-                        Violence Subtype:
-                      </span>
-                      <span>{selectedIncident.violence_subtype || "N/A"}</span>
-                    </p>
-                  </div>
-
-                  {/* Description */}
-                  <div className="mb-4 p-4 bg-white rounded-md shadow-sm">
-                    <div className="flex">
-                      <span className="font-medium w-36 flex-shrink-0 text-gray-700">
-                        Description:
-                      </span>
-                      <span className="text-gray-800 break-words whitespace-pre-wrap text-justify">
-                        {selectedIncident.incident_description || "N/A"}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Other Incident Details */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <p className="flex gap-2">
-                      <span className="font-medium w-36">
-                        Date of Incident:
-                      </span>
-                      <span>{selectedIncident.incident_date || "N/A"}</span>
-                    </p>
-                    <p className="flex gap-2">
-                      <span className="font-medium w-36">
-                        Time of Incident:
-                      </span>
-                      <span>{selectedIncident.incident_time || "N/A"}</span>
-                    </p>
-                    <p className="flex gap-2">
-                      <span className="font-medium w-36">
-                        Place of Incident:
-                      </span>
-                      <span>{selectedIncident.incident_location || "N/A"}</span>
-                    </p>
-                    <p className="flex gap-2">
-                      <span className="font-medium w-36">Type of Place:</span>
-                      <span>{selectedIncident.type_of_place || "N/A"}</span>
-                    </p>
-                    <p className="flex gap-2">
-                      <span className="font-medium w-36">
-                        Electronic Means:
-                      </span>
-                      <span>{selectedIncident.electronic_means || "N/A"}</span>
-                    </p>
-                    <p className="flex gap-2">
-                      <span className="font-medium w-36">Conflict Area:</span>
-                      <span>{selectedIncident.conflict_area || "N/A"}</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
-        )}
 
-        {/* Session Modal */}
-        {selectedSession && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
-            onClick={() => setSelectedSession(null)}
-          >
-            <div
-              className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6 relative max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setSelectedSession(null)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition"
-              >
-                ✕
-              </button>
-
-              <h2 className="text-2xl font-bold text-[#292D96] mb-4 text-center">
-                Session Details
-              </h2>
-
-              <div className="space-y-4">
-                <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                  <p>
-                    <span className="font-medium">Session No:</span>{" "}
-                    {selectedSession.sess_num ?? selectedSession.sess_id}
-                  </p>
-                  <p>
-                    <span className="font-medium">Type:</span>{" "}
-                    {selectedSession.sess_type || "N/A"}
-                  </p>
-                  <p>
-                    <span className="font-medium">Status:</span>{" "}
-                    {selectedSession.sess_status || "N/A"}
-                  </p>
-                  <p>
-                    <span className="font-medium">Scheduled:</span>{" "}
-                    {selectedSession.sess_next_sched
-                      ? new Date(
-                          selectedSession.sess_next_sched
-                        ).toLocaleString()
-                      : selectedSession.sess_date_today
-                      ? new Date(
-                          selectedSession.sess_date_today
-                        ).toLocaleString()
-                      : "N/A"}
-                  </p>
-                  <p>
-                    <span className="font-medium">Location:</span>{" "}
-                    {selectedSession.sess_location || "N/A"}
-                  </p>
+            {/* Session Dropdown Below */}
+            {openSessionIndex === index && (
+              <div className="mt-4 space-y-4">
+                <p className="text-sm font-semibold text-[#292D96]">Sessions:</p>
+                <div className="flex flex-wrap gap-2">
+                  {(incident.sessions || []).map((session, sIndex) => (
+                    <button
+                      key={sIndex}
+                      onClick={() =>
+                        setSelectedSessionIndex(
+                          selectedSessionIndex === sIndex ? null : sIndex
+                        )
+                      }
+                      className={`px-3 py-1.5 text-sm rounded-md border ${selectedSessionIndex === sIndex
+                        ? "bg-[#292D96] text-white border-[#292D96]"
+                        : "text-[#292D96] border-[#292D96] hover:bg-[#292D96] hover:text-white"
+                        } transition`}
+                    >
+                      Session {sIndex + 1}
+                    </button>
+                  ))}
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                  <h3 className="font-semibold text-gray-700 mb-2 text-lg">
-                    Notes
-                  </h3>
-                  <p>
-                    <span className="font-medium">Mental Note:</span>{" "}
-                    {selectedSession.sess_mental_note || "N/A"}
-                  </p>
-                  <p>
-                    <span className="font-medium">Physical Note:</span>{" "}
-                    {selectedSession.sess_physical_note || "N/A"}
-                  </p>
-                  <p>
-                    <span className="font-medium">Financial Note:</span>{" "}
-                    {selectedSession.sess_financial_note || "N/A"}
-                  </p>
-                </div>
+                {selectedSessionIndex != null &&
+                  incident.sessions[selectedSessionIndex] && (
+                    <SessionDetails session={incident.sessions[selectedSessionIndex]} />
+                  )}
               </div>
-            </div>
+            )}
           </div>
-        )}
+        ))}
 
-        {/* Back Button Below Right Section */}
-        <div className="max-w-screen-xl mx-auto w-full px-6 pb-8 flex justify-end">
+        {/* Back Button */}
+        <div className="flex justify-end">
           <Link
             to="/desk_officer/victims"
-            className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
+            className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-4 py-2 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
           >
             ← Back to List
           </Link>
         </div>
-      </div>
-    </>
+
+      </div >
+      {showModal && selectedIncident && (
+        <CaseTreeModal
+          selectedIncident={selectedIncident}
+          onClose={() => {
+            setShowModal(false);
+            setSelectedIncident(null);
+          }}
+        />
+      )
+      }
+    </div >
+
   );
 }

@@ -21,8 +21,8 @@ export default function AdministrativeInfo({
   const [selectedMunicipality, setSelectedMunicipality] = useState("");
   const [selectedBarangay, setSelectedBarangay] = useState("");
 
-  const [sitio, setSitio] = useState("");
   const [street, setStreet] = useState("");
+  const [sitio, setSitio] = useState("");
 
   useEffect(() => {
     axios
@@ -199,13 +199,7 @@ export default function AdministrativeInfo({
 
         <div className="flex flex-col">
           <label className="font-medium text-sm mb-1">Sitio</label>
-          <input
-            type="text"
-            placeholder="Sitio Example"
-            className={inputStyle}
-            value={sitio}
-            onChange={(e) => setSitio(e.target.value)}
-          />
+          <input type="text" placeholder="Sitio Example" className={inputStyle} />
         </div>
 
         <div className="flex flex-col">
@@ -273,31 +267,31 @@ export default function AdministrativeInfo({
                 className="input"
                 type="text"
                 placeholder="First Name"
-                // value={formDataState.vic_first_name || ""}
-                // onChange={(e) => handleChange("vic_first_name", e.target.value)}
+              // value={formDataState.vic_first_name || ""}
+              // onChange={(e) => handleChange("vic_first_name", e.target.value)}
               />
               <input
                 className="input"
                 type="text"
                 placeholder="Middle Name"
-                // value={formDataState.vic_middle_name || ""}
-                // onChange={(e) =>
-                //   handleChange("vic_middle_name", e.target.value)
-                // }
+              // value={formDataState.vic_middle_name || ""}
+              // onChange={(e) =>
+              //   handleChange("vic_middle_name", e.target.value)
+              // }
               />
               <input
                 className="input"
                 type="text"
                 placeholder="Last Name"
-                // value={formDataState.vic_last_name || ""}
-                // onChange={(e) => handleChange("vic_last_name", e.target.value)}
+              // value={formDataState.vic_last_name || ""}
+              // onChange={(e) => handleChange("vic_last_name", e.target.value)}
               />
               <input
                 className="input"
                 type="text"
                 placeholder="Extension (e.g. Jr., III)"
-                // value={formDataState.vic_extension || ""}
-                // onChange={(e) => handleChange("vic_extension", e.target.value)}
+              // value={formDataState.vic_extension || ""}
+              // onChange={(e) => handleChange("vic_extension", e.target.value)}
               />
             </div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -308,8 +302,8 @@ export default function AdministrativeInfo({
                 className="input"
                 type="text"
                 placeholder="Extension (e.g. Jr., III)"
-                // value={formDataState.vic_extension || ""}
-                // onChange={(e) => handleChange("vic_extension", e.target.value)}
+              // value={formDataState.vic_extension || ""}
+              // onChange={(e) => handleChange("vic_extension", e.target.value)}
               />
             </div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -320,8 +314,8 @@ export default function AdministrativeInfo({
                 className="input"
                 type="number"
                 placeholder="Extension (e.g. Jr., III)"
-                // value={formDataState.vic_extension || ""}
-                // onChange={(e) => handleChange("vic_extension", e.target.value)}
+              // value={formDataState.vic_extension || ""}
+              // onChange={(e) => handleChange("vic_extension", e.target.value)}
               />
             </div>
           </div>

@@ -23,9 +23,6 @@ urlpatterns = [
     path("sessions/", SessionListCreateView.as_view(), name="session-list-create"),
     path("sessions/<int:sess_id>/", SessionDetailView.as_view(), name="session-detail"),
     path("sessions/create_sched/", create_session, name="create-session"),
-
-    # Social Worker Management
-    path("officials/social-workers/", SocialWorkerListView.as_view(), name="list-social-workers"),
-    path("officials/social-workers/<int:of_id>/assign_barangay/", AssignBarangayView.as_view(), name="assign-barangay"),
+    path("officials/social-workers/", list_social_workers, name="list-social-workers"),
 
 ] + router.urls
