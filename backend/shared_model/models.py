@@ -463,3 +463,19 @@ class Evidence(models.Model):
 
     def __str__(self):
         return f"Evidence {self.id} for Incident {self.incident_id}"
+
+class Services(models.Model):
+    '''
+    assigned_place refers to which barangay the service can be acquired
+    REASONING: lahi lahi man ug lugar ang barangay nya dili baya pareho tanan service location
+    
+    address refers to where the specific service is located
+    '''
+    assigned_place = models.CharField(max_length=100, default="assigned")
+    name = models.CharField(max_length=100, default="service") 
+    address = models.CharField(max_length=100, default="address")
+    contact_person = models.CharField(max_length=100, default="contact person")
+    contact_number = models.CharField(max_length=100, default="contact number")
+
+class BPOApplication(models.Model):
+    # placeholder
