@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers, generics, permissions
 from shared_model.models import *
 from datetime import date
 
@@ -162,6 +162,77 @@ class VAWDeskOfficerListSerializer(serializers.ModelSerializer):
         if obj.of_suffix:
             parts.append(obj.of_suffix)
         return " ".join(parts)
+
+#====================================SESSIONS========================================
+class QuestionSerializer(serializers.ModelSerializer):
+    created_by_name = serializers.CharField(source="created_by.full_name", read_only=True)
+    mappings = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Question
+        fields = "__all__"
+        read_only_fields = ["ques_id", "created_at", "created_by_name", "mappings"]
+
+    def get_mappings(self, obj):
+        return [
+            {
+                "session_number": m.session_number,
+                "session_type": m.session_type.name,
+            }
+            for m in obj.type_questions.all()
+        ]
+
+class SessionTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SessionType
+        fields = ["id", "name"]
+
+class SessionTypeQuestionSerializer(serializers.ModelSerializer):
+    question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
+    session_type_name = serializers.CharField(source="session_type.name", read_only=True)
+
+    class Meta:
+        model = SessionTypeQuestion
+        fields = [
+            "id",
+            "session_number",
+            "session_type",
+            "session_type_name",
+            "question",
+            "question_text",
+        ]
+        read_only_fields = ["id", "question_text", "session_type_name"]
+
+
+# Bulk create Questions
+class BulkQuestionSerializer(serializers.Serializer):
+    questions = QuestionSerializer(many=True)
+
+    def create(self, validated_data):
+        official = self.context["request"].user.official
+        created = []
+        for q in validated_data["questions"]:
+            obj = Question.objects.create(created_by=official, **q)
+            created.append(obj)
+        return created
+    
+# Attach Bulk serializer to QuestionSerializer
+class QuestionBulkItemSerializer(QuestionSerializer):
+    class Meta(QuestionSerializer.Meta):
+        list_serializer_class = BulkQuestionSerializer
+
+
+class BulkAssignSerializer(serializers.Serializer):
+    questions = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=False
+    )
+    session_numbers = serializers.ListField(
+        child=serializers.IntegerField(min_value=1), allow_empty=False
+    )
+    session_types = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=False
+    )
+
     
 class OfficialSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
