@@ -12,6 +12,8 @@ admin.site.register(IncidentInformation)
 admin.site.register(Session)
 admin.site.register(SessionType)
 admin.site.register(Question)
+admin.site.register(Informant)
+
 # admin.site.register(Province)
 # admin.site.register(Municipality)
 # admin.site.register(Barangay)

@@ -127,20 +127,20 @@ class OfficialFaceSample(models.Model):
 
 # starting here is for forms
 class Informant(models.Model):
-    fname = models.CharField(max_length=50, blank=True, null=True)
-    mname = models.CharField(max_length=50, blank=True, null=True)
-    lname = models.CharField(max_length=50, blank=True, null=True)
-    extension = models.CharField(max_length=50, blank=True, null=True)
-    birth_date = models.DateField(blank=True, null=True)
-    relationship_to_victim = models.CharField(max_length=50, blank=True, null=True)
-    contact = models.CharField(max_length=11, blank=True, null=True)
-    occupation = models.CharField(max_length=50, blank=True, null=True)
+    inf_fname = models.CharField(max_length=50, blank=True, null=True)
+    inf_mname = models.CharField(max_length=50, blank=True, null=True)
+    inf_lname = models.CharField(max_length=50, blank=True, null=True)
+    inf_extension = models.CharField(max_length=50, blank=True, null=True)
+    inf_birth_date = models.DateField(blank=True, null=True)
+    inf_relationship_to_victim = models.CharField(max_length=50, blank=True, null=True)
+    inf_contact = models.CharField(max_length=11, blank=True, null=True)
+    inf_occupation = models.CharField(max_length=50, blank=True, null=True)
     
     # foreign key
-    address = models.ForeignKey(Address, on_delete=models.CASCADE, null=True, blank=True)
+    inf_address = models.ForeignKey(Address, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.fname} {self.lname}" if self.fname else "Unnamed Informant"
+        return f"{self.inf_fname} {self.inf_lname}" if self.inf_fname else "Unnamed Informant"
 
 class Victim(models.Model): #dapat pun-an of field na when ni na create ang victim
     CIVIL_STATUS_CHOICES = [
@@ -382,7 +382,7 @@ class IncidentInformation(models.Model):
     sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
     street = models.ForeignKey("Street", on_delete=models.SET_NULL, related_name="incidents", null=True, blank=True)
 
-    informant = models.ForeignKey(Informant, on_delete=models.SET_NULL, related_name="incidents", null=True, blank=True)
+    informant = models.ForeignKey(Informant, on_delete=models.CASCADE, related_name="incidents", null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Auto-fill hierarchy like in Victim & Official
