@@ -50,7 +50,12 @@ class CaseReportSerializer(serializers.ModelSerializer):
             "informant_name", "informant_relationship", "informant_contact",
             
         ]
-        
+
+class InformantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Informant
+        fields = "__all__"
+
 class VictimSerializer(serializers.ModelSerializer):
     face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
     case_report = CaseReportSerializer(read_only=True)

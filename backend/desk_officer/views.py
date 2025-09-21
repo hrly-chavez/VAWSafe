@@ -253,6 +253,16 @@ def register_victim(request):
                                 status=status.HTTP_400_BAD_REQUEST)
             perpetrator = p_ser.save()
 
+        # ✅ 4.5) Informant (optional)
+        informant = None
+        informant_data = parse_json_field("informant")
+        if informant_data:
+            inf_ser = InformantSerializer(data=informant_data)
+            if not inf_ser.is_valid():
+                return Response({"success": False, "errors": inf_ser.errors},
+                                status=status.HTTP_400_BAD_REQUEST)
+            informant = inf_ser.save()
+
         # 5) IncidentInformation (optional)
         incident = None
         incident_data = parse_json_field("incident")
@@ -262,6 +272,9 @@ def register_victim(request):
 
             if perpetrator:
                 incident_data["perp_id"] = perpetrator.pk
+
+            if informant:
+                incident_data["informant"] = informant.pk
        
             for key in ("is_via_electronic_means", "is_conflict_area", "is_calamity_area"):
                 if key in incident_data:
@@ -283,14 +296,13 @@ def register_victim(request):
                     file=file
                 )
 
-        
-
         return Response({
             "success": True,
             "victim": VictimSerializer(victim).data,
             "case_report": CaseReportSerializer(case_report).data if case_report else None,
             "incident": IncidentInformationSerializer(incident).data if incident else None,
             "perpetrator": PerpetratorSerializer(perpetrator).data if perpetrator else None,
+            "informant": InformantSerializer(informant).data if informant else None,
         }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
