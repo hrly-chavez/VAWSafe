@@ -33,5 +33,7 @@ urlpatterns = [
     # Session types (dropdown support)
     path("session-types/", SessionTypeList.as_view(), name="sessiontype-list"),
 
+    path("services/", ServicesListCreateView.as_view(), name="services-list-create"),
+
     path('', include(router.urls)),
 ] + router.urls

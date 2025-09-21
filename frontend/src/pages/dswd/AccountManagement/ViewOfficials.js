@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+import api from "../../../api/axios";
 
 export default function ViewOfficials() {
   const { of_id } = useParams(); // expects route like /officials/:of_id
@@ -10,7 +11,7 @@ export default function ViewOfficials() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    axios.get(`http://localhost:8000/api/dswd/officials/${of_id}/`)
+    api.get(`http://localhost:8000/api/dswd/officials/${of_id}/`)
       .then((res) => {
         setOfficial(res.data);
         setLoading(false);

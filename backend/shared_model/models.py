@@ -63,8 +63,8 @@ class Address(models.Model):
     province = models.ForeignKey("Province", on_delete=models.PROTECT, null=True, blank=True)
     municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, null=True, blank=True)
     barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, null=True, blank=True)
-    sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, null=True, blank=True)
-    street = models.ForeignKey("Street", on_delete=models.SET_NULL, null=True, blank=True)
+    sitio = models.CharField(max_length=150, null=True, blank=True)
+    street = models.CharField(max_length=150, null=True, blank=True)
 
     def __str__(self):
         parts = [str(x) for x in [self.street, self.sitio, self.barangay, self.municipality, self.province] if x]
@@ -549,12 +549,23 @@ class Services(models.Model):
     
     service_address refers to where the specific service is located
     '''
+
+    CATEGORY_CHOICES = [
+        ("Protection", "Protection"),
+        ("Legal", "Legal"),
+        ("Pyscho-Social", "Pyscho-Social"),
+        ("Medical", "Medical"),
+        ("Medico-Legal", "Medico-Legal"),
+        ("Livelihood and Employment", "Livelihood and Employment"),
+        ("Others", "Others")
+    ]
     assigned_place = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_place")
     service_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="service_address")
 
     name = models.CharField(max_length=100, default="service") 
     contact_person = models.CharField(max_length=100, default="contact person")
     contact_number = models.CharField(max_length=100, default="contact number")
+    category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default="Others")
 
 class BPOApplication(models.Model):
     print('hello world')
