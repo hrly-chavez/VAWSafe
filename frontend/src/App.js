@@ -25,9 +25,9 @@ const DOVictimSearch = lazy(() =>import("./pages/desk_officer/Victims/SearchVict
 const DOSocialWorkers = lazy(() =>import("./pages/desk_officer/SocialWorker/SocialWorker"));
 const DOServices = lazy(() => import("./pages/desk_officer/Services/Services"));
 const DOCaseRecords = lazy(() =>import("./pages/desk_officer/CaseRecords/CaseRecords"));
-const DOAccountManagement = lazy(() =>import("./pages/desk_officer/AccountManage/AccountManagement"));
-const DOPendingAccount = lazy(() =>import("./pages/desk_officer/AccountManage/PendingAccount"));
-const ViewOfficials = lazy(() => import("./pages/desk_officer/AccountManage/ViewOfficials"));
+// const DOAccountManagement = lazy(() =>import("./pages/desk_officer/AccountManage/AccountManagement"));
+// const DOPendingAccount = lazy(() =>import("./pages/desk_officer/AccountManage/PendingAccount"));
+// const ViewOfficials = lazy(() => import("./pages/desk_officer/AccountManage/ViewOfficials"));
 
 // Social Worker Pages (lazy loaded)
 const DashboardPage = lazy(() =>import("./pages/social_worker/Dashboard/Dashboard"));
@@ -84,9 +84,9 @@ export default function App() {
               <Route path={ROUTES.DESK_OFFICER_START_SESSION} element={<StartSession />}/>
               <Route path={ROUTES.DESK_OFFICER_SOCIAL_WORKERS}element={<DOSocialWorkers />}/>
               <Route path={ROUTES.DESK_OFFICER_SERVICES}element={<DOServices />}/>
-              <Route path={ROUTES.DESK_OFFICER_CASE_RECORDS}element={<DOCaseRecords />}/>
+              {/* <Route path={ROUTES.DESK_OFFICER_CASE_RECORDS}element={<DOCaseRecords />}/>
               <Route path={ROUTES.DESK_OFFICER_ACCOUNT_MANAGEMENT}element={<DOAccountManagement />}/>
-              <Route path={ROUTES.DESK_OFFICER_VIEW_OFFICIAL} element={<ViewOfficials />} />
+              <Route path={ROUTES.DESK_OFFICER_VIEW_OFFICIAL} element={<ViewOfficials />} /> */}
             </Route>
 
             {/* DSWD group */}
