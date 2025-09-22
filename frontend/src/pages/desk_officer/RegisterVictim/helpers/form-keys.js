@@ -1,3 +1,14 @@
+export const INFORMANT_FIELDS = [
+  "inf_fname",
+  "inf_mname",
+  "inf_lname",
+  "inf_extension",
+  "inf_birth_date",
+  "inf_relationship_to_victim",
+  "inf_contact",
+  "inf_occupation",
+];
+
 export const VICTIM_FIELDS = [
   "vic_first_name",
   "vic_middle_name",
