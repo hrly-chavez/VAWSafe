@@ -36,6 +36,8 @@ export default function VictimDetails() {
       }
     };
 
+
+    // PISTI NANI WA NASAD NI GANA, DI NA KA FETCH NA AHAK NAMAN NI OIIII
     const fetchIncidents = async () => {
       try {
         const res = await api.get(`/api/desk_officer/case/${vic_id}/`);
