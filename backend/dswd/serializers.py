@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers, generics, permissions
 from shared_model.models import *
 from datetime import date
 
@@ -162,6 +162,77 @@ class VAWDeskOfficerListSerializer(serializers.ModelSerializer):
         if obj.of_suffix:
             parts.append(obj.of_suffix)
         return " ".join(parts)
+
+#====================================SESSIONS========================================
+class QuestionSerializer(serializers.ModelSerializer):
+    created_by_name = serializers.CharField(source="created_by.full_name", read_only=True)
+    mappings = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Question
+        fields = "__all__"
+        read_only_fields = ["ques_id", "created_at", "created_by_name", "mappings"]
+
+    def get_mappings(self, obj):
+        return [
+            {
+                "session_number": m.session_number,
+                "session_type": m.session_type.name,
+            }
+            for m in obj.type_questions.all()
+        ]
+
+class SessionTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SessionType
+        fields = ["id", "name"]
+
+class SessionTypeQuestionSerializer(serializers.ModelSerializer):
+    question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
+    session_type_name = serializers.CharField(source="session_type.name", read_only=True)
+
+    class Meta:
+        model = SessionTypeQuestion
+        fields = [
+            "id",
+            "session_number",
+            "session_type",
+            "session_type_name",
+            "question",
+            "question_text",
+        ]
+        read_only_fields = ["id", "question_text", "session_type_name"]
+
+
+# Bulk create Questions
+class BulkQuestionSerializer(serializers.Serializer):
+    questions = QuestionSerializer(many=True)
+
+    def create(self, validated_data):
+        official = self.context["request"].user.official
+        created = []
+        for q in validated_data["questions"]:
+            obj = Question.objects.create(created_by=official, **q)
+            created.append(obj)
+        return created
+    
+# Attach Bulk serializer to QuestionSerializer
+class QuestionBulkItemSerializer(QuestionSerializer):
+    class Meta(QuestionSerializer.Meta):
+        list_serializer_class = BulkQuestionSerializer
+
+
+class BulkAssignSerializer(serializers.Serializer):
+    questions = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=False
+    )
+    session_numbers = serializers.ListField(
+        child=serializers.IntegerField(min_value=1), allow_empty=False
+    )
+    session_types = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=False
+    )
+
     
 class OfficialSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
@@ -187,3 +258,54 @@ class BarangaySerializer(serializers.ModelSerializer):
     class Meta:
         model = Barangay
         fields = "__all__"
+
+# class AddressSerializer(serializers.ModelSerializer):
+#     province = serializers.PrimaryKeyRelatedField(queryset=Province.objects.all(), allow_null=True, required=False)
+#     municipality = serializers.PrimaryKeyRelatedField(queryset=Municipality.objects.all(), allow_null=True, required=False)
+#     barangay = serializers.PrimaryKeyRelatedField(queryset=Barangay.objects.all(), allow_null=True, required=False)
+
+#     class Meta:
+#         model = Address
+#         fields = ["id", "province", "municipality", "barangay", "sitio", "street"]
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ["id", "province", "municipality", "barangay", "sitio", "street"]
+
+    def to_representation(self, instance):
+        parts = []
+        if instance.street:
+            parts.append(str(instance.street))
+        if instance.sitio:
+            parts.append(str(instance.sitio))
+        if instance.barangay:
+            parts.append(str(instance.barangay))
+        if instance.municipality:
+            parts.append(str(instance.municipality))
+        if instance.province:
+            parts.append(str(instance.province))
+        return ", ".join(parts) or "—"
+
+
+
+class ServicesSerializer(serializers.ModelSerializer):
+    assigned_place = AddressSerializer()
+    service_address = AddressSerializer()
+
+    class Meta:
+        model = Services
+        fields = ["id", "category", "name", "contact_person", "contact_number", "assigned_place", "service_address"]
+
+    def create(self, validated_data):
+        assigned_place_data = validated_data.pop("assigned_place", None)
+        service_address_data = validated_data.pop("service_address", None)
+
+        assigned_place = Address.objects.create(**assigned_place_data) if assigned_place_data else None
+        service_address = Address.objects.create(**service_address_data) if service_address_data else None
+
+        return Services.objects.create(
+            assigned_place=assigned_place,
+            service_address=service_address,
+            **validated_data
+        )

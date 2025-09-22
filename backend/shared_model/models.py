@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.conf import settings
+from django.utils.timezone import now
 
 # for address
 class Province(models.Model):  
@@ -56,7 +57,19 @@ class Street(models.Model):
 
     def __str__(self):
         return f"{self.name}, {self.sitio.name}"
-    
+
+# all purpose address save all[?]
+class Address(models.Model):
+    province = models.ForeignKey("Province", on_delete=models.PROTECT, null=True, blank=True)
+    municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, null=True, blank=True)
+    barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, null=True, blank=True)
+    sitio = models.CharField(max_length=150, null=True, blank=True)
+    street = models.CharField(max_length=150, null=True, blank=True)
+
+    def __str__(self):
+        parts = [str(x) for x in [self.street, self.sitio, self.barangay, self.municipality, self.province] if x]
+        return ", ".join(parts)
+
 # for system users
 class Official(models.Model):
     ROLE_CHOICES = [
@@ -91,8 +104,6 @@ class Official(models.Model):
     barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
     sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
     street = models.ForeignKey("Street", on_delete=models.SET_NULL, null=True, blank=True, related_name="officials") 
-
-
 
     #where na baranggay assigned
     of_assigned_barangay = models.ForeignKey(Barangay, on_delete=models.PROTECT, related_name="assigned_officials", null=True, blank=True)
@@ -395,11 +406,9 @@ class CaseReport(models.Model):  #ADMINISTRATIVE INFORMATION
     office_address = models.CharField(max_length=255,null=True, blank=True)
     report_type = models.CharField(max_length=255,null=True, blank=True)
     
-    #not used and do not use
     informant_name = models.CharField(max_length=255, null=True, blank=True)
     informant_relationship = models.CharField(max_length=255, null=True, blank=True)
     informant_contact = models.CharField(max_length=50, null=True, blank=True)
-    
     def __str__(self):
         return f"CaseReport for {self.victim.vic_last_name}, {self.victim.vic_first_name}"
     
@@ -407,26 +416,18 @@ class Session(models.Model):
 
     SESSION_STAT =[
         ('Pending', 'Pending'),
-        ('Ongoing', 'Ongoing'),
+        ('Ongoing', 'Ongoing'), 
         ('Done', 'Done'),
     ]
-    SESSION_TYPES = [
-        ('Counseling', 'Counseling'),
-        ('Interview', 'Interview'),
-        ('Follow-up', 'Follow-up'),
-    ]
+    
     sess_id = models.AutoField(primary_key=True)
     sess_num = models.IntegerField(null=True, blank=True)
     sess_status = models.CharField(max_length=20,choices=SESSION_STAT, default='Pending') 
     sess_next_sched = models.DateTimeField(null=True, blank=True) # if scheduled session
     sess_date_today = models.DateTimeField(null=True, blank=True)   #if start right away
-    sess_mental_note = models.TextField(null=True,blank=True)
-    sess_physical_note = models.TextField(null=True,blank=True)
-    sess_financial_note = models.TextField(null=True,blank=True)
     sess_location = models.CharField(max_length=200, null=True, blank=True)
-    sess_type = models.CharField(max_length=50, choices=SESSION_TYPES, null=True, blank=True)
-    sess_updated_at = models.DateField(null=True, blank=True)
-    sess_description = models.TextField(null=True, blank=True)  
+    sess_description = models.TextField(null=True, blank=True)
+    sess_type = models.ManyToManyField("SessionType", related_name="sessions")
     incident_id = models.ForeignKey(IncidentInformation,to_field='incident_id', on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
     assigned_official = models.ForeignKey("Official",on_delete=models.SET_NULL,related_name="assigned_sessions",null=True,blank=True)
 
@@ -437,6 +438,82 @@ class Session(models.Model):
             else "No Victim"
         )
         return f"Session {self.sess_id} - Victim: {victim_name}" 
+    
+class SessionType(models.Model):
+    SESSION_TYPES = [
+        ('Intake / Initial Assessment', 'Intake / Initial Assessment'),
+        ('Counseling', 'Counseling'),
+        ('Follow-up', 'Follow-up'),
+        ('Legal Support','Legal Support'),
+        ('Shelter / Reintegration','Shelter / Reintegration'),
+        ('Case Closure','Case Closure'),
+    ]
+    name = models.CharField(max_length=100, choices=SESSION_TYPES)
+
+    def __str__(self):
+        return self.name
+        
+class SessionTypeQuestion(models.Model):
+    session_number = models.IntegerField()  # 1, 2, 3, 4, 5.
+    session_type = models.ForeignKey(SessionType, on_delete=models.CASCADE, related_name="type_questions")
+    question = models.ForeignKey('Question', on_delete=models.CASCADE, related_name="type_questions")
+
+    class Meta:
+        unique_together = ('session_number', 'session_type', 'question')
+
+class Question(models.Model): #HOLDER FOR ALL QUESTIONS
+    ANSWER_TYPES = [
+        ('Yes/No', 'Yes/No'),
+        ('Text', 'Text'),
+        ('Multiple Choice', 'Multiple Choice')
+    ]
+    QUESTION_CATEGORIES = [
+        ('Safety Assessment','Safety Assessment'),
+        ('Physical Health Assessment','Physical Health Assessment'),
+        ('Emotional / Psychological Assessment','Emotional / Psychological Assessment'),
+        ('Social & Family Support Assessment','Social & Family Support Assessment'),
+        ('Financial / Livelihood Assessment','Financial / Livelihood Assessment'),
+        ('Legal / Protective Measures','Legal / Protective Measures'),
+    ]
+    ques_id = models.AutoField(primary_key=True)
+    ques_category = models.CharField(choices=QUESTION_CATEGORIES, max_length=100, null=True, blank=True)
+    ques_question_text = models.TextField(null=True, blank=True)
+    ques_answer_type = models.CharField(max_length=20, choices=ANSWER_TYPES, null=True, blank=True)
+    ques_is_active = models.BooleanField(default=False)
+    created_at  = models.DateTimeField(default=now)
+    created_by = models.ForeignKey(Official, on_delete=models.SET_NULL,null=True,blank=True,related_name="created_questions")
+    
+
+    def __str__(self):
+        category = self.ques_category or "Uncategorized"
+        text = (self.ques_question_text or "")[:50]
+        return f"[{category}] {text}"
+
+class SessionQuestion(models.Model):
+
+    sq_id = models.AutoField(primary_key=True)
+    sq_is_required = models.BooleanField(default=False)
+
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='session_questions')
+    question = models.ForeignKey(Question, on_delete=models.PROTECT, related_name='session_questions')
+    
+    class Meta:
+            unique_together = ('session', 'question')
+
+    def __str__(self):
+            return f"Session {self.session.sess_id} - Q {self.question.ques_id}"
+    
+class Answer(models.Model):
+    ans_id = models.AutoField(primary_key=True)
+    ans_value = models.TextField(null=True, blank=True) 
+    ans_note = models.TextField(null=True, blank=True)
+
+    sq_id = models.OneToOneField(SessionQuestion, on_delete=models.CASCADE, related_name='answer')
+
+    
+
+    def __str__(self):
+        return f"Session {self.sq_id.session.sess_id} - Q: {self.sq_id.question.ques_question_text[:30]} -> {self.ans_value}"
 
 # for update changes
 class Session_Changelog(models.Model):
@@ -448,7 +525,8 @@ class Session_Changelog(models.Model):
     sess_id = models.ForeignKey(Session,on_delete=models.CASCADE, to_field='sess_id', related_name='changelogs')
     
     def __str__(self):
-        return f"Change in {self.sc_field_changed} on {self.sc_changed_timestamp}"
+        return f"Change in {self.sc_field_changed} on {self.sc_changed_timestamp}"    
+
 
 # newly added
 class Evidence(models.Model):
@@ -463,3 +541,31 @@ class Evidence(models.Model):
 
     def __str__(self):
         return f"Evidence {self.id} for Incident {self.incident_id}"
+
+class Services(models.Model):
+    '''
+    assigned_place refers to which barangay the service can be acquired
+    REASONING: lahi lahi man ug lugar ang barangay nya dili baya pareho tanan service location
+    
+    service_address refers to where the specific service is located
+    '''
+
+    CATEGORY_CHOICES = [
+        ("Protection", "Protection"),
+        ("Legal", "Legal"),
+        ("Pyscho-Social", "Pyscho-Social"),
+        ("Medical", "Medical"),
+        ("Medico-Legal", "Medico-Legal"),
+        ("Livelihood and Employment", "Livelihood and Employment"),
+        ("Others", "Others")
+    ]
+    assigned_place = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_place")
+    service_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="service_address")
+
+    name = models.CharField(max_length=100, default="service") 
+    contact_person = models.CharField(max_length=100, default="contact person")
+    contact_number = models.CharField(max_length=100, default="contact number")
+    category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default="Others")
+
+class BPOApplication(models.Model):
+    print('hello world')

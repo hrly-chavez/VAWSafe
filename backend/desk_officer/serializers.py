@@ -64,78 +64,6 @@ class PerpetratorSerializer(serializers.ModelSerializer):
         model = Perpetrator
         fields = "__all__"
 
-class SessionSerializer(serializers.ModelSerializer):
-    victim_name = serializers.SerializerMethodField()
-    case_no = serializers.SerializerMethodField() 
-    location = serializers.SerializerMethodField()
-    official_name = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Session
-        fields = "__all__"
-        read_only_fields = ["sess_id", "sess_num","sess_updated_at"]
-    def get_victim_name(self, obj):
-        # Check if session has an incident and victim
-        if obj.incident_id and obj.incident_id.vic_id:
-            return obj.incident_id.vic_id.full_name
-        return None
-    def get_case_no(self, obj):
-        if obj.incident_id:
-            return obj.incident_id.incident_num
-        return None
-    def get_location(self, obj):
-        return obj.sess_location or "—"
-    
-    def create(self, validated_data):
-        # Auto-generate sess_num based on incident
-        incident = validated_data.get("incident_id")
-        if incident:
-            last_num = (
-                Session.objects.filter(incident_id=incident)
-                .order_by("-sess_num")
-                .values_list("sess_num", flat=True)
-                .first()
-            )
-            validated_data["sess_num"] = (last_num or 0) + 1
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        validated_data["sess_updated_at"] = date.today()
-        return super().update(instance, validated_data)
-    def get_official_name(self, obj):
-        return obj.assigned_official.full_name if obj.assigned_official else None
-
-
-class IncidentInformationSerializer(serializers.ModelSerializer):
-    vic_id = VictimSerializer(read_only=True)   # nested victim
-    perp_id = PerpetratorSerializer(read_only=True)  # nested perpetrator
-    sessions = SessionSerializer(many=True, read_only=True)  # related sessions
-
-    class Meta:
-        model = IncidentInformation
-        fields = "__all__"
-        read_only_fields = ["incident_id", "incident_num"]
-        extra_kwargs = {
-            "incident_date": {"required": False, "allow_null": True},
-            "incident_time": {"required": False, "allow_null": True},
-        }
-
-    def create(self, validated_data):
-        victim = validated_data.get("vic_id")
-
-        # get last case number for this victim
-        last_num = (
-            IncidentInformation.objects.filter(vic_id=victim)
-            .order_by("-incident_num")
-            .values_list("incident_num", flat=True)
-            .first()
-        )
-        validated_data["incident_num"] = (last_num or 0) + 1
-
-        return super().create(validated_data)
-
-
-
 class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
     perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)
 
@@ -151,8 +79,90 @@ class VictimDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Victim
         fields = "__all__"
-        
+
+class IncidentInformationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IncidentInformation
+        fields = "__all__"
+        read_only_fields = ["incident_id", "incident_num"]  
+
+    def create(self, validated_data):
+        victim = validated_data.get("vic_id")
+
+        # get last case number for this victim
+        last_num = (
+            IncidentInformation.objects.filter(vic_id=victim)
+            .order_by("-incident_num")
+            .values_list("incident_num", flat=True)
+            .first()
+        )
+        validated_data["incident_num"] = (last_num or 0) + 1
+
+        return super().create(validated_data)     
+
+class SessionSerializer(serializers.ModelSerializer):
+    victim_name = serializers.SerializerMethodField()
+    case_no = serializers.SerializerMethodField() 
+    location = serializers.SerializerMethodField()
+    official_name = serializers.SerializerMethodField()
+    sess_type = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=SessionType.objects.all()
+    )
+
+    class Meta:
+        model = Session
+        fields = "__all__"
+        read_only_fields = ["sess_id", "sess_num","sess_updated_at"]
+
+    def get_victim_name(self, obj):
+        if obj.incident_id and obj.incident_id.vic_id:
+            return obj.incident_id.vic_id.full_name
+        return None
+
+    def get_case_no(self, obj):
+        if obj.incident_id:
+            return obj.incident_id.incident_num
+        return None
+
+    def get_location(self, obj):
+        return obj.sess_location or "—"
     
+    def create(self, validated_data):
+        session_types = validated_data.pop("sess_type", [])
+        incident = validated_data.get("incident_id")
+
+        if incident:
+            last_num = (
+                Session.objects.filter(incident_id=incident)
+                .order_by("-sess_num")
+                .values_list("sess_num", flat=True)
+                .first()
+            )
+            validated_data["sess_num"] = (last_num or 0) + 1
+
+        session = super().create(validated_data)
+        session.sess_type.set(session_types)
+        return session
+
+    def update(self, instance, validated_data):
+        session_types = validated_data.pop("sess_type", None)
+        validated_data["sess_updated_at"] = date.today()
+
+        session = super().update(instance, validated_data)
+        if session_types is not None:
+            session.sess_type.set(session_types)
+        return session
+
+    def get_official_name(self, obj):
+        return obj.assigned_official.full_name if obj.assigned_official else None
+
+class SessionTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SessionType
+        fields = ["id", "name"]
+    
+    
+
 # Account Management
 class OfficialSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
