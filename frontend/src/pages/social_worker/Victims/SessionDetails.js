@@ -1,4 +1,4 @@
-// src/pages/desk_officer/Victims/SessionDetails.js
+// src/pages/social_worker/Victims/SessionDetails.js
 import React, { useEffect, useState } from "react";
 import api from "../../../api/axios";
 
@@ -12,7 +12,7 @@ export default function SessionDetails({ sessionId, onClose }) {
 
     const fetchSession = async () => {
       try {
-        const res = await api.get(`/api/desk_officer/sessions/${sessionId}/`);
+        const res = await api.get(`/api/social_worker/sessions/${sessionId}/`);
         setSession(res.data);
       } catch (err) {
         setError("Failed to load session details");
@@ -54,26 +54,17 @@ export default function SessionDetails({ sessionId, onClose }) {
             <p className="text-red-600">{error}</p>
           ) : session ? (
             <>
-              {/* Top Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DetailItem label="Session Number" value={session.sess_num} />
                 <DetailItem label="Status" value={session.sess_status} />
                 <DetailItem
                   label="Date"
-                  value={
-                    session.sess_next_sched ||
-                    session.sess_date_today ||
-                    "—"
-                  }
+                  value={session.sess_next_sched || session.sess_date_today || "—"}
                 />
                 <DetailItem label="Location" value={session.sess_location} />
-                <DetailItem
-                  label="Assigned Official"
-                  value={session.official_name}
-                />
+                <DetailItem label="Assigned Official" value={session.official_name} />
               </div>
 
-              {/* Description */}
               <div>
                 <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
                   Description
@@ -83,51 +74,48 @@ export default function SessionDetails({ sessionId, onClose }) {
                 </p>
               </div>
 
-              {/* Session Types */}
-              {session.sess_type && session.sess_type.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
-                    Session Types
-                  </h3>
-                  <ul className="list-disc list-inside text-sm text-gray-800">
-                    {session.sess_type.map((type, idx) =>
-                      typeof type === "object" ? (
-                        <li key={idx}>{type.name}</li>
-                      ) : (
-                        <li key={idx}>{type}</li>
-                      )
-                    )}
-                  </ul>
-                </div>
-              )}
+              <div>
+                <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
+                  Session Types
+                </h3>
+                <ul className="list-disc list-inside text-sm text-gray-800">
+                  {(session.sess_type || []).map((type, idx) => (
+                    <li key={idx}>{type.name}</li>
+                  ))}
+                </ul>
+              </div>
 
               {/* Answered Questions */}
-              {session.session_questions &&
-                session.session_questions.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
-                      Answered Questions
-                    </h3>
-                    <div className="space-y-3">
-                      {session.session_questions.map((q) => (
-                        <div
-                          key={q.sq_id}
-                          className="bg-gray-50 border rounded-md p-3 shadow-sm"
-                        >
-                          <p className="text-sm font-medium text-gray-800">
-                            {q.question_text}
+              <div>
+                <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
+                  Answered Questions
+                </h3>
+                {session.questions && session.questions.length > 0 ? (
+                  <div className="space-y-3">
+                    {session.questions.map((q) => (
+                      <div
+                        key={q.sq_id}
+                        className="p-3 border rounded-md bg-gray-50"
+                      >
+                        <p className="text-sm font-medium text-gray-800">
+                          {q.question_text}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <span className="font-semibold">Answer:</span>{" "}
+                          {q.sq_value || "—"}
+                        </p>
+                        {q.sq_note && (
+                          <p className="text-sm text-gray-500 italic">
+                            Note: {q.sq_note}
                           </p>
-                          <p className="text-xs text-gray-600 mt-1">
-                            Answer:{" "}
-                            <span className="font-semibold">
-                              {q.sq_value || "—"}
-                            </span>
-                          </p>
-                        </div>
-                      ))}
-                    </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No answers yet.</p>
                 )}
+              </div>
             </>
           ) : (
             <p>No session found.</p>

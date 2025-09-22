@@ -4,6 +4,8 @@ import api from "../../../api/axios";
 import { CheckCircleIcon, PlayCircleIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
+import SessionTypeQuestionPreview from "./SessionTypeQuestionPreview";
+
 
 export default function Schedule({ victim, incident, back, next }) {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -165,6 +167,11 @@ useEffect(() => {
           isClearable
         />
       </div>
+      {/* Preview of mapped questions */}
+        <SessionTypeQuestionPreview
+        sessionNum={(incident?.sessions?.length || 0) + 1}
+        selectedTypes={selectedTypes}
+      />
       </div>
      
       {/* Actions */}

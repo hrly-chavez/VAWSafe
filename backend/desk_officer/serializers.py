@@ -85,25 +85,8 @@ class VictimDetailSerializer(serializers.ModelSerializer):
         model = Victim
         fields = "__all__"
 
-class IncidentInformationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = IncidentInformation
-        fields = "__all__"
-        read_only_fields = ["incident_id", "incident_num"]  
 
-    def create(self, validated_data):
-        victim = validated_data.get("vic_id")
-
-        # get last case number for this victim
-        last_num = (
-            IncidentInformation.objects.filter(vic_id=victim)
-            .order_by("-incident_num")
-            .values_list("incident_num", flat=True)
-            .first()
-        )
-        validated_data["incident_num"] = (last_num or 0) + 1
-
-        return super().create(validated_data)     
+#======================================SESSION=================================================
 
 class SessionSerializer(serializers.ModelSerializer):
     victim_name = serializers.SerializerMethodField()
@@ -161,12 +144,86 @@ class SessionSerializer(serializers.ModelSerializer):
     def get_official_name(self, obj):
         return obj.assigned_official.full_name if obj.assigned_official else None
 
+class IncidentInformationSerializer(serializers.ModelSerializer):
+    sessions = SessionSerializer(many=True, read_only=True)  # ✅ add sessions
+
+    class Meta:
+        model = IncidentInformation
+        fields = "__all__"
+        read_only_fields = ["incident_id", "incident_num"]
+
+    def create(self, validated_data):
+        victim = validated_data.get("vic_id")
+
+        # get last case number for this victim
+        last_num = (
+            IncidentInformation.objects.filter(vic_id=victim)
+            .order_by("-incident_num")
+            .values_list("incident_num", flat=True)
+            .first()
+        )
+        validated_data["incident_num"] = (last_num or 0) + 1
+
+        return super().create(validated_data)
+    
 class SessionTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = SessionType
         fields = ["id", "name"]
-    
-    
+
+class SessionTypeQuestionSerializer(serializers.ModelSerializer): #Mapped questions
+    question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
+    question_category = serializers.CharField(source="question.ques_category", read_only=True)
+    question_answer_type = serializers.CharField(source="question.ques_answer_type", read_only=True)
+
+    class Meta:
+        model = SessionTypeQuestion
+        fields = ["id", "session_number", "session_type", "question", "question_text", "question_category", "question_answer_type"]
+
+class SessionQuestionSerializer(serializers.ModelSerializer):  # Generated + answered questions
+    question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
+    question_category = serializers.CharField(source="question.ques_category", read_only=True)
+    question_answer_type = serializers.CharField(source="question.ques_answer_type", read_only=True)
+
+    class Meta:
+        model = SessionQuestion
+        fields = [
+            "sq_id",
+            "question",
+            "question_text",
+            "question_category",
+            "question_answer_type",
+            "sq_is_required",
+            "sq_value",   
+            "sq_note",    
+        ]
+
+class DeskOfficerSessionDetailSerializer(serializers.ModelSerializer): #show session and session answer in card
+    official_name = serializers.CharField(source="assigned_official.full_name", read_only=True)
+    sess_type = SessionTypeSerializer(many=True, read_only=True)
+    session_questions = SessionQuestionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Session
+        fields = [
+            "sess_id",
+            "sess_num",
+            "sess_status",
+            "sess_next_sched",
+            "sess_date_today",
+            "sess_location",
+            "sess_description",
+            "official_name",
+            "sess_type",          # names not IDs
+            "session_questions",  # answered questions
+        ]
+
+class GenerateSessionQuestionsSerializer(serializers.Serializer):
+    session_types = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=False
+    )
+
+#======================================SESSION================================================= 
 
 # Account Management
 class OfficialSerializer(serializers.ModelSerializer):

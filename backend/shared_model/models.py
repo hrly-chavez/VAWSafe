@@ -356,7 +356,7 @@ class IncidentInformation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     status = models.CharField(max_length=10, default="Ongoing")
     incident_id = models.AutoField(primary_key=True)
-    incident_num = models.IntegerField(null=True,blank=True)
+    incident_num = models.IntegerField(null=True,blank=True) #case number
     
     violence_type = models.CharField(max_length=100, choices=VIOLENCE_TYPE, null=True, blank=True)
     violence_subtype = models.CharField(max_length=100, null=True, blank=True)
@@ -509,30 +509,22 @@ class Question(models.Model): #HOLDER FOR ALL QUESTIONS
         return f"[{category}] {text}"
 
 class SessionQuestion(models.Model):
-
     sq_id = models.AutoField(primary_key=True)
     sq_is_required = models.BooleanField(default=False)
 
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='session_questions')
     question = models.ForeignKey(Question, on_delete=models.PROTECT, related_name='session_questions')
-    
+
+    # Direct answer fields
+    sq_value = models.TextField(null=True, blank=True)
+    sq_note = models.TextField(null=True, blank=True)
+
     class Meta:
-            unique_together = ('session', 'question')
+        unique_together = ('session', 'question')
 
     def __str__(self):
-            return f"Session {self.session.sess_id} - Q {self.question.ques_id}"
-    
-class Answer(models.Model):
-    ans_id = models.AutoField(primary_key=True)
-    ans_value = models.TextField(null=True, blank=True) 
-    ans_note = models.TextField(null=True, blank=True)
+        return f"Session {self.session.sess_id} - Q {self.question.ques_id} -> {self.sq_value or 'No answer'}"
 
-    sq_id = models.OneToOneField(SessionQuestion, on_delete=models.CASCADE, related_name='answer')
-
-    
-
-    def __str__(self):
-        return f"Session {self.sq_id.session.sess_id} - Q: {self.sq_id.question.ques_question_text[:30]} -> {self.ans_value}"
 
 # for update changes
 class Session_Changelog(models.Model):
