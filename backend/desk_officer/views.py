@@ -309,7 +309,7 @@ class SessionListCreateView(generics.ListCreateAPIView):
 
 class SessionDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Session.objects.all()
-    serializer_class = SessionSerializer
+    serializer_class = DeskOfficerSessionDetailSerializer
     lookup_field = "sess_id"
 
 @api_view(["POST"])
@@ -347,6 +347,96 @@ def list_session_types(request):
     types = SessionType.objects.all()
     serializer = SessionTypeSerializer(types, many=True)
     return Response(serializer.data)
+
+@api_view(["GET"])
+def mapped_questions(request):
+    """
+    Get mapped questions for a given session number and one or more session types.
+    Example: /api/desk_officer/mapped-questions/?session_num=1&session_types=1,2
+    """
+    session_num = request.query_params.get("session_num")
+    type_ids = request.query_params.get("session_types")
+
+    if not session_num or not type_ids:
+        return Response({"error": "session_num and session_types are required"}, status=400)
+
+    type_ids = [int(t) for t in type_ids.split(",")]
+
+    mappings = SessionTypeQuestion.objects.filter(
+        session_number=session_num,
+        session_type__id__in=type_ids
+    ).select_related("question", "session_type")
+
+    serializer = SessionTypeQuestionSerializer(mappings, many=True)
+    return Response(serializer.data)
+
+@api_view(["GET"])
+def session_questions(request, sess_id):
+    try:
+        session = Session.objects.get(pk=sess_id)
+    except Session.DoesNotExist:
+        return Response({"error": "Session not found"}, status=404)
+
+    questions = session.session_questions.select_related("question").all()
+    serializer = SessionQuestionSerializer(questions, many=True)
+    return Response(serializer.data)
+
+@api_view(["POST"])
+def generate_session_questions(request, sess_id):
+    """
+    Generate SessionQuestions for a session based on selected types + session number.
+    """
+    try:
+        session = Session.objects.get(pk=sess_id)
+    except Session.DoesNotExist:
+        return Response({"error": "Session not found"}, status=404)
+
+    type_ids = request.data.get("session_types", [])
+    if not type_ids:
+        return Response({"error": "session_types required"}, status=400)
+
+    mappings = SessionTypeQuestion.objects.filter(
+        session_number=session.sess_num,
+        session_type__id__in=type_ids
+    ).select_related("question")
+
+    created = []
+    for m in mappings:
+        sq, _ = SessionQuestion.objects.get_or_create(
+            session=session,
+            question=m.question,
+            defaults={"sq_is_required": False}
+        )
+        created.append(sq)
+
+    serializer = SessionQuestionSerializer(created, many=True)
+    return Response(serializer.data)
+
+@api_view(["POST"])
+def submit_answers(request, sess_id):
+    try:
+        session = Session.objects.get(pk=sess_id)
+    except Session.DoesNotExist:
+        return Response({"error": "Session not found"}, status=404)
+
+    answers_data = request.data.get("answers", [])
+    for ans in answers_data:
+        sq_id = ans.get("sq_id")
+        value = ans.get("value")
+        note = ans.get("note", "")
+
+        try:
+            sq = SessionQuestion.objects.get(pk=sq_id, session=session)
+        except SessionQuestion.DoesNotExist:
+            continue  # skip invalid ids
+
+        sq.sq_value = value
+        sq.sq_note = note
+        sq.save()
+
+    return Response({"message": "Answers submitted successfully"})
+
+
 #=======================================================================
 
 

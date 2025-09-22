@@ -4,14 +4,15 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
+from django.utils import timezone
 from deepface import DeepFace
+from django.db.models import Q
 from shared_model.models import *
 from .serializers import *
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from shared_model.permissions import IsRole
-
-
+from rest_framework.decorators import api_view, permission_classes
 
 class victim_list(generics.ListAPIView):
     serializer_class = VictimListSerializer
@@ -33,6 +34,17 @@ class victim_detail(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['Social Worker']
 
+# retrieve all information related to case (Social Worker)
+class VictimIncidentsView(generics.ListAPIView):
+    serializer_class = IncidentInformationSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['Social Worker']
+
+    def get_queryset(self):
+        vic_id = self.kwargs.get("vic_id")
+        return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by('incident_num')
+
+    
 class search_victim_facial(APIView):
 
     parser_classes = [MultiPartParser, FormParser]
@@ -109,7 +121,8 @@ class search_victim_facial(APIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['Social Worker']
 
-#========================================SESSIONS
+#========================================SESSIONS====================================================
+
 class scheduled_session_lists(generics.ListAPIView):
     serializer_class = SocialWorkerSessionSerializer
     permission_classes = [IsAuthenticated]
@@ -122,7 +135,7 @@ class scheduled_session_lists(generics.ListAPIView):
                 sess_status="Pending")
         return Session.objects.none()
     
-class scheduled_session_detail(generics.RetrieveAPIView):
+class scheduled_session_detail(generics.RetrieveUpdateAPIView):  # View + Update
     serializer_class = SocialWorkerSessionDetailSerializer
     permission_classes = [IsAuthenticated]
 
@@ -131,3 +144,150 @@ class scheduled_session_detail(generics.RetrieveAPIView):
         if hasattr(user, "official") and user.official.of_role == "Social Worker":
             return Session.objects.filter(assigned_official=user.official)
         return Session.objects.none()
+
+class SessionTypeListView(generics.ListAPIView):
+    queryset = SessionType.objects.all()
+    serializer_class = SessionTypeSerializer
+    permission_classes = [IsAuthenticated]
+
+    
+#Session Start 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def social_worker_mapped_questions(request):
+    """
+    Get mapped questions for a given session number and one or more session types.
+    Example: /api/social_worker/mapped-questions/?session_num=1&session_types=1,2
+    """
+    session_num = request.query_params.get("session_num")
+    type_ids = request.query_params.get("session_types")
+
+    if not session_num or not type_ids:
+        return Response({"error": "session_num and session_types are required"}, status=400)
+
+    type_ids = [int(t) for t in type_ids.split(",")]
+
+    mappings = SessionTypeQuestion.objects.filter(
+        session_number=session_num,
+        session_type__id__in=type_ids
+    ).select_related("question", "session_type")
+
+    serializer = SocialWorkerSessionTypeQuestionSerializer(mappings, many=True)
+    return Response(serializer.data)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def start_session(request, sess_id):
+    """
+    Start a scheduled session assigned to the logged-in social worker.
+    Hydrates mapped questions into SessionQuestions.
+    """
+    user = request.user
+    try:
+        session = Session.objects.get(pk=sess_id, assigned_official=user.official)
+    except Session.DoesNotExist:
+        return Response({"error": "Session not found or not assigned to you"}, status=404)
+
+    # Mark session as ongoing
+    session.sess_status = "Ongoing"
+    session.sess_date_today = timezone.now()
+    session.save()
+
+    # Hydrate mapped questions
+    type_ids = list(session.sess_type.values_list("id", flat=True))
+    mappings = SessionTypeQuestion.objects.filter(
+        session_number=session.sess_num,
+        session_type__id__in=type_ids
+    ).select_related("question")
+
+    created = []
+    for m in mappings:
+        sq, _ = SessionQuestion.objects.get_or_create(
+            session=session,
+            question=m.question,
+            defaults={"sq_is_required": False}
+        )
+        created.append(sq)
+
+    #  serialize session detail (with victim + incident + etc.)
+    session_data = SocialWorkerSessionDetailSerializer(session).data
+    # attach hydrated questions separately
+    session_data["questions"] = SocialWorkerSessionQuestionSerializer(created, many=True).data
+
+    return Response(session_data, status=200)
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def finish_session(request, sess_id):
+    """
+    Save answers and mark session as Done.
+    """
+    user = request.user
+    try:
+        session = Session.objects.get(pk=sess_id, assigned_official=user.official)
+    except Session.DoesNotExist:
+        return Response({"error": "Session not found or not assigned to you"}, status=404)
+
+    answers = request.data.get("answers", [])
+    for ans in answers:
+        try:
+            sq = SessionQuestion.objects.get(pk=ans["sq_id"], session=session)
+            sq.sq_value = ans.get("value")
+            sq.sq_note = ans.get("note")
+            sq.save()
+        except SessionQuestion.DoesNotExist:
+            continue
+
+    #  Mark as Done
+    session.sess_status = "Done"
+    session.save()
+
+    return Response({"message": "Session finished successfully!"}, status=200)
+#schedule session
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])
+def schedule_next_session(request):
+    user = request.user
+
+    if request.method == "GET":
+        # same queryset logic
+        if hasattr(user, "official") and user.official.of_role == "Social Worker":
+            sessions = Session.objects.filter(
+                assigned_official=user.official,
+                sess_status__in=["Pending", "Ongoing"]
+            ).order_by("-sess_next_sched")
+        else:
+            sessions = Session.objects.none()
+
+        serializer = SocialWorkerSessionCRUDSerializer(sessions, many=True)
+        return Response(serializer.data)
+
+    elif request.method == "POST":
+        serializer = SocialWorkerSessionCRUDSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_social_workers(request):
+    
+    q = request.query_params.get("q", "").strip()
+    workers = Official.objects.filter(of_role="Social Worker")
+
+    if q:
+     workers = workers.filter(
+        Q(of_fname__icontains=q) |
+        Q(of_lname__icontains=q) |
+        Q(of_m_initial__icontains=q)
+    )
+
+    workers = workers[:20]
+    data = [
+        {"of_id": w.of_id, "full_name": w.full_name}
+        for w in workers
+    ]
+    return Response(data, status=200)
+#=====================================================================================================

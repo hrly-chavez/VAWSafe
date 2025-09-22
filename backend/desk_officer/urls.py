@@ -25,5 +25,10 @@ urlpatterns = [
     path("sessions/create_sched/", create_session, name="create-session"),
     path("officials/social-workers/", list_social_workers, name="list-social-workers"),
     path("session-types/", list_session_types, name="list-session-types"),
+    path("mapped-questions/", mapped_questions, name="mapped-questions"),
+    path("sessions/<int:sess_id>/questions/", session_questions, name="session-questions"),
+    path("sessions/<int:sess_id>/generate-questions/", generate_session_questions, name="generate-session-questions"),
+    path("sessions/<int:sess_id>/answers/", submit_answers, name="submit-answers"),
+
 
 ] + router.urls

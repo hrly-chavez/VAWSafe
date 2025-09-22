@@ -14,7 +14,7 @@ export default function VictimDetails() {
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [openSessionIndex, setOpenSessionIndex] = useState(null);
-  const [selectedSessionIndex, setSelectedSessionIndex] = useState(null);
+  const [selectedSessionId, setSelectedSessionId] = useState(null);
 
   useEffect(() => {
     document.body.style.overflow = showModal ? "hidden" : "auto";
@@ -40,7 +40,7 @@ export default function VictimDetails() {
       try {
         const res = await api.get(`/api/desk_officer/case/${vic_id}/`);
         if (Array.isArray(res.data)) {
-          setIncidentList(res.data); // store all incidents
+          setIncidentList(res.data);
         }
       } catch (err) {
         console.error("Failed to fetch incidents", err);
@@ -53,7 +53,6 @@ export default function VictimDetails() {
     }
   }, [vic_id]);
 
-  // small helper to read whichever key exists (keeps UI from going blank if fields differ)
   const get = (obj, keys, fallback = "N/A") => {
     for (const k of keys) {
       if (obj && obj[k] != null && obj[k] !== "") return obj[k];
@@ -63,21 +62,16 @@ export default function VictimDetails() {
 
   const fullName = victim
     ? [
-      get(
-        victim,
-        ["vic_first_name", "first_name", "fname", "given_name"],
-        ""
-      ),
-      get(victim, ["vic_middle_name", "middle_name", "mname"], ""),
-      get(victim, ["vic_last_name", "last_name", "lname", "surname"], ""),
-      get(victim, ["vic_extension", "name_suffix"], ""),
-    ]
-      .filter(Boolean)
-      .join(" ")
+        get(victim, ["vic_first_name", "first_name", "fname", "given_name"], ""),
+        get(victim, ["vic_middle_name", "middle_name", "mname"], ""),
+        get(victim, ["vic_last_name", "last_name", "lname", "surname"], ""),
+        get(victim, ["vic_extension", "name_suffix"], ""),
+      ]
+        .filter(Boolean)
+        .join(" ")
     : "";
 
   const isMinor = victim?.vic_child_class != null;
-
 
   return (
     <div className="min-h-screen bg-white relative">
@@ -105,7 +99,7 @@ export default function VictimDetails() {
           </p>
         </div>
 
-        {/* Victim Information Box */}
+        {/* Victim Info */}
         <div className="bg-white border rounded-xl shadow-lg p-6">
           <h3 className="text-lg font-semibold text-[#292D96] mb-4">Victim Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -131,7 +125,6 @@ export default function VictimDetails() {
               </div>
             ))}
           </div>
-          {/* Full Address Block */}
           <div className="mt-6">
             <p className="text-xs text-gray-500 mb-1">Full Address</p>
             <p className="text-sm font-medium text-gray-800 bg-gray-50 border rounded-md p-3 whitespace-pre-wrap break-words">
@@ -160,20 +153,15 @@ export default function VictimDetails() {
           </div>
         )}
 
-
         <h3 className="text-lg font-semibold text-[#292D96] mb-4">Case Information</h3>
         {incidentList.map((incident, index) => (
           <div key={index} className="border rounded-md p-4 shadow-sm bg-gray-50">
-
             {/* Case Info + Buttons */}
             <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <p>
-                  <span className="font-medium text-gray-800">Case No:</span>{" "}
-                  {incident.incident_num || "—"}
-                </p>
-              </div>
-
+              <p>
+                <span className="font-medium text-gray-800">Case No:</span>{" "}
+                {incident.incident_num || "—"}
+              </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => {
@@ -184,12 +172,11 @@ export default function VictimDetails() {
                 >
                   View Case Details
                 </button>
-
                 <button
                   onClick={() => {
                     const isSame = openSessionIndex === index;
                     setOpenSessionIndex(isSame ? null : index);
-                    setSelectedSessionIndex(null); // reset session view
+                    setSelectedSessionId(null);
                   }}
                   className="inline-flex items-center gap-2 rounded-md border border-green-600 text-green-600 px-3 py-1.5 text-sm font-medium hover:bg-green-600 hover:text-white transition"
                 >
@@ -198,33 +185,51 @@ export default function VictimDetails() {
               </div>
             </div>
 
-            {/* Session Dropdown Below */}
+            {/* Sessions */}
             {openSessionIndex === index && (
               <div className="mt-4 space-y-4">
                 <p className="text-sm font-semibold text-[#292D96]">Sessions:</p>
-                <div className="flex flex-wrap gap-2">
-                  {(incident.sessions || []).map((session, sIndex) => (
-                    <button
-                      key={sIndex}
-                      onClick={() =>
-                        setSelectedSessionIndex(
-                          selectedSessionIndex === sIndex ? null : sIndex
-                        )
-                      }
-                      className={`px-3 py-1.5 text-sm rounded-md border ${selectedSessionIndex === sIndex
-                        ? "bg-[#292D96] text-white border-[#292D96]"
-                        : "text-[#292D96] border-[#292D96] hover:bg-[#292D96] hover:text-white"
-                        } transition`}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(incident.sessions || []).map((session) => (
+                    <div
+                      key={session.sess_id}
+                      className="border rounded-lg p-4 bg-white shadow hover:shadow-md transition cursor-pointer"
+                      onClick={() => setSelectedSessionId(session.sess_id)}
                     >
-                      Session {sIndex + 1}
-                    </button>
+                      <h4 className="text-base font-semibold text-[#292D96] mb-2">
+                        Session {session.sess_num || "—"}
+                      </h4>
+                      <p className="text-sm">
+                        <span className="font-medium">Status:</span>{" "}
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs ${
+                            session.sess_status === "Pending"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : session.sess_status === "Ongoing"
+                              ? "bg-blue-100 text-blue-700"
+                              : session.sess_status === "Done"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {session.sess_status}
+                        </span>
+                      </p>
+                      <p className="text-sm">
+                        <span className="font-medium">Date:</span>{" "}
+                        {session.sess_next_sched || session.sess_date_today || "—"}
+                      </p>
+                      <p className="text-sm">
+                        <span className="font-medium">Location:</span>{" "}
+                        {session.sess_location || "—"}
+                      </p>
+                      <p className="text-sm">
+                        <span className="font-medium">Assigned Official:</span>{" "}
+                        {session.official_name || "—"}
+                      </p>
+                    </div>
                   ))}
                 </div>
-
-                {selectedSessionIndex != null &&
-                  incident.sessions[selectedSessionIndex] && (
-                    <SessionDetails session={incident.sessions[selectedSessionIndex]} />
-                  )}
               </div>
             )}
           </div>
@@ -239,8 +244,9 @@ export default function VictimDetails() {
             ← Back to List
           </Link>
         </div>
+      </div>
 
-      </div >
+      {/* Case Modal */}
       {showModal && selectedIncident && (
         <CaseTreeModal
           selectedIncident={selectedIncident}
@@ -249,9 +255,15 @@ export default function VictimDetails() {
             setSelectedIncident(null);
           }}
         />
-      )
-      }
-    </div >
+      )}
 
+      {/* Session Modal */}
+      {selectedSessionId && (
+        <SessionDetails
+          sessionId={selectedSessionId}
+          onClose={() => setSelectedSessionId(null)}
+        />
+      )}
+    </div>
   );
 }

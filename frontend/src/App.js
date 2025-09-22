@@ -38,6 +38,7 @@ const Victims = lazy(() => import("./pages/social_worker/Victims/Victims"));
 const VictimDetailPage = lazy(() =>import("./pages/social_worker/Victims/VictimDetailPage"));
 const SearchVictimFacial = lazy(() =>import("./pages/social_worker/Victims/SearchVictimFacial"));
 const ViewSessions = lazy(() =>import("./pages/social_worker/Sessions/ViewSessions"));
+const SocialWorkerStartSession = lazy(() => import("./pages/social_worker/Sessions/StartSession"));
 
 //DSWD
 const DSWDDashboard = lazy(() =>import("./pages/dswd/Dashboard/DSWDDashboard"));
@@ -120,6 +121,7 @@ export default function App() {
               <Route path={ROUTES.SOCIAL_WORKER_VICTIM_DETAIL} element={<VictimDetailPage />}/>
               <Route path={ROUTES.SOCIAL_WORKER_SEARCH_FACIAL}element={<SearchVictimFacial />}/>
               <Route path={ROUTES.SOCIAL_WORKER_VIEW_SESSION}element={<ViewSessions />}/>
+              <Route path={ROUTES.SOCIAL_WORKER_START_SESSION}element={<SocialWorkerStartSession/>}/>
             </Route>
 
             <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />
