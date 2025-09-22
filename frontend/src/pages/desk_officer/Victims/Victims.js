@@ -12,7 +12,6 @@ export default function Victims() {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const navigate = useNavigate();
 
-
   useEffect(() => {
     const fetchVictims = async () => {
       setLoading(true);
