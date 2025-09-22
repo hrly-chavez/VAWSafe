@@ -13,16 +13,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from shared_model.models import Official, OfficialFaceSample
 from .serializers import OfficialSerializer, OfficialFaceSampleSerializer
 from rest_framework.decorators import api_view, permission_classes
-from django.core.mail import send_mail
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.core.cache import cache
-import uuid
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.encoding import force_str, force_bytes
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
-
 
 from deepface import DeepFace
 from PIL import Image
@@ -44,9 +34,361 @@ def check_dswd_exists(request):
     exists = Official.objects.filter(of_role="DSWD").exists()  # use your field name
     return Response({"dswd_exists": exists})
 
+# class create_official(APIView):
+#     """
+#     NOTE: this endpoint currently allows unauthenticated creation.
+#     In production you should restrict this to IsAdminUser / staff.
+#     """
+#     parser_classes = [MultiPartParser, FormParser]
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         serializer = OfficialSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Build unique username from fname+lname
+#         fname = request.data.get("of_fname", "").strip().lower()
+#         lname = request.data.get("of_lname", "").strip().lower()
+#         base_username = f"{fname}{lname}".replace(" ", "")
+#         username = base_username or get_random_string(8)
+
+#         # ensure uniqueness
+#         counter = 0
+#         while User.objects.filter(username=username).exists():
+#             counter += 1
+#             username = f"{base_username}{counter}"
+
+#         generated_password = get_random_string(length=12)
+
+#         # create Django User (hashed password)
+#         user = User.objects.create_user(username=username, password=generated_password)
+        
+#         # Auto-assign barangay to of_assigned_barangay
+#         barangay_id = request.data.get("barangay")
+#         if barangay_id:
+#             serializer.validated_data["of_assigned_barangay_id"] = barangay_id
+
+#         # create Official record
+#         official = Official.objects.create(user=user, **serializer.validated_data)
+
+#         # Photos - support of_photos[] or single of_photo
+#         photo_files = request.FILES.getlist("of_photos") or []
+#         if not photo_files:
+#             single_photo = request.FILES.get("of_photo")
+#             if single_photo:
+#                 photo_files = [single_photo]
+
+#         if photo_files:
+#             official.of_photo = photo_files[0]
+#             official.save()
+
+#         # Process embeddings (DeepFace) and save OfficialFaceSample rows
+#         created_count = 0
+#         for index, file in enumerate(photo_files):
+#             temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+#             try:
+#                 image = Image.open(file).convert("RGB")
+#                 image.save(temp_image, format="JPEG")
+#                 temp_image.flush()
+#                 temp_image.close()
+
+#                 embeddings = DeepFace.represent(
+#                     img_path=temp_image.name,
+#                     model_name="ArcFace",
+#                     enforce_detection=True
+#                 )
+
+#                 # Normalize DeepFace.represent output to list of floats
+#                 if isinstance(embeddings, list):
+#                     if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
+#                         embedding_vector = embeddings[0]["embedding"]
+#                     elif all(isinstance(x, float) for x in embeddings):
+#                         embedding_vector = embeddings
+#                     else:
+#                         raise ValueError("Unexpected list format from DeepFace.")
+#                 elif isinstance(embeddings, dict) and "embedding" in embeddings:
+#                     embedding_vector = embeddings["embedding"]
+#                 else:
+#                     raise ValueError("Unexpected format from DeepFace.represent()")
+
+#                 OfficialFaceSample.objects.create(
+#                     official=official,
+#                     photo=file,
+#                     embedding=embedding_vector
+#                 )
+#                 created_count += 1
+
+#             except Exception as e:
+#                 traceback.print_exc()
+#             finally:
+#                 if os.path.exists(temp_image.name):
+#                     os.remove(temp_image.name)
+
+#         if created_count == 0:
+#             return Response({"error": "Face registration failed. Please upload clearer photos."}, status=status.HTTP_400_BAD_REQUEST)
+
+#         return Response({
+#             "message": f"Registration successful. {created_count} face sample(s) saved.",
+#             "official_id": official.of_id,
+#             "username": username,
+#             "password": generated_password,
+#             "role": official.of_role,
+#             "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
+#             "assigned_barangay_name": official.of_assigned_barangay.name if official.of_assigned_barangay else None
+#         }, status=status.HTTP_201_CREATED)
+
+# class create_official(APIView):
+#     """
+#     Registration endpoint:
+#     - Social Worker -> immediately creates a Django User
+#     - VAWDesk -> stored as pending (no user account yet), requires DSWD approval
+#     """
+#     parser_classes = [MultiPartParser, FormParser]
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         serializer = OfficialSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#         role = serializer.validated_data.get("of_role", "").strip()
+
+#         user = None
+#         username = None
+#         generated_password = None
+
+#         if role == "Social Worker":
+#             # ✅ Generate username + password for Social Worker
+#             fname = request.data.get("of_fname", "").strip().lower()
+#             lname = request.data.get("of_lname", "").strip().lower()
+#             base_username = f"{fname}{lname}".replace(" ", "")
+#             username = base_username or get_random_string(8)
+
+#             # Ensure uniqueness
+#             counter = 0
+#             while User.objects.filter(username=username).exists():
+#                 counter += 1
+#                 username = f"{base_username}{counter}"
+
+#             generated_password = get_random_string(length=12)
+#             user = User.objects.create_user(username=username, password=generated_password)
+
+#         # For VAWDesk -> don't create a User yet (set status pending)
+#         official = Official.objects.create(
+#             user=user,
+#             status="pending" if role == "VAWDesk" else "active",  # 👈 add status field in model
+#             **serializer.validated_data
+#         )
+
+#         # Handle photos (optional for VAWDesk)
+#         photo_files = request.FILES.getlist("of_photos") or []
+#         if not photo_files:
+#             single_photo = request.FILES.get("of_photo")
+#             if single_photo:
+#                 photo_files = [single_photo]
+
+#         if photo_files:
+#             official.of_photo = photo_files[0]
+#             official.save()
+
+#         if role == "Social Worker":
+#             # Process embeddings only for Social Workers
+#             created_count = 0
+#             for index, file in enumerate(photo_files):
+#                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+#                 try:
+#                     image = Image.open(file).convert("RGB")
+#                     image.save(temp_image, format="JPEG")
+#                     temp_image.flush()
+#                     temp_image.close()
+
+#                     embeddings = DeepFace.represent(
+#                         img_path=temp_image.name,
+#                         model_name="ArcFace",
+#                         enforce_detection=True
+#                     )
+
+#                     if isinstance(embeddings, list):
+#                         if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
+#                             embedding_vector = embeddings[0]["embedding"]
+#                         elif all(isinstance(x, float) for x in embeddings):
+#                             embedding_vector = embeddings
+#                         else:
+#                             raise ValueError("Unexpected list format from DeepFace.")
+#                     elif isinstance(embeddings, dict) and "embedding" in embeddings:
+#                         embedding_vector = embeddings["embedding"]
+#                     else:
+#                         raise ValueError("Unexpected format from DeepFace.represent()")
+
+#                     OfficialFaceSample.objects.create(
+#                         official=official,
+#                         photo=file,
+#                         embedding=embedding_vector
+#                     )
+#                     created_count += 1
+
+#                 except Exception as e:
+#                     traceback.print_exc()
+#                 finally:
+#                     if os.path.exists(temp_image.name):
+#                         os.remove(temp_image.name)
+
+#             if created_count == 0:
+#                 return Response({"error": "Face registration failed. Please upload clearer photos."},
+#                                 status=status.HTTP_400_BAD_REQUEST)
+
+#             return Response({
+#                 "message": f"Social Worker registered. {created_count} face sample(s) saved.",
+#                 "official_id": official.of_id,
+#                 "username": username,
+#                 "password": generated_password,
+#                 "role": official.of_role,
+#                 "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
+#                 "assigned_barangay_name": official.of_assigned_barangay.name if official.of_assigned_barangay else None
+#             }, status=status.HTTP_201_CREATED)
+
+#         # If VAWDesk -> no credentials yet
+#         return Response({
+#             "message": "VAWDesk registration submitted. Awaiting DSWD approval.",
+#             "official_id": official.of_id,
+#             "role": official.of_role,
+#             "status": official.status
+#         }, status=status.HTTP_202_ACCEPTED)
+
+# views.py
+# class create_official(APIView):
+#     """
+#     Registration endpoint:
+#     - Social Worker -> immediately creates a Django User + face embeddings
+#     - VAWDesk -> stored as pending (no user account yet), requires DSWD approval
+#     """
+#     parser_classes = [MultiPartParser, FormParser]
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         serializer = OfficialSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#         role = serializer.validated_data.get("of_role", "").strip()
+#         user = None
+#         username = None
+#         generated_password = None
+
+#         # ✅ Social Worker: immediately create User
+#         if role == "Social Worker":
+#             fname = request.data.get("of_fname", "").strip().lower()
+#             lname = request.data.get("of_lname", "").strip().lower()
+#             base_username = f"{fname}{lname}".replace(" ", "")
+#             username = base_username or get_random_string(8)
+
+#             counter = 0
+#             while User.objects.filter(username=username).exists():
+#                 counter += 1
+#                 username = f"{base_username}{counter}"
+
+#             generated_password = get_random_string(length=12)
+#             user = User.objects.create_user(username=username, password=generated_password)
+
+#         # ✅ Create the official (VAWDesk defaults to pending)
+#         official = Official.objects.create(
+#             user=user,
+#             status="pending" if role == "VAWDesk" else "approved",
+#             **serializer.validated_data
+#         )
+
+#         # Collect uploaded photos
+#         photo_files = request.FILES.getlist("of_photos") or []
+#         if not photo_files:
+#             single_photo = request.FILES.get("of_photo")
+#             if single_photo:
+#                 photo_files = [single_photo]
+
+#         if photo_files:
+#             official.of_photo = photo_files[0]  # set profile photo
+#             official.save()
+
+#         # ✅ Social Worker: process embeddings immediately
+#         if role == "Social Worker":
+#             created_count = 0
+#             for index, file in enumerate(photo_files):
+#                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+#                 try:
+#                     image = Image.open(file).convert("RGB")
+#                     image.save(temp_image, format="JPEG")
+#                     temp_image.flush()
+#                     temp_image.close()
+
+#                     embeddings = DeepFace.represent(
+#                         img_path=temp_image.name,
+#                         model_name="ArcFace",
+#                         enforce_detection=True
+#                     )
+
+#                     if isinstance(embeddings, list):
+#                         if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
+#                             embedding_vector = embeddings[0]["embedding"]
+#                         elif all(isinstance(x, float) for x in embeddings):
+#                             embedding_vector = embeddings
+#                         else:
+#                             raise ValueError("Unexpected list format from DeepFace.")
+#                     elif isinstance(embeddings, dict) and "embedding" in embeddings:
+#                         embedding_vector = embeddings["embedding"]
+#                     else:
+#                         raise ValueError("Unexpected format from DeepFace.represent()")
+
+#                     OfficialFaceSample.objects.create(
+#                         official=official,
+#                         photo=file,
+#                         embedding=embedding_vector
+#                     )
+#                     created_count += 1
+
+#                 except Exception as e:
+#                     traceback.print_exc()
+#                 finally:
+#                     if os.path.exists(temp_image.name):
+#                         os.remove(temp_image.name)
+
+#             if created_count == 0:
+#                 return Response({"error": "Face registration failed. Please upload clearer photos."},
+#                                 status=status.HTTP_400_BAD_REQUEST)
+
+#             return Response({
+#                 "message": f"Social Worker registered. {created_count} face sample(s) saved.",
+#                 "official_id": official.of_id,
+#                 "username": username,
+#                 "password": generated_password,
+#                 "role": official.of_role,
+#                 "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
+#                 "assigned_barangay_name": official.of_assigned_barangay.name if official.of_assigned_barangay else None
+#             }, status=status.HTTP_201_CREATED)
+
+#         # ✅ VAWDesk: save photos only (no embeddings yet)
+#         if role == "VAWDesk":
+#             for file in photo_files:
+#                 OfficialFaceSample.objects.create(
+#                     official=official,
+#                     photo=file,
+#                     embedding=None  # embeddings will be generated upon approval
+#                 )
+
+#             return Response({
+#                 "message": "VAWDesk registration submitted. Awaiting DSWD approval.",
+#                 "official_id": official.of_id,
+#                 "role": official.of_role,
+#                 "status": official.status
+#             }, status=status.HTTP_202_ACCEPTED)
 
 
 class create_official(APIView):
+    """
+    Registration endpoint:
+    - Social Worker -> immediately creates a Django User + face embeddings
+    - VAWDesk -> stored as pending (no user account yet), requires DSWD approval
+    - DSWD -> allowed only if no DSWD exists yet; creates User + face embeddings
+    """
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [AllowAny]
 
@@ -64,11 +406,13 @@ class create_official(APIView):
         # DSWD Registration Logic
         # -----------------------
         if role == "DSWD":
+            # Check if any DSWD exists
             if Official.objects.filter(of_role="DSWD").exists():
                 return Response(
                     {"error": "A DSWD account already exists. Cannot create another automatically."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            # Proceed with creation (approved immediately)
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
             base_username = f"{fname}{lname}".replace(" ", "")
@@ -106,6 +450,7 @@ class create_official(APIView):
         # -----------------------
         elif role == "VAWDesk":
             status_value = "pending"
+
         else:
             return Response({"error": f"Invalid role: {role}"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -181,27 +526,6 @@ class create_official(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # -----------------------
-            # Send Email with credentials
-            # -----------------------
-            email_address = serializer.validated_data.get("of_email")  # make sure OfficialSerializer includes of_email
-            if email_address:
-                subject = f"Your {role} Account Credentials"
-                message = (
-                    f"Hello {official.of_fname} {official.of_lname},\n\n"
-                    f"Your {role} account has been created and approved.\n\n"
-                    f"Username: {username}\n"
-                    f"Password: {generated_password}\n\n"
-                    f"Please log in and change your password immediately."
-                )
-                send_mail(
-                    subject,
-                    message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [email_address],
-                    fail_silently=False,
-                )
-
             return Response({
                 "message": f"{role} registered. {created_count} face sample(s) saved.",
                 "official_id": official.of_id,
@@ -229,6 +553,7 @@ class create_official(APIView):
                 "role": official.of_role,
                 "status": official.status
             }, status=status.HTTP_202_ACCEPTED)
+
 
 
 class face_login(APIView):
@@ -447,284 +772,7 @@ class manual_login(APIView):
             "profile_photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
             "tokens": tokens
         }, status=200)
-    
-class ForgotPasswordFaceView(APIView):
-    parser_classes = [MultiPartParser, FormParser]
-    permission_classes = [AllowAny]
 
-    def post(self, request):
-        uploaded_file = request.FILES.get("frame")
-        if not uploaded_file:
-            return Response({"success": False, "message": "No image uploaded."}, status=400)
-
-        # Save temp image
-        try:
-            temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
-            temp_image.write(uploaded_file.read())
-            temp_image.flush()
-            temp_image.close()
-            chosen_frame = temp_image.name
-        except Exception as e:
-            return Response({"success": False, "message": f"Failed to save image: {str(e)}"}, status=400)
-
-        best_match = None
-        lowest_distance = float("inf")
-
-        try:
-            for sample in OfficialFaceSample.objects.select_related("official"):
-                try:
-                    result = DeepFace.verify(
-                        img1_path=chosen_frame,
-                        img2_path=sample.photo.path,
-                        model_name="ArcFace",
-                        enforce_detection=True
-                    )
-
-                    official = sample.official
-                    print(f"[DEBUG] Compared with {official.of_fname} {official.of_lname}, "
-                          f"distance: {result['distance']:.4f}, verified: {result['verified']}")
-
-                    if result["verified"] and result["distance"] < lowest_distance:
-                        lowest_distance = result["distance"]
-                        best_match = official
-
-                except Exception as ve:
-                    print(f"[WARN] Skipping {sample.official.of_fname} {sample.official.of_lname}: {str(ve)}")
-                    continue
-
-            if best_match:
-                return Response({
-                    "success": True,
-                    "official": {
-                        "id": best_match.of_id,
-                        "username": best_match.user.username,
-                        "full_name": f"{best_match.of_fname} {best_match.of_lname}",
-                    }
-                }, status=200)
-
-            return Response({"success": False, "message": "No matching account found."}, status=404)
-
-        except Exception as e:
-            traceback.print_exc()
-            return Response({"success": False, "message": str(e)}, status=400)
-
-        finally:
-            if chosen_frame and os.path.exists(chosen_frame):
-                os.remove(chosen_frame)
-
-
-# class VerifyEmailView(APIView):
-#     permission_classes = [AllowAny]
-
-#     def post(self, request):
-#         official_id = request.data.get("official_id")
-#         email = request.data.get("email")
-
-#         if not official_id or not email:
-#             return Response({"success": False, "message": "Missing data"}, status=400)
-
-#         try:
-#             official = Official.objects.select_related("user").get(of_id=official_id)
-#             user = official.user
-#             if not user:
-#                 return Response({"success": False, "message": "No linked user account"}, status=400)
-
-#             # Check if email matches
-#             if user.email != email and official.of_email != email:
-#                 return Response({"success": False, "message": "Email does not match"}, status=400)
-
-#         except Official.DoesNotExist:
-#             return Response({"success": False, "message": "Official not found"}, status=404)
-
-#         # generate reset token
-#         reset_token = uuid.uuid4().hex
-#         cache.set(f"reset:{reset_token}", user.id, timeout=900)  # valid 15 mins
-
-#         return Response({
-#             "success": True,
-#             "reset_token": reset_token,
-#             "official": {
-#                 "id": official.of_id,
-#                 "full_name": official.full_name,
-#                 "username": user.username,
-#                 "email": user.email,
-#             }
-#         })
-
-
-# class ResetPasswordView(APIView):
-#     permission_classes = [AllowAny]
-
-#     def post(self, request):
-#         token = request.data.get("reset_token")
-#         new_password = request.data.get("new_password")
-
-#         if not token or not new_password:
-#             return Response({"success": False, "message": "Missing data"}, status=400)
-
-#         user_id = cache.get(f"reset:{token}")
-#         if not user_id:
-#             return Response({"success": False, "message": "Invalid or expired token"}, status=400)
-
-#         try:
-#             user = User.objects.get(id=user_id)
-#         except User.DoesNotExist:
-#             return Response({"success": False, "message": "User not found"}, status=404)
-
-#         user.set_password(new_password)
-#         user.save()
-#         cache.delete(f"reset:{token}")
-
-#         return Response({"success": True, "message": "Password reset successful"})
-
-# class VerifyEmailView(APIView):
-#     permission_classes = [AllowAny]
-
-#     def post(self, request):
-#         official_id = request.data.get("official_id")
-#         email = request.data.get("email")
-
-#         try:
-#             official = Official.objects.get(of_id=official_id)
-#         except Official.DoesNotExist:
-#             return Response({"error": "Official not found"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         if official.of_email != email:
-#             return Response({"error": "Email does not match our records"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         user = official.user
-#         if not user:
-#             return Response({"error": "No linked user account"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         # Generate reset token
-#         uid = urlsafe_base64_encode(force_bytes(user.pk))
-#         token = default_token_generator.make_token(user)
-
-#         # (Optional) still send an email for confirmation
-#         send_mail(
-#             subject="Password Reset Request",
-#             message="A password reset was requested for your account. "
-#                     "If this wasn’t you, please contact support immediately.",
-#             from_email=settings.DEFAULT_FROM_EMAIL,
-#             recipient_list=[email],
-#         )
-
-#         # Return uid + token for React modal flow
-#         return Response({
-#             "success": True,
-#             "message": "Password reset instructions sent",
-#             "uid": uid,
-#             "reset_token": token,
-#         }, status=status.HTTP_200_OK)
-
-
-# class ResetPasswordView(APIView):
-#     permission_classes = [AllowAny]
-
-#     def post(self, request):
-#         uidb64 = request.data.get("uid")
-#         token = request.data.get("token")
-#         new_password = request.data.get("new_password")
-
-#         try:
-#             uid = force_str(urlsafe_base64_decode(uidb64))
-#             user = User.objects.get(pk=uid)
-#         except (User.DoesNotExist, ValueError, TypeError):
-#             return Response({"error": "Invalid link"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         if not default_token_generator.check_token(user, token):
-#             return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         user.set_password(new_password)
-#         user.save()
-
-#         return Response({"success": True, "message": "Password reset successful"}, status=status.HTTP_200_OK)
-    
-User = get_user_model()
-token_generator = PasswordResetTokenGenerator()
-
-# ✅ Step 2: Email Verification (works with or without face recog)
-class VerifyEmailView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        official_id = request.data.get("official_id")  # optional
-        email = request.data.get("email") or request.data.get("of_email")
-
-        if not email:
-            return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # CASE A: Face recog success → verify against official record
-        if official_id:
-            try:
-                official = Official.objects.get(of_id=official_id)
-            except Official.DoesNotExist:
-                return Response({"error": "Official not found"}, status=status.HTTP_400_BAD_REQUEST)
-
-            if official.of_email != email:
-                return Response({"error": "Email does not match our records"}, status=status.HTTP_400_BAD_REQUEST)
-
-            user = official.user
-            if not user:
-                return Response({"error": "No linked user account"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # CASE B: No face recog → fallback to email-only
-        else:
-            try:
-                user = User.objects.get(email=email)
-            except User.DoesNotExist:
-                return Response({"error": "User with this email does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Generate token + uid
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        token = default_token_generator.make_token(user)
-
-        reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
-
-        # Always send email
-        send_mail(
-            subject="Password Reset Request",
-            message=f"A password reset was requested for your account.\n\n"
-                    f"Click the link to reset your password: {reset_link}\n\n"
-                    f"If this wasn’t you, please contact support immediately.",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
-        )
-
-        # Return to frontend (so React modal can also use uid+token directly if needed)
-        return Response({
-            "success": True,
-            "message": "Password reset instructions sent",
-            "uid": uid,
-            "reset_token": token,
-        }, status=status.HTTP_200_OK)
-
-
-# ✅ Step 3: Reset Password
-class ResetPasswordView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        uidb64 = request.data.get("uid")
-        token = request.data.get("token")
-        new_password = request.data.get("new_password")
-
-        if not (uidb64 and token and new_password):
-            return Response({"error": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(pk=uid)
-        except (User.DoesNotExist, ValueError, TypeError):
-            return Response({"error": "Invalid link"}, status=status.HTTP_400_BAD_REQUEST)
-
-        if not default_token_generator.check_token(user, token):
-            return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
-
-        user.set_password(new_password)
-        user.save()
-
-        return Response({"success": True, "message": "Password reset successful"}, status=status.HTTP_200_OK)
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):

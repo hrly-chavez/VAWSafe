@@ -7,7 +7,6 @@ import {
   EyeIcon,
   TrashIcon,
 } from "@heroicons/react/24/solid";
-import api from "../../../api/axios";
 
 export default function AccountManagement() {
   const [officials, setOfficials] = useState([]);
@@ -16,7 +15,7 @@ export default function AccountManagement() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.get("/api/dswd/officials/")
+    axios.get("http://localhost:8000/api/dswd/officials/")
       .then((res) => {
         setOfficials(res.data);
         setLoading(false);
