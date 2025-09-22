@@ -364,6 +364,13 @@ const LoginPage = () => {
     checkDSWD();
   }, []);
 
+  const [animateIn, setAnimateIn] = useState(false);
+  const [animateOut, setAnimateOut] = useState(false);
+
+  useEffect(() => {
+    setAnimateIn(true);
+  }, []);
+
   return (
     <div
       className="min-h-screen relative"
@@ -375,9 +382,24 @@ const LoginPage = () => {
       }}
     >
       <div className="flex items-center justify-center py-8 sm:py-12 px-4 relative z-10">
+        <button
+          onClick={() => {
+            setAnimateOut(true);
+            setTimeout(() => {
+              navigate("/");
+            }, 700); // match transition duration
+          }}
+          className="absolute top-6 right-6 text-white text-2xl font-bold hover:text-red-400 transition-colors z-20"
+        >
+          ✕
+        </button>
+
         <div className="relative w-full max-w-6xl h-auto sm:h-[600px] grid grid-cols-1 sm:grid-cols-2 shadow-2xl rounded-2xl overflow-hidden bg-white/5 backdrop-blur-lg">
-          {/* Left Welcome Section */}
-          <div className="bg-[#2d0a3a]/30 text-white flex flex-col justify-center items-start px-6 sm:px-12 py-8">
+          {/* {/* Left Welcome Section */}
+          <div
+            className={`bg-[#2d0a3a]/30 text-white flex flex-col justify-center items-start px-6 sm:px-12 py-8 transform transition-transform duration-700 ${animateOut ? "-translate-x-full" : animateIn ? "translate-x-0" : "-translate-x-full"
+              }`}
+          >
             <div key={currentSlide} className="transition-opacity duration-700 opacity-100">
               <div key={currentSlide} className="fade-in-slide w-full max-w-4xl text-left">
                 <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-6 animate-slide-fade">
@@ -405,7 +427,10 @@ const LoginPage = () => {
           </div>
 
           {/* Right Login Section */}
-          <div className="bg-white/10 backdrop-blur-md flex flex-col justify-center items-center px-10 w-full h-[600px]">
+          <div
+            className={`bg-white/10 backdrop-blur-md flex flex-col justify-center items-center px-10 py-12 transform transition-transform duration-700 ${animateOut ? "translate-x-full" : animateIn ? "translate-x-0" : "translate-x-full"
+              }`}
+          >
             {!showCamera ? (
               <>
                 {/* Header */}

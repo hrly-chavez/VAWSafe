@@ -17,6 +17,12 @@ import RegisterUser from "./pages/RegisterUser";
 import ManualLoginPage from "./pages/ManualLoginPage";
 import ResetPasswordPage from "./pages/ResetPassword";
 
+
+//Landing Page
+const LandingLayout = lazy(() => 
+  import("./pages/landing/LandingLayout")
+);
+
 //Desk officer
 const BPOApplication = lazy(() =>
   import("./pages/desk_officer/RegisterVictim/BPOApplication")
@@ -118,9 +124,10 @@ export default function App() {
       <Router>
         <Suspense fallback={<div>Loading...</div>}>
           <Routes>
-            <Route path="/" element={<Navigate to={ROUTES.LOGIN} replace />} />
+            <Route path="/" element={<Navigate to={ROUTES.LANDING} replace />} />
 
             {/* Public routes */}
+            <Route path={ROUTES.LANDING + "/*"} element={<LandingLayout />} />
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
             <Route path={ROUTES.MANUAL_LOGIN} element={<ManualLoginPage />} />
             <Route path={ROUTES.REGISTER} element={<RegisterUser />} />
