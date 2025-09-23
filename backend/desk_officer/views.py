@@ -54,6 +54,17 @@ class ViewDetail (generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['VAWDesk']
 
+# retrieve all information related to case
+class VictimIncidentsView(generics.ListAPIView):
+    serializer_class = IncidentInformationSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['VAWDesk']
+
+    def get_queryset(self):
+        vic_id = self.kwargs.get("vic_id")
+        # If Victim's PK is vic_id, filter like this:
+        return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by('incident_num')
+
 class search_victim_facial(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
@@ -128,17 +139,6 @@ class search_victim_facial(APIView):
 
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['VAWDesk']
-
-# retrieve all information related to case
-class VictimIncidentsView(generics.ListAPIView):
-    serializer_class = IncidentInformationSerializer
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['VAWDesk']
-
-    def get_queryset(self):
-        vic_id = self.kwargs.get("vic_id")
-        # If Victim's PK is vic_id, filter like this:
-        return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by('incident_num')
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])

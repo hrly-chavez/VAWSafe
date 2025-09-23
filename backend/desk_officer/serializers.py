@@ -69,22 +69,18 @@ class PerpetratorSerializer(serializers.ModelSerializer):
         model = Perpetrator
         fields = "__all__"
 
-class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
-    perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)
+# class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
+#     perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)
 
-    class Meta:
-        model = IncidentInformation
-        fields = "__all__"
+#     class Meta:
+#         model = IncidentInformation
+#         fields = "__all__"  # keep all existing fields
+#         extra_fields = ["perpetrator"]
 
-class VictimDetailSerializer(serializers.ModelSerializer):
-    face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
-    case_report = CaseReportSerializer(read_only=True)
-    incidents = IncidentWithPerpetratorSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Victim
-        fields = "__all__"
-
+#     def to_representation(self, instance):
+#         rep = super().to_representation(instance)
+#         rep["perpetrator"] = PerpetratorSerializer(instance.perp_id).data if instance.perp_id else None
+#         return rep
 
 #======================================SESSION=================================================
 
@@ -144,9 +140,9 @@ class SessionSerializer(serializers.ModelSerializer):
     def get_official_name(self, obj):
         return obj.assigned_official.full_name if obj.assigned_official else None
 
-class IncidentInformationSerializer(serializers.ModelSerializer):
-    sessions = SessionSerializer(many=True, read_only=True)  # ✅ add sessions
-
+class IncidentInformationSerializer(serializers.ModelSerializer): #fetch case and session in victim info
+    sessions = SessionSerializer(many=True, read_only=True)  #  add sessions
+    perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)  
     class Meta:
         model = IncidentInformation
         fields = "__all__"
@@ -165,7 +161,16 @@ class IncidentInformationSerializer(serializers.ModelSerializer):
         validated_data["incident_num"] = (last_num or 0) + 1
 
         return super().create(validated_data)
-    
+
+class VictimDetailSerializer(serializers.ModelSerializer): #together with IncidentInformationSerializer
+    face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
+    case_report = CaseReportSerializer(read_only=True)
+    incidents = IncidentInformationSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Victim
+        fields = "__all__"
+ 
 class SessionTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = SessionType
