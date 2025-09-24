@@ -25,23 +25,104 @@ class VictimFaceSampleSerializer(serializers.ModelSerializer):
         model = VictimFaceSample
         fields = ["photo", "embedding"]  # embedding can be excluded if not needed
 
+class SessionTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SessionType
+        fields = ["id", "name"]
+
+class SessionQuestionSerializer(serializers.ModelSerializer):  # Generated + answered questions
+    question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
+    question_category = serializers.CharField(source="question.ques_category", read_only=True)
+    question_answer_type = serializers.CharField(source="question.ques_answer_type", read_only=True)
+
+    class Meta:
+        model = SessionQuestion
+        fields = [
+            "sq_id",
+            "question",
+            "question_text",
+            "question_category",
+            "question_answer_type",
+            "sq_is_required",
+            "sq_value",   
+            "sq_note",    
+        ]
+
+class DeskOfficerSessionDetailSerializer(serializers.ModelSerializer): #show session and session answer in card
+    official_name = serializers.CharField(source="assigned_official.full_name", read_only=True)
+    sess_type = SessionTypeSerializer(many=True, read_only=True)
+    session_questions = SessionQuestionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Session
+        fields = [
+            "sess_id",
+            "sess_num",
+            "sess_status",
+            "sess_next_sched",
+            "sess_date_today",
+            "sess_location",
+            "sess_description",
+            "official_name",
+            "sess_type",          # names not IDs
+            "session_questions",  # answered questions
+        ]
 
 class CaseReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = CaseReport
         fields = "__all__"
 
-
-class IncidentInformationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = IncidentInformation
-        fields = "__all__"
-
-
 class PerpetratorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Perpetrator
         fields = "__all__"
+
+# class IncidentInformationSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = IncidentInformation
+#         fields = "__all__"
+
+class SessionSerializer(serializers.ModelSerializer):
+    victim_name = serializers.SerializerMethodField()
+    case_no = serializers.SerializerMethodField() 
+    location = serializers.SerializerMethodField()
+    official_name = serializers.SerializerMethodField()
+    sess_type = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=SessionType.objects.all()
+    )
+
+    class Meta:
+        model = Session
+        fields = "__all__"
+        read_only_fields = ["sess_id", "sess_num","sess_updated_at"]
+
+    def get_victim_name(self, obj):
+        if obj.incident_id and obj.incident_id.vic_id:
+            return obj.incident_id.vic_id.full_name
+        return None
+
+    def get_case_no(self, obj):
+        if obj.incident_id:
+            return obj.incident_id.incident_num
+        return None
+
+    def get_location(self, obj):
+        return obj.sess_location or "—"
+    
+    def get_official_name(self, obj):
+        return obj.assigned_official.full_name if obj.assigned_official else None
+
+class IncidentInformationSerializer(serializers.ModelSerializer): #fetch case and session in victim info
+    sessions = SessionSerializer(many=True, read_only=True)  #  add sessions
+    perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)  
+    class Meta:
+        model = IncidentInformation
+        fields = "__all__"
+        read_only_fields = ["incident_id", "incident_num"]
+
+
+
 class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
     perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)
 
