@@ -10,7 +10,7 @@ export default function Sessions() {
 
   useEffect(() => {
     api
-      .get("/api/social_worker/sessions/")
+      .get("/api/social_worker/sessions/pending/")
       .then((res) => setSessions(res.data))
       .catch((err) => console.error("Failed to fetch sessions", err));
   }, []);

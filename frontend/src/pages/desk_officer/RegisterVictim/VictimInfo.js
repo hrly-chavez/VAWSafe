@@ -1,9 +1,6 @@
 //frontend/src/pages/desk_officer/RegisterVictim/VictimInfo.js
 import { useEffect, useState } from "react";
-export default function VictimInfo({
-  formDataState,
-  setFormDataState,
-}) {
+export default function VictimInfo({ formDataState, setFormDataState }) {
   // Utility to calculate if victim is minor
   function isMinor(birthDate) {
     if (!birthDate) return false;
@@ -13,8 +10,8 @@ export default function VictimInfo({
       today.getFullYear() -
       birth.getFullYear() -
       (today.getMonth() < birth.getMonth() ||
-        (today.getMonth() === birth.getMonth() &&
-          today.getDate() < birth.getDate())
+      (today.getMonth() === birth.getMonth() &&
+        today.getDate() < birth.getDate())
         ? 1
         : 0);
     return age < 18;
@@ -107,6 +104,7 @@ export default function VictimInfo({
           </select>
         </div>
       </div>
+      {/* AHAK ASA NAMAN TUNG CONDITIONAL NGA INPUT FIELD PARA SA SOGIE NGA AKO GI HIMO NGANO NAWAGTANG NAMAN SAD TU */}
 
       {/* Birth Details */}
       <div>
@@ -130,6 +128,7 @@ export default function VictimInfo({
         </div>
       </div>
 
+      {/* MILAGROHA KANI MAN NUOY NAA */}
       {/* Guardian details if minor */}
       {showGuardian && (
         <>
@@ -188,6 +187,7 @@ export default function VictimInfo({
         </>
       )}
 
+      {/* GIUSA KAHA NAG DIV TANAN OI, NGIL AD NA KAAYU TAN AWN */}
       {/* Civil status, education */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -237,7 +237,6 @@ export default function VictimInfo({
             <option value="Post graduate">Post graduate</option>
           </select>
         </div>
-
 
         {/* Nationality & Ethnicity */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -340,7 +339,9 @@ export default function VictimInfo({
               </option>
               <option value="Learning Disability">Learning Disability</option>
               <option value="Mental Disability">Mental Disability</option>
-              <option value="Orthopedic Disability">Orthopedic Disability</option>
+              <option value="Orthopedic Disability">
+                Orthopedic Disability
+              </option>
               <option value="Physical Disability">Physical Disability</option>
               <option value="Psychological Disability">
                 Psychological Disability
@@ -365,6 +366,7 @@ export default function VictimInfo({
           />
         </div>
 
+        {/* NGANONG NANGADOBLE NAMAN NI OI FINAL NAMAN TA TU AKONG GI PUSH  */}
         {/* Contact */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">

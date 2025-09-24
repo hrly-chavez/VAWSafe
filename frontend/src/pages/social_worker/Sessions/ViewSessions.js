@@ -1,19 +1,26 @@
 // src/pages/social_worker/Sessions/ViewSessions.js
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import Select from "react-select";
 import api from "../../../api/axios";
+import SessionTypeQuestionPreview from "./SessionTypeQuestionPreview";
 
 export default function ViewSessions() {
   const { sess_id } = useParams();
   const navigate = useNavigate();
   const [session, setSession] = useState(null);
+  const [allTypes, setAllTypes] = useState([]);
+  const [editingType, setEditingType] = useState(false);
+  const [selectedTypes, setSelectedTypes] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  //  Fetch session
   useEffect(() => {
     api
       .get(`/api/social_worker/sessions/${sess_id}/`)
       .then((res) => {
         setSession(res.data);
+        setSelectedTypes(res.data.sess_type_display || []);
         setLoading(false);
       })
       .catch((err) => {
@@ -22,13 +29,28 @@ export default function ViewSessions() {
       });
   }, [sess_id]);
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "—";
-    const d = new Date(dateStr);
-    return d.toLocaleString("en-US", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
+  //  Fetch all session types for editing
+  useEffect(() => {
+    api
+      .get("/api/social_worker/session-types/")
+      .then((res) => setAllTypes(res.data))
+      .catch((err) => console.error("Failed to fetch session types", err));
+  }, []);
+
+  //  Save type update
+  const handleSaveType = async () => {
+    try {
+      const ids = selectedTypes.map((t) => t.id);
+      const res = await api.patch(`/api/social_worker/sessions/${sess_id}/`, {
+        sess_type: ids,
+      });
+      setSession(res.data);
+      setSelectedTypes(res.data.sess_type_display || []);
+      setEditingType(false);
+    } catch (err) {
+      console.error("Failed to update session type", err);
+      alert("Failed to update session type.");
+    }
   };
 
   if (loading) return <p className="p-6">Loading...</p>;
@@ -49,93 +71,129 @@ export default function ViewSessions() {
     );
   }
 
-  const { victim, incident, case_report } = session;
+  const { victim, incident, sess_type_display } = session;
 
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-white rounded shadow space-y-6">
-      <h2 className="text-2xl font-bold text-blue-700 mb-4">
+    <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-8">
+      <h2 className="text-2xl font-bold text-blue-800 border-b pb-2">
         Session Details
       </h2>
 
       {/* Session Info */}
-      <section>
-        <h3 className="font-semibold text-lg mb-2">Session Information</h3>
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <p><strong>Case No.:</strong> {incident?.incident_num || "—"}</p>
-          <p><strong>Session No.:</strong> {session.sess_num || "—"}</p>
-          <p><strong>Status:</strong> {session.sess_status || "—"}</p>
-          <p><strong>Type:</strong> {session.sess_type || "—"}</p>
-          <p><strong>Location:</strong> {session.sess_location || "—"}</p>
-          <p><strong>Assigned Social Worker:</strong> {session.official_name || "—"}</p>
+      <section className="bg-gray-50 p-4 rounded-lg border">
+        <h3 className="font-semibold text-lg mb-3 text-gray-800">
+          Session Information
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <div>
+            <p className="text-gray-500">Case No.</p>
+            <p className="font-medium">{incident?.incident_num || "—"}</p>
+          </div>
+          <div>
+            <p className="text-gray-500">Session No.</p>
+            <p className="font-medium">{session.sess_num || "—"}</p>
+          </div>
+          <div>
+            <p className="text-gray-500">Status</p>
+            <span
+              className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                session.sess_status === "Pending"
+                  ? "bg-yellow-100 text-yellow-700"
+                  : session.sess_status === "Ongoing"
+                  ? "bg-blue-100 text-blue-700"
+                  : "bg-green-100 text-green-700"
+              }`}
+            >
+              {session.sess_status}
+            </span>
+          </div>
+          <div>
+            <p className="text-gray-500">Type</p>
+            {editingType ? (
+              <div className="space-y-2">
+                <Select
+                  isMulti
+                  value={selectedTypes}
+                  onChange={(val) => setSelectedTypes(val)}
+                  options={allTypes}
+                  getOptionLabel={(o) => o.name}
+                  getOptionValue={(o) => o.id}
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveType}
+                    className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditingType(false);
+                      setSelectedTypes(sess_type_display || []);
+                    }}
+                    className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <p className="font-medium">
+                  {Array.isArray(sess_type_display) && sess_type_display.length > 0
+                    ? sess_type_display.map((t) => t.name).join(", ")
+                    : "—"}
+                </p>
+                <button
+                  onClick={() => setEditingType(true)}
+                  className="ml-2 text-blue-600 text-sm hover:underline"
+                >
+                  Edit
+                </button>
+              </div>
+            )}
+          </div>
+          <div>
+            <p className="text-gray-500">Location</p>
+            <p className="font-medium">{session.sess_location || "—"}</p>
+          </div>
+          <div>
+            <p className="text-gray-500">Assigned Social Worker</p>
+            <p className="font-medium">{session.official_name || "—"}</p>
+          </div>
         </div>
       </section>
 
-      {/* Victim Info */}
+      {/* Victim Profile Button */}
       {victim && (
-        <section>
-          <h3 className="font-semibold text-lg mb-2">Victim Information</h3>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <p><strong>Full Name:</strong> {victim.vic_first_name} {victim.vic_middle_name} {victim.vic_last_name} {victim.vic_extension}</p>
-            <p><strong>Sex:</strong> {victim.vic_sex}</p>
-            <p><strong>Birth Date:</strong> {victim.vic_birth_date}</p>
-            <p><strong>Birth Place:</strong> {victim.vic_birth_place}</p>
-            <p><strong>Civil Status:</strong> {victim.vic_civil_status}</p>
-            <p><strong>Education:</strong> {victim.vic_educational_attainment}</p>
-            <p><strong>Nationality:</strong> {victim.vic_nationality}</p>
-            <p><strong>Religion:</strong> {victim.vic_religion}</p>
-            <p><strong>Contact:</strong> {victim.vic_contact_number}</p>
-          </div>
-        </section>
+        <div>
+          <Link
+            to={`/social_worker/victims/${victim.vic_id}`}
+            className="inline-block px-5 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition"
+          >
+            View Victim Profile
+          </Link>
+        </div>
       )}
 
-      {/* Incident Info */}
-      {incident && (
-        <section>
-          <h3 className="font-semibold text-lg mb-2">Incident Information</h3>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <p><strong>Description:</strong> {incident.incident_description}</p>
-            <p><strong>Date:</strong> {incident.incident_date}</p>
-            <p><strong>Time:</strong> {incident.incident_time}</p>
-            <p><strong>Location:</strong> {incident.incident_location}</p>
-            <p><strong>Type of Place:</strong> {incident.type_of_place}</p>
-            <p><strong>Conflict Area:</strong> {incident.conflict_area || "—"}</p>
-            <p><strong>Calamity Area:</strong> {incident.is_calamity_area ? "Yes" : "No"}</p>
-          </div>
-        </section>
-      )}
+      {/* Mapped Questions Preview */}
+      <SessionTypeQuestionPreview
+        sessionNum={session.sess_num}
+        selectedTypes={sess_type_display?.map((t) => t.id) || []} // ✅ fixed
+      />
 
-      {/* Perpetrator Info */}
-      {incident?.perpetrator && (
-        <section>
-          <h3 className="font-semibold text-lg mb-2">Perpetrator Information</h3>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <p><strong>Name:</strong> {incident.perpetrator.perp_first_name} {incident.perpetrator.perp_last_name}</p>
-            <p><strong>Sex:</strong> {incident.perpetrator.perp_sex}</p>
-            <p><strong>Birth Date:</strong> {incident.perpetrator.perp_birth_date}</p>
-            <p><strong>Contact:</strong> {incident.perpetrator.perp_contact_number}</p>
-          </div>
-        </section>
-      )}
-
-
-      {/* Case Report */}
-        {case_report && (
-          <section>
-            <h3 className="font-semibold text-lg mb-2">Case Report</h3>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <p><strong>Handling Organization:</strong> {case_report.handling_org || "—"}</p>
-              <p><strong>Office Address:</strong> {case_report.office_address || "—"}</p>
-              <p><strong>Report Type:</strong> {case_report.report_type || "—"}</p>
-            </div>
-          </section>
-        )}
-
-
-      <div className="mt-6 flex justify-end">
-       <button className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-        Start Session
-      </button>
-        <button onClick={() => navigate(-1)} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
+      {/* Actions */}
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => navigate(`/social_worker/sessions/${sess_id}/start`)}
+          className="px-5 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700"
+        >
+          Start Session
+        </button>
+        <button
+          onClick={() => navigate(-1)}
+          className="px-5 py-2 bg-gray-200 text-gray-800 rounded-md font-medium hover:bg-gray-300"
+        >
           Back
         </button>
       </div>

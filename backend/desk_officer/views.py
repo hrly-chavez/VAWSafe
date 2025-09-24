@@ -54,6 +54,17 @@ class ViewDetail (generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['VAWDesk']
 
+# retrieve all information related to case
+class VictimIncidentsView(generics.ListAPIView):
+    serializer_class = IncidentInformationSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['VAWDesk']
+
+    def get_queryset(self):
+        vic_id = self.kwargs.get("vic_id")
+        # If Victim's PK is vic_id, filter like this:
+        return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by('incident_num')
+
 class search_victim_facial(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
@@ -128,17 +139,6 @@ class search_victim_facial(APIView):
 
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['VAWDesk']
-
-# retrieve all information related to case
-class VictimIncidentsView(generics.ListAPIView):
-    serializer_class = IncidentInformationSerializer
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['VAWDesk']
-
-    def get_queryset(self):
-        vic_id = self.kwargs.get("vic_id")
-        # If Victim's PK is vic_id, filter like this:
-        return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by('incident_num')
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
@@ -253,6 +253,16 @@ def register_victim(request):
                                 status=status.HTTP_400_BAD_REQUEST)
             perpetrator = p_ser.save()
 
+        # ✅ 4.5) Informant (optional)
+        informant = None
+        informant_data = parse_json_field("informant")
+        if informant_data:
+            inf_ser = InformantSerializer(data=informant_data)
+            if not inf_ser.is_valid():
+                return Response({"success": False, "errors": inf_ser.errors},
+                                status=status.HTTP_400_BAD_REQUEST)
+            informant = inf_ser.save()
+
         # 5) IncidentInformation (optional)
         incident = None
         incident_data = parse_json_field("incident")
@@ -262,6 +272,9 @@ def register_victim(request):
 
             if perpetrator:
                 incident_data["perp_id"] = perpetrator.pk
+
+            if informant:
+                incident_data["informant"] = informant.pk
        
             for key in ("is_via_electronic_means", "is_conflict_area", "is_calamity_area"):
                 if key in incident_data:
@@ -283,14 +296,13 @@ def register_victim(request):
                     file=file
                 )
 
-        
-
         return Response({
             "success": True,
             "victim": VictimSerializer(victim).data,
             "case_report": CaseReportSerializer(case_report).data if case_report else None,
             "incident": IncidentInformationSerializer(incident).data if incident else None,
             "perpetrator": PerpetratorSerializer(perpetrator).data if perpetrator else None,
+            "informant": InformantSerializer(informant).data if informant else None,
         }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
@@ -309,7 +321,7 @@ class SessionListCreateView(generics.ListCreateAPIView):
 
 class SessionDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Session.objects.all()
-    serializer_class = SessionSerializer
+    serializer_class = DeskOfficerSessionDetailSerializer
     lookup_field = "sess_id"
 
 @api_view(["POST"])
@@ -341,6 +353,107 @@ def list_social_workers(request):
         for w in workers
     ]
     return Response(data)
+
+@api_view(["GET"])
+def list_session_types(request):
+    types = SessionType.objects.all()
+    serializer = SessionTypeSerializer(types, many=True)
+    return Response(serializer.data)
+
+@api_view(["GET"])
+def mapped_questions(request):
+    """
+    Get mapped questions for a given session number and one or more session types.
+    Example: /api/desk_officer/mapped-questions/?session_num=1&session_types=1,2
+    """
+    session_num = request.query_params.get("session_num")
+    type_ids = request.query_params.get("session_types")
+
+    if not session_num or not type_ids:
+        return Response({"error": "session_num and session_types are required"}, status=400)
+
+    type_ids = [int(t) for t in type_ids.split(",")]
+
+    mappings = SessionTypeQuestion.objects.filter(
+        session_number=session_num,
+        session_type__id__in=type_ids
+    ).select_related("question", "session_type")
+
+    serializer = SessionTypeQuestionSerializer(mappings, many=True)
+    return Response(serializer.data)
+
+@api_view(["GET"])
+def session_questions(request, sess_id):
+    try:
+        session = Session.objects.get(pk=sess_id)
+    except Session.DoesNotExist:
+        return Response({"error": "Session not found"}, status=404)
+
+    questions = session.session_questions.select_related("question").all()
+    serializer = SessionQuestionSerializer(questions, many=True)
+    return Response(serializer.data)
+
+@api_view(["POST"])
+def generate_session_questions(request, sess_id):
+    """
+    Generate SessionQuestions for a session based on selected types + session number.
+    """
+    try:
+        session = Session.objects.get(pk=sess_id)
+    except Session.DoesNotExist:
+        return Response({"error": "Session not found"}, status=404)
+
+    type_ids = request.data.get("session_types", [])
+    if not type_ids:
+        return Response({"error": "session_types required"}, status=400)
+
+    mappings = SessionTypeQuestion.objects.filter(
+        session_number=session.sess_num,
+        session_type__id__in=type_ids
+    ).select_related("question")
+
+    created = []
+    for m in mappings:
+        sq, _ = SessionQuestion.objects.get_or_create(
+            session=session,
+            question=m.question,
+            defaults={"sq_is_required": False}
+        )
+        created.append(sq)
+
+    serializer = SessionQuestionSerializer(created, many=True)
+    return Response(serializer.data)
+
+@api_view(["POST"])
+def submit_answers(request, sess_id):
+    try:
+        session = Session.objects.get(pk=sess_id)
+    except Session.DoesNotExist:
+        return Response({"error": "Session not found"}, status=404)
+
+    answers_data = request.data.get("answers", [])
+    for ans in answers_data:
+        sq_id = ans.get("sq_id")
+        value = ans.get("value")
+        note = ans.get("note", "")
+
+        try:
+            sq = SessionQuestion.objects.get(pk=sq_id, session=session)
+        except SessionQuestion.DoesNotExist:
+            continue  # skip invalid ids
+
+        sq.sq_value = value
+        sq.sq_note = note
+        sq.save()
+
+    return Response({"message": "Answers submitted successfully"})
+
+
+#=======================================================================
+
+
+
+
 
 # Approve and Reject Official
 # @api_view(["POST"])
