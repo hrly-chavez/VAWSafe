@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.conf import settings
+from django.utils.timezone import now
 
 # for address
 class Province(models.Model):  
@@ -56,6 +57,21 @@ class Street(models.Model):
 
     def __str__(self):
         return f"{self.name}, {self.sitio.name}"
+    
+class Address(models.Model):
+    province = models.ForeignKey(Province, on_delete=models.SET_NULL, null=True, blank=True)
+    municipality = models.ForeignKey(Municipality, on_delete=models.SET_NULL, null=True, blank=True)
+    barangay = models.ForeignKey(Barangay, on_delete=models.SET_NULL, null=True, blank=True)
+    sitio = models.ForeignKey(Sitio, on_delete=models.SET_NULL, null=True, blank=True)
+    street = models.ForeignKey(Street, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        parts = [self.street.name if self.street else None,
+                 self.sitio.name if self.sitio else None,
+                 self.barangay.name if self.barangay else None,
+                 self.municipality.name if self.municipality else None,
+                 self.province.name if self.province else None]
+        return ', '.join([p for p in parts if p])
     
 # for system users
 class Official(models.Model):
