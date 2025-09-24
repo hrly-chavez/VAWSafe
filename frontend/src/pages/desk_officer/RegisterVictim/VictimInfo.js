@@ -373,20 +373,6 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             Contact Number
           </label>
           <input
-            className="input"
-            type="text"
-            placeholder="e.g. 09123456789"
-            value={formDataState.vic_contact_number || ""}
-            onChange={(e) => handleChange("vic_contact_number", e.target.value)}
-          />
-        </div>
-
-        {/* Contact */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Contact Number
-          </label>
-          <input
             className="input w-full"
             type="text"
             placeholder="Contact Number"
