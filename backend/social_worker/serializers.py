@@ -171,8 +171,8 @@ class SocialWorkerSessionSerializer(serializers.ModelSerializer):
         return obj.sess_location or None
 
 class IncidentInformationSerializer(serializers.ModelSerializer): #show incident and session in a card form
-    sessions = SocialWorkerSessionSerializer (many=True, read_only=True)
-
+    sessions = SocialWorkerSessionSerializer(many=True, read_only=True)
+    perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)  
     class Meta:
         model = IncidentInformation
         fields = "__all__"
@@ -240,6 +240,24 @@ class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):  # View 
             "questions",
         ]
 
+
+class CloseCaseSerializer(serializers.ModelSerializer):#case close
+    class Meta:
+        model = IncidentInformation
+        fields = ["incident_id", "incident_status"]
+        read_only_fields = ["incident_id"]
+
+    def validate(self, data):
+        instance = self.instance
+        if not instance:
+            raise serializers.ValidationError("Incident not found")
+
+        # Count sessions
+        total_sessions = instance.sessions.count()
+        if total_sessions < 2:
+            raise serializers.ValidationError("Case cannot be closed before 2 sessions")
+
+        return data
 
 
 

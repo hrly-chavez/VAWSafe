@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import NextSessionModal from "./NextSessionModal";
+import CaseSessionFollowup from "./CaseSessionFollowup";
 
 export default function StartSession() {
   const { sess_id } = useParams();
@@ -12,6 +13,7 @@ export default function StartSession() {
   const [session, setSession] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showFollowupModal, setShowFollowupModal] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0); // always go to the top
@@ -45,30 +47,23 @@ export default function StartSession() {
 
   //  Finish session
   const handleFinishSession = async () => {
-    try {
-      const payload = {
-        answers: questions.map((q) => ({
-          sq_id: q.sq_id,
-          value: q.sq_value,
-          note: q.sq_note,
-        })),
-      };
-      await api.post(
-        `/api/social_worker/sessions/${sess_id}/finish/`,
-        payload
-      );
-      alert("Session finished successfully!");
+  try {
+    const payload = {
+      answers: questions.map((q) => ({
+        sq_id: q.sq_id,
+        value: q.sq_value,
+        note: q.sq_note,
+      })),
+    };
+    await api.post(`/api/social_worker/sessions/${sess_id}/finish/`, payload);
+    alert("Session finished successfully!");
+    setShowFollowupModal(true); // 🔹 open modal instead of window.confirm
+  } catch (err) {
+    console.error("Failed to finish session", err);
+    alert("Failed to finish session.");
+  }
+};
 
-      if (window.confirm("Would you like to schedule the next session?")) {
-        setShowNextModal(true); // show modal
-      } else {
-        navigate("/social_worker/sessions");
-      }
-    } catch (err) {
-      console.error("Failed to finish session", err);
-      alert("Failed to finish session.");
-    }
-  };
 
   if (loading) return <p className="p-6">Loading session...</p>;
 
@@ -196,6 +191,15 @@ export default function StartSession() {
         }}
         session={session}
       />
+      <CaseSessionFollowup
+        show={showFollowupModal}
+        onClose={(success) => {
+          setShowFollowupModal(false);
+          if (success) navigate("/social_worker/sessions");
+        }}
+        session={session}
+      />
+
     </div>
   );
 }

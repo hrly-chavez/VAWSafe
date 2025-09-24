@@ -243,8 +243,27 @@ def finish_session(request, sess_id):
     session.save()
 
     return Response({"message": "Session finished successfully!"}, status=200)
-#schedule session
+#case close
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def close_case(request, incident_id):
+    """
+    Close a case (incident) if it has 2 or more sessions.
+    """
+    try:
+        incident = IncidentInformation.objects.get(pk=incident_id)
+    except IncidentInformation.DoesNotExist:
+        return Response({"error": "Incident not found"}, status=404)
 
+    serializer = CloseCaseSerializer(
+        incident, data={"incident_status": "Done"}, partial=True
+    )
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+
+    return Response({"message": "Case closed successfully!"}, status=200)
+
+#schedule session
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def schedule_next_session(request):
@@ -290,4 +309,5 @@ def list_social_workers(request):
         for w in workers
     ]
     return Response(data, status=200)
+
 #=====================================================================================================
