@@ -25,7 +25,7 @@ export default function StartSession() {
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [officials, setOfficials] = useState([]);
   const [selectedOfficial, setSelectedOfficial] = useState(null);
-   const nextSessionNum = (session?.sess_num || 0) + 1;
+  const nextSessionNum = (session?.sess_num || 0) + 1;
 
   //  toggle for answering
   const [isAnswering, setIsAnswering] = useState(false);
@@ -107,9 +107,6 @@ export default function StartSession() {
   const handleSubmit = async () => {
     try {
       const payload = {
-        sess_mental_note: mentalNote,
-        sess_physical_note: physicalNote,
-        sess_financial_note: financialNote,
         sess_status: "Done",
         sess_type: selectedTypes.map((t) => t.value),
         assigned_official: selectedOfficial,
