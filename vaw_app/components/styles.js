@@ -1,5 +1,5 @@
 import styled from 'styled-components/native';
-import {View, Text, Image, TextInput, TouchableOpacity} from 'react-native';
+import { View, Text, Image, TextInput, TouchableOpacity } from 'react-native';
 import Constants from 'expo-constants';
 
 const StatusBarHeight = Constants.statusBarHeight;
@@ -63,8 +63,8 @@ export const PageTitle = styled.Text`
   color: ${brand};
   padding: 10px;
 
-  ${(props) => 
-    props.welcome && 
+  ${(props) =>
+    props.welcome &&
     `
       font-size: 30px;
     `}
@@ -77,8 +77,8 @@ export const SubTitle = styled.Text`
   font-weight: bold;
   color: ${tertiary};
 
-  ${(props) => 
-    props.welcome && 
+  ${(props) =>
+    props.welcome &&
     `
       margin-bottom: 5px;
       font-weight: normal;
@@ -186,4 +186,184 @@ export const TextLink = styled.TouchableOpacity`
 export const TextLinkContent = styled.Text`
   color: ${brand};
   font-size: 15px;
+`;
+
+
+//Notification
+export const ContentWrapper = styled.View`
+  flex: 1;
+  padding: 0 25px;
+  padding-top: ${StatusBarHeight + 10}px;
+`;
+
+export const SearchContainer = styled.View`
+  flex-direction: row;
+  align-items: center;
+  background-color: ${secondary};
+  border-radius: 10px;
+  padding: 10px 15px;
+  margin-top: 20px;
+  width: 100%;
+`;
+
+export const SearchInput = styled.TextInput`
+  flex: 1;
+  font-size: 14px;
+  color: ${tertiary};
+  padding-left: 5px;
+`;
+
+export const NotificationHeader = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  width: 100%;
+`;
+
+export const NotificationTitle = styled.Text`
+  font-size: 20px;
+  font-weight: bold;
+  color: ${brand};
+`;
+
+export const NotificationCard = styled.TouchableOpacity`
+  background-color: ${secondary};
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  width: 100%;
+`;
+
+export const CardHeader = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 5px;
+`;
+
+export const SenderText = styled.Text`
+  font-weight: bold;
+  color: ${tertiary};
+`;
+
+export const DateText = styled.Text`
+  font-size: 12px;
+  color: ${darklight};
+`;
+
+export const SubjectText = styled.Text`
+  font-size: 15px;
+  font-weight: 500;
+  color: ${tertiary};
+  margin-bottom: 3px;
+`;
+
+export const PreviewText = styled.Text`
+  font-size: 13px;
+  color: ${darklight};
+`;
+
+export const ComposeBox = styled.TouchableOpacity`
+  position: absolute;
+  bottom: 50px;
+  right: 25px;
+  background-color: ${brand};
+  flex-direction: row;
+  align-items: center;
+  padding: 10px 15px;
+  border-radius: 30px;
+  elevation: 3;
+`;
+
+export const ComposeText = styled.Text`
+  color: ${primary};
+  font-size: 14px;
+  margin-left: 8px;
+`;
+
+export const SectionDivider = styled.View`
+  height: 1px;
+  background-color: ${darklight};
+  margin: 15px 25px;
+  opacity: 0.4;
+`;
+
+
+// Profile
+export const ProfileContainer = styled.View`
+  flex: 1;
+  padding: 25px;
+  background-color: ${primary};
+`;
+
+export const ProfileTitle = styled.Text`
+  font-size: 28px;
+  font-weight: bold;
+  color: ${brand};
+  margin-bottom: 5px;
+`;
+
+export const ProfileSubTitle = styled.Text`
+  font-size: 14px;
+  color: ${darklight};
+  margin-top: 5px;
+`;
+
+export const InfoScroll = styled.ScrollView`
+  width: 100%;
+  margin-bottom: 20px;
+`;
+
+export const InfoRow = styled.View`
+  flex-direction: row;
+  align-items: flex-start;
+  margin-bottom: 15px;
+`;
+
+export const InfoIcon = styled.View`
+  margin-right: 10px;
+  margin-top: 3px;
+`;
+
+export const InfoLabel = styled.Text`
+  font-weight: bold;
+  font-size: 15px;
+  color: ${tertiary};
+`;
+
+export const InfoValue = styled.Text`
+  font-size: 14px;
+  color: ${darklight};
+`;
+
+export const InfoBlock = styled.View`
+  flex: 1;
+`;
+
+export const InfoCard = styled.View`
+  background-color: ${secondary};
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  width: 100%;
+`;
+
+export const InfoValueSmall = styled.Text`
+  font-size: 14px;
+  color: ${darklight};
+`;
+
+export const TopBackButton = styled.TouchableOpacity`
+  position: absolute;
+  top: ${StatusBarHeight + 10}px;
+  left: 25px;
+  z-index: 10;
+`;
+
+export const TopRightButton = styled.TouchableOpacity`
+  position: absolute;
+  top: ${StatusBarHeight + 10}px;
+  right: 25px;
+  z-index: 10;
 `;

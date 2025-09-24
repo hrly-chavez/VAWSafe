@@ -198,6 +198,10 @@ class Victim(models.Model): #dapat pun-an of field na when ni na create ang vict
     vic_last_name = models.CharField(max_length=100)
     vic_first_name = models.CharField(max_length=100)
     vic_middle_name = models.CharField(max_length=100, blank=True, null=True)
+
+    # Added an email field in the victim
+    vic_email = models.EmailField(max_length=100, blank=True, null=True)
+
     vic_extension = models.CharField(max_length=10, blank=True, null=True)
     vic_sex = models.CharField(max_length=10, choices=SEX_CHOICES)
     vic_is_SOGIE = models.CharField(max_length=50, choices=SOGIE_CHOICES, default='No')

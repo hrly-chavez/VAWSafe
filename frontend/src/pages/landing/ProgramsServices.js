@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useRef, useEffect } from "react";
 
 const services = [
   {
@@ -8,12 +9,12 @@ const services = [
   },
   {
     title: "Psychosocial Support",
-    image: "/images/program1.png",
+    image: "/images/program1.jpg",
     description: "Offers emotional and psychological assistance to help survivors recover and reintegrate.",
   },
   {
     title: "Medical and Health Services",
-    image: "/images/program2.png",
+    image: "/images/program2.jpg",
     description: "Ensures access to essential medical care and health support for affected individuals.",
   },
   {
@@ -33,12 +34,36 @@ const services = [
   },
   {
     title: "Hotlines and Emergency Services",
-    image: "/images/program6.jpg",
+    image: "/images/program6.png",
     description: "Offers 24/7 emergency assistance and hotline access for urgent VAWC-related support.",
   },
 ];
 
 export default function ProgramsServices() {
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    let scrollAmount = 0;
+
+    const interval = setInterval(() => {
+      if (scrollContainer) {
+        scrollContainer.scrollLeft += 1;
+        scrollAmount += 1;
+
+        if (
+          scrollAmount >=
+          scrollContainer.scrollWidth - scrollContainer.clientWidth
+        ) {
+          scrollContainer.scrollLeft = 0;
+          scrollAmount = 0;
+        }
+      }
+    }, 20);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="bg-white">
       {/* Banner */}
@@ -51,34 +76,46 @@ export default function ProgramsServices() {
         </p>
       </div>
 
-      {/* Services Grid */}
-      <div className="max-w-7xl mx-auto px-6 sm:px-12 py-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-        {services.map((service, idx) => (
-          <div
-            key={idx}
-            className={`group relative block rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 bg-white ${idx === services.length - 1 ? "lg:col-span-1 lg:mx-auto" : ""
-              }`}
-          >
-            <div className="h-56 w-full overflow-hidden relative">
-              <img
-                src={service.image}
-                alt={service.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
+      {/* Auto-Moving Carousel */}
+      <div className="px-6 py-12 min-h-[300px] sm:min-h-[360px]">
+        <div
+          ref={scrollRef}
+          style={{
+            scrollbarWidth: "none", // Firefox
+            msOverflowStyle: "none", // IE 10+
+          }}
+          className="flex gap-6 overflow-x-auto scroll-smooth pb-4"
+        >
+          <style>
+            {`
+      div::-webkit-scrollbar {
+        display: none;
+      }
+    `}
+          </style>
+          {services.map((service, idx) => (
+            <motion.div
+              key={idx}
+              whileHover={{ scale: 1.05 }}
+              className="inline-block min-w-[280px] sm:min-w-[320px] bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 h-full"
 
-              {/* Hover Overlay */}
-              <div className="absolute inset-0 bg-[#292D96]/80 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-6 text-center">
-                <p className="text-sm sm:text-base">{service.description}</p>
+            >
+              <div className="h-[180px] sm:h-[200px] w-full overflow-hidden relative">
+                <img
+                  src={service.image}
+                  alt={service.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-[#292D96]/80 text-white opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4 text-center">
+                  <p className="text-sm">{service.description}</p>
+                </div>
               </div>
-            </div>
-
-            <div className="p-5 text-center">
-              <h3 className="text-[#292D96] font-semibold text-lg group-hover:text-pink-500 transition-colors duration-300">
-                {service.title}
-              </h3>
-            </div>
-          </div>
-        ))}
+              <div className="p-4 text-center">
+                <h3 className="text-[#292D96] font-semibold text-lg">{service.title}</h3>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </div>
   );

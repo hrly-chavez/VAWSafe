@@ -1,5 +1,6 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { useNavigation } from '@react-navigation/native';
 
 import {
     InnerContainer,
@@ -15,6 +16,7 @@ import {
 } from './../components/styles';
 
 const Welcome = () => {
+    const navigation = useNavigation();
 
     return (
         <>
@@ -27,7 +29,7 @@ const Welcome = () => {
                     <StyledFormArea>
                         <Avatar resizeMode="full" source={require('./../assets/img/logo1.png')} />
                         <Line />
-                        <StyledButton onPress={() => { }}>
+                        <StyledButton onPress={() => navigation.navigate('Notification')}>
                             <ButtonText>Get Started</ButtonText>
                         </StyledButton>
                     </StyledFormArea>

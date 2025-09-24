@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { StatusBar } from 'expo-status-bar';
+import { View, Alert } from 'react-native';
 
 // formik
 import { Formik } from "formik";
@@ -9,6 +10,8 @@ import { Octicons, Ionicons, Fontisto, MaterialIcons } from '@expo/vector-icons'
 
 // local authentication
 import * as LocalAuthentication from 'expo-local-authentication';
+
+import { useNavigation } from '@react-navigation/native';
 
 import {
     StyledContainer,
@@ -31,16 +34,17 @@ import {
     TextLink,
     TextLinkContent,
 } from './../components/styles';
-import { View, Alert } from 'react-native'
-
-// Colors
-const { brand, darklight, primary } = Colors;
 
 // keyboard avoiding view
 import KeyboardAvoidingWrapper from "./../components/KeyboardAvoidingWrapper";
 
+// Colors
+const { brand, darklight, primary } = Colors;
+
 const Login = () => {
     const [hidePassword, setHidePassword] = useState(true);
+
+    const navigation = useNavigation();
 
     // Face ID / Fingerprint login function
     const handleFaceID = async () => {
@@ -68,6 +72,7 @@ const Login = () => {
             if (result.success) {
                 Alert.alert('Success', 'Authenticated successfully!');
                 // Navigate to Welcome screen or Dashboard here
+                navigation.navigate('Welcome');
             } else {
                 Alert.alert("Error", "Authentication failed.");
             }
@@ -88,9 +93,15 @@ const Login = () => {
                     <Formik
                         initialValues={{ email: '', password: '' }}
                         onSubmit={(values) => {
-                            console.log(values);
-                            Alert.alert('Login', `Email: ${values.email}`);
-                            // Navigate to Welcome screen or Dashboard here
+                            const { email, password } = values;
+
+                            // if (!email || !password) {
+                            //     Alert.alert("Missing Fields", "Please enter both email and password.");
+                            //     return;
+                            // }
+
+                            Alert.alert('Login', `Email: ${email}`);
+                            navigation.navigate('Welcome');
                         }}
                     >
                         {({ handleChange, handleBlur, handleSubmit, values }) => (
@@ -137,17 +148,17 @@ const Login = () => {
                                 <Line />
 
                                 {/* Google Button */}
-                                <StyledButton google={true} onPress={handleSubmit}>
+                                {/* <StyledButton google={true} onPress={handleSubmit}>
                                     <Fontisto name="google" color={primary} size={25} />
                                     <ButtonText google={true}>Sign in with Google</ButtonText>
-                                </StyledButton>
+                                </StyledButton> */}
 
-                                <ExtraView>
+                                {/* <ExtraView>
                                     <ExtraText>Don't have an account already? </ExtraText>
-                                    <TextLink>
+                                    <TextLink onPress={() => navigation.navigate('Signup')}>
                                         <TextLinkContent>Signup</TextLinkContent>
                                     </TextLink>
-                                </ExtraView>
+                                </ExtraView> */}
                             </StyledFormArea>
                         )}
                     </Formik>

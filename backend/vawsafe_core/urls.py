@@ -27,6 +27,10 @@ urlpatterns = [
     path('api/social_worker/', include('social_worker.urls')),
     path('api/desk_officer/', include('desk_officer.urls')),
     path('api/dswd/', include('dswd.urls')),
+
+    # path for the victim aadded
+    path('api/victim/', include('victim.urls')),
+
     path('api/token/', MyTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { StatusBar } from 'expo-status-bar';
+import { Alert } from 'react-native'
+
+import { useNavigation } from '@react-navigation/native';
 
 // formik
 import { Formik } from "formik";
@@ -30,19 +33,21 @@ import {
 } from './../components/styles';
 import { View, TouchableOpacity } from 'react-native'
 
-// Colors
-const { brand, darklight, primary } = Colors;
-
 //Dtetimepicker
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 // keyboard avoiding view
 import KeyboardAvoidingWrapper from "./../components/KeyboardAvoidingWrapper";
 
+// Colors
+const { brand, darklight, primary } = Colors;
+
 const Signup = () => {
     const [hidePassword, setHidePassword] = useState(true);
     const [show, setShow] = useState(false);
     const [date, setDate] = useState(new Date(2000, 0, 1));
+
+    const navigation = useNavigation();
 
     //Actual date of birth to be sent
     const [dob, setDob] = useState();
@@ -77,8 +82,46 @@ const Signup = () => {
 
                     <Formik
                         initialValues={{ fullName: '', email: '', dateOfBirth: '', password: '', confirmPassword: '' }}
-                        onSubmit={(values) => {
-                            console.log(values);
+                        onSubmit={async (values) => {
+                            const { fullName, email, password, confirmPassword } = values;
+
+                            if (!fullName || !email || !password || !confirmPassword || !dob) {
+                                Alert.alert("Missing Fields", "Please fill out all fields before submitting.");
+                                return;
+                            }
+
+                            if (password !== confirmPassword) {
+                                Alert.alert("Password Mismatch", "Passwords do not match.");
+                                return;
+                            }
+
+                            try {
+                                const response = await fetch("http://192.168.1.5:8000/api/victim/register/", {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                        email: values.email,
+                                        password: values.password,
+                                        full_name: values.fullName,
+                                        birth_date: dob.toISOString().split("T")[0], // format: YYYY-MM-DD
+                                    }),
+                                });
+
+                                const data = await response.json();
+
+                                if (response.ok) {
+                                    Alert.alert("Success", data.message);
+                                    navigation.navigate('Login');
+                                    // Optionally navigate to login or dashboard
+                                } else {
+                                    Alert.alert("Signup Failed", JSON.stringify(data));
+                                }
+                            } catch (error) {
+                                console.error(error);
+                                Alert.alert("Error", "Something went wrong");
+                            }
                         }}
                     >
                         {({ handleChange, handleBlur, handleSubmit, values }) => <StyledFormArea>
@@ -150,7 +193,7 @@ const Signup = () => {
                             <Line />
                             <ExtraView>
                                 <ExtraText>Already have an account? </ExtraText>
-                                <TextLink>
+                                <TextLink onPress={() => navigation.navigate('Login')}>
                                     <TextLinkContent>Login</TextLinkContent>
                                 </TextLink>
                             </ExtraView>

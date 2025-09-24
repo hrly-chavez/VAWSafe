@@ -382,7 +382,7 @@ const LoginPage = () => {
             setAnimateOut(true);
             setTimeout(() => {
               navigate("/");
-            }, 700); // match transition duration
+            }, 700);
           }}
           className="absolute top-6 right-6 text-white text-2xl font-bold hover:text-red-400 transition-colors z-20"
         >
