@@ -353,11 +353,15 @@ class IncidentInformation(models.Model):
         ('Rido', 'Rido'),
         ('Others', 'Others'),
     ]
+    INCIDENT_CHOICES = [
+        ('Pending','Pending'),
+        ('Ongoing','Ongoing'),
+        ('Done','Done'),
+    ]
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
-    status = models.CharField(max_length=10, default="Ongoing")
     incident_id = models.AutoField(primary_key=True)
     incident_num = models.IntegerField(null=True,blank=True) #case number
-    
+    incident_status= models.CharField(max_length=20, choices=INCIDENT_CHOICES,default='Pending') #case status
     violence_type = models.CharField(max_length=100, choices=VIOLENCE_TYPE, null=True, blank=True)
     violence_subtype = models.CharField(max_length=100, null=True, blank=True)
     
