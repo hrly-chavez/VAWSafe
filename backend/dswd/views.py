@@ -61,13 +61,15 @@ class ViewVictim(generics.ListAPIView):
 class ProvinceList(generics.ListAPIView):
     queryset = Province.objects.all()
     serializer_class = ProvinceSerializer
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['DSWD']
+    # permission_classes = [IsAuthenticated, IsRole]
+    # allowed_roles = ['DSWD']
+    permission_classes = [AllowAny]
 
 class MunicipalityList(generics.ListAPIView):
     serializer_class = MunicipalitySerializer
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['DSWD']
+    # permission_classes = [IsAuthenticated, IsRole]
+    # allowed_roles = ['DSWD']
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         province_id = self.request.query_params.get("province")
@@ -78,8 +80,9 @@ class MunicipalityList(generics.ListAPIView):
 
 class BarangayList(generics.ListAPIView):
     serializer_class = BarangaySerializer
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['DSWD']
+    # permission_classes = [IsAuthenticated, IsRole]
+    # allowed_roles = ['DSWD']
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         municipality_id = self.request.query_params.get("municipality")

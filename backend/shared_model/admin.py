@@ -15,6 +15,7 @@ admin.site.register(Question)
 admin.site.register(Informant)
 admin.site.register(Perpetrator)
 admin.site.register(Evidence)
+admin.site.register(Address)
 
 # admin.site.register(Province)
 # admin.site.register(Municipality)
