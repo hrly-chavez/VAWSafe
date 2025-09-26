@@ -99,11 +99,12 @@ class Official(models.Model):
     of_photo = models.ImageField(upload_to='photos/', null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
 
-    province = models.ForeignKey("Province", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
-    municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
-    barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
-    sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
-    street = models.ForeignKey("Street", on_delete=models.SET_NULL, null=True, blank=True, related_name="officials") 
+    # province = models.ForeignKey("Province", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
+    # municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
+    # barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
+    # sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
+    # street = models.ForeignKey("Street", on_delete=models.SET_NULL, null=True, blank=True, related_name="officials") 
+    address = models.ForeignKey(Address, on_delete=models.PROTECT, related_name="official_address", null=True, blank=True)
 
     #where na baranggay assigned
     of_assigned_barangay = models.ForeignKey(Barangay, on_delete=models.PROTECT, related_name="assigned_officials", null=True, blank=True)

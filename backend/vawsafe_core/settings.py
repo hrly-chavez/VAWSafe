@@ -109,9 +109,9 @@ WSGI_APPLICATION = 'vawsafe_core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'vawsafe',
+        'NAME': 'vawsafe2',
         'USER': 'postgres',
-        'PASSWORD': '123456', 
+        'PASSWORD': 'Caratao123', 
         'HOST': 'localhost',
         'PORT': '5432',
     }
