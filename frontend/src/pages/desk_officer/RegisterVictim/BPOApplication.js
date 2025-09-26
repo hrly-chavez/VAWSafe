@@ -1,6 +1,44 @@
-import React from "react";
+import React, { useState } from "react";
 
 const BPOApplicationForm = () => {
+  const [children, setChildren] = useState([
+    {
+      firstName: "",
+      middleName: "",
+      lastName: "",
+      extension: "",
+      sex: "",
+      dob: "",
+    },
+  ]);
+
+  // Add new child card
+  const addChild = () => {
+    setChildren([
+      ...children,
+      {
+        firstName: "",
+        middleName: "",
+        lastName: "",
+        extension: "",
+        sex: "",
+        dob: "",
+      },
+    ]);
+  };
+
+  // Remove child card
+  const removeChild = (index) => {
+    setChildren(children.filter((_, i) => i !== index));
+  };
+
+  // Update child values
+  const handleChange = (index, field, value) => {
+    const updatedChildren = [...children];
+    updatedChildren[index][field] = value;
+    setChildren(updatedChildren);
+  };
+
   return (
     <form className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-md space-y-6">
       <h2 className="text-2xl font-bold text-center mb-6 text-[#292D96]">
@@ -63,39 +101,72 @@ const BPOApplicationForm = () => {
         </div>
       </div>
 
-      {/* Victim’s Children Info */}
-      <div className="p-4 border rounded-lg bg-gray-50 shadow-sm">
-        <h3 className="text-xl font-semibold mb-4 text-[#292D96]">
-          Victim's Children Information
-        </h3>
+      {children.map((child, index) => (
+        <div
+          key={index}
+          className="p-4 mb-4 bg-white rounded-lg shadow-sm border space-y-4 relative"
+        >
+          {/* Remove button */}
+          {children.length > 1 && (
+            <button
+              type="button"
+              onClick={() => removeChild(index)}
+              className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+            >
+              ✕
+            </button>
+          )}
 
-        {/* Single Child Card (can be duplicated dynamically later) */}
-        <div className="p-4 bg-white rounded-lg shadow-sm border space-y-4">
           {/* Name Fields */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 First Name
               </label>
-              <input className="input w-full" />
+              <input
+                className="input w-full"
+                value={child.firstName}
+                onChange={(e) =>
+                  handleChange(index, "firstName", e.target.value)
+                }
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Middle Name
               </label>
-              <input className="input w-full" />
+              <input
+                className="input w-full"
+                value={child.middleName}
+                onChange={(e) =>
+                  handleChange(index, "middleName", e.target.value)
+                }
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Last Name
               </label>
-              <input className="input w-full" />
+              <input
+                className="input w-full"
+                value={child.lastName}
+                onChange={(e) =>
+                  handleChange(index, "lastName", e.target.value)
+                }
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Extension
               </label>
-              <input className="input w-full" placeholder="e.g. Jr., III" />
+              <input
+                className="input w-full"
+                placeholder="e.g. Jr., III"
+                value={child.extension}
+                onChange={(e) =>
+                  handleChange(index, "extension", e.target.value)
+                }
+              />
             </div>
           </div>
 
@@ -105,7 +176,11 @@ const BPOApplicationForm = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Sex
               </label>
-              <select className="input w-full">
+              <select
+                className="input w-full"
+                value={child.sex}
+                onChange={(e) => handleChange(index, "sex", e.target.value)}
+              >
                 <option value="">Select</option>
                 <option>Male</option>
                 <option>Female</option>
@@ -115,11 +190,25 @@ const BPOApplicationForm = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Date of Birth
               </label>
-              <input className="input w-full" type="date" />
+              <input
+                type="date"
+                className="input w-full"
+                value={child.dob}
+                onChange={(e) => handleChange(index, "dob", e.target.value)}
+              />
             </div>
           </div>
         </div>
-      </div>
+      ))}
+
+      {/* Add child button */}
+      <button
+        type="button"
+        onClick={addChild}
+        className="mt-2 px-4 py-2 bg-[#292D96] text-white rounded-lg hover:bg-[#1e2370]"
+      >
+        + Add Child
+      </button>
 
       {/* Respondent Info */}
       <div className="p-4 border rounded-lg bg-gray-50 shadow-sm">
