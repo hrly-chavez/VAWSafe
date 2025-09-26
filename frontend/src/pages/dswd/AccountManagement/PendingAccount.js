@@ -25,6 +25,26 @@ export default function PendingAccount() {
     }
   };
 
+  const handleReject = async (officialId) => {
+    const reason = window.prompt("Enter reason for rejection:");
+    if (!reason) return; // cancel if empty
+
+    try {
+      await api.post(`/api/dswd/pending-officials/${officialId}/reject/`, { reason });
+      alert("Official has been rejected and notified by email.");
+    } catch (error) {
+      console.error("Rejection failed:", error);
+      alert("Failed to reject account.");
+    } finally {
+      // Refresh list
+      try {
+        const refreshed = await api.get("/api/dswd/pending-officials/");
+        setPendingOfficials(refreshed.data);
+      } catch (refreshError) {
+        console.error("Error refreshing pending list:", refreshError);
+      }
+    }
+  };
 
 
   useEffect(() => {
@@ -134,9 +154,13 @@ export default function PendingAccount() {
                         Approve
                       </button>
 
-                      <button className="bg-red-500 text-white px-3 py-1 rounded text-sm shadow hover:bg-red-600">
+                      <button
+                        onClick={() => handleReject(official.of_id)}
+                        className="bg-red-500 text-white px-3 py-1 rounded text-sm shadow hover:bg-red-600"
+                      >
                         Reject
                       </button>
+
                     </div>
                   </td>
                 </tr>
