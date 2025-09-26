@@ -280,6 +280,17 @@ class Victim(models.Model): #dapat pun-an of field na when ni na create ang vict
     def full_name(self):
         parts = [self.vic_first_name, self.vic_middle_name, self.vic_last_name, self.vic_extension]
         return " ".join(filter(None, parts))
+
+    # kani add nako para makita ang full address
+    def compose_full_address(self):
+        parts = [
+            self.street.name if self.street else None,
+            self.sitio.name if self.sitio else None,
+            self.barangay.name if self.barangay else None,
+            self.municipality.name if self.municipality else None,
+            self.province.name if self.province else None,
+        ]
+        return ", ".join(filter(None, parts)) or "Homeless"
  
 class VictimFaceSample(models.Model):
     victim = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name="face_samples")
@@ -399,16 +410,26 @@ class IncidentInformation(models.Model):
             self.sitio = self.street.sitio
             self.barangay = self.street.sitio.barangay
             self.municipality = self.street.sitio.barangay.municipality
-            self.city = self.street.sitio.barangay.municipality.city
+            self.province = self.street.sitio.barangay.municipality.province
         elif self.sitio:
             self.barangay = self.sitio.barangay
             self.municipality = self.sitio.barangay.municipality
-            self.city = self.sitio.barangay.municipality.city
+            self.province = self.sitio.barangay.municipality.province
         elif self.barangay:
             self.municipality = self.barangay.municipality
-            self.city = self.barangay.municipality.city
+            self.province = self.barangay.municipality.province
         elif self.municipality:
-            self.city = self.municipality.city
+            self.province = self.municipality.province
+
+        # # testing basin mo show na ang address instead sa default nga Homeless
+        # parts = [
+        #     self.street.name if self.street else None,
+        #     self.sitio.name if self.sitio else None,
+        #     self.barangay.name if self.barangay else None,
+        #     self.municipality.name if self.municipality else None,
+        #     self.province.name if self.province else None,
+        # ]
+        # self.vic_current_address = ", ".join(filter(None, parts)) or "Homeless"
 
         super().save(*args, **kwargs)
 
@@ -421,8 +442,8 @@ class IncidentInformation(models.Model):
             raise ValidationError("Sitio must belong to the selected Barangay.")
         if self.barangay and self.municipality and self.barangay.municipality != self.municipality:
             raise ValidationError("Barangay must belong to the selected Municipality.")
-        if self.municipality and self.city and self.municipality.city != self.city:
-            raise ValidationError("Municipality must belong to the selected City.")
+        if self.municipality and self.province and self.municipality.province != self.province:
+            raise ValidationError("Municipality must belong to the selected Province.")
 
     def __str__(self):
         return f"Incident {self.incident_id}"

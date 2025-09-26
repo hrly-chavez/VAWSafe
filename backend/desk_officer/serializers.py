@@ -20,11 +20,10 @@ class BarangaySerializer(serializers.ModelSerializer):
 # --- Lightweight list serializer ---
 class VictimListSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
-
+   
     class Meta:
         model = Victim
-        fields = ["vic_id", "vic_first_name", "vic_middle_name", "vic_last_name", 
-                  "vic_extension", "vic_sex", "vic_birth_place", "age"]
+        fields = "__all__"
 
     def get_age(self, obj):
         if obj.vic_birth_date:
@@ -60,9 +59,36 @@ class VictimSerializer(serializers.ModelSerializer):
     face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
     case_report = CaseReportSerializer(read_only=True)
     full_name = serializers.ReadOnlyField()
+    full_address = serializers.SerializerMethodField()
+
     class Meta:
         model = Victim
         fields = "__all__"
+    
+    def get_full_address(self, obj):
+        return obj.compose_full_address()
+
+    def create(self, validated_data):
+        # Extract foreign key IDs from initial data
+        province_id = self.initial_data.get("province")
+        municipality_id = self.initial_data.get("municipality")
+        barangay_id = self.initial_data.get("barangay")
+        sitio_id = self.initial_data.get("sitio")
+        street_id = self.initial_data.get("street")
+
+        # Assign foreign keys manually
+        if province_id:
+            validated_data["province_id"] = province_id
+        if municipality_id:
+            validated_data["municipality_id"] = municipality_id
+        if barangay_id:
+            validated_data["barangay_id"] = barangay_id
+        if sitio_id:
+            validated_data["sitio_id"] = sitio_id
+        if street_id:
+            validated_data["street_id"] = street_id
+
+        return Victim.objects.create(**validated_data)
 
 class PerpetratorSerializer(serializers.ModelSerializer):
     class Meta:
@@ -166,6 +192,10 @@ class VictimDetailSerializer(serializers.ModelSerializer): #together with Incide
     face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
     case_report = CaseReportSerializer(read_only=True)
     incidents = IncidentInformationSerializer(many=True, read_only=True)
+    full_address = serializers.SerializerMethodField()
+
+    def get_full_address(self, obj):
+        return obj.compose_full_address()
 
     class Meta:
         model = Victim
