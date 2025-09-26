@@ -353,11 +353,13 @@ class IncidentInformation(models.Model):
         ('Rido', 'Rido'),
         ('Others', 'Others'),
     ]
+    
     INCIDENT_CHOICES = [
         ('Pending','Pending'),
         ('Ongoing','Ongoing'),
         ('Done','Done'),
     ]
+    
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     incident_id = models.AutoField(primary_key=True)
     incident_num = models.IntegerField(null=True,blank=True) #case number
@@ -377,16 +379,18 @@ class IncidentInformation(models.Model):
     is_calamity_area = models.BooleanField(default=False)
 
     # foreign keys
+    informant = models.ForeignKey(Informant, on_delete=models.CASCADE, null=True, blank=True)
     vic_id = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name='incidents')
+    perp_id = models.ForeignKey(Perpetrator, on_delete=models.CASCADE,to_field='perp_id', related_name='related_incidents',null=True, blank=True)
     of_id = models.ForeignKey(Official, on_delete=models.SET_NULL, related_name='handled_incidents',null=True, blank=True)
-    perp_id = models.ForeignKey(Perpetrator, on_delete=models.SET_NULL,to_field='perp_id', related_name='related_incidents',null=True, blank=True)
+    
+    # for address
     province = models.ForeignKey("province", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
     municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
     barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
     sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
     street = models.ForeignKey("Street", on_delete=models.SET_NULL, related_name="incidents", null=True, blank=True)
 
-    informant = models.ForeignKey(Informant, on_delete=models.CASCADE, related_name="incidents", null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Auto-fill hierarchy like in Victim & Official
@@ -421,7 +425,24 @@ class IncidentInformation(models.Model):
 
     def __str__(self):
         return f"Incident {self.incident_id}"
-  
+
+class BPOApplication(models.Model):
+    commission_date = models.DateTimeField()
+    consent_circumstances = models.TextField(blank=True, null=True)
+
+    incident = models.ForeignKey(IncidentInformation, on_delete=models.CASCADE, blank=True, null=True)
+
+class BPOApplicationVictimChildrenList(models.Model):
+    fname = models.CharField(max_length=50, blank=True, null=True)
+    mname = models.CharField(max_length=50, blank=True, null=True)
+    lname = models.CharField(max_length=50, blank=True, null=True)
+    extension = models.CharField(max_length=50, blank=True, null=True)
+    birth_date = models.DateField( null=True, blank=True)
+    sex = models.CharField(max_length=10, null=True, blank=True)
+
+    # foreign key
+    bpo_application = models.ForeignKey(BPOApplication, on_delete=models.CASCADE, blank=True, null=True) 
+
 class CaseReport(models.Model):  #ADMINISTRATIVE INFORMATION
     victim = models.OneToOneField(Victim, on_delete=models.CASCADE, related_name="case_report")
 
@@ -429,9 +450,6 @@ class CaseReport(models.Model):  #ADMINISTRATIVE INFORMATION
     office_address = models.CharField(max_length=255,null=True, blank=True)
     report_type = models.CharField(max_length=255,null=True, blank=True)
     
-    informant_name = models.CharField(max_length=255, null=True, blank=True)
-    informant_relationship = models.CharField(max_length=255, null=True, blank=True)
-    informant_contact = models.CharField(max_length=50, null=True, blank=True)
     def __str__(self):
         return f"CaseReport for {self.victim.vic_last_name}, {self.victim.vic_first_name}"
     
@@ -451,6 +469,8 @@ class Session(models.Model):
     sess_location = models.CharField(max_length=200, null=True, blank=True)
     sess_description = models.TextField(null=True, blank=True)
     sess_type = models.ManyToManyField("SessionType", related_name="sessions")
+    
+    # foreign key
     incident_id = models.ForeignKey(IncidentInformation,to_field='incident_id', on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
     assigned_official = models.ForeignKey("Official",on_delete=models.SET_NULL,related_name="assigned_sessions",null=True,blank=True)
 
@@ -581,22 +601,3 @@ class Services(models.Model):
     contact_person = models.CharField(max_length=100, default="contact person")
     contact_number = models.CharField(max_length=100, default="contact number")
     category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default="Others")
-
-class BPOApplication(models.Model):
-    applicant_fname = models.CharField(max_length=50, blank=True, null=True)
-    applicant_mname = models.CharField(max_length=50, blank=True, null=True)
-    applicant_lname = models.CharField(max_length=50, blank=True, null=True)
-    applicant_extension = models.CharField(max_length=50, blank=True, null=True)
-    applicant_birth_date = models.DateField(null=True, blank=True)
-
-    # foreign keys
-    applicant_address = models.ForeignKey(Address, on_delete=models.CASCADE, null=True, blank=True)
-    victim = models.ForeignKey(Victim, on_delete=models.CASCADE, blank=True, null=True)
-
-class BPOApplicationVictimChildrenList(models.Model):
-    fname = models.CharField(max_length=50, blank=True, null=True)
-    mname = models.CharField(max_length=50, blank=True, null=True)
-    lname = models.CharField(max_length=50, blank=True, null=True)
-    extension = models.CharField(max_length=50, blank=True, null=True)
-    birth_date = models.DateField( null=True, blank=True)
-    sex = models.CharField(max_length=10, null=True, blank=True)
