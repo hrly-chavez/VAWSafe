@@ -5,6 +5,7 @@ import api from "../../../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import NextSessionModal from "./NextSessionModal";
 import CaseSessionFollowup from "./CaseSessionFollowup";
+import AddCustomQuestions from "./AddCustomQuestions";
 
 export default function StartSession() {
   const { sess_id } = useParams();
@@ -14,6 +15,8 @@ export default function StartSession() {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showFollowupModal, setShowFollowupModal] = useState(false);
+  const [showAddCustomModal, setShowAddCustomModal] = useState(false);
+
 
   useEffect(() => {
     window.scrollTo(0, 0); // always go to the top
@@ -54,6 +57,7 @@ export default function StartSession() {
         value: q.sq_value,
         note: q.sq_note,
       })),
+      sess_description: session?.sess_description || "",
     };
     await api.post(`/api/social_worker/sessions/${sess_id}/finish/`, payload);
     alert("Session finished successfully!");
@@ -105,11 +109,11 @@ export default function StartSession() {
                   className="p-3 border rounded mb-3 bg-gray-50"
                 >
                   <p className="font-medium text-gray-800 mb-2">
-                    {q.question_text}
+                    {q.question_text || q.sq_custom_text}
                   </p>
 
                   {/* Render input by type */}
-                  {q.question_answer_type === "Yes/No" && (
+                  {(q.question_answer_type || q.sq_custom_answer_type) === "Yes/No" && (
                     <select
                       value={q.sq_value || ""}
                       onChange={(e) =>
@@ -123,7 +127,7 @@ export default function StartSession() {
                     </select>
                   )}
 
-                  {q.question_answer_type === "Text" && (
+                 {(q.question_answer_type || q.sq_custom_answer_type) === "Text" && (
                     <textarea
                       value={q.sq_value || ""}
                       onChange={(e) =>
@@ -135,7 +139,7 @@ export default function StartSession() {
                     />
                   )}
 
-                  {q.question_answer_type === "Multiple Choice" && (
+                  {(q.question_answer_type || q.sq_custom_answer_type) === "Multiple Choice" && (
                     <input
                       type="text"
                       value={q.sq_value || ""}
@@ -146,6 +150,7 @@ export default function StartSession() {
                       placeholder="Enter selected choice..."
                     />
                   )}
+                  
 
                   {/* Optional note */}
                   <input
@@ -163,6 +168,24 @@ export default function StartSession() {
           </div>
         </div>
       ))}
+        {/* CUSTOM QUESTION BUTTON */}
+        <div className="flex justify-end">
+              <button onClick={() => setShowAddCustomModal(true)} 
+                className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700">
+                Add Custom Question
+              </button>
+            </div>
+          <h2 className="text-2xl font-bold text-green-700 mb-4">
+            Session Feedback
+          </h2>   
+          {/* Session Feedback / Description */}
+          <div className="p-4 bg-gray-50 border rounded-md shadow-sm mb-6">
+            <textarea value={session?.sess_description || ""}
+              onChange={(e) => setSession((prev) => ({ ...prev, sess_description: e.target.value }))}
+              className="w-full border rounded-md p-3 text-sm text-gray-800"
+              rows={4}
+              placeholder="Write your feedback about this session (e.g. progress, issues, observations)..."/>
+          </div>
 
       {/* Actions */}
       {questions.length > 0 && (
@@ -198,6 +221,13 @@ export default function StartSession() {
           if (success) navigate("/social_worker/sessions");
         }}
         session={session}
+      />
+      {/* Modal for Custom Questions */}
+    <AddCustomQuestions
+        show={showAddCustomModal}
+        onClose={() => setShowAddCustomModal(false)}
+        sessionId={sess_id}
+        onAdded={(newQ) => setQuestions((prev) => [...prev, newQ])}
       />
 
     </div>

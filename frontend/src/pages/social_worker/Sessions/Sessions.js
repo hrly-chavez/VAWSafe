@@ -58,7 +58,7 @@ export default function Sessions() {
                     <th>Session No.</th>
                     <th>Schedule Date</th>
                     <th>Location</th>
-                    <th>Session Type</th>
+                    {/* <th>Session Type</th> */}
                     <th>Assigned Social Worker</th>
                     <th>Actions</th>
                   </tr>
@@ -72,7 +72,7 @@ export default function Sessions() {
                         <td>{s.sess_num || "—"}</td>
                         <td>{formatDate(s.sess_next_sched)}</td>
                         <td>{s.location || "—"}</td>
-                        <td>{s.sess_type || "—"}</td>
+                        {/* <td>{s.sess_type || "—"}</td> */}
                         <td>{s.official_name || "—"}</td>
                         <td className="flex gap-2">
                           <Link

@@ -142,7 +142,7 @@ class Informant(models.Model):
     def __str__(self):
         return f"{self.inf_fname} {self.inf_lname}" if self.inf_fname else "Unnamed Informant"
 
-class Victim(models.Model): #dapat pun-an of field na when ni na create ang victim
+class Victim(models.Model): 
     CIVIL_STATUS_CHOICES = [
         ('SINGLE', 'Single'),
         ('MARRIED', 'Married'),
@@ -321,7 +321,7 @@ class Perpetrator(models.Model):
     def __str__(self):
         return f"{self.per_last_name}, {self.per_first_name}"
   
-class IncidentInformation(models.Model):
+class IncidentInformation(models.Model): #Case in the frontend
     VIOLENCE_TYPE = [
         ('Intimate partner violence against women and their children', 'Intimate partner violence against women and their children'),
         ('Rape', 'Rape'),
@@ -517,7 +517,11 @@ class SessionQuestion(models.Model):
     sq_is_required = models.BooleanField(default=False)
 
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='session_questions')
-    question = models.ForeignKey(Question, on_delete=models.PROTECT, related_name='session_questions')
+    question = models.ForeignKey(Question, on_delete=models.PROTECT, related_name='session_questions', null=True, blank=True)
+
+     # For ad-hoc custom questions
+    sq_custom_text = models.TextField(null=True, blank=True)
+    sq_custom_answer_type = models.CharField(max_length=20, choices=Question.ANSWER_TYPES, null=True, blank=True)
 
     # Direct answer fields
     sq_value = models.TextField(null=True, blank=True)
@@ -527,21 +531,9 @@ class SessionQuestion(models.Model):
         unique_together = ('session', 'question')
 
     def __str__(self):
-        return f"Session {self.session.sess_id} - Q {self.question.ques_id} -> {self.sq_value or 'No answer'}"
-
-
-# for update changes
-class Session_Changelog(models.Model):
-    sc_changed_timestamp = models.DateTimeField()
-    sc_field_changed = models.CharField(max_length=100)
-    sc_old_value = models.TextField()
-    sc_new_value = models.TextField()
-    sc_reason_for_update = models.TextField()
-    sess_id = models.ForeignKey(Session,on_delete=models.CASCADE, to_field='sess_id', related_name='changelogs')
-    
-    def __str__(self):
-        return f"Change in {self.sc_field_changed} on {self.sc_changed_timestamp}"    
-
+        if self.question:
+            return f"Session {self.session.sess_id} - Q {self.question.ques_id} -> {self.sq_value or 'No answer'}"
+        return f"Session {self.session.sess_id} - Custom Q -> {self.sq_value or 'No answer'}"
 
 # newly added
 class Evidence(models.Model):

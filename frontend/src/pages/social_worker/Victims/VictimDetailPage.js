@@ -190,7 +190,7 @@ export default function VictimDetailPage() {
                 </button>
               </div>
             </div>
-
+            {/* Card/Box and clickable Session */}
           {openSessionIndex === index && (
             <div className="mt-4 space-y-4">
               <p className="text-sm font-semibold text-[#292D96]">Sessions:</p>
@@ -199,9 +199,11 @@ export default function VictimDetailPage() {
                  <div key={session.sess_id}
                   className="border rounded-lg p-4 bg-white shadow hover:shadow-md transition cursor-pointer"
                   onClick={() => setSelectedSessionIndex(session.sess_id)}>
+                    {/* Session number */}
                     <h4 className="text-base font-semibold text-[#292D96] mb-2">
                       Session {session.sess_num || "—"}
                     </h4>
+                    {/* Status */}
                     <p className="text-sm">
                       <span className="font-medium">Status:</span>{" "}
                       <span
@@ -218,14 +220,35 @@ export default function VictimDetailPage() {
                         {session.sess_status}
                       </span>
                     </p>
-                    <p className="text-sm">
-                      <span className="font-medium">Date:</span>{" "}
-                      {session.sess_next_sched || session.sess_date_today || "—"}
-                    </p>
+                      {/* Date */}
+                    <p className="text-sm"> 
+                    <span className="font-medium">Date:</span>{" "}
+                    {session.sess_next_sched
+                      ? new Date(session.sess_next_sched).toLocaleString([], {
+                          year: "numeric",
+                          month: "numeric",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "numeric",
+                          hour12: true,
+                        })
+                      : session.sess_date_today
+                      ? new Date(session.sess_date_today).toLocaleString([], {
+                          year: "numeric",
+                          month: "numeric",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "numeric",
+                          hour12: true,
+                        })
+                      : "—"}
+                  </p>
+                    {/* location */}
                     <p className="text-sm">
                       <span className="font-medium">Location:</span>{" "}
                       {session.location || "—"}
                     </p>
+                    {/* Official */}
                     <p className="text-sm">
                       <span className="font-medium">Assigned Official:</span>{" "}
                       {session.official_name || "—"}
@@ -235,6 +258,8 @@ export default function VictimDetailPage() {
               </div>
             </div>
           )}
+
+
 
           </div>
         ))}
