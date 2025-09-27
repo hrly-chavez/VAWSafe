@@ -183,20 +183,31 @@ export default function ViewSessions() {
       />
 
       {/* Actions */}
-      <div className="flex justify-end gap-3">
-        <button
-          onClick={() => navigate(`/social_worker/sessions/${sess_id}/start`)}
-          className="px-5 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700"
-        >
-          Start Session
-        </button>
-        <button
-          onClick={() => navigate(-1)}
-          className="px-5 py-2 bg-gray-200 text-gray-800 rounded-md font-medium hover:bg-gray-300"
-        >
-          Back
-        </button>
-      </div>
+        <div className="flex justify-end gap-3">
+          {session.sess_status === "Pending" && (
+            <button
+              onClick={() => navigate(`/social_worker/sessions/${sess_id}/start`)}
+              className="px-5 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700"
+            >
+              Start Session
+            </button>
+          )}
+          {session.sess_status === "Ongoing" && (
+            <button
+              onClick={() => navigate(`/social_worker/sessions/${sess_id}/start`)}
+              className="px-5 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700"
+            >
+              Continue Session
+            </button>
+          )}
+          <button
+            onClick={() => navigate(-1)}
+            className="px-5 py-2 bg-gray-200 text-gray-800 rounded-md font-medium hover:bg-gray-300"
+          >
+            Back
+          </button>
+        </div>
+
     </div>
   );
 }

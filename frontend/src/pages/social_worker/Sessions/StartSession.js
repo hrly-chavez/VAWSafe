@@ -23,23 +23,35 @@ export default function StartSession() {
   }, []);
 
   //  Start session & hydrate questions on mount
-  useEffect(() => {
-    const startSession = async () => {
-      try {
-        const res = await api.post(
-          `/api/social_worker/sessions/${sess_id}/start/`
-        );
-        setQuestions(res.data.questions); // hydrated questions
-        setSession(res.data); // keep session details for modal
-      } catch (err) {
-        console.error("Failed to start session", err);
-        alert("Could not start session.");
-      } finally {
-        setLoading(false);
+ useEffect(() => {
+  const loadSession = async () => {
+    try {
+      // First fetch session details
+      const detailRes = await api.get(`/api/social_worker/sessions/${sess_id}/`);
+      const sess = detailRes.data;
+
+      if (sess.sess_status === "Pending") {
+        // Start the session (hydrate questions)
+        const res = await api.post(`/api/social_worker/sessions/${sess_id}/start/`);
+        setQuestions(res.data.questions);
+        setSession(res.data);
+      } else if (sess.sess_status === "Ongoing") {
+        // Just load existing questions
+        setQuestions(sess.questions || []);
+        setSession(sess);
+      } else {
+        alert("This session is already finished.");
+        navigate(-1);
       }
-    };
-    startSession();
-  }, [sess_id]);
+    } catch (err) {
+      console.error("Failed to load session", err);
+      alert("Could not load session.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  loadSession();
+}, [sess_id, navigate]);
 
   //  Update answer locally
   const handleChange = (sq_id, field, value) => {

@@ -98,14 +98,23 @@ export default function SessionDetails({ sessionId, onClose }) {
                 </p>
               </div>
 
-              <div>
-                
-                <ul className="list-disc list-inside text-sm text-gray-800">
-                  {(session.sess_type || []).map((type, idx) => (
-                    <li key={idx}>{type.name}</li>
-                  ))}
-                </ul>
-              </div>
+             {/* Session Types */}
+{session.sess_type_display && session.sess_type_display.length > 0 && (
+  <div>
+    <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
+      Session Types
+    </h3>
+    <div className="p-3 border rounded-md bg-gray-50 space-y-1">
+      {session.sess_type_display.map((type, idx) => (
+        <p key={idx} className="text-sm font-medium text-gray-800">
+          {type.name}
+        </p>
+      ))}
+    </div>
+  </div>
+)}
+
+
 
               {/* Mapped Questions */}
               <div>

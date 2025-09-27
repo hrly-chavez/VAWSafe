@@ -131,10 +131,11 @@ class scheduled_session_lists(generics.ListAPIView):
         user = self.request.user
         if hasattr(user, "official") and user.official.of_role == "Social Worker":
             return Session.objects.filter(
-                assigned_official=user.official, 
-                sess_status="Pending")
+                assigned_official=user.official,
+                sess_status__in=["Pending", "Ongoing"]  
+            ).order_by("sess_status", "sess_next_sched")   
         return Session.objects.none()
-    
+
 class scheduled_session_detail(generics.RetrieveUpdateAPIView):  # View + Update
     serializer_class = SocialWorkerSessionDetailSerializer
     permission_classes = [IsAuthenticated]
@@ -142,7 +143,11 @@ class scheduled_session_detail(generics.RetrieveUpdateAPIView):  # View + Update
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return Session.objects.filter(assigned_official=user.official)
+            # Allow access to all sessions under incidents where this social worker
+            # is assigned to at least one session
+            return Session.objects.filter(
+                incident_id__sessions__assigned_official=user.official
+            ).distinct()
         return Session.objects.none()
 
 class SessionTypeListView(generics.ListAPIView):
@@ -249,8 +254,6 @@ def add_custom_question(request, sess_id):
         created.append(sq)
 
     return Response(SocialWorkerSessionQuestionSerializer(created, many=True).data, status=201)
-
-
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
