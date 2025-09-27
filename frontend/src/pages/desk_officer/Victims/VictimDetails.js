@@ -218,9 +218,27 @@ export default function VictimDetails() {
                         </span>
                       </p>
                       <p className="text-sm">
-                        <span className="font-medium">Date:</span>{" "}
-                        {session.sess_next_sched || session.sess_date_today || "—"}
-                      </p>
+                          <span className="font-medium">Date:</span>{" "}
+                          {session.sess_next_sched
+                            ? new Date(session.sess_next_sched).toLocaleString([], {
+                                year: "numeric",
+                                month: "numeric",
+                                day: "numeric",
+                                hour: "numeric",
+                                minute: "numeric",
+                                hour12: true,
+                              })
+                            : session.sess_date_today
+                            ? new Date(session.sess_date_today).toLocaleString([], {
+                                year: "numeric",
+                                month: "numeric",
+                                day: "numeric",
+                                hour: "numeric",
+                                minute: "numeric",
+                                hour12: true,
+                              })
+                            : "—"}
+                        </p>
                       <p className="text-sm">
                         <span className="font-medium">Location:</span>{" "}
                         {session.sess_location || "—"}

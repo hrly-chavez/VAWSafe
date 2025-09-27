@@ -59,13 +59,29 @@ export default function SessionDetails({ sessionId, onClose }) {
                 <DetailItem label="Session Number" value={session.sess_num} />
                 <DetailItem label="Status" value={session.sess_status} />
                 <DetailItem
-                  label="Date"
-                  value={
-                    session.sess_next_sched ||
-                    session.sess_date_today ||
-                    "—"
-                  }
-                />
+                    label="Date"
+                    value={
+                      session.sess_next_sched
+                        ? new Date(session.sess_next_sched).toLocaleString([], {
+                            year: "numeric",
+                            month: "numeric",
+                            day: "numeric",
+                            hour: "numeric",
+                            minute: "numeric",
+                            hour12: true,
+                          })
+                        : session.sess_date_today
+                        ? new Date(session.sess_date_today).toLocaleString([], {
+                            year: "numeric",
+                            month: "numeric",
+                            day: "numeric",
+                            hour: "numeric",
+                            minute: "numeric",
+                            hour12: true,
+                          })
+                        : "—"
+                    }
+                  />
                 <DetailItem label="Location" value={session.sess_location} />
                 <DetailItem
                   label="Assigned Official"
@@ -84,50 +100,114 @@ export default function SessionDetails({ sessionId, onClose }) {
               </div>
 
               {/* Session Types */}
-              {session.sess_type && session.sess_type.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
-                    Session Types
-                  </h3>
-                  <ul className="list-disc list-inside text-sm text-gray-800">
-                    {session.sess_type.map((type, idx) =>
-                      typeof type === "object" ? (
-                        <li key={idx}>{type.name}</li>
-                      ) : (
-                        <li key={idx}>{type}</li>
-                      )
-                    )}
-                  </ul>
-                </div>
-              )}
+{session.sess_type && session.sess_type.length > 0 && (
+  <div>
+    <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
+      Session Types
+    </h3>
+    <div className="p-3 border rounded-md bg-gray-50 space-y-1">
+      {session.sess_type.map((type, idx) =>
+        typeof type === "object" ? (
+          <p key={idx} className="text-sm font-medium text-gray-800">
+            {type.name}
+          </p>
+        ) : (
+          <p key={idx} className="text-sm font-medium text-gray-800">
+            {type}
+          </p>
+        )
+      )}
+    </div>
+  </div>
+)}
 
-              {/* Answered Questions */}
-              {session.session_questions &&
-                session.session_questions.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
-                      Answered Questions
-                    </h3>
-                    <div className="space-y-3">
-                      {session.session_questions.map((q) => (
-                        <div
-                          key={q.sq_id}
-                          className="bg-gray-50 border rounded-md p-3 shadow-sm"
-                        >
-                          <p className="text-sm font-medium text-gray-800">
-                            {q.question_text}
-                          </p>
-                          <p className="text-xs text-gray-600 mt-1">
-                            Answer:{" "}
-                            <span className="font-semibold">
-                              {q.sq_value || "—"}
-                            </span>
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+
+             {/* Mapped Questions */}
+<div>
+  <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
+    Mapped Questions
+  </h3>
+  {session.session_questions &&
+  session.session_questions.filter((q) => q.question_text).length > 0 ? (
+    <div className="space-y-4">
+      {Object.entries(
+        session.session_questions
+          .filter((q) => q.question_text)
+          .reduce((acc, q) => {
+            const cat = q.question_category || "Uncategorized";
+            if (!acc[cat]) acc[cat] = [];
+            acc[cat].push(q);
+            return acc;
+          }, {})
+      ).map(([category, qs]) => (
+        <div key={category}>
+          <h4 className="text-md font-semibold text-gray-700 mb-2">
+            {category}
+          </h4>
+          <div className="space-y-3">
+            {qs.map((q) => (
+              <div
+                key={q.sq_id}
+                className="p-3 border rounded-md bg-gray-50"
+              >
+                <p className="text-sm font-medium text-gray-800">
+                  {q.question_text}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold">Answer:</span>{" "}
+                  {q.sq_value || "—"}
+                </p>
+                {q.sq_note && (
+                  <p className="text-sm text-gray-500 italic">
+                    Note: {q.sq_note}
+                  </p>
                 )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p className="text-sm text-gray-500">No mapped questions answered.</p>
+  )}
+</div>
+
+{/* Custom Questions */}
+<div>
+  <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
+    Custom Questions
+  </h3>
+  {session.session_questions &&
+  session.session_questions.filter((q) => q.sq_custom_text).length > 0 ? (
+    <div className="space-y-3">
+      {session.session_questions
+        .filter((q) => q.sq_custom_text)
+        .map((q) => (
+          <div
+            key={q.sq_id}
+            className="p-3 border rounded-md bg-gray-50"
+          >
+            <p className="text-sm font-medium text-gray-800">
+              {q.sq_custom_text}
+            </p>
+            <p className="text-sm text-gray-600">
+              <span className="font-semibold">Answer:</span>{" "}
+              {q.sq_value || "—"}
+            </p>
+            {q.sq_note && (
+              <p className="text-sm text-gray-500 italic">
+                Note: {q.sq_note}
+              </p>
+            )}
+          </div>
+        ))}
+    </div>
+  ) : (
+    <p className="text-sm text-gray-500">No custom questions answered.</p>
+  )}
+</div>
+
             </>
           ) : (
             <p>No session found.</p>

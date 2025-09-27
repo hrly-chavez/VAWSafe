@@ -26,40 +26,10 @@ export default function StartSession() {
   const [officials, setOfficials] = useState([]);
   const [selectedOfficial, setSelectedOfficial] = useState(null);
   const nextSessionNum = (session?.sess_num || 0) + 1;
+  const [answers, setAnswers] = useState([]);
 
   //  toggle for answering
   const [isAnswering, setIsAnswering] = useState(false);
-
-  // upload handler
-  const handleFileChange = (e) => {
-    const selected = Array.from(e.target.files);
-    const valid = [];
-    for (let file of selected) {
-      if (file.size > 10 * 1024 * 1024) {
-        setError(` ${file.name} is larger than 10 MB`);
-        continue;
-      }
-      valid.push({
-        id: `${file.name}-${file.lastModified}`,
-        file,
-        preview: URL.createObjectURL(file),
-      });
-    }
-    if (valid.length) {
-      setError("");
-      setFiles((prev) => [...prev, ...valid]);
-    }
-    if (inputRef.current) inputRef.current.value = ""; // reset input
-  };
-
-  const handleRemove = (id) => {
-    setFiles((prev) => {
-      const fileToRemove = prev.find((f) => f.id === id);
-      if (fileToRemove) URL.revokeObjectURL(fileToRemove.preview);
-      return prev.filter((f) => f.id !== id);
-    });
-  };
-
   useEffect(() => {
     return () => files.forEach((f) => URL.revokeObjectURL(f.preview));
   }, [files]);
@@ -90,34 +60,51 @@ export default function StartSession() {
       .catch((err) => console.error("Failed to fetch officials", err));
   }, []);
 
-  // 🔥 Start Answering
-  const handleStartAnswering = async () => {
-    try {
-      await api.post(`/api/desk_officer/sessions/${session.sess_id}/generate-questions/`, {
-        session_types: selectedTypes.map((t) => t.value),
-      });
-      setIsAnswering(true);
-    } catch (err) {
-      console.error("Error generating questions:", err.response?.data || err.message);
-      alert("Failed to start answering");
-    }
-  };
+//  Start Answering
+const handleStartAnswering = async () => {
+  try {
+    const res = await api.post(`/api/desk_officer/sessions/${session.sess_id}/start/`, {
+      session_types: selectedTypes.map((t) => t.value),
+      sess_location: session.sess_location, 
+    });
 
-  //  Submit session (mark as Done)
-  const handleSubmit = async () => {
-    try {
-      const payload = {
-        sess_status: "Done",
-        sess_type: selectedTypes.map((t) => t.value),
-        assigned_official: selectedOfficial,
-      };
-      await api.patch(`/api/desk_officer/sessions/${session.sess_id}/`, payload);
-      setShowModal(true);
-    } catch (err) {
-      console.error("Error submitting session:", err.response?.data || err.message);
-      alert("Failed to submit session");
-    }
-  };
+    // Optional: you can preload the returned session/questions into state
+    // Example: setQuestions(res.data.session_questions);
+
+    setIsAnswering(true);
+  } catch (err) {
+    console.error("Error starting session:", err.response?.data || err.message);
+    alert("Failed to start answering");
+  }
+};
+
+
+
+//  Submit session (save answers + mark Done)
+const handleSubmit = async () => {
+  try {
+    const payload = {
+      sess_status: "Done",
+      sess_type: selectedTypes.map((t) => t.value),
+      assigned_official: selectedOfficial,
+      sess_location: session.sess_location,
+      answers: answers.map((q) => ({
+        sq_id: q.sq_id,
+        value: q.sq_value,
+        note: q.sq_note,
+      })),
+    };
+
+    await api.post(`/api/desk_officer/sessions/${session.sess_id}/finish/`, payload);
+
+    alert("Session finished successfully!");
+    setShowModal(true);
+  } catch (err) {
+    console.error("Error submitting session:", err.response?.data || err.message);
+    alert("Failed to submit session");
+  }
+};
+
 
   return (
     <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6">
@@ -160,7 +147,17 @@ export default function StartSession() {
               />
             </div>
           </div>
-
+          {/* Location */}
+          <div>
+            <label className="text-xs text-gray-600">Location</label>
+            <input
+              type="text"
+              value={session?.sess_location || ""}
+              onChange={(e) => (session.sess_location = e.target.value)}
+              className="w-full border rounded p-2"
+              placeholder="Enter session location..."
+            />
+          </div>
           {/* Session Type Selection */}
           <div>
             <label className="text-xs text-gray-600 block mb-1">
@@ -194,7 +191,10 @@ export default function StartSession() {
               selectedTypes={selectedTypes}
             />
           ) : (
-            <SessionQuestions sessionId={session?.sess_id} />
+            <SessionQuestions
+              sessionId={session?.sess_id}
+              onAnswersChange={setAnswers}
+            />
           )}
 
           {/* Actions */}

@@ -8,7 +8,7 @@ urlpatterns = [
     path("case/<int:vic_id>/", VictimIncidentsView.as_view(), name="socialworker-view-incidents"),
 
     #Sessions
-    path("sessions/pending/", scheduled_session_lists.as_view(), name="my-sessions"),
+    path("sessions/pending&Ongoing/", scheduled_session_lists.as_view(), name="my-sessions"),
     path("sessions/<int:pk>/", scheduled_session_detail.as_view(), name="session-detail"),
     path("session-types/", SessionTypeListView.as_view(), name="session-types-list"),
     path("mapped-questions/", social_worker_mapped_questions, name="social-worker-mapped-questions"),
