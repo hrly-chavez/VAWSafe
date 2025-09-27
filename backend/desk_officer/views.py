@@ -466,6 +466,8 @@ def finish_session(request, sess_id):
 
     if "assigned_official" in request.data:
         session.assigned_official_id = request.data["assigned_official"]
+    if "sess_location" in request.data:   
+        session.sess_location = request.data["sess_location"]
 
     session.save()
 

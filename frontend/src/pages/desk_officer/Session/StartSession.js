@@ -1,5 +1,5 @@
 // src/pages/desk_officer/Session/StartSession.js
-import Modal from "react-modal";
+
 import { useLocation } from "react-router-dom";
 import api from "../../../api/axios";
 import Select from "react-select";
@@ -26,10 +26,11 @@ export default function StartSession() {
   const [officials, setOfficials] = useState([]);
   const [selectedOfficial, setSelectedOfficial] = useState(null);
   const nextSessionNum = (session?.sess_num || 0) + 1;
-  const [answers, setAnswers] = useState([]);
-
+  const [questions, setQuestions] = useState([]);
   //  toggle for answering
   const [isAnswering, setIsAnswering] = useState(false);
+  const [location, setLocation] = useState(session?.sess_location || "");
+
   useEffect(() => {
     return () => files.forEach((f) => URL.revokeObjectURL(f.preview));
   }, [files]);
@@ -67,10 +68,7 @@ const handleStartAnswering = async () => {
       session_types: selectedTypes.map((t) => t.value),
       sess_location: session.sess_location, 
     });
-
-    // Optional: you can preload the returned session/questions into state
-    // Example: setQuestions(res.data.session_questions);
-
+    setQuestions(res.data.session_questions || []);
     setIsAnswering(true);
   } catch (err) {
     console.error("Error starting session:", err.response?.data || err.message);
@@ -87,13 +85,14 @@ const handleSubmit = async () => {
       sess_status: "Done",
       sess_type: selectedTypes.map((t) => t.value),
       assigned_official: selectedOfficial,
-      sess_location: session.sess_location,
-      answers: answers.map((q) => ({
+      sess_location: location,
+      answers: questions.map((q) => ({
         sq_id: q.sq_id,
         value: q.sq_value,
         note: q.sq_note,
       })),
     };
+
 
     await api.post(`/api/desk_officer/sessions/${session.sess_id}/finish/`, payload);
 
@@ -151,12 +150,12 @@ const handleSubmit = async () => {
           <div>
             <label className="text-xs text-gray-600">Location</label>
             <input
-              type="text"
-              value={session?.sess_location || ""}
-              onChange={(e) => (session.sess_location = e.target.value)}
-              className="w-full border rounded p-2"
-              placeholder="Enter session location..."
-            />
+            type="text"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            className="w-full border rounded p-2"
+            placeholder="Enter session location..."
+          />
           </div>
           {/* Session Type Selection */}
           <div>
@@ -192,9 +191,10 @@ const handleSubmit = async () => {
             />
           ) : (
             <SessionQuestions
-              sessionId={session?.sess_id}
-              onAnswersChange={setAnswers}
+              questions={questions}
+              setQuestions={setQuestions}
             />
+            
           )}
 
           {/* Actions */}

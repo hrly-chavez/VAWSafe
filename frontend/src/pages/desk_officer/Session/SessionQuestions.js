@@ -1,34 +1,15 @@
 // src/pages/desk_officer/Session/SessionQuestions.js
 //Questions of the Start Session (answerable questions)
-import { useEffect, useState } from "react";
-import api from "../../../api/axios";
+
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function SessionQuestions({ sessionId, onAnswersChange }) {
-  const [questions, setQuestions] = useState([]);
-
-  useEffect(() => {
-    if (!sessionId) return;
-
-    api
-      .get(`/api/desk_officer/sessions/${sessionId}/questions/`)
-      .then((res) => setQuestions(res.data))
-      .catch((err) => console.error("Failed to fetch session questions", err));
-  }, [sessionId]);
-
+export default function SessionQuestions({ questions, setQuestions }) {
+  
   const handleChange = (sq_id, field, newValue) => {
-    setQuestions((prev) =>
-      prev.map((q) =>
-        q.sq_id === sq_id ? { ...q, [field]: newValue } : q
-      )
+    const updated = questions.map((q) =>
+      q.sq_id === sq_id ? { ...q, [field]: newValue } : q
     );
-    // Notify parent whenever answers change
-    if (onAnswersChange) {
-     const updated = questions.map((q) =>
-        q.sq_id === sq_id ? { ...q, [field]: newValue } : q
-      );
-      onAnswersChange(updated);
-    }
+    setQuestions(updated);
   };
 
 
