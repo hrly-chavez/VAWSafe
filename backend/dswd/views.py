@@ -555,3 +555,5 @@ class ServicesListCreateView(generics.ListCreateAPIView):
         if category and category != "All":
             queryset = queryset.filter(category=category)
         return queryset
+
+
