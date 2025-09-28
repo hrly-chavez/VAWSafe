@@ -10,7 +10,7 @@ export default function Sessions() {
 
   useEffect(() => {
     api
-      .get("/api/social_worker/sessions/pending/")
+      .get("/api/social_worker/sessions/pending&Ongoing/")
       .then((res) => setSessions(res.data))
       .catch((err) => console.error("Failed to fetch sessions", err));
   }, []);
@@ -58,7 +58,7 @@ export default function Sessions() {
                     <th>Session No.</th>
                     <th>Schedule Date</th>
                     <th>Location</th>
-                    <th>Session Type</th>
+                    <th>Status</th>
                     <th>Assigned Social Worker</th>
                     <th>Actions</th>
                   </tr>
@@ -72,7 +72,21 @@ export default function Sessions() {
                         <td>{s.sess_num || "—"}</td>
                         <td>{formatDate(s.sess_next_sched)}</td>
                         <td>{s.location || "—"}</td>
-                        <td>{s.sess_type || "—"}</td>
+                        {/* 🔹 Status badge */}
+                        <td>
+                          <span
+                            className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                              s.sess_status === "Pending"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : s.sess_status === "Ongoing"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-green-100 text-green-700"
+                            }`}
+                          >
+                            {s.sess_status}
+                          </span>
+                        </td>
+                        {/* Official */}
                         <td>{s.official_name || "—"}</td>
                         <td className="flex gap-2">
                           <Link

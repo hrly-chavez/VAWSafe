@@ -46,7 +46,7 @@ export default function Sidebar() {
       return [
         { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/social_worker" },
         { icon: "/images/heart.png", label: "VAWC Victims", path: "/social_worker/victims" },   
-        // { icon: "/images/case.png", label: "Case Records", path: "/social_worker/case-records" },
+        { icon: "/images/case.png", label: "Case Records", path: "/social_worker/case-records" },
         { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/social_worker/sessions" },
         { icon: "/images/peace.png", label: "Services", path: "/social_worker/services" },
         { icon: "/images/logout.png", label: "Log Out", path: "/login", isLogout: true }

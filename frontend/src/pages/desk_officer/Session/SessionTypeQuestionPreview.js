@@ -1,4 +1,5 @@
 // src/pages/desk_officer/Session/SessionTypeQuestionPreview.js
+//Show mapped questions
 import { useEffect, useState } from "react";
 import api from "../../../api/axios";
 import { motion, AnimatePresence } from "framer-motion";

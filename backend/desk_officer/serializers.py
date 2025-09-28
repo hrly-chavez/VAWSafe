@@ -198,9 +198,11 @@ class SessionQuestionSerializer(serializers.ModelSerializer):  # Generated + ans
             "question_text",
             "question_category",
             "question_answer_type",
+            "sq_custom_text",         # for ad-hoc questions
+            "sq_custom_answer_type",  # type of ad-hoc questions
             "sq_is_required",
-            "sq_value",   
-            "sq_note",    
+            "sq_value",
+            "sq_note",
         ]
 
 class DeskOfficerSessionDetailSerializer(serializers.ModelSerializer): #show session and session answer in card
