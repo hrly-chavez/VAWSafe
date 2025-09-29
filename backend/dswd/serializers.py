@@ -187,3 +187,109 @@ class BarangaySerializer(serializers.ModelSerializer):
     class Meta:
         model = Barangay
         fields = "__all__"
+
+# class AddressSerializer(serializers.ModelSerializer):
+#     province = serializers.PrimaryKeyRelatedField(queryset=Province.objects.all(), allow_null=True, required=False)
+#     municipality = serializers.PrimaryKeyRelatedField(queryset=Municipality.objects.all(), allow_null=True, required=False)
+#     barangay = serializers.PrimaryKeyRelatedField(queryset=Barangay.objects.all(), allow_null=True, required=False)
+
+#     class Meta:
+#         model = Address
+#         fields = ["id", "province", "municipality", "barangay", "sitio", "street"]
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ["id", "province", "municipality", "barangay", "sitio", "street"]
+
+    def to_representation(self, instance):
+        parts = []
+        if instance.street:
+            parts.append(str(instance.street))
+        if instance.sitio:
+            parts.append(str(instance.sitio))
+        if instance.barangay:
+            parts.append(str(instance.barangay))
+        if instance.municipality:
+            parts.append(str(instance.municipality))
+        if instance.province:
+            parts.append(str(instance.province))
+        return ", ".join(parts) or "—"
+
+
+
+# class ServicesSerializer(serializers.ModelSerializer):
+#     assigned_place = AddressSerializer()
+#     service_address = AddressSerializer()
+
+#     class Meta:
+#         model = Services
+#         fields = ["serv_id", "name", "contact_person", "contact_number", "assigned_place", "service_address"]
+
+#     def create(self, validated_data):
+#         assigned_place_data = validated_data.pop("assigned_place", None)
+#         service_address_data = validated_data.pop("service_address", None)
+
+#         assigned_place = Address.objects.create(**assigned_place_data) if assigned_place_data else None
+#         service_address = Address.objects.create(**service_address_data) if service_address_data else None
+
+#         return Services.objects.create(
+#             assigned_place=assigned_place,
+#             service_address=service_address,
+#             **validated_data
+#         )
+
+class ServicesSerializer(serializers.ModelSerializer):
+    assigned_place = AddressSerializer(required=False, allow_null=True)
+    service_address = AddressSerializer(required=False, allow_null=True)
+
+    class Meta:
+        model = Services
+        fields = [
+            "serv_id",
+            "name",
+            "contact_person",
+            "contact_number",
+            "category",
+            "assigned_place",
+            "service_address",
+        ]
+
+    def create(self, validated_data):
+        assigned_place_data = validated_data.pop("assigned_place", None)
+        service_address_data = validated_data.pop("service_address", None)
+
+        assigned_place = Address.objects.create(**assigned_place_data) if assigned_place_data else None
+        service_address = Address.objects.create(**service_address_data) if service_address_data else None
+
+        return Services.objects.create(
+            assigned_place=assigned_place,
+            service_address=service_address,
+            **validated_data
+        )
+
+    def update(self, instance, validated_data):
+        assigned_place_data = validated_data.pop("assigned_place", None)
+        service_address_data = validated_data.pop("service_address", None)
+
+        if assigned_place_data:
+            if instance.assigned_place:
+                for attr, value in assigned_place_data.items():
+                    setattr(instance.assigned_place, attr, value)
+                instance.assigned_place.save()
+            else:
+                instance.assigned_place = Address.objects.create(**assigned_place_data)
+
+        if service_address_data:
+            if instance.service_address:
+                for attr, value in service_address_data.items():
+                    setattr(instance.service_address, attr, value)
+                instance.service_address.save()
+            else:
+                instance.service_address = Address.objects.create(**service_address_data)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance

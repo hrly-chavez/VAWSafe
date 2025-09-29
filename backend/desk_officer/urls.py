@@ -26,8 +26,7 @@ urlpatterns = [
     path("session-types/", list_session_types, name="list-session-types"),
     path("mapped-questions/", mapped_questions, name="mapped-questions"),
     path("sessions/<int:sess_id>/questions/", session_questions, name="session-questions"),
-    path("sessions/<int:sess_id>/generate-questions/", generate_session_questions, name="generate-session-questions"),
-    path("sessions/<int:sess_id>/answers/", submit_answers, name="submit-answers"),
-
+    path("sessions/<int:sess_id>/start/", start_session, name="start-session"),
+    path("sessions/<int:sess_id>/finish/", finish_session, name="finish-session"),
 
 ] + router.urls

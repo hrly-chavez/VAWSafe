@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import SchedulePage from "../Session/Schedule";
 
 const BPOApplicationForm = () => {
   const [formData, setFormData] = useState({
@@ -339,6 +340,28 @@ const BPOApplicationForm = () => {
           </div>
         </div>
       </div>
+
+      <div className="flex justify-end gap-4 mt-6">
+        <button
+          type="button"
+          className="px-6 py-2 rounded-lg border border-red-500 text-red-600 hover:bg-red-50 hover:border-red-600 transition"
+        >
+          Decline
+        </button>
+        <button
+          type="submit"
+          className="px-6 py-2 rounded-lg bg-[#292D96] text-white hover:bg-[#1e2370] transition"
+        >
+          Accept
+        </button>
+      </div>
+
+      {/* Show schedule page after success */}
+      <SchedulePage
+        embedded={true}
+        // victim={showSchedulePage.victim}
+        // incident={showSchedulePage.incident}
+      />
     </form>
   );
 };

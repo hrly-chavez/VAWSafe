@@ -23,6 +23,9 @@ const RegisterUser = ({ onClose, defaultRole }) => {
   const [provinces, setProvinces] = useState([]);
   const [municipalities, setMunicipalities] = useState([]);
   const [barangays, setBarangays] = useState([]);
+  const [sitio, setSitio] = useState("");
+  const [street, setStreet] = useState("");
+
 
   // const [selectedCity, setSelectedCity] = useState("");
   const [selectedProvince, setSelectedProvince] = useState("");
@@ -151,9 +154,12 @@ useEffect(() => {
     formData.append("of_lname", of_lname);
     formData.append("of_email", of_email);
     formData.append("of_role", of_role);
-    formData.append("province", selectedProvince);
-    formData.append("municipality", selectedMunicipality);
-    formData.append("barangay", selectedBarangay);
+    formData.append("address.province", selectedProvince);
+    formData.append("address.municipality", selectedMunicipality);
+    formData.append("address.barangay", selectedBarangay);
+    formData.append("address.sitio", sitio);
+    formData.append("address.street", street);
+
 
     for (let i = 0; i < photos.length; i++) {
       const blob = await fetch(photos[i]).then((res) => res.blob());
@@ -198,6 +204,9 @@ useEffect(() => {
       setFname("");
       setLname("");
       setEmail("");
+      setSitio("");
+      setStreet("");
+
       if (!dswdExists) setRole("DSWD"); // keep role DSWD if first-time
       else setRole(defaultRole || "VAWDesk");
       setCurrentIndex(0);
@@ -396,13 +405,26 @@ useEffect(() => {
 
               <div className="flex flex-col">
                 <label className="font-medium text-sm mb-1">Sitio</label>
-                <input type="text" placeholder="Sitio Example" className={inputStyle} />
+                <input
+                  type="text"
+                  placeholder="Sitio Example"
+                  value={sitio}
+                  onChange={(e) => setSitio(e.target.value)}
+                  className={inputStyle}
+                />
               </div>
 
               <div className="flex flex-col">
                 <label className="font-medium text-sm mb-1">Street</label>
-                <input type="text" placeholder="Example Street Name" className={inputStyle} />
+                <input
+                  type="text"
+                  placeholder="Example Street Name"
+                  value={street}
+                  onChange={(e) => setStreet(e.target.value)}
+                  className={inputStyle}
+                />
               </div>
+
 
               <div className="flex flex-col">
                 <label className="font-medium text-sm mb-1">Assigned Barangay</label>

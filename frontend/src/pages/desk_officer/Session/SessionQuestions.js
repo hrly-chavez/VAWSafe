@@ -1,44 +1,17 @@
 // src/pages/desk_officer/Session/SessionQuestions.js
-import { useEffect, useState } from "react";
-import api from "../../../api/axios";
+//Questions of the Start Session (answerable questions)
+
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function SessionQuestions({ sessionId }) {
-  const [questions, setQuestions] = useState([]);
-
-  useEffect(() => {
-    if (!sessionId) return;
-
-    api
-      .get(`/api/desk_officer/sessions/${sessionId}/questions/`)
-      .then((res) => setQuestions(res.data))
-      .catch((err) => console.error("Failed to fetch session questions", err));
-  }, [sessionId]);
-
+export default function SessionQuestions({ questions, setQuestions }) {
+  
   const handleChange = (sq_id, field, newValue) => {
-    setQuestions((prev) =>
-      prev.map((q) =>
-        q.sq_id === sq_id ? { ...q, [field]: newValue } : q
-      )
+    const updated = questions.map((q) =>
+      q.sq_id === sq_id ? { ...q, [field]: newValue } : q
     );
+    setQuestions(updated);
   };
 
- const handleSaveAnswers = async () => {
-  try {
-    const payload = {
-      answers: questions.map((q) => ({
-        sq_id: q.sq_id,
-        value: q.sq_value,
-        note: q.sq_note,
-      })),
-    };
-    await api.post(`/api/desk_officer/sessions/${sessionId}/answers/`, payload);
-    alert(" Answers submitted successfully!");
-  } catch (err) {
-    console.error("Failed to submit answers", err.response?.data || err.message);
-    alert(" Failed to submit answers");
-  }
-};;
 
   // Group questions by category
   const grouped = questions.reduce((acc, q) => {
@@ -134,17 +107,6 @@ export default function SessionQuestions({ sessionId }) {
           </div>
         </div>
       ))}
-
-      {questions.length > 0 && (
-        <div className="flex justify-end mt-4">
-          <button
-            onClick={handleSaveAnswers}
-            className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700"
-          >
-            Save Answers
-          </button>
-        </div>
-      )}
     </div>
   );
 }

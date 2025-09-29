@@ -131,10 +131,11 @@ class scheduled_session_lists(generics.ListAPIView):
         user = self.request.user
         if hasattr(user, "official") and user.official.of_role == "Social Worker":
             return Session.objects.filter(
-                assigned_official=user.official, 
-                sess_status="Pending")
+                assigned_official=user.official,
+                sess_status__in=["Pending", "Ongoing"]  
+            ).order_by("sess_status", "sess_next_sched")   
         return Session.objects.none()
-    
+
 class scheduled_session_detail(generics.RetrieveUpdateAPIView):  # View + Update
     serializer_class = SocialWorkerSessionDetailSerializer
     permission_classes = [IsAuthenticated]
@@ -142,7 +143,11 @@ class scheduled_session_detail(generics.RetrieveUpdateAPIView):  # View + Update
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return Session.objects.filter(assigned_official=user.official)
+            # Allow access to all sessions under incidents where this social worker
+            # is assigned to at least one session
+            return Session.objects.filter(
+                incident_id__sessions__assigned_official=user.official
+            ).distinct()
         return Session.objects.none()
 
 class SessionTypeListView(generics.ListAPIView):
@@ -216,6 +221,40 @@ def start_session(request, sess_id):
 
     return Response(session_data, status=200)
 
+@api_view(["POST"]) 
+@permission_classes([IsAuthenticated])
+def add_custom_question(request, sess_id):
+    """
+    Add one or more custom ad-hoc questions to a session.
+    """
+    user = request.user
+    try:
+        session = Session.objects.get(pk=sess_id, assigned_official=user.official)
+    except Session.DoesNotExist:
+        return Response({"error": "Session not found or not assigned to you"}, status=404)
+
+    questions_data = request.data.get("questions", [])  # expect a list
+    if not isinstance(questions_data, list) or len(questions_data) == 0:
+        return Response({"error": "Questions must be a non-empty list"}, status=400)
+
+    created = []
+    for q in questions_data:
+        text = q.get("sq_custom_text")
+        answer_type = q.get("sq_custom_answer_type")
+        if not text or not answer_type:
+            continue  # skip invalid entries
+
+        sq = SessionQuestion.objects.create(
+            session=session,
+            question=None,
+            sq_custom_text=text,
+            sq_custom_answer_type=answer_type,
+            sq_is_required=q.get("sq_is_required", False)
+        )
+        created.append(sq)
+
+    return Response(SocialWorkerSessionQuestionSerializer(created, many=True).data, status=201)
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def finish_session(request, sess_id):
@@ -237,12 +276,37 @@ def finish_session(request, sess_id):
             sq.save()
         except SessionQuestion.DoesNotExist:
             continue
-
+    #  Save session description (feedback)
+    description = request.data.get("sess_description")
+    if description is not None:
+        session.sess_description = description
     #  Mark as Done
     session.sess_status = "Done"
     session.save()
 
     return Response({"message": "Session finished successfully!"}, status=200)
+
+
+#case close
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def close_case(request, incident_id):
+    """
+    Close a case (incident) if it has 2 or more sessions.
+    """
+    try:
+        incident = IncidentInformation.objects.get(pk=incident_id)
+    except IncidentInformation.DoesNotExist:
+        return Response({"error": "Incident not found"}, status=404)
+
+    serializer = CloseCaseSerializer(
+        incident, data={"incident_status": "Done"}, partial=True
+    )
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+
+    return Response({"message": "Case closed successfully!"}, status=200)
+
 #schedule session
 
 @api_view(["GET", "POST"])
@@ -290,4 +354,19 @@ def list_social_workers(request):
         for w in workers
     ]
     return Response(data, status=200)
-#=====================================================================================================
+
+#=======================================CASES==============================================================
+
+class SocialWorkerCaseList(generics.ListAPIView):
+    serializer_class = IncidentSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, "official") and user.official.of_role == "Social Worker":
+            return IncidentInformation.objects.filter(
+                sessions__assigned_official=user.official,
+                incident_status__in=["Pending", "Ongoing"]
+            ).distinct()
+        return IncidentInformation.objects.none()
+

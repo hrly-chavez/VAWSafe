@@ -62,13 +62,15 @@ class ViewVictim(generics.ListAPIView):
 class ProvinceList(generics.ListAPIView):
     queryset = Province.objects.all()
     serializer_class = ProvinceSerializer
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['DSWD']
+    # permission_classes = [IsAuthenticated, IsRole]
+    # allowed_roles = ['DSWD']
+    permission_classes = [AllowAny]
 
 class MunicipalityList(generics.ListAPIView):
     serializer_class = MunicipalitySerializer
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['DSWD']
+    # permission_classes = [IsAuthenticated, IsRole]
+    # allowed_roles = ['DSWD']
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         province_id = self.request.query_params.get("province")
@@ -79,8 +81,9 @@ class MunicipalityList(generics.ListAPIView):
 
 class BarangayList(generics.ListAPIView):
     serializer_class = BarangaySerializer
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['DSWD']
+    # permission_classes = [IsAuthenticated, IsRole]
+    # allowed_roles = ['DSWD']
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         municipality_id = self.request.query_params.get("municipality")
@@ -388,3 +391,64 @@ class PendingOfficials(viewsets.ModelViewSet):
         except Exception as e:
             traceback.print_exc()
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    @action(detail=True, methods=['post'], url_path='reject')
+    def reject(self, request, pk=None):
+        """
+        Reject an applicant:
+        - Send rejection email with reason
+        - Delete their Official record
+        """
+        try:
+            official = self.get_object()
+
+            if official.status != "pending":
+                return Response({"error": "This official is not pending approval."},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            # ✅ Get reason from request
+            reason = request.data.get("reason", "No reason provided.")
+
+            # ✅ Send rejection email
+            send_mail(
+                subject="VAWDesk Application Status",
+                message=(
+                    f"Dear {official.of_fname},\n\n"
+                    "We regret to inform you that your application as VAWDesk Officer "
+                    "has been rejected by DSWD.\n\n"
+                    f"Reason: {reason}\n\n"
+                    "Thank you for your interest."
+                ),
+                from_email="no-reply@vawsafe.ph",
+                recipient_list=[official.of_email],
+                fail_silently=False,
+            )
+
+            # ✅ Delete record
+            official.delete()
+
+            return Response({
+                "message": "Official rejected and record deleted.",
+                "reason": reason
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            traceback.print_exc()
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        
+class ServicesListCreateView(generics.ListCreateAPIView):
+    serializer_class = ServicesSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']
+
+    def get_queryset(self):
+        queryset = Services.objects.all()
+        category = self.request.query_params.get("category", None)
+
+        # only filter if not "All" and not empty
+        if category and category != "All":
+            queryset = queryset.filter(category=category)
+        return queryset
+
+

@@ -254,6 +254,106 @@ export default function VictimDetails() {
           </div>
         )}
 
+        <h3 className="text-lg font-semibold text-[#292D96] mb-4">Case Information</h3>
+        {incidentList.map((incident, index) => (
+          <div key={index} className="border rounded-md p-4 shadow-sm bg-gray-50">
+            {/* Case Info + Buttons */}
+            <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
+              <p>
+                <span className="font-medium text-gray-800">Case No:</span>{" "}
+                {incident.incident_num || "—"}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setSelectedIncident(incident);
+                    setShowModal(true);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
+                >
+                  View Case Details
+                </button>
+                <button
+                  onClick={() => {
+                    const isSame = openSessionIndex === index;
+                    setOpenSessionIndex(isSame ? null : index);
+                    setSelectedSessionId(null);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-md border border-green-600 text-green-600 px-3 py-1.5 text-sm font-medium hover:bg-green-600 hover:text-white transition"
+                >
+                  {openSessionIndex === index ? "Hide Sessions" : "View Sessions"}
+                </button>
+              </div>
+            </div>
+
+            {/* Sessions */}
+            {openSessionIndex === index && (
+              <div className="mt-4 space-y-4">
+                <p className="text-sm font-semibold text-[#292D96]">Sessions:</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(incident.sessions || []).map((session) => (
+                    <div
+                      key={session.sess_id}
+                      className="border rounded-lg p-4 bg-white shadow hover:shadow-md transition cursor-pointer"
+                      onClick={() => setSelectedSessionId(session.sess_id)}
+                    >
+                      <h4 className="text-base font-semibold text-[#292D96] mb-2">
+                        Session {session.sess_num || "—"}
+                      </h4>
+                      <p className="text-sm">
+                        <span className="font-medium">Status:</span>{" "}
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs ${
+                            session.sess_status === "Pending"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : session.sess_status === "Ongoing"
+                              ? "bg-blue-100 text-blue-700"
+                              : session.sess_status === "Done"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {session.sess_status}
+                        </span>
+                      </p>
+                      <p className="text-sm">
+                          <span className="font-medium">Date:</span>{" "}
+                          {session.sess_next_sched
+                            ? new Date(session.sess_next_sched).toLocaleString([], {
+                                year: "numeric",
+                                month: "numeric",
+                                day: "numeric",
+                                hour: "numeric",
+                                minute: "numeric",
+                                hour12: true,
+                              })
+                            : session.sess_date_today
+                            ? new Date(session.sess_date_today).toLocaleString([], {
+                                year: "numeric",
+                                month: "numeric",
+                                day: "numeric",
+                                hour: "numeric",
+                                minute: "numeric",
+                                hour12: true,
+                              })
+                            : "—"}
+                        </p>
+                      <p className="text-sm">
+                        <span className="font-medium">Location:</span>{" "}
+                        {session.sess_location || "—"}
+                      </p>
+                      <p className="text-sm">
+                        <span className="font-medium">Assigned Official:</span>{" "}
+                        {session.official_name || "—"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+
         {/* Back Button */}
         <div className="flex justify-end">
           <Link

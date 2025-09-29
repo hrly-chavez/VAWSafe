@@ -204,9 +204,11 @@ class SocialWorkerSessionQuestionSerializer(serializers.ModelSerializer): #Sessi
         fields = [
             "sq_id",
             "question",
-            "question_text",
+            "question_text",    
             "question_category",
             "question_answer_type",
+            "sq_custom_text",        #for ad-hoc questions
+            "sq_custom_answer_type",
             "sq_is_required",
             "sq_value",
             "sq_note",
@@ -240,7 +242,58 @@ class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):  # View 
             "questions",
         ]
 
+class CloseCaseSerializer(serializers.ModelSerializer):#case close
+    class Meta:
+        model = IncidentInformation
+        fields = ["incident_id", "incident_status"]
+        read_only_fields = ["incident_id"]
 
+    def validate(self, data):
+        instance = self.instance
+        if not instance:
+            raise serializers.ValidationError("Incident not found")
 
+        # Count sessions
+        total_sessions = instance.sessions.count()
+        if total_sessions < 2:
+            raise serializers.ValidationError("Case cannot be closed before 2 sessions")
 
-#==================================================================================================
+        return data
+
+#=======================================CASES==========================================================
+
+class IncidentSerializer(serializers.ModelSerializer): #For case Column & Rows 
+    victim_name = serializers.SerializerMethodField()
+    gender = serializers.SerializerMethodField()
+    case_no = serializers.SerializerMethodField()
+    official_name = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
+
+    class Meta:
+        model = IncidentInformation
+        fields = [
+            "incident_id",
+            "case_no",
+            "incident_status",
+            "violence_type",
+            "incident_date",
+            "victim_name",
+            "gender",
+            "official_name",
+            "location",
+        ]
+
+    def get_victim_name(self, obj):
+        return obj.vic_id.full_name if obj.vic_id else None
+
+    def get_gender(self, obj):
+        return obj.vic_id.vic_sex if obj.vic_id else None
+
+    def get_case_no(self, obj):
+        return obj.incident_num or obj.incident_id
+
+    def get_official_name(self, obj):
+        return obj.of_id.full_name if obj.of_id else None
+
+    def get_location(self, obj):
+        return obj.incident_location or None

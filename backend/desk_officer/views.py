@@ -324,11 +324,10 @@ class SessionDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = DeskOfficerSessionDetailSerializer
     lookup_field = "sess_id"
 
+
 @api_view(["POST"])
-def create_session(request):
-    """
-    API for scheduling or starting a session.
-    """
+def create_session(request): 
+    #Purpose: To create a new session record (schedule or start immediately).
     data = request.data.copy()
     started_now = data.pop("started_now", False)
 
@@ -394,9 +393,12 @@ def session_questions(request, sess_id):
     return Response(serializer.data)
 
 @api_view(["POST"])
-def generate_session_questions(request, sess_id):
+def start_session(request, sess_id):
     """
-    Generate SessionQuestions for a session based on selected types + session number.
+    Start a session (Desk Officer).
+    - Marks session as Ongoing
+    - Hydrates mapped questions into SessionQuestions
+    - Returns session details with questions
     """
     try:
         session = Session.objects.get(pk=sess_id)
@@ -407,6 +409,12 @@ def generate_session_questions(request, sess_id):
     if not type_ids:
         return Response({"error": "session_types required"}, status=400)
 
+    # Mark session as ongoing
+    session.sess_status = "Ongoing"
+    session.sess_date_today = timezone.now()
+    session.save()
+
+    # Hydrate mapped questions
     mappings = SessionTypeQuestion.objects.filter(
         session_number=session.sess_num,
         session_type__id__in=type_ids
@@ -421,32 +429,49 @@ def generate_session_questions(request, sess_id):
         )
         created.append(sq)
 
-    serializer = SessionQuestionSerializer(created, many=True)
-    return Response(serializer.data)
+    # Serialize full session detail (with hydrated questions)
+    session_data = DeskOfficerSessionDetailSerializer(session).data
+    session_data["session_questions"] = SessionQuestionSerializer(created, many=True).data
+
+    return Response(session_data, status=200)
 
 @api_view(["POST"])
-def submit_answers(request, sess_id):
+def finish_session(request, sess_id):
+    """
+    Save answers and mark session as Done (Desk Officer).
+    """
     try:
         session = Session.objects.get(pk=sess_id)
     except Session.DoesNotExist:
         return Response({"error": "Session not found"}, status=404)
 
-    answers_data = request.data.get("answers", [])
-    for ans in answers_data:
-        sq_id = ans.get("sq_id")
-        value = ans.get("value")
-        note = ans.get("note", "")
-
+    # Save answers
+    answers = request.data.get("answers", [])
+    for ans in answers:
         try:
-            sq = SessionQuestion.objects.get(pk=sq_id, session=session)
+            sq = SessionQuestion.objects.get(pk=ans["sq_id"], session=session)
+            sq.sq_value = ans.get("value")
+            sq.sq_note = ans.get("note")
+            sq.save()
         except SessionQuestion.DoesNotExist:
-            continue  # skip invalid ids
+            continue
 
-        sq.sq_value = value
-        sq.sq_note = note
-        sq.save()
+    # Update session fields
+    session.sess_status = "Done"
+    if "sess_description" in request.data:
+        session.sess_description = request.data["sess_description"]
 
-    return Response({"message": "Answers submitted successfully"})
+    if "sess_type" in request.data:
+        session.sess_type.set(request.data["sess_type"])
+
+    if "assigned_official" in request.data:
+        session.assigned_official_id = request.data["assigned_official"]
+    if "sess_location" in request.data:   
+        session.sess_location = request.data["sess_location"]
+
+    session.save()
+
+    return Response({"message": "Session finished successfully!"}, status=200)
 
 
 #=======================================================================
