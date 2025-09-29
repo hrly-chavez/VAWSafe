@@ -91,7 +91,7 @@ export default function SessionDetails({ sessionId, onClose }) {
                     
               <div>
                 <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
-                  Description
+                  Social Worker Feedback
                 </h3>
                 <p className="text-sm text-gray-800 whitespace-pre-wrap break-words bg-gray-50 border rounded-md p-3">
                   {session.sess_description || "—"}
@@ -119,7 +119,7 @@ export default function SessionDetails({ sessionId, onClose }) {
               {/* Mapped Questions */}
               <div>
                 <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
-                  Mapped Questions
+                  Questions
                 </h3>
                 {session.questions && session.questions.filter((q) => q.question_text).length > 0 ? (
                   <div className="space-y-4">
