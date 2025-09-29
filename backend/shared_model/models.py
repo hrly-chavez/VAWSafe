@@ -642,22 +642,3 @@ class Services(models.Model):
     contact_person = models.CharField(max_length=100, default="contact person")
     contact_number = models.CharField(max_length=100, default="contact number")
     category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default="Others")
-
-class BPOApplication(models.Model):
-    applicant_fname = models.CharField(max_length=50, blank=True, null=True)
-    applicant_mname = models.CharField(max_length=50, blank=True, null=True)
-    applicant_lname = models.CharField(max_length=50, blank=True, null=True)
-    applicant_extension = models.CharField(max_length=50, blank=True, null=True)
-    applicant_birth_date = models.DateField(null=True, blank=True)
-
-    # foreign keys
-    applicant_address = models.ForeignKey(Address, on_delete=models.CASCADE, null=True, blank=True)
-    victim = models.ForeignKey(Victim, on_delete=models.CASCADE, blank=True, null=True)
-
-class BPOApplicationVictimChildrenList(models.Model):
-    fname = models.CharField(max_length=50, blank=True, null=True)
-    mname = models.CharField(max_length=50, blank=True, null=True)
-    lname = models.CharField(max_length=50, blank=True, null=True)
-    extension = models.CharField(max_length=50, blank=True, null=True)
-    birth_date = models.DateField( null=True, blank=True)
-    sex = models.CharField(max_length=10, null=True, blank=True)
