@@ -10,6 +10,9 @@ urlpatterns = [
     #victim
     path("victims/", ViewVictim.as_view(), name="view_victim"),
     path("victims/<int:vic_id>/", ViewDetail.as_view(), name="view_detail"),
+    path("victims/case/<int:vic_id>/", VictimIncidentsView.as_view(), name="view_incidents"),
+    #part gihapon sa victim pero view sessions sa victim
+    path("victims/sessions/<int:sess_id>/", SessionDetailView.as_view(), name="session-detail"),
     path("victims/search-victim/", search_victim_facial.as_view(), name="search-face"),
     path("provinces/", ProvinceList.as_view(), name="province"),
     path("municipalities/", MunicipalityList.as_view(), name="municipality"),
@@ -32,7 +35,7 @@ urlpatterns = [
     path("session-type-questions/<int:pk>/", SessionTypeQuestionDetail.as_view(), name="sessiontypequestion-detail"),
     # Session types (dropdown support)
     path("session-types/", SessionTypeList.as_view(), name="sessiontype-list"),
-
+    #services
     path("services/", ServicesListCreateView.as_view(), name="services-list-create"),
 
     path('', include(router.urls)),

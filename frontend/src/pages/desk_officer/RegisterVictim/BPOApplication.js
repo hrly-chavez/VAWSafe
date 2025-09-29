@@ -1,49 +1,43 @@
 import React, { useState } from "react";
+import SchedulePage from "../Session/Schedule";
 
 const BPOApplicationForm = () => {
-  const [formData, setFormData] = useState({
-    applicantName: "",
-    applicantAddress: "",
-    applicantTel: "",
-    relationshipToVictim: "",
-    occupation: "",
-    victimName: "",
-    victimDOB: "",
-    victimAddress: "",
-    victimTel: "",
-    incomeSource: "",
-    civilStatus: "",
-    numberOfChildren: "",
-    childrenAges: "",
-    respondentName: "",
-    respondentDOB: "",
-    respondentSex: "",
-    respondentAddress: "",
-    respondentTel: "",
-    commissionDates: "",
-    commissionPlaces: "",
-    victimRespondentRelationship: "",
-    actsComplained: [],
-    otherActs: "",
-    date: "",
-    signature: "",
-    punongBarangaySignature: "",
-    punongBarangayDate: "",
-  });
+  const [children, setChildren] = useState([
+    {
+      firstName: "",
+      middleName: "",
+      lastName: "",
+      extension: "",
+      sex: "",
+      dob: "",
+    },
+  ]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  // Add new child card
+  const addChild = () => {
+    setChildren([
+      ...children,
+      {
+        firstName: "",
+        middleName: "",
+        lastName: "",
+        extension: "",
+        sex: "",
+        dob: "",
+      },
+    ]);
   };
 
-  const handleCheckboxChange = (e) => {
-    const { value, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      actsComplained: checked
-        ? [...prev.actsComplained, value]
-        : prev.actsComplained.filter((act) => act !== value),
-    }));
+  // Remove child card
+  const removeChild = (index) => {
+    setChildren(children.filter((_, i) => i !== index));
+  };
+
+  // Update child values
+  const handleChange = (index, field, value) => {
+    const updatedChildren = [...children];
+    updatedChildren[index][field] = value;
+    setChildren(updatedChildren);
   };
 
   return (
@@ -60,50 +54,25 @@ const BPOApplicationForm = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block font-medium">Name of Applicant</label>
-            <input
-              name="applicantName"
-              value={formData.applicantName}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" />
           </div>
           <div>
             <label className="block font-medium">Address</label>
-            <input
-              name="applicantAddress"
-              value={formData.applicantAddress}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" />
           </div>
           <div>
             <label className="block font-medium">Tel. No.</label>
-            <input
-              name="applicantTel"
-              value={formData.applicantTel}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" />
           </div>
           <div>
             <label className="block font-medium">
               Relationship to Victim/s
             </label>
-            <input
-              name="relationshipToVictim"
-              value={formData.relationshipToVictim}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" />
           </div>
           <div>
             <label className="block font-medium">Occupation</label>
-            <input
-              name="occupation"
-              value={formData.occupation}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" />
           </div>
         </div>
       </div>
@@ -116,87 +85,131 @@ const BPOApplicationForm = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block font-medium">Name of Victim/s</label>
-            <input
-              name="victimName"
-              value={formData.victimName}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" />
           </div>
           <div>
             <label className="block font-medium">Date/s of Birth</label>
-            <input
-              name="victimDOB"
-              value={formData.victimDOB}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" type="date" />
           </div>
           <div>
             <label className="block font-medium">Address</label>
-            <input
-              name="victimAddress"
-              value={formData.victimAddress}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" />
           </div>
           <div>
             <label className="block font-medium">Tel. No.</label>
-            <input
-              name="victimTel"
-              value={formData.victimTel}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" />
           </div>
         </div>
       </div>
 
-      {/* Family Info */}
-      <div className="p-4 border rounded-lg bg-gray-50 shadow-sm">
-        <h3 className="text-xl font-semibold mb-4 text-[#292D96]">
-          Family Information
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block font-medium">Source of Income</label>
-            <input
-              name="incomeSource"
-              value={formData.incomeSource}
-              onChange={handleChange}
-              className="input"
-            />
+      {children.map((child, index) => (
+        <div
+          key={index}
+          className="p-4 mb-4 bg-white rounded-lg shadow-sm border space-y-4 relative"
+        >
+          {/* Remove button */}
+          {children.length > 1 && (
+            <button
+              type="button"
+              onClick={() => removeChild(index)}
+              className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+            >
+              ✕
+            </button>
+          )}
+
+          {/* Name Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                First Name
+              </label>
+              <input
+                className="input w-full"
+                value={child.firstName}
+                onChange={(e) =>
+                  handleChange(index, "firstName", e.target.value)
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Middle Name
+              </label>
+              <input
+                className="input w-full"
+                value={child.middleName}
+                onChange={(e) =>
+                  handleChange(index, "middleName", e.target.value)
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Last Name
+              </label>
+              <input
+                className="input w-full"
+                value={child.lastName}
+                onChange={(e) =>
+                  handleChange(index, "lastName", e.target.value)
+                }
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Extension
+              </label>
+              <input
+                className="input w-full"
+                placeholder="e.g. Jr., III"
+                value={child.extension}
+                onChange={(e) =>
+                  handleChange(index, "extension", e.target.value)
+                }
+              />
+            </div>
           </div>
-          <div>
-            <label className="block font-medium">Civil Status</label>
-            <input
-              name="civilStatus"
-              value={formData.civilStatus}
-              onChange={handleChange}
-              className="input"
-            />
-          </div>
-          <div>
-            <label className="block font-medium">Number of Children</label>
-            <input
-              name="numberOfChildren"
-              value={formData.numberOfChildren}
-              onChange={handleChange}
-              className="input"
-            />
-          </div>
-          <div>
-            <label className="block font-medium">Ages of Children</label>
-            <input
-              name="childrenAges"
-              value={formData.childrenAges}
-              onChange={handleChange}
-              className="input"
-            />
+
+          {/* Sex & DOB */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Sex
+              </label>
+              <select
+                className="input w-full"
+                value={child.sex}
+                onChange={(e) => handleChange(index, "sex", e.target.value)}
+              >
+                <option value="">Select</option>
+                <option>Male</option>
+                <option>Female</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Date of Birth
+              </label>
+              <input
+                type="date"
+                className="input w-full"
+                value={child.dob}
+                onChange={(e) => handleChange(index, "dob", e.target.value)}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      ))}
+
+      {/* Add child button */}
+      <button
+        type="button"
+        onClick={addChild}
+        className="mt-2 px-4 py-2 bg-[#292D96] text-white rounded-lg hover:bg-[#1e2370]"
+      >
+        + Add Child
+      </button>
 
       {/* Respondent Info */}
       <div className="p-4 border rounded-lg bg-gray-50 shadow-sm">
@@ -206,48 +219,27 @@ const BPOApplicationForm = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block font-medium">Name of Respondent</label>
-            <input
-              name="respondentName"
-              value={formData.respondentName}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" />
           </div>
           <div>
             <label className="block font-medium">Date of Birth</label>
-            <input
-              name="respondentDOB"
-              value={formData.respondentDOB}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" type="date" />
           </div>
           <div>
             <label className="block font-medium">Sex</label>
-            <input
-              name="respondentSex"
-              value={formData.respondentSex}
-              onChange={handleChange}
-              className="input"
-            />
+            <select className="input">
+              <option value="">Select</option>
+              <option>Male</option>
+              <option>Female</option>
+            </select>
           </div>
           <div>
             <label className="block font-medium">Address</label>
-            <input
-              name="respondentAddress"
-              value={formData.respondentAddress}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" />
           </div>
           <div>
             <label className="block font-medium">Tel. No.</label>
-            <input
-              name="respondentTel"
-              value={formData.respondentTel}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" />
           </div>
         </div>
       </div>
@@ -260,49 +252,28 @@ const BPOApplicationForm = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block font-medium">Date/s of Commission</label>
-            <input
-              name="commissionDates"
-              value={formData.commissionDates}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" type="date" />
           </div>
           <div>
             <label className="block font-medium">Place/s of Commission</label>
-            <input
-              name="commissionPlaces"
-              value={formData.commissionPlaces}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" />
           </div>
         </div>
 
         <label className="block mt-4 font-medium">
           Relationship of Victim to Respondent
         </label>
-        <select
-          name="victimRespondentRelationship"
-          value={formData.victimRespondentRelationship}
-          onChange={handleChange}
-          className="input"
-        >
+        <select className="input">
           <option value="">--Select--</option>
-          {[
-            "Husband/Wife",
-            "Former Husband/Wife",
-            "Parent",
-            "Child",
-            "Relative",
-            "Guardian",
-            "Common Law Spouse",
-            "Dating Relationship",
-            "Sexual Relationship",
-          ].map((rel) => (
-            <option key={rel} value={rel}>
-              {rel}
-            </option>
-          ))}
+          <option>Husband/Wife</option>
+          <option>Former Husband/Wife</option>
+          <option>Parent</option>
+          <option>Child</option>
+          <option>Relative</option>
+          <option>Guardian</option>
+          <option>Common Law Spouse</option>
+          <option>Dating Relationship</option>
+          <option>Sexual Relationship</option>
         </select>
       </div>
 
@@ -313,32 +284,39 @@ const BPOApplicationForm = () => {
         </h3>
         <div className="space-y-2">
           <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              value="Threats"
-              onChange={handleCheckboxChange}
-            />
-            Threats
+            <input type="checkbox" /> Threats
           </label>
           <label className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              value="Physical Injuries"
-              onChange={handleCheckboxChange}
-            />
-            Physical Injuries
+            <input type="checkbox" /> Physical Injuries
           </label>
           <div>
             <label className="block font-medium">Others (specify)</label>
-            <input
-              name="otherActs"
-              value={formData.otherActs}
-              onChange={handleChange}
-              className="input"
-            />
+            <input className="input" />
           </div>
         </div>
       </div>
+
+      <div className="flex justify-end gap-4 mt-6">
+        <button
+          type="button"
+          className="px-6 py-2 rounded-lg border border-red-500 text-red-600 hover:bg-red-50 hover:border-red-600 transition"
+        >
+          Decline
+        </button>
+        <button
+          type="submit"
+          className="px-6 py-2 rounded-lg bg-[#292D96] text-white hover:bg-[#1e2370] transition"
+        >
+          Accept
+        </button>
+      </div>
+
+      {/* Show schedule page after success */}
+      <SchedulePage
+        embedded={true}
+        // victim={showSchedulePage.victim}
+        // incident={showSchedulePage.incident}
+      />
     </form>
   );
 };

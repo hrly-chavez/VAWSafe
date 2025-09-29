@@ -33,3 +33,13 @@ yarn-error.log*
 backend/media/
 **/migrations/*.py
 !**/migrations/__init__.py
+
+# === React Native (Expo) ===
+vaw_app/node_modules/
+vaw_app/.expo/
+vaw_app/.expo-shared/
+vaw_app/.env*
+vaw_app/npm-debug.log*
+vaw_app/yarn-debug.log*
+vaw_app/yarn-error.log*
+vaw_app/package-lock.json
