@@ -315,14 +315,45 @@ class BulkAssignSerializer(serializers.Serializer):
     )
 
     
+# class OfficialSerializer(serializers.ModelSerializer):
+#     full_name = serializers.ReadOnlyField()
+
+#     class Meta:
+#         model = Official
+#         fields = [
+#             "of_id", "full_name", "of_role", "of_contact", "of_photo",
+#             "province", "municipality", "barangay", "sitio", "street", "of_assigned_barangay", "status"
+#         ]
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ["id", "province", "municipality", "barangay", "sitio", "street"]
+
+    def to_representation(self, instance):
+        parts = []
+        if instance.street:
+            parts.append(str(instance.street))
+        if instance.sitio:
+            parts.append(str(instance.sitio))
+        if instance.barangay:
+            parts.append(str(instance.barangay))
+        if instance.municipality:
+            parts.append(str(instance.municipality))
+        if instance.province:
+            parts.append(str(instance.province))
+        return ", ".join(parts) or "—"
+
+
 class OfficialSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
+    address = AddressSerializer(read_only=True)
 
     class Meta:
         model = Official
         fields = [
             "of_id", "full_name", "of_role", "of_contact", "of_photo",
-            "province", "municipality", "barangay", "sitio", "street", "of_assigned_barangay", "status"
+            "address", "of_assigned_barangay", "status"
         ]
 
 class ProvinceSerializer(serializers.ModelSerializer):
@@ -348,26 +379,6 @@ class BarangaySerializer(serializers.ModelSerializer):
 #     class Meta:
 #         model = Address
 #         fields = ["id", "province", "municipality", "barangay", "sitio", "street"]
-
-class AddressSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Address
-        fields = ["id", "province", "municipality", "barangay", "sitio", "street"]
-
-    def to_representation(self, instance):
-        parts = []
-        if instance.street:
-            parts.append(str(instance.street))
-        if instance.sitio:
-            parts.append(str(instance.sitio))
-        if instance.barangay:
-            parts.append(str(instance.barangay))
-        if instance.municipality:
-            parts.append(str(instance.municipality))
-        if instance.province:
-            parts.append(str(instance.province))
-        return ", ".join(parts) or "—"
-
 
 
 # class ServicesSerializer(serializers.ModelSerializer):
