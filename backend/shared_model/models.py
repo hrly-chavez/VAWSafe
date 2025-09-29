@@ -99,11 +99,12 @@ class Official(models.Model):
     of_photo = models.ImageField(upload_to='photos/', null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
 
-    province = models.ForeignKey("Province", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
-    municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
-    barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
-    sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
-    street = models.ForeignKey("Street", on_delete=models.SET_NULL, null=True, blank=True, related_name="officials") 
+    # province = models.ForeignKey("Province", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
+    # municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
+    # barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
+    # sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
+    # street = models.ForeignKey("Street", on_delete=models.SET_NULL, null=True, blank=True, related_name="officials") 
+    address = models.ForeignKey(Address, on_delete=models.PROTECT, related_name="official_address", null=True, blank=True)
 
     #where na baranggay assigned
     of_assigned_barangay = models.ForeignKey(Barangay, on_delete=models.PROTECT, related_name="assigned_officials", null=True, blank=True)
@@ -569,14 +570,32 @@ class Evidence(models.Model):
     def __str__(self):
         return f"Evidence {self.id} for Incident {self.incident_id}"
 
-class Services(models.Model):
-    '''
-    assigned_place refers to which barangay the service can be acquired
-    REASONING: lahi lahi man ug lugar ang barangay nya dili baya pareho tanan service location
+# class Services(models.Model):
+#     '''
+#     assigned_place refers to which barangay the service can be acquired
+#     REASONING: lahi lahi man ug lugar ang barangay nya dili baya pareho tanan service location
     
-    service_address refers to where the specific service is located
-    '''
+#     service_address refers to where the specific service is located
+#     '''
 
+#     CATEGORY_CHOICES = [
+#         ("Protection", "Protection"),
+#         ("Legal", "Legal"),
+#         ("Pyscho-Social", "Pyscho-Social"),
+#         ("Medical", "Medical"),
+#         ("Medico-Legal", "Medico-Legal"),
+#         ("Livelihood and Employment", "Livelihood and Employment"),
+#         ("Others", "Others")
+#     ]
+#     assigned_place = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_place")
+#     service_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="service_address")
+
+#     name = models.CharField(max_length=100, default="service") 
+#     contact_person = models.CharField(max_length=100, default="contact person")
+#     contact_number = models.CharField(max_length=100, default="contact number")
+#     category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default="Others")
+
+class Services(models.Model):
     CATEGORY_CHOICES = [
         ("Protection", "Protection"),
         ("Legal", "Legal"),
@@ -586,6 +605,7 @@ class Services(models.Model):
         ("Livelihood and Employment", "Livelihood and Employment"),
         ("Others", "Others")
     ]
+    serv_id = models.AutoField(primary_key=True)
     assigned_place = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_place")
     service_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="service_address")
 
@@ -593,3 +613,16 @@ class Services(models.Model):
     contact_person = models.CharField(max_length=100, default="contact person")
     contact_number = models.CharField(max_length=100, default="contact number")
     category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default="Others")
+
+class ServiceGiven(models.Model):
+    SERVICE_STATUS = [
+        ('Pending','Pending'),
+        ('Done','Done'),
+    ]
+
+    of_id = models.ForeignKey(Official, on_delete=models.SET_NULL, null=True, blank=True)
+    serv_id = models.ForeignKey(Services, on_delete=models.SET_NULL, null=True, blank=True)
+
+    service_pic = models.ImageField(upload_to='service_forms/', null=True, blank=True)
+    service_status = models.CharField(max_length=20, choices=SERVICE_STATUS, default='Pending')
+    

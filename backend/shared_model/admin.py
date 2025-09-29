@@ -13,6 +13,7 @@ admin.site.register(Session)
 admin.site.register(SessionType)
 admin.site.register(Question)
 admin.site.register(Informant)
+admin.site.register(Address)
 admin.site.register(Perpetrator)
 admin.site.register(Evidence)
 

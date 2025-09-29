@@ -46,11 +46,202 @@ def check_dswd_exists(request):
 
 
 
+# class create_official(APIView):
+#     parser_classes = [MultiPartParser, FormParser]
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         serializer = OfficialSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#         role = serializer.validated_data.get("of_role", "").strip()
+#         user = None
+#         username = None
+#         generated_password = None
+
+#         # -----------------------
+#         # DSWD Registration Logic
+#         # -----------------------
+#         if role == "DSWD":
+#             if Official.objects.filter(of_role="DSWD").exists():
+#                 return Response(
+#                     {"error": "A DSWD account already exists. Cannot create another automatically."},
+#                     status=status.HTTP_400_BAD_REQUEST
+#                 )
+#             fname = request.data.get("of_fname", "").strip().lower()
+#             lname = request.data.get("of_lname", "").strip().lower()
+#             base_username = f"{fname}{lname}".replace(" ", "")
+#             username = base_username or get_random_string(8)
+
+#             counter = 0
+#             while User.objects.filter(username=username).exists():
+#                 counter += 1
+#                 username = f"{base_username}{counter}"
+
+#             generated_password = get_random_string(length=12)
+#             user = User.objects.create_user(username=username, password=generated_password)
+#             status_value = "approved"
+
+#         # -----------------------
+#         # Social Worker
+#         # -----------------------
+#         elif role == "Social Worker":
+#             fname = request.data.get("of_fname", "").strip().lower()
+#             lname = request.data.get("of_lname", "").strip().lower()
+#             base_username = f"{fname}{lname}".replace(" ", "")
+#             username = base_username or get_random_string(8)
+
+#             counter = 0
+#             while User.objects.filter(username=username).exists():
+#                 counter += 1
+#                 username = f"{base_username}{counter}"
+
+#             generated_password = get_random_string(length=12)
+#             user = User.objects.create_user(username=username, password=generated_password)
+#             status_value = "approved"
+
+#         # -----------------------
+#         # VAWDesk
+#         # -----------------------
+#         elif role == "VAWDesk":
+#             status_value = "pending"
+#         else:
+#             return Response({"error": f"Invalid role: {role}"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # -----------------------
+#         # Create Official
+#         # -----------------------
+#         # official = Official.objects.create(
+#         #     user=user,
+#         #     status=status_value,
+#         #     **serializer.validated_data
+#         # )
+#         official = serializer.save(
+#             user=user,
+#             status=status_value
+#         )
+
+#         # -----------------------
+#         # Handle uploaded photos
+#         # -----------------------
+#         photo_files = request.FILES.getlist("of_photos") or []
+#         if not photo_files:
+#             single_photo = request.FILES.get("of_photo")
+#             if single_photo:
+#                 photo_files = [single_photo]
+
+#         if photo_files:
+#             official.of_photo = photo_files[0]
+#             official.save()
+
+#         # -----------------------
+#         # Process face embeddings
+#         # -----------------------
+#         if role in ["Social Worker", "DSWD"]:
+#             created_count = 0
+#             for index, file in enumerate(photo_files):
+#                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+#                 try:
+#                     image = Image.open(file).convert("RGB")
+#                     image.save(temp_image, format="JPEG")
+#                     temp_image.flush()
+#                     temp_image.close()
+
+#                     embeddings = DeepFace.represent(
+#                         img_path=temp_image.name,
+#                         model_name="ArcFace",
+#                         enforce_detection=True
+#                     )
+
+#                     if isinstance(embeddings, list):
+#                         if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
+#                             embedding_vector = embeddings[0]["embedding"]
+#                         elif all(isinstance(x, float) for x in embeddings):
+#                             embedding_vector = embeddings
+#                         else:
+#                             raise ValueError("Unexpected list format from DeepFace.")
+#                     elif isinstance(embeddings, dict) and "embedding" in embeddings:
+#                         embedding_vector = embeddings["embedding"]
+#                     else:
+#                         raise ValueError("Unexpected format from DeepFace.represent()")
+
+#                     OfficialFaceSample.objects.create(
+#                         official=official,
+#                         photo=file,
+#                         embedding=embedding_vector
+#                     )
+#                     created_count += 1
+
+#                 except Exception as e:
+#                     traceback.print_exc()
+#                 finally:
+#                     if os.path.exists(temp_image.name):
+#                         os.remove(temp_image.name)
+
+#             if created_count == 0:
+#                 return Response(
+#                     {"error": "Face registration failed. Please upload clearer photos."},
+#                     status=status.HTTP_400_BAD_REQUEST
+#                 )
+
+#             # -----------------------
+#             # Send Email with credentials
+#             # -----------------------
+#             email_address = serializer.validated_data.get("of_email")  # make sure OfficialSerializer includes of_email
+#             if email_address:
+#                 subject = f"Your {role} Account Credentials"
+#                 message = (
+#                     f"Hello {official.of_fname} {official.of_lname},\n\n"
+#                     f"Your {role} account has been created and approved.\n\n"
+#                     f"Username: {username}\n"
+#                     f"Password: {generated_password}\n\n"
+#                     f"Please log in and change your password immediately."
+#                 )
+#                 send_mail(
+#                     subject,
+#                     message,
+#                     settings.DEFAULT_FROM_EMAIL,
+#                     [email_address],
+#                     fail_silently=False,
+#                 )
+
+#             return Response({
+#                 "message": f"{role} registered. {created_count} face sample(s) saved.",
+#                 "official_id": official.of_id,
+#                 "username": username,
+#                 "password": generated_password,
+#                 "role": official.of_role,
+#                 "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
+#                 "assigned_barangay_name": official.of_assigned_barangay.name if official.of_assigned_barangay else None
+#             }, status=status.HTTP_201_CREATED)
+
+#         # -----------------------
+#         # VAWDesk: save photos only
+#         # -----------------------
+#         if role == "VAWDesk":
+#             for file in photo_files:
+#                 OfficialFaceSample.objects.create(
+#                     official=official,
+#                     photo=file,
+#                     embedding=None
+#                 )
+
+#             return Response({
+#                 "message": "VAWDesk registration submitted. Awaiting DSWD approval.",
+#                 "official_id": official.of_id,
+#                 "role": official.of_role,
+#                 "status": official.status
+#             }, status=status.HTTP_202_ACCEPTED)
+
 class create_official(APIView):
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [AllowAny]
 
     def post(self, request):
+        # -----------------------
+        # Validate data
+        # -----------------------
         serializer = OfficialSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -59,21 +250,24 @@ class create_official(APIView):
         user = None
         username = None
         generated_password = None
+        status_value = "pending"
 
         # -----------------------
-        # DSWD Registration Logic
+        # Account creation logic
         # -----------------------
         if role == "DSWD":
             if Official.objects.filter(of_role="DSWD").exists():
                 return Response(
-                    {"error": "A DSWD account already exists. Cannot create another automatically."},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {"error": "A DSWD account already exists. Cannot create another."},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
+
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "")
-            username = base_username or get_random_string(8)
+            base_username = f"{fname}{lname}".replace(" ", "") or get_random_string(8)
 
+            # Ensure unique username
+            username = base_username
             counter = 0
             while User.objects.filter(username=username).exists():
                 counter += 1
@@ -83,15 +277,12 @@ class create_official(APIView):
             user = User.objects.create_user(username=username, password=generated_password)
             status_value = "approved"
 
-        # -----------------------
-        # Social Worker
-        # -----------------------
         elif role == "Social Worker":
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "")
-            username = base_username or get_random_string(8)
+            base_username = f"{fname}{lname}".replace(" ", "") or get_random_string(8)
 
+            username = base_username
             counter = 0
             while User.objects.filter(username=username).exists():
                 counter += 1
@@ -101,42 +292,42 @@ class create_official(APIView):
             user = User.objects.create_user(username=username, password=generated_password)
             status_value = "approved"
 
-        # -----------------------
-        # VAWDesk
-        # -----------------------
         elif role == "VAWDesk":
             status_value = "pending"
         else:
             return Response({"error": f"Invalid role: {role}"}, status=status.HTTP_400_BAD_REQUEST)
 
         # -----------------------
-        # Create Official
+        # Create Official with serializer.save()
         # -----------------------
-        official = Official.objects.create(
+        official = serializer.save(
             user=user,
-            status=status_value,
-            **serializer.validated_data
+            status=status_value
         )
+
+        if not official:
+            return Response({"error": "Failed to create official."}, status=status.HTTP_400_BAD_REQUEST)
 
         # -----------------------
         # Handle uploaded photos
         # -----------------------
-        photo_files = request.FILES.getlist("of_photos") or []
+        photo_files = request.FILES.getlist("of_photos")
         if not photo_files:
             single_photo = request.FILES.get("of_photo")
             if single_photo:
                 photo_files = [single_photo]
 
         if photo_files:
+            # store first photo in of_photo field
             official.of_photo = photo_files[0]
             official.save()
 
         # -----------------------
-        # Process face embeddings
+        # Face Embeddings (Social Worker / DSWD only)
         # -----------------------
         if role in ["Social Worker", "DSWD"]:
             created_count = 0
-            for index, file in enumerate(photo_files):
+            for file in photo_files:
                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
                 try:
                     image = Image.open(file).convert("RGB")
@@ -150,6 +341,7 @@ class create_official(APIView):
                         enforce_detection=True
                     )
 
+                    # normalize output
                     if isinstance(embeddings, list):
                         if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
                             embedding_vector = embeddings[0]["embedding"]
@@ -181,10 +373,8 @@ class create_official(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # -----------------------
-            # Send Email with credentials
-            # -----------------------
-            email_address = serializer.validated_data.get("of_email")  # make sure OfficialSerializer includes of_email
+            # Send credentials by email
+            email_address = serializer.validated_data.get("of_email")
             if email_address:
                 subject = f"Your {role} Account Credentials"
                 message = (
@@ -213,7 +403,7 @@ class create_official(APIView):
             }, status=status.HTTP_201_CREATED)
 
         # -----------------------
-        # VAWDesk: save photos only
+        # VAWDesk logic
         # -----------------------
         if role == "VAWDesk":
             for file in photo_files:
@@ -229,6 +419,7 @@ class create_official(APIView):
                 "role": official.of_role,
                 "status": official.status
             }, status=status.HTTP_202_ACCEPTED)
+
 
 
 class face_login(APIView):
