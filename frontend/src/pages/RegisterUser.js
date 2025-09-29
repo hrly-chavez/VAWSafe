@@ -7,9 +7,6 @@ const RegisterUser = ({ onClose, defaultRole }) => {
   const MAX_PHOTOS = 3;
   const webcamRef = useRef(null);
 
-  //hide rha ni ang role sa mo register
-  const [showRole, setShowRole] = useState(false);
-
   const [photos, setPhotos] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [status, setStatus] = useState("");
@@ -308,45 +305,43 @@ useEffect(() => {
                 <input type="text" placeholder="09123456789" className={inputStyle} />
               </div>
 
-              {showRole && (
-                dswdExists ? (
-                  // Allow selection if DSWD exists
-                  defaultRole ? (
-                    <div className="flex flex-col">
-                      <label className="font-medium text-sm mb-1">Role</label>
-                      <input
-                        type="text"
-                        value={of_role}
-                        readOnly
-                        className="px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-gray-700"
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex flex-col">
-                      <label className="font-medium text-sm mb-1">Role</label>
-                      <select
-                        value={of_role}
-                        onChange={(e) => setRole(e.target.value)}
-                        className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                      >
-                        <option value="">Select Role</option>
-                        <option value="VAWDesk">VAWDesk</option>
-                        <option value="Social Worker">Social Worker</option>
-                      </select>
-                    </div>
-                  )
-                ) : (
-                  // Force DSWD role if first-time
+              {dswdExists ? (
+                // Allow selection if DSWD exists
+                defaultRole ? (
                   <div className="flex flex-col">
                     <label className="font-medium text-sm mb-1">Role</label>
                     <input
                       type="text"
-                      value="DSWD"
+                      value={of_role}
                       readOnly
                       className="px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-gray-700"
                     />
                   </div>
+                ) : (
+                  <div className="flex flex-col">
+                    <label className="font-medium text-sm mb-1">Role</label>
+                    <select
+                      value={of_role}
+                      onChange={(e) => setRole(e.target.value)}
+                      className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    >
+                      <option value="">Select Role</option>
+                      <option value="VAWDesk">VAWDesk</option>
+                      <option value="Social Worker">Social Worker</option>
+                    </select>
+                  </div>
                 )
+              ) : (
+                // Force DSWD role if first-time
+                <div className="flex flex-col">
+                  <label className="font-medium text-sm mb-1">Role</label>
+                  <input
+                    type="text"
+                    value="DSWD"
+                    readOnly
+                    className="px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-gray-700"
+                  />
+                </div>
               )}
 
               <div className="flex flex-col">

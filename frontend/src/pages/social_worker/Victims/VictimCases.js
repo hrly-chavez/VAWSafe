@@ -49,7 +49,7 @@ export default function VictimCases({ selectedIncident, onClose }) {
             icon={<FolderIcon className="h-6 w-6 text-[#292D96]" />}
             items={[
               { label: "Case No", value: selectedIncident.incident_num },
-              { label: "Status", value: selectedIncident.incident_status },
+              { label: "Status", value: selectedIncident.status },
               { label: "Created At", value: new Date(selectedIncident.created_at).toLocaleString() },
               { label: "Handling Organization", value: selectedIncident.handling_organization },
               { label: "Case Manager", value: selectedIncident.case_manager },
@@ -58,42 +58,41 @@ export default function VictimCases({ selectedIncident, onClose }) {
           />
 
           {/* Perpetrator Info */}
-          {selectedIncident.perpetrator && (
+          {selectedIncident.perp_id && (
             <TreeSection
               title="Perpetrator Info"
               icon={<UserCircleIcon className="h-6 w-6 text-[#292D96]" />}
               items={[
                 {
                   label: "Full Name",
-                  value: `${selectedIncident.perpetrator.per_first_name || ""} ${selectedIncident.perpetrator.per_last_name || ""}`,
+                  value: `${selectedIncident.perp_id.per_first_name} ${selectedIncident.perp_id.per_last_name}`,
                 },
-                { label: "Sex", value: selectedIncident.perpetrator.per_sex },
-                { label: "Birth Date", value: selectedIncident.perpetrator.per_birth_date },
-                { label: "Birth Place", value: selectedIncident.perpetrator.per_birth_place },
-                { label: "Nationality", value: selectedIncident.perpetrator.per_nationality },
-                { label: "Occupation", value: selectedIncident.perpetrator.per_main_occupation },
-                { label: "Religion", value: selectedIncident.perpetrator.per_religion },
-                { label: "Current Address", value: selectedIncident.perpetrator.per_current_address },
-                { label: "Relationship", value: selectedIncident.perpetrator.per_relationship_type },
-                ...(selectedIncident.perpetrator.per_relationship_type !== "Stranger/Unknown"
-                  ? [{ label: "Specific Relationship", value: selectedIncident.perpetrator.per_relationship_subtype }]
+                { label: "Sex", value: selectedIncident.perp_id.per_sex },
+                { label: "Birth Date", value: selectedIncident.perp_id.per_birth_date },
+                { label: "Birth Place", value: selectedIncident.perp_id.per_birth_place },
+                { label: "Nationality", value: selectedIncident.perp_id.per_nationality },
+                { label: "Occupation", value: selectedIncident.perp_id.per_main_occupation },
+                { label: "Religion", value: selectedIncident.perp_id.per_religion },
+                { label: "Current Address", value: selectedIncident.perp_id.per_current_address },
+                { label: "Relationship", value: selectedIncident.perp_id.per_relationship_type },
+                ...(selectedIncident.perp_id.per_relationship_type !== "Stranger/Unknown"
+                  ? [{ label: "Specific Relationship", value: selectedIncident.perp_id.per_relationship_subtype }]
                   : []),
               ]}
             />
           )}
 
-
           {/* Child Perpetrator */}
-          {selectedIncident.perpetrator && selectedIncident.perpetrator.per_guardian_child_category && (
+          {selectedIncident.is_child_perpetrator && (
             <TreeSection
               title="Child Perpetrator Details"
               icon={<UserIcon className="h-6 w-6 text-yellow-600" />}
               items={[
-                { label: "Child Classification", value: selectedIncident.perpetrator.per_guardian_child_category },
-                { label: "Guardian First Name", value: selectedIncident.perpetrator.per_guardian_first_name },
-                { label: "Guardian Middle Name", value: selectedIncident.perpetrator.per_guardian_middle_name },
-                { label: "Guardian Last Name", value: selectedIncident.perpetrator.per_guardian_last_name },
-                { label: "Guardian Contact", value: selectedIncident.perpetrator.per_guardian_contact },
+                { label: "Child Classification", value: selectedIncident.perp_child_class },
+                { label: "Guardian First Name", value: selectedIncident.perp_guardian_fname },
+                { label: "Guardian Middle Name", value: selectedIncident.perp_guardian_mname },
+                { label: "Guardian Last Name", value: selectedIncident.perp_guardian_lname },
+                { label: "Guardian Contact", value: selectedIncident.perp_guardian_contact },
               ]}
             />
           )}

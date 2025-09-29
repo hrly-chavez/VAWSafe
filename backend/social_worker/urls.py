@@ -16,7 +16,6 @@ urlpatterns = [
     path("sessions/<int:sess_id>/finish/", finish_session, name="social-worker-finish-session"),
     path("officials/social-workers/", list_social_workers, name="list-social-workers"),
     path("sessions/", schedule_next_session, name="social-worker-sessions"),
-    path("cases/<int:incident_id>/close/", close_case, name="close-case"),
 
     
 ]
