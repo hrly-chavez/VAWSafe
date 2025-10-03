@@ -240,7 +240,7 @@ class OfficialSerializer(serializers.ModelSerializer):
         model = Official
         fields = [
             "of_id", "full_name", "of_role", "of_contact", "of_photo",
-            "province", "municipality", "barangay", "sitio", "street", "of_assigned_barangay"
+            "address", "of_assigned_barangay", "status"
         ]
 
 class EvidenceSerializer(serializers.ModelSerializer):

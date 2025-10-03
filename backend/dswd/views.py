@@ -112,6 +112,7 @@ class SessionDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Session.objects.all()
     serializer_class = DeskOfficerSessionDetailSerializer
     lookup_field = "sess_id"
+    permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ["DSWD"]
     
 

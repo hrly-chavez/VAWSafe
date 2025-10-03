@@ -703,133 +703,6 @@ class ForgotPasswordFaceView(APIView):
             if chosen_frame and os.path.exists(chosen_frame):
                 os.remove(chosen_frame)
 
-
-# class VerifyEmailView(APIView):
-#     permission_classes = [AllowAny]
-
-#     def post(self, request):
-#         official_id = request.data.get("official_id")
-#         email = request.data.get("email")
-
-#         if not official_id or not email:
-#             return Response({"success": False, "message": "Missing data"}, status=400)
-
-#         try:
-#             official = Official.objects.select_related("user").get(of_id=official_id)
-#             user = official.user
-#             if not user:
-#                 return Response({"success": False, "message": "No linked user account"}, status=400)
-
-#             # Check if email matches
-#             if user.email != email and official.of_email != email:
-#                 return Response({"success": False, "message": "Email does not match"}, status=400)
-
-#         except Official.DoesNotExist:
-#             return Response({"success": False, "message": "Official not found"}, status=404)
-
-#         # generate reset token
-#         reset_token = uuid.uuid4().hex
-#         cache.set(f"reset:{reset_token}", user.id, timeout=900)  # valid 15 mins
-
-#         return Response({
-#             "success": True,
-#             "reset_token": reset_token,
-#             "official": {
-#                 "id": official.of_id,
-#                 "full_name": official.full_name,
-#                 "username": user.username,
-#                 "email": user.email,
-#             }
-#         })
-
-
-# class ResetPasswordView(APIView):
-#     permission_classes = [AllowAny]
-
-#     def post(self, request):
-#         token = request.data.get("reset_token")
-#         new_password = request.data.get("new_password")
-
-#         if not token or not new_password:
-#             return Response({"success": False, "message": "Missing data"}, status=400)
-
-#         user_id = cache.get(f"reset:{token}")
-#         if not user_id:
-#             return Response({"success": False, "message": "Invalid or expired token"}, status=400)
-
-#         try:
-#             user = User.objects.get(id=user_id)
-#         except User.DoesNotExist:
-#             return Response({"success": False, "message": "User not found"}, status=404)
-
-#         user.set_password(new_password)
-#         user.save()
-#         cache.delete(f"reset:{token}")
-
-#         return Response({"success": True, "message": "Password reset successful"})
-
-# class VerifyEmailView(APIView):
-#     permission_classes = [AllowAny]
-
-#     def post(self, request):
-#         official_id = request.data.get("official_id")
-#         email = request.data.get("email")
-
-#         try:
-#             official = Official.objects.get(of_id=official_id)
-#         except Official.DoesNotExist:
-#             return Response({"error": "Official not found"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         if official.of_email != email:
-#             return Response({"error": "Email does not match our records"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         user = official.user
-#         if not user:
-#             return Response({"error": "No linked user account"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         # Generate reset token
-#         uid = urlsafe_base64_encode(force_bytes(user.pk))
-#         token = default_token_generator.make_token(user)
-
-#         # (Optional) still send an email for confirmation
-#         send_mail(
-#             subject="Password Reset Request",
-#             message="A password reset was requested for your account. "
-#                     "If this wasn’t you, please contact support immediately.",
-#             from_email=settings.DEFAULT_FROM_EMAIL,
-#             recipient_list=[email],
-#         )
-
-#         # Return uid + token for React modal flow
-#         return Response({
-#             "success": True,
-#             "message": "Password reset instructions sent",
-#             "uid": uid,
-#             "reset_token": token,
-#         }, status=status.HTTP_200_OK)
-
-
-# class ResetPasswordView(APIView):
-#     permission_classes = [AllowAny]
-
-#     def post(self, request):
-#         uidb64 = request.data.get("uid")
-#         token = request.data.get("token")
-#         new_password = request.data.get("new_password")
-
-#         try:
-#             uid = force_str(urlsafe_base64_decode(uidb64))
-#             user = User.objects.get(pk=uid)
-#         except (User.DoesNotExist, ValueError, TypeError):
-#             return Response({"error": "Invalid link"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         if not default_token_generator.check_token(user, token):
-#             return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         user.set_password(new_password)
-#         user.save()
-
-#         return Response({"success": True, "message": "Password reset successful"}, status=status.HTTP_200_OK)
     
 User = get_user_model()
 token_generator = PasswordResetTokenGenerator()
@@ -916,6 +789,8 @@ class ResetPasswordView(APIView):
         user.save()
 
         return Response({"success": True, "message": "Password reset successful"}, status=status.HTTP_200_OK)
+    
+
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):

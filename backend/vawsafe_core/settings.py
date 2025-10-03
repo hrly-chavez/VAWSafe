@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'social_worker',
     'victim',
     'dswd',
-    'shared_model',
+    'shared_model.apps.SharedModelConfig',
     'auth_app',
 ]
 
