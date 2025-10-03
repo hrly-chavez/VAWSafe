@@ -151,7 +151,6 @@ class SocialWorkerListSerializer(serializers.ModelSerializer):
             "of_role",
             "of_contact",
             "photo",
-            "assigned_barangay",
             "of_specialization",
         ]
 

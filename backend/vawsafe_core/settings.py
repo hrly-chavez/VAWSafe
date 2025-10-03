@@ -55,6 +55,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -63,7 +64,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     
-    'corsheaders.middleware.CorsMiddleware', 
 ]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -72,6 +72,7 @@ ROOT_URLCONF = 'vawsafe_core.urls'
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "auth_app.authentication.CookieJWTAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -111,7 +112,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'vawsafe',
         'USER': 'postgres',
-        'PASSWORD': '123456', 
+        'PASSWORD': 'Caratao123', 
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -160,7 +161,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
+
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -173,19 +175,42 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",
-#     "http://127.0.0.1:3000",
-# ]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+# Dev cookie flags (switch to Secure/None in prod cross-site)
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
 
 
 from datetime import timedelta
+#KANI PARA SA LOCALSTORAGE
+# SIMPLE_JWT = {
+#     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+#     # "ACCESS_TOKEN_LIFETIME": timedelta(seconds=30),  # just for test
+#     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+#     "ROTATE_REFRESH_TOKENS": True, # kani kay basta ma expire ang access mo renew both access ug refresh more secure
+#     # "ROTATE_REFRESH_TOKENS": False, #kani sya kay basta ma expire ang access kay mo renew new access pero same refresh less secure
+# }
+
+#KANI KAY PARA SA HTTPONLY
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
-    # "ACCESS_TOKEN_LIFETIME": timedelta(seconds=30),  # just for test
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-    "ROTATE_REFRESH_TOKENS": True, # kani kay basta ma expire ang access mo renew both access ug refresh more secure
-    # "ROTATE_REFRESH_TOKENS": False, #kani sya kay basta ma expire ang access kay mo renew new access pero same refresh less secure
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),      # short
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),       # or 30/90 days if you want
+    "ROTATE_REFRESH_TOKENS": True,                      # optional
+    "BLACKLIST_AFTER_ROTATION": True,                   # if using blacklist app
 }
 
 # Email settings
@@ -198,6 +223,6 @@ EMAIL_HOST_PASSWORD = "qvrt xcrf meek royf"  # 👈 from Step 2
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
-# settings.py
+# settings.py PARA NI SA KATUNG FORGOT PASS
 FRONTEND_URL = "http://localhost:3000"  # or your deployed React frontend URL
 DEFAULT_FROM_EMAIL = "carataojoegie@gmail.com"  # or your system email
