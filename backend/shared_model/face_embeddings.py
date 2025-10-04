@@ -120,7 +120,7 @@
 #         except Exception:
 #             traceback.print_exc()
 
-
+#pag save rha ni sya ug check sa any embeddings? sa officials
 # shared_model/face_embeddings.py
 import os
 import tempfile

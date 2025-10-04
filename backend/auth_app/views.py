@@ -1039,14 +1039,16 @@ class CookieTokenRefreshView(views.APIView):
     def post(self, request):
         refresh_cookie = request.COOKIES.get("refresh")
         if not refresh_cookie:
-            return Response({"detail": "No refresh cookie"}, status=401)
+            # No session to refresh → be quiet
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         serializer = TokenRefreshSerializer(data={"refresh": refresh_cookie})
         serializer.is_valid(raise_exception=True)
-        new_access = serializer.validated_data["access"]
-        new_refresh = serializer.validated_data.get("refresh")  # present if rotation True
 
-        resp = Response(status=204)
+        new_access = serializer.validated_data["access"]
+        new_refresh = serializer.validated_data.get("refresh")
+
+        resp = Response(status=status.HTTP_204_NO_CONTENT)
         set_auth_cookies(resp, new_access, new_refresh if new_refresh else None)
         return resp
 
