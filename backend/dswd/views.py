@@ -542,6 +542,9 @@ class PendingOfficials(viewsets.ModelViewSet):
             traceback.print_exc()
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class ServiceCategoryListView(generics.ListAPIView):
+    queryset = ServiceCategory.objects.all()
+    serializer_class = ServiceCategorySerializer
         
 class ServicesListCreateView(generics.ListCreateAPIView):
     serializer_class = ServicesSerializer
@@ -552,9 +555,9 @@ class ServicesListCreateView(generics.ListCreateAPIView):
         queryset = Services.objects.all()
         category = self.request.query_params.get("category", None)
 
-        # only filter if not "All" and not empty
         if category and category != "All":
-            queryset = queryset.filter(category=category)
+            queryset = queryset.filter(category_id=category)  # ✅ use category_id
         return queryset
+
 
 
