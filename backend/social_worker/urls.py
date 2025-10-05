@@ -18,6 +18,9 @@ urlpatterns = [
     path("officials/social-workers/", list_social_workers, name="list-social-workers"),
     path("sessions/", schedule_next_session, name="social-worker-sessions"),
     path("cases/<int:incident_id>/close/", close_case, name="close-case"),
+    path("services/category/<int:category_id>/", services_by_category, name="services-by-category"),
+    path("service-categories/", list_service_categories, name="service-categories"),
+
 
     #Cases
     path("cases/", SocialWorkerCaseList.as_view(), name="list-of-cases"),

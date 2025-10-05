@@ -155,7 +155,6 @@ class SessionTypeListView(generics.ListAPIView):
     serializer_class = SessionTypeSerializer
     permission_classes = [IsAuthenticated]
 
-    
 #Session Start 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -259,7 +258,7 @@ def add_custom_question(request, sess_id):
 @permission_classes([IsAuthenticated])
 def finish_session(request, sess_id):
     """
-    Save answers and mark session as Done.
+    Save answers, selected services, and mark session as Done.
     """
     user = request.user
     try:
@@ -267,6 +266,7 @@ def finish_session(request, sess_id):
     except Session.DoesNotExist:
         return Response({"error": "Session not found or not assigned to you"}, status=404)
 
+    # Save answers
     answers = request.data.get("answers", [])
     for ans in answers:
         try:
@@ -276,18 +276,32 @@ def finish_session(request, sess_id):
             sq.save()
         except SessionQuestion.DoesNotExist:
             continue
-    #  Save session description (feedback)
+
+    # Save description
     description = request.data.get("sess_description")
     if description is not None:
         session.sess_description = description
-    #  Mark as Done
+
+    # Save selected services
+    service_ids = request.data.get("services", [])
+    if isinstance(service_ids, list):
+        # clear old ones
+        session.services_given.all().delete()
+        # create new
+        for sid in service_ids:
+            ServiceGiven.objects.create(
+                session=session,
+                serv_id_id=sid,
+                of_id=user.official
+            )
+
+    # Mark as Done
     session.sess_status = "Done"
     session.save()
 
     return Response({"message": "Session finished successfully!"}, status=200)
 
 
-#case close
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def close_case(request, incident_id):
@@ -353,6 +367,32 @@ def list_social_workers(request):
         for w in workers
     ]
     return Response(data, status=200)
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def services_by_category(request, category_id):
+    """
+    List all active services under a given category.
+    Example: /api/social_worker/services/category/1/
+    """
+    services = Services.objects.filter(
+        category_id=category_id,
+        is_active=True
+    )
+    serializer = ServicesSerializer(services, many=True)
+    return Response(serializer.data, status=200)
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_service_categories(request):
+    """
+    Returns all available service categories.
+    """
+    categories = ServiceCategory.objects.all()
+    data = [{"id": c.id, "name": c.name} for c in categories]
+    return Response(data, status=200)
+
 
 #=======================================CASES==============================================================
 
