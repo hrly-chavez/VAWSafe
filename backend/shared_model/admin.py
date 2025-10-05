@@ -181,16 +181,15 @@ class OfficialFaceSampleAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Victim)
-admin.site.register(VictimFaceSample)
-admin.site.register(IncidentInformation)
+# admin.site.register(VictimFaceSample)
+# admin.site.register(IncidentInformation)
 
 admin.site.register(Session)
 admin.site.register(SessionType)
-admin.site.register(Question)
-admin.site.register(Informant)
-admin.site.register(Address)
-admin.site.register(Perpetrator)
-admin.site.register(Evidence)
+#admin.site.register(Question)
+
+admin.site.register(Services)
+admin.site.register(ServiceCategory)
 
 # admin.site.register(Province)
 # admin.site.register(Municipality)

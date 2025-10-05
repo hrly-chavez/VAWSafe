@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import NextSessionModal from "./NextSessionModal";
 import CaseSessionFollowup from "./CaseSessionFollowup";
 import AddCustomQuestions from "./AddCustomQuestions";
+import Select from "react-select";
 
 export default function StartSession() {
   const { sess_id } = useParams();
@@ -16,11 +17,35 @@ export default function StartSession() {
   const [loading, setLoading] = useState(true);
   const [showFollowupModal, setShowFollowupModal] = useState(false);
   const [showAddCustomModal, setShowAddCustomModal] = useState(false);
+  const [availableServices, setAvailableServices] = useState([]);
+  const [serviceCategories, setServiceCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [categoryServices, setCategoryServices] = useState([]);
+  const [selectedServices, setSelectedServices] = useState([]);
+
+
 
 
   useEffect(() => {
     window.scrollTo(0, 0); // always go to the top
   }, []);
+
+
+// Fetch service categories on load
+  useEffect(() => {
+    api.get("/api/social_worker/service-categories/")
+      .then(res => setServiceCategories(res.data))
+      .catch(err => console.error("Failed to fetch service categories", err));
+  }, []);
+
+  // Fetch services when category changes
+  useEffect(() => {
+    if (!selectedCategory) return;
+    api.get(`/api/social_worker/services/category/${selectedCategory.value}/`)
+      .then(res => setCategoryServices(res.data))
+      .catch(err => console.error("Failed to fetch services by category", err));
+  }, [selectedCategory]);
+
 
   //  Start session & hydrate questions on mount
  useEffect(() => {
@@ -70,10 +95,11 @@ export default function StartSession() {
         note: q.sq_note,
       })),
       sess_description: session?.sess_description || "",
+      services: selectedServices.map((s) => s.value),
     };
     await api.post(`/api/social_worker/sessions/${sess_id}/finish/`, payload);
     alert("Session finished successfully!");
-    setShowFollowupModal(true); // 🔹 open modal instead of window.confirm
+    setShowFollowupModal(true); // open modal 
   } catch (err) {
     console.error("Failed to finish session", err);
     alert("Failed to finish session.");
@@ -187,6 +213,53 @@ export default function StartSession() {
                 Add Custom Question
               </button>
             </div>
+
+            {/* SERVICE */}
+          <h2 className="text-2xl font-bold text-green-700 mb-4">
+            Services Provided
+          </h2>
+
+          <div className="p-4 bg-gray-50 border rounded-md shadow-sm mb-6 space-y-4">
+            {/* Category Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Select Service Category
+              </label>
+              <Select
+                value={selectedCategory}
+                onChange={(val) => {
+                  setSelectedCategory(val);
+                  setSelectedServices([]); // reset services when category changes
+                }}
+                options={serviceCategories.map(c => ({
+                  value: c.id,
+                  label: c.name,
+                }))}
+                placeholder="Choose category..."
+              />
+            </div>
+
+            {/* Services Dropdown */}
+            {selectedCategory && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Select Organization(s)
+                </label>
+                <Select
+                  isMulti
+                  value={selectedServices}
+                  onChange={(val) => setSelectedServices(val)}
+                  options={categoryServices.map(s => ({
+                    value: s.serv_id,
+                    label: `${s.name} – ${s.contact_person} (${s.contact_number})`,
+                  }))}
+                  placeholder="Select organizations under this category..."
+                />
+              </div>
+            )}
+          </div>
+
+
           <h2 className="text-2xl font-bold text-green-700 mb-4">
             Session Feedback
           </h2>   

@@ -213,7 +213,32 @@ class SocialWorkerSessionQuestionSerializer(serializers.ModelSerializer): #Sessi
             "sq_value",
             "sq_note",
         ]
+#=====SERVICES======
+class ServicesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Services
+        fields = [
+            "serv_id",
+            "name",
+            "category",
+            "contact_person",
+            "contact_number",
+            "assigned_place",
+            "service_address",
+        ]
 
+class ServiceGivenSerializer(serializers.ModelSerializer):
+    service = ServicesSerializer(source="serv_id", read_only=True)
+
+    class Meta:
+        model = ServiceGiven
+        fields = [
+            "id",
+            "service",        
+            "service_status",
+            "service_pic",
+        ]
+#===========
 class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):  # View + Update Session
     victim = VictimSerializer(source="incident_id.vic_id", read_only=True)
     incident = IncidentWithPerpetratorSerializer(source="incident_id", read_only=True)
@@ -222,6 +247,7 @@ class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):  # View 
     sess_type = serializers.PrimaryKeyRelatedField(many=True, queryset=SessionType.objects.all(),write_only=True) #  Accept IDs for update
     sess_type_display = SessionTypeSerializer(source="sess_type", many=True, read_only=True)
     questions = SocialWorkerSessionQuestionSerializer(source="session_questions", many=True, read_only=True)
+    services_given = ServiceGivenSerializer(many=True, read_only=True)
 
     class Meta:
         model = Session
@@ -240,7 +266,11 @@ class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):  # View 
             "case_report",
             "official_name",
             "questions",
+            "services_given",
         ]
+
+
+
 
 class CloseCaseSerializer(serializers.ModelSerializer):#case close
     class Meta:
