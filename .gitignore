@@ -43,3 +43,9 @@ vaw_app/npm-debug.log*
 vaw_app/yarn-debug.log*
 vaw_app/yarn-error.log*
 vaw_app/package-lock.json
+
+# === Sensitive Backups (Fernet key rotations) ===
+.env
+backend/.env
+**/.env
+backend/backups/

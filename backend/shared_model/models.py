@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.conf import settings
 from django.utils.timezone import now
+from fernet_fields import EncryptedCharField, EncryptedTextField
 
 # for address
 class Province(models.Model):  
@@ -57,18 +58,28 @@ class Street(models.Model):
 
     def __str__(self):
         return f"{self.name}, {self.sitio.name}"
-
+    
 # all purpose address save all[?]
 class Address(models.Model):
     province = models.ForeignKey("Province", on_delete=models.PROTECT, null=True, blank=True)
     municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, null=True, blank=True)
     barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, null=True, blank=True)
     sitio = models.CharField(max_length=150, null=True, blank=True)
-    street = models.CharField(max_length=150, null=True, blank=True)
-
+    street = models.CharField(max_length=150, null=True, blank=True)    
+     
     def __str__(self):
         parts = [str(x) for x in [self.street, self.sitio, self.barangay, self.municipality, self.province] if x]
         return ", ".join(parts)
+    
+
+# class Address(models.Model):
+#     province = models.ForeignKey("Province", on_delete=models.CASCADE, null=True, blank=True)
+#     municipality = models.ForeignKey("Municipality", on_delete=models.CASCADE, null=True, blank=True)
+#     barangay = models.ForeignKey("Barangay", on_delete=models.CASCADE, null=True, blank=True)
+#     sitio = models.CharField(max_length=150, null=True, blank=True)
+#     street = models.CharField(max_length=150, null=True, blank=True)
+
+
 
 # for system users
 class Official(models.Model):
@@ -87,7 +98,8 @@ class Official(models.Model):
     of_id = models.AutoField(primary_key=True)
     of_fname = models.CharField(max_length=50)
     of_lname = models.CharField(max_length=50)
-    of_email = models.CharField(max_length=100, blank=True, null=True)
+    # of_email = models.CharField(max_length=100, blank=True, null=True)
+    of_email = EncryptedCharField(max_length=100, blank=True, null=True)
     of_m_initial = models.CharField(max_length=50, null=True, blank=True)
     of_suffix = models.CharField(max_length=50, null=True, blank=True)
     of_sex = models.CharField(max_length=1, null=True, blank=True)
@@ -104,7 +116,7 @@ class Official(models.Model):
     # barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
     # sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
     # street = models.ForeignKey("Street", on_delete=models.SET_NULL, null=True, blank=True, related_name="officials") 
-    address = models.ForeignKey(Address, on_delete=models.PROTECT, related_name="official_address", null=True, blank=True)
+    address = models.ForeignKey(Address, on_delete=models.SET_NULL, related_name="official_address", null=True, blank=True)
 
     #where na baranggay assigned
     of_assigned_barangay = models.ForeignKey(Barangay, on_delete=models.PROTECT, related_name="assigned_officials", null=True, blank=True)

@@ -11,7 +11,15 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+#kani sya para mo load ang backend/.env para sa encryption
+import environ
 import os
+
+#para ni sya sa encryption para ma migrate ang attribute nga encryptedcharfield etc
+import django.utils.encoding
+if not hasattr(django.utils.encoding, "force_text"):
+    django.utils.encoding.force_text = django.utils.encoding.force_str
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,6 +30,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure--n8q#^8nc-n(=ww(*d4frzqy=q2eno_w!ek5=4msh6ct(ryrb!'
+
+
+# Initialize env // para ni sa encryption
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+
+
+#kuhaon ang fernet key sa backend/.env
+FERNET_KEYS = env.list("FERNET_KEYS", default=[])
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -43,13 +61,17 @@ INSTALLED_APPS = [
     #3rd party apps
     'rest_framework',
     'corsheaders',
+    #Authentication and authorization
     "rest_framework_simplejwt",
+    #encryption
+    "fernet_fields",
 
     #Users apps
     'desk_officer',
     'social_worker',
     'victim',
     'dswd',
+    #gibutangan nako ug apps.SharedModelConfig para sa face embeddings para sa /admin
     'shared_model.apps.SharedModelConfig',
     'auth_app',
 ]
@@ -112,7 +134,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'vawsafe',
         'USER': 'postgres',
-        'PASSWORD': 'Caratao123', 
+        'PASSWORD': '123456', 
         'HOST': 'localhost',
         'PORT': '5432',
     }
