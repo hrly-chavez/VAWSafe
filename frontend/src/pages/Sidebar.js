@@ -57,8 +57,8 @@ export default function Sidebar() {
       return [
         { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/dswd" },
         { icon: "/images/heart.png", label: "VAWC Victims", path: "/dswd/victims" },
-        { icon: "/images/customer.png", label: "Social Workers", path: "/dswd/social-workers" },
-        { icon: "/images/founder.png", label: "VAW Desk Officer", path: "/dswd/vawdesk-officer" },
+        // { icon: "/images/customer.png", label: "Social Workers", path: "/dswd/social-workers" },
+        // { icon: "/images/founder.png", label: "VAW Desk Officer", path: "/dswd/vawdesk-officer" },
         { icon: "/images/peace.png", label: "Services", path: "/dswd/services" },
         { icon: "/images/peace.png", label: "Questions Management", path: "/dswd/questions" },
         // { icon: "/images/account-settings.png", label: "Account Management", path: "/dswd/account-management" },

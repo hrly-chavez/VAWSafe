@@ -1,5 +1,6 @@
 //src/routes/routes.js
 export const ROUTES = {
+
   LOGIN: "/login",
   MANUAL_LOGIN: "/login/manual",
   REGISTER: "/register",
@@ -53,4 +54,8 @@ export const ROUTES = {
   SOCIAL_WORKER_VICTIMS: "/social_worker/victims",
   SOCIAL_WORKER_VICTIM_DETAIL: "/social_worker/victims/:vic_id",
   SOCIAL_WORKER_SEARCH_FACIAL: "/social_worker/victims/search-facial",
+
+  
+  // landing page
+  LANDING: "/landing",
 };
