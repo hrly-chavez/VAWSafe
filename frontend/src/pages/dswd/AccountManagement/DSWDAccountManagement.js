@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import RegisterUser from "../../RegisterUser";
 
 import {
   PencilSquareIcon,
@@ -14,6 +15,9 @@ export default function AccountManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(""); 
   const navigate = useNavigate();
+
+  // mao ni ang modal para sa register user
+  const [showRegisterModal, setShowRegisterModal] = useState(false); 
 
   useEffect(() => {
     api.get("/api/dswd/officials/")
@@ -48,8 +52,10 @@ export default function AccountManagement() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold text-[#292D96]">Permissions & Accounts › User Management</h1>
-        <button className="bg-yellow-400 hover:bg-yellow-500 text-white font-semibold px-4 py-2 rounded shadow">
-          Add User
+        <button 
+          onClick={() => setShowRegisterModal(true)}
+          className="bg-yellow-400 hover:bg-yellow-500 text-white font-semibold px-4 py-2 rounded shadow">
+            Add User
         </button>
       </div>
 
@@ -156,6 +162,12 @@ export default function AccountManagement() {
           <button className="px-2 py-1 border rounded hover:bg-gray-100">Last</button>
         </div>
       </div>
+      {showRegisterModal &&(
+        <RegisterUser
+          onClose={() => setShowRegisterModal(false)}
+          defaultRole= {["Social Worker", "VAWDesk"]}
+        />
+      )}
     </div>
   );
 }
