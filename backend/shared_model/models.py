@@ -99,7 +99,7 @@ class Official(models.Model):
     of_fname = models.CharField(max_length=50)
     of_lname = models.CharField(max_length=50)
     # of_email = models.CharField(max_length=100, blank=True, null=True)
-    of_email = EncryptedCharField(max_length=100, blank=True, null=True)
+    of_email = EncryptedCharField(max_length=255, blank=True, null=True)
     of_m_initial = models.CharField(max_length=50, null=True, blank=True)
     of_suffix = models.CharField(max_length=50, null=True, blank=True)
     of_sex = models.CharField(max_length=1, null=True, blank=True)
