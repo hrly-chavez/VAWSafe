@@ -191,6 +191,8 @@ admin.site.register(SessionType)
 admin.site.register(Services)
 admin.site.register(ServiceCategory)
 
+admin.site.register(AuditLog)
+
 # admin.site.register(Province)
 # admin.site.register(Municipality)
 # admin.site.register(Barangay)

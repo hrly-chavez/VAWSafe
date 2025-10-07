@@ -51,7 +51,11 @@ def me(request):
     if not user:
         return Response({"authenticated": False}, status=200)
 
-    official = getattr(user, "official", None)
+    # official = getattr(user, "official", None)
+    try:
+        official = user.official
+    except Official.DoesNotExist:
+        official = None
     role = getattr(official, "of_role", None)
     name = getattr(official, "full_name",
                    f"{getattr(official, 'of_fname', '')} {getattr(official, 'of_lname', '')}".strip())

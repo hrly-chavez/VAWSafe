@@ -344,16 +344,47 @@ class AddressSerializer(serializers.ModelSerializer):
         return ", ".join(parts) or "—"
 
 
+# class OfficialSerializer(serializers.ModelSerializer):
+#     full_name = serializers.ReadOnlyField()
+#     address = AddressSerializer(read_only=True)
+
+#     class Meta:
+#         model = Official
+#         fields = [
+#             "of_id", "full_name", "of_role", "of_contact", "of_photo",
+#             "address", "of_assigned_barangay", "status"
+#         ]
+
 class OfficialSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
     address = AddressSerializer(read_only=True)
+    user_is_active = serializers.SerializerMethodField()
+    deleted_at = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Official
         fields = [
-            "of_id", "full_name", "of_role", "of_contact", "of_photo",
-            "address", "of_assigned_barangay", "status"
+            "of_id", "full_name", "of_role", "of_contact", "of_email", "of_photo",
+            "address", "of_assigned_barangay", "status",
+            "user_is_active", "deleted_at"
         ]
+
+    def get_user_is_active(self, obj):
+        if obj.user_id:
+            return bool(obj.user.is_active)
+        return None
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    actor_name = serializers.SerializerMethodField()
+    class Meta:
+        model = AuditLog
+        fields = ["id", "action", "target_model", "target_id", "reason", "changes", "created_at", "actor_name"]
+
+    def get_actor_name(self, obj):
+        if obj.actor and hasattr(obj.actor, "official"):
+            return obj.actor.official.full_name
+        return getattr(obj.actor, "username", None)
 
 class ProvinceSerializer(serializers.ModelSerializer):
     class Meta:
