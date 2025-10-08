@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.conf import settings
 from django.utils.timezone import now
+from fernet_fields import EncryptedCharField, EncryptedTextField
 
 # for address
 class Province(models.Model):  
@@ -57,15 +58,15 @@ class Street(models.Model):
 
     def __str__(self):
         return f"{self.name}, {self.sitio.name}"
-
+    
 # all purpose address save all[?]
 class Address(models.Model):
     province = models.ForeignKey("Province", on_delete=models.PROTECT, null=True, blank=True)
     municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, null=True, blank=True)
     barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, null=True, blank=True)
     sitio = models.CharField(max_length=150, null=True, blank=True)
-    street = models.CharField(max_length=150, null=True, blank=True)
-
+    street = models.CharField(max_length=150, null=True, blank=True)    
+     
     def __str__(self):
         parts = [str(x) for x in [self.street, self.sitio, self.barangay, self.municipality, self.province] if x]
         return ", ".join(parts)
@@ -87,7 +88,8 @@ class Official(models.Model):
     of_id = models.AutoField(primary_key=True)
     of_fname = models.CharField(max_length=50)
     of_lname = models.CharField(max_length=50)
-    of_email = models.CharField(max_length=100, blank=True, null=True)
+    # of_email = models.CharField(max_length=100, blank=True, null=True)
+    of_email = EncryptedCharField(max_length=255, blank=True, null=True)
     of_m_initial = models.CharField(max_length=50, null=True, blank=True)
     of_suffix = models.CharField(max_length=50, null=True, blank=True)
     of_sex = models.CharField(max_length=1, null=True, blank=True)
@@ -99,19 +101,20 @@ class Official(models.Model):
     of_photo = models.ImageField(upload_to='photos/', null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
 
-    # province = models.ForeignKey("Province", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
-    # municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
-    # barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
-    # sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="officials", null=True, blank=True)
-    # street = models.ForeignKey("Street", on_delete=models.SET_NULL, null=True, blank=True, related_name="officials") 
-    address = models.ForeignKey(Address, on_delete=models.PROTECT, related_name="official_address", null=True, blank=True)
+    address = models.ForeignKey(Address, on_delete=models.SET_NULL, related_name="official_address", null=True, blank=True)
 
     #where na baranggay assigned
     of_assigned_barangay = models.ForeignKey(Barangay, on_delete=models.PROTECT, related_name="assigned_officials", null=True, blank=True)
 
+    #para sa soft deletion
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.of_fname} {self.of_lname}"
+    
+    @property
+    def is_archived(self):
+        return self.deleted_at is not None
 
     @property
     def full_name(self):
@@ -125,6 +128,49 @@ class OfficialFaceSample(models.Model):
 
     def __str__(self):
         return f"FaceSample for {self.official.full_name}"
+    
+class AuditLog(models.Model):
+    ACTION_CHOICES = [
+        ("deactivate", "Deactivate"),
+        ("reactivate", "Reactivate"),
+        ("archive", "Archive"),
+        ("update", "Update"),
+    ]
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    action = models.CharField(max_length=32, choices=ACTION_CHOICES)
+    target_model = models.CharField(max_length=128)
+    target_id = models.CharField(max_length=64)
+    reason = models.TextField(null=True, blank=True)
+    changes = models.JSONField(default=dict, blank=True)  # {field: [old, new]}
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.action} {self._target_label()} by DSWD {self._actor_label()} @ {self.created_at:%Y-%m-%d %H:%M}"
+
+    def _actor_label(self):
+        if self.actor and hasattr(self.actor, "official"):
+            try:
+                return self.actor.official.full_name
+            except Exception:
+                pass
+        return getattr(self.actor, "username", self.actor_id)
+
+    def _target_label(self):
+        # Show nicer labels per model type; fallback to "Model(id)"
+        if self.target_model == "Official":
+            try:
+                # Import inside the method to avoid circular imports at module load
+                from shared_model.models import Official
+                off = Official.objects.only("of_fname","of_lname","of_m_initial","of_suffix").get(pk=int(self.target_id))
+                # use your @property full_name if available
+                name = getattr(off, "full_name", f"{off.of_fname} {off.of_lname}")
+                return f"Official {name} [{off.pk}]"
+            except Exception:
+                return f"Official({self.target_id})"
+        # add other models here if you want custom labels
+        return f"{self.target_model}({self.target_id})"
+
+
 
 # starting here is for forms
 class Informant(models.Model):

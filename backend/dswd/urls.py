@@ -42,6 +42,7 @@ urlpatterns = [
 
     #services
     path("services/", ServicesListCreateView.as_view(), name="services-list-create"),
+    path("service-categories/", ServiceCategoryListView.as_view(), name="service-categories"),
 
     path('', include(router.urls)),
 ] + router.urls

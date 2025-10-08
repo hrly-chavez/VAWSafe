@@ -1,5 +1,5 @@
 // LoginPage.js
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useContext } from "react";
 import Webcam from "react-webcam";
 import { useNavigate } from "react-router-dom";
 import "./LoginPage.css";
@@ -13,6 +13,8 @@ import {
   CameraIcon,
   EyeIcon
 } from '@heroicons/react/24/solid';
+import { AuthContext } from "../context/AuthContext";
+import api from "../api/axios";
 
 const LoginPage = () => {
 
@@ -29,6 +31,26 @@ const LoginPage = () => {
   //modal para matic open register user nga modal if way dswd account
   const [autoDSWDRegister, setAutoDSWDRegister] = useState(false);
 
+  //para sa cookies
+  const { login: authLogin } = useContext(AuthContext);
+
+  // simple cookie reader for CSRF
+  function getCookie(name) {
+    const m = document.cookie.match(new RegExp("(^|; )" + name + "=([^;]+)"));
+    return m ? decodeURIComponent(m[2]) : null;
+  }
+
+  async function apiFetch(url, options = {}) {
+    const opts = { credentials: "include", ...options };
+    const method = (opts.method || "GET").toUpperCase();
+
+    // Add CSRF only for unsafe methods
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+      opts.headers = { ...(opts.headers || {}), "X-CSRFToken": getCookie("csrftoken") };
+    }
+
+    return fetch(url, opts);
+  }
 
   // UI states
   const [message, setMessage] = useState("");
@@ -152,7 +174,6 @@ const LoginPage = () => {
       setCountdown(i);
       await delay(1000);
     }
-
     if (loginCancelledRef.current) return;
 
     setCountdown(null);
@@ -180,13 +201,12 @@ const LoginPage = () => {
     });
 
     try {
-      const blinkRes = await fetch(
-        "http://localhost:8000/api/auth/blink-check/",
-        {
-          method: "POST",
-          body: blinkForm,
-        }
-      );
+      const blinkRes = await apiFetch("http://localhost:8000/api/auth/blink-check/", {
+        method: "POST",
+        body: blinkForm,
+        // credentials: "include", // send cookies if your blink-check is CSRF-protected
+        // headers: { "X-CSRFToken": getCookie("csrftoken") }, // safe to include
+      });
       if (loginCancelledRef.current) return;
       const blinkData = await blinkRes.json();
 
@@ -211,13 +231,12 @@ const LoginPage = () => {
         loginForm.append(`frame${j + 1}`, chosenBlob, `frame${j + 1}.jpg`);
       });
 
-      const loginRes = await fetch(
-        "http://localhost:8000/api/auth/face-login/",
-        {
-          method: "POST",
-          body: loginForm,
-        }
-      );
+      const loginRes = await apiFetch("http://localhost:8000/api/auth/face-login/", {
+        method: "POST",
+        body: loginForm,
+        // credentials: "include",                            // cookies set by server
+        // headers: { "X-CSRFToken": getCookie("csrftoken") } // CSRF for POST
+      });
       if (loginCancelledRef.current) return;
 
       const loginData = await loginRes.json();
@@ -225,23 +244,15 @@ const LoginPage = () => {
       setLoading(false);
 
       if (loginRes.ok && loginData.match) {
-        console.log("loginData.user:", loginData.user);
-        //  Store JWT tokens and user info in localStorage for axios interceptor
-        localStorage.setItem(
-          "vawsafeAuth",
-          JSON.stringify({
-            access: loginData.tokens.access,
-            refresh: loginData.tokens.refresh,
-            user: {
-              username: loginData.username,
-              role: loginData.role,
-              name: loginData.name,
-              official_id: loginData.official_id,
-            },
-          })
-        );
+        // ✅ Cookies already contain tokens; just set user in context
+        authLogin({
+          username: loginData.username,
+          role: loginData.role,
+          name: loginData.name,
+          official_id: loginData.official_id,
+        });
 
-        // ✅ Also set welcome card info
+        // ✅ Welcome card
         setWelcomeData({
           name: loginData.name,
           role: loginData.role,
@@ -250,19 +261,13 @@ const LoginPage = () => {
         });
         setShowWelcomeCard(true);
 
-
-        const user = loginData;
+        // ✅ Redirect based on role
+        const role = (loginData.role || "").toLowerCase();
         setTimeout(() => {
-          // ✅ Redirect based on role
-          if (user.role === "DSWD") {
-            navigate("/dswd");
-          } else if (user.role === "VAWDesk") {
-            navigate("/desk_officer");
-          } else if (user.role === "Social Worker") {
-            navigate("/social_worker");
-          } else {
-            navigate("/login"); // fallback
-          }
+          if (role === "dswd") navigate("/dswd");
+          else if (role === "vawdesk") navigate("/desk_officer");
+          else if (role === "social worker") navigate("/social_worker");
+          else navigate("/login");
         }, 5000);
       } else {
         setMessage(loginData.message || " Face verification failed.");
@@ -272,11 +277,153 @@ const LoginPage = () => {
       setMessage("Server error. Please try again.");
       setLoading(false);
     }
-
   };
 
 
-  // Utility Functions for ManualLogin
+  //old face login
+  // const handleFaceLogin = async () => {
+  //     loginCancelledRef.current = false; // reset on new attempt
+  //     setShowCamera(true);
+  //     setShowCounter(true);
+  //     setLoading(true);
+  //     setMessage(
+  //       <div className="flex items-center gap-2 text-white-600 text-lg">
+  //         <CameraIcon className="w-5 h-5" />
+  //         <span>Please look at the camera to log in.</span>
+  //       </div>
+  //     );
+  //     setBlinkCaptured(false);
+
+  //     // countdown
+  //     for (let i = 3; i > 0; i--) {
+  //       if (loginCancelledRef.current) return; // stop if cancelled
+  //       setCountdown(i);
+  //       await delay(1000);
+  //     }
+
+  //     if (loginCancelledRef.current) return;
+
+  //     setCountdown(null);
+  //     setMessage(
+  //       <div className="flex items-center gap-2 text-white-600 text-lg">
+  //         <EyeIcon className="w-5 h-5" />
+  //         <span>Capturing frames... Please blink now!</span>
+  //       </div>
+  //     );
+
+  //     const frames = await captureBurstFrames();
+  //     if (loginCancelledRef.current) return;
+
+  //     if (frames.length === 0) {
+  //       setMessage(" Failed to capture webcam images.");
+  //       setLoading(false);
+  //       return;
+  //     }
+
+  //     // Step 1: Blink check
+  //     const blinkForm = new FormData();
+  //     frames.forEach((frame, i) => {
+  //       const blob = base64ToBlob(frame);
+  //       blinkForm.append(`frame${i + 1}`, blob, `frame${i + 1}.jpg`);
+  //     });
+
+  //     try {
+  //       const blinkRes = await fetch(
+  //         "http://localhost:8000/api/auth/blink-check/",
+  //         {
+  //           method: "POST",
+  //           body: blinkForm,
+  //         }
+  //       );
+  //       if (loginCancelledRef.current) return;
+  //       const blinkData = await blinkRes.json();
+
+  //       if (!blinkRes.ok || !blinkData.blink) {
+  //         setMessage(blinkData.message || " No blink detected, please try again.");
+  //         setLoading(false);
+  //         return;
+  //       }
+
+  //       setBlinkCaptured(true);
+  //       setMessage(
+  //         <div className="flex items-center gap-2 text-green-600 text-lg">
+  //           <CheckCircleIcon className="w-5 h-5" />
+  //           <span>Blink captured. Now verifying face...</span>
+  //         </div>
+  //       );
+
+  //       // Step 2: Send candidate frames to face-login
+  //       const loginForm = new FormData();
+  //       blinkData.candidate_indices.forEach((idx, j) => {
+  //         const chosenBlob = base64ToBlob(frames[idx]);
+  //         loginForm.append(`frame${j + 1}`, chosenBlob, `frame${j + 1}.jpg`);
+  //       });
+
+  //       const loginRes = await fetch(
+  //         "http://localhost:8000/api/auth/face-login/",
+  //         {
+  //           method: "POST",
+  //           body: loginForm,
+  //         }
+  //       );
+  //       if (loginCancelledRef.current) return;
+
+  //       const loginData = await loginRes.json();
+  //       console.log("Face login response:", loginData);
+  //       setLoading(false);
+
+  //       if (loginRes.ok && loginData.match) {
+  //         console.log("loginData.user:", loginData.user);
+  //         //  Store JWT tokens and user info in localStorage for axios interceptor
+  //         localStorage.setItem(
+  //           "vawsafeAuth",
+  //           JSON.stringify({
+  //             access: loginData.tokens.access,
+  //             refresh: loginData.tokens.refresh,
+  //             user: {
+  //               username: loginData.username,
+  //               role: loginData.role,
+  //               name: loginData.name,
+  //               official_id: loginData.official_id,
+  //             },
+  //           })
+  //         );
+
+  //         // ✅ Also set welcome card info
+  //         setWelcomeData({
+  //           name: loginData.name,
+  //           role: loginData.role,
+  //           username: loginData.username,
+  //           official_id: loginData.official_id,
+  //         });
+  //         setShowWelcomeCard(true);
+
+
+  //         const user = loginData;
+  //         setTimeout(() => {
+  //           // ✅ Redirect based on role
+  //           if (user.role === "DSWD") {
+  //             navigate("/dswd");
+  //           } else if (user.role === "VAWDesk") {
+  //             navigate("/desk_officer");
+  //           } else if (user.role === "Social Worker") {
+  //             navigate("/social_worker");
+  //           } else {
+  //             navigate("/login"); // fallback
+  //           }
+  //         }, 5000);
+  //       } else {
+  //         setMessage(loginData.message || " Face verification failed.");
+  //       }
+  //     } catch (err) {
+  //       console.error(err);
+  //       setMessage("Server error. Please try again.");
+  //       setLoading(false);
+  //     }
+
+  //   };
+
+
   const handleManualLogin = async () => {
     const newErrors = { username: "", password: "" };
     let hasError = false;
@@ -285,7 +432,6 @@ const LoginPage = () => {
       newErrors.username = "Username is required.";
       hasError = true;
     }
-
     if (!password.trim()) {
       newErrors.password = "Password is required.";
       hasError = true;
@@ -297,36 +443,27 @@ const LoginPage = () => {
     setMessage("Logging in...");
 
     try {
-      const response = await fetch(
-        "http://localhost:8000/api/auth/manual-login/",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password }),
-        }
-      );
+      const response = await apiFetch("http://localhost:8000/api/auth/manual-login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // credentials: "include", // ⬅️ send/receive cookies
+        body: JSON.stringify({ username, password }),
+      });
 
       const data = await response.json();
 
       if (response.ok && data.match) {
-        // ✅ Store JWT tokens and user info for axios interceptor
-        localStorage.setItem(
-          "vawsafeAuth",
-          JSON.stringify({
-            access: data.tokens.access,
-            refresh: data.tokens.refresh,
-            user: {
-              username: data.username,
-              role: data.role,
-              name: data.name,
-              official_id: data.official_id,
-            },
-          })
-        );
+        // ✅ Tokens are in HttpOnly cookies; just store user in context
+        authLogin({
+          username: data.username,
+          role: data.role,
+          name: data.name,
+          official_id: data.official_id,
+        });
 
         setMessage(`Welcome, ${data.name} (${data.role})`);
 
-        const role = data.role?.toLowerCase();
+        const role = (data.role || "").toLowerCase();
         if (role === "social worker") navigate("/social_worker");
         else if (role === "vawdesk") navigate("/desk_officer");
         else if (role === "dswd") navigate("/dswd");
@@ -345,6 +482,78 @@ const LoginPage = () => {
       setMessage("Server error. Try again later.");
     }
   };
+
+
+  //old manual login
+  // Utility Functions for ManualLogin
+  // const handleManualLogin = async () => {
+  //   const newErrors = { username: "", password: "" };
+  //   let hasError = false;
+
+  //   if (!username.trim()) {
+  //     newErrors.username = "Username is required.";
+  //     hasError = true;
+  //   }
+
+  //   if (!password.trim()) {
+  //     newErrors.password = "Password is required.";
+  //     hasError = true;
+  //   }
+
+  //   setLoginErrors(newErrors);
+  //   if (hasError) return;
+
+  //   setMessage("Logging in...");
+
+  //   try {
+  //     const response = await fetch(
+  //       "http://localhost:8000/api/auth/manual-login/",
+  //       {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({ username, password }),
+  //       }
+  //     );
+
+  //     const data = await response.json();
+
+  //     if (response.ok && data.match) {
+  //       // ✅ Store JWT tokens and user info for axios interceptor
+  //       localStorage.setItem(
+  //         "vawsafeAuth",
+  //         JSON.stringify({
+  //           access: data.tokens.access,
+  //           refresh: data.tokens.refresh,
+  //           user: {
+  //             username: data.username,
+  //             role: data.role,
+  //             name: data.name,
+  //             official_id: data.official_id,
+  //           },
+  //         })
+  //       );
+
+  //       setMessage(`Welcome, ${data.name} (${data.role})`);
+
+  //       const role = data.role?.toLowerCase();
+  //       if (role === "social worker") navigate("/social_worker");
+  //       else if (role === "vawdesk") navigate("/desk_officer");
+  //       else if (role === "dswd") navigate("/dswd");
+  //     } else {
+  //       if (data.message?.toLowerCase().includes("username")) {
+  //         setBackendErrors({ username: "Username not found", password: "" });
+  //       } else if (data.message?.toLowerCase().includes("password")) {
+  //         setBackendErrors({ username: "", password: "Incorrect password" });
+  //       } else {
+  //         setBackendErrors({ username: "", password: "" });
+  //         setMessage(data.message || "Invalid credentials");
+  //       }
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     setMessage("Server error. Try again later.");
+  //   }
+  // };
 
   useEffect(() => {
     const checkDSWD = async () => {

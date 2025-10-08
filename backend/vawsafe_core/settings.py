@@ -11,7 +11,15 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+#kani sya para mo load ang backend/.env para sa encryption
+import environ
 import os
+
+#para ni sya sa encryption para ma migrate ang attribute nga encryptedcharfield etc
+import django.utils.encoding
+if not hasattr(django.utils.encoding, "force_text"):
+    django.utils.encoding.force_text = django.utils.encoding.force_str
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,6 +30,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure--n8q#^8nc-n(=ww(*d4frzqy=q2eno_w!ek5=4msh6ct(ryrb!'
+
+
+# Initialize env // para ni sa encryption
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+
+
+#kuhaon ang fernet key sa backend/.env
+FERNET_KEYS = env.list("FERNET_KEYS", default=[])
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -43,18 +61,23 @@ INSTALLED_APPS = [
     #3rd party apps
     'rest_framework',
     'corsheaders',
+    #Authentication and authorization
     "rest_framework_simplejwt",
+    #encryption
+    "fernet_fields",
 
     #Users apps
     'desk_officer',
     'social_worker',
     'victim',
     'dswd',
-    'shared_model',
+    #gibutangan nako ug apps.SharedModelConfig para sa face embeddings para sa /admin
+    'shared_model.apps.SharedModelConfig',
     'auth_app',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -63,7 +86,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     
-    'corsheaders.middleware.CorsMiddleware', 
 ]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -72,6 +94,7 @@ ROOT_URLCONF = 'vawsafe_core.urls'
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "auth_app.authentication.CookieJWTAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -160,7 +183,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
+
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -173,19 +197,42 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",
-#     "http://127.0.0.1:3000",
-# ]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+# Dev cookie flags (switch to Secure/None in prod cross-site)
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
 
 
 from datetime import timedelta
+#KANI PARA SA LOCALSTORAGE
+# SIMPLE_JWT = {
+#     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+#     # "ACCESS_TOKEN_LIFETIME": timedelta(seconds=30),  # just for test
+#     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+#     "ROTATE_REFRESH_TOKENS": True, # kani kay basta ma expire ang access mo renew both access ug refresh more secure
+#     # "ROTATE_REFRESH_TOKENS": False, #kani sya kay basta ma expire ang access kay mo renew new access pero same refresh less secure
+# }
+
+#KANI KAY PARA SA HTTPONLY
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
-    # "ACCESS_TOKEN_LIFETIME": timedelta(seconds=30),  # just for test
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-    "ROTATE_REFRESH_TOKENS": True, # kani kay basta ma expire ang access mo renew both access ug refresh more secure
-    # "ROTATE_REFRESH_TOKENS": False, #kani sya kay basta ma expire ang access kay mo renew new access pero same refresh less secure
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),      # short
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),       # or 30/90 days if you want
+    "ROTATE_REFRESH_TOKENS": True,                      # optional
+    "BLACKLIST_AFTER_ROTATION": True,                   # if using blacklist app
 }
 
 # Email settings
@@ -198,6 +245,6 @@ EMAIL_HOST_PASSWORD = "qvrt xcrf meek royf"  # 👈 from Step 2
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
-# settings.py
+# settings.py PARA NI SA KATUNG FORGOT PASS
 FRONTEND_URL = "http://localhost:3000"  # or your deployed React frontend URL
 DEFAULT_FROM_EMAIL = "carataojoegie@gmail.com"  # or your system email

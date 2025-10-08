@@ -16,7 +16,12 @@ from rest_framework.decorators import action
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
 from PIL import Image
-from .utils.logging import log_change
+from .utils.logging import log_changefrom django.utils import timezone
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from django.db.models.fields.files import FieldFile
+from datetime import date, datetime
+import json
+
 
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
@@ -112,6 +117,7 @@ class SessionDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Session.objects.all()
     serializer_class = DeskOfficerSessionDetailSerializer
     lookup_field = "sess_id"
+    permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ["DSWD"]
     
 
@@ -549,24 +555,206 @@ class SessionTypeList(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
 class ChangeLogListView(generics.ListAPIView):
-    """DSWD Admin: View all system change logs."""
+    """DSWD Admin: View all system change logs.
+       For now it's only used in question changelogs
+    """
     queryset = ChangeLog.objects.all().select_related("user")
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ChangeLogSerializer
 
 #==================================================================================
-    
-class OfficialViewSet(ModelViewSet):
-   queryset = Official.objects.all()
-   serializer_class = OfficialSerializer
-   permission_classes = [AllowAny]  # 👈 disables auth only for this view
 
-   def get_queryset(self):
-        return Official.objects.filter(
+IMMUTABLE_FIELDS = {"of_fname", "of_lname", "of_dob"}  # protect unless special flow
+
+def _diff(before, after):
+    changes = {}
+    for k, new in after.items():
+        old = getattr(before, k, None)
+        if old != new:
+            changes[k] = [old, new]
+    return changes
+
+def _audit(actor, action, target, reason=None, changes=None):
+    return AuditLog.objects.create(
+        actor=actor,
+        action=action,
+        target_model=target.__class__.__name__,
+        target_id=str(getattr(target, "pk", None)),
+        reason=reason,
+        changes=changes or {},
+    )
+
+def _audit_safe(value):
+    """Return a JSON-serializable representation of common Django objects."""
+    # Files / images from serializer or model
+    if isinstance(value, FieldFile):
+        return value.name or None  # e.g. "photos/abc.jpg"
+    # InMemoryUploadedFile or any file-like with a name
+    if hasattr(value, "read") and hasattr(value, "name"):
+        return getattr(value, "name", "uploaded_file")
+
+    # Model instances -> ModelLabel:pk
+    if hasattr(value, "_meta") and hasattr(value, "pk"):
+        try:
+            return f"{value._meta.label}:{value.pk}"
+        except Exception:
+            return str(value)
+
+    # Datetimes/dates
+    if isinstance(value, (datetime, date)):
+        return value.isoformat()
+
+    # Containers
+    if isinstance(value, dict):
+        return {k: _audit_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_audit_safe(v) for v in value]
+
+    # Primitives or fallback
+    try:
+        json.dumps(value)
+        return value
+    except TypeError:
+        return str(value)
+
+class OfficialViewSet(ModelViewSet):
+    queryset = Official.objects.all()
+    serializer_class = OfficialSerializer
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
+    permission_classes = [IsAuthenticated]  # default for safe methods
+
+    def get_queryset(self):
+        qs = Official.objects.filter(
             of_role__in=["Social Worker", "VAWDesk"]
         ).exclude(
             of_role="VAWDesk", status="pending"
         )
+
+        # include_archived=1 to see archived in lists
+        include_archived = self.request.query_params.get("include_archived") in {"1", "true", "True"}
+
+        # Hide archived by default for list, BUT allow them for retrieve AND unarchive
+        if self.action not in {"retrieve", "unarchive"} and not include_archived:
+            qs = qs.filter(deleted_at__isnull=True)
+
+        return qs.order_by("of_lname", "of_fname")
+
+    # ---- permissions per action ----
+    def get_permissions(self):
+        if self.action in {"deactivate","reactivate","archive","unarchive","partial_update","update"}:
+            # DSWD only for state changes and edits
+            return [IsAuthenticated(), IsRole()]
+        return super().get_permissions()
+
+    # Make IsRole check this
+    allowed_roles = ["DSWD"]
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop("partial", False)
+        instance = self.get_object()
+
+        reason = request.data.get("reason") or request.headers.get("X-Reason")
+
+        incoming = request.data.copy()
+        stripped = {}
+        for f in IMMUTABLE_FIELDS:
+            if f in incoming:
+                stripped[f] = incoming.pop(f)
+
+        serializer = self.get_serializer(instance, data=incoming, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        # compute diff BEFORE saving
+        changes = _diff(instance, serializer.validated_data)
+
+        # save
+        self.perform_update(serializer)
+
+        if getattr(instance, "_prefetched_objects_cache", None):
+            instance._prefetched_objects_cache = {}
+
+        # sanitize for JSONField
+        if changes or stripped:
+            if stripped:
+                changes["_immutable_rejected"] = {k: v for k, v in stripped.items()}
+            safe_changes = _audit_safe(changes)
+            _audit(request.user, "update", serializer.instance, reason=reason, changes=safe_changes)
+
+        return Response(serializer.data)
+
+
+    # ---- custom actions ----
+    @action(detail=True, methods=["post"])
+    def deactivate(self, request, pk=None):
+        official = self.get_object()
+        if not official.user_id:
+            return Response({"detail": "No linked user to deactivate."}, status=400)
+        official.user.is_active = False
+        official.user.save(update_fields=["is_active"])
+        _audit(request.user, "deactivate", official, reason=request.data.get("reason"))
+        return Response({"status": "deactivated"})
+
+    @action(detail=True, methods=["post"])
+    def reactivate(self, request, pk=None):
+        official = self.get_object()
+        if not official.user_id:
+            return Response({"detail": "No linked user to reactivate."}, status=400)
+        official.user.is_active = True
+        official.user.save(update_fields=["is_active"])
+        _audit(request.user, "reactivate", official, reason=request.data.get("reason"))
+        return Response({"status": "reactivated"})
+
+    @action(detail=True, methods=["post"])
+    def archive(self, request, pk=None):
+        official = self.get_object()
+        if official.deleted_at:
+            return Response({"detail": "Already archived."}, status=400)
+
+        # 1) Mark archived
+        official.deleted_at = timezone.now()
+        official.save(update_fields=["deleted_at"])
+
+        # 2) Optional safety: also deactivate their user so they cannot log in
+        if official.user_id and official.user.is_active:
+            official.user.is_active = False
+            official.user.save(update_fields=["is_active"])
+
+        _audit(request.user, "archive", official, reason=request.data.get("reason"))
+        return Response({"status": "archived", "deleted_at": official.deleted_at})
+    
+    @action(detail=True, methods=["post"])
+    def unarchive(self, request, pk=None):
+        official = self.get_object()
+        if not official.deleted_at:
+            return Response({"detail": "Not archived."}, status=400)
+
+        before = official.deleted_at
+        official.deleted_at = None
+        official.save(update_fields=["deleted_at"])
+
+        # Do NOT auto-reactivate login; require an explicit "reactivate" click
+        _audit(request.user, "update", official, reason=request.data.get("reason"),
+            changes={"deleted_at": [str(before), None]})
+        return Response({"status": "unarchived"})
+
+    @action(detail=True, methods=["get"])
+    def audits(self, request, pk=None):
+        qs = AuditLog.objects.filter(target_model="Official", target_id=str(pk)).order_by("-created_at")[:50]
+        from .serializers import AuditLogSerializer
+        return Response(AuditLogSerializer(qs, many=True).data)
+    
+# class OfficialViewSet(ModelViewSet):
+#    queryset = Official.objects.all()
+#    serializer_class = OfficialSerializer
+#    #permission_classes = [IsAuthenticated] #it allows all officials to view it but requires login  
+#    permission_classes = [AllowAny] #it allows all officials to view it but requires login  
+
+#    def get_queryset(self):
+#         return Official.objects.filter(
+#             of_role__in=["Social Worker", "VAWDesk"]
+#         ).exclude(
+#             of_role="VAWDesk", status="pending"
+#         )
     
 class PendingOfficials(viewsets.ModelViewSet):
     queryset = Official.objects.all()
@@ -721,6 +909,9 @@ class PendingOfficials(viewsets.ModelViewSet):
             traceback.print_exc()
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+class ServiceCategoryListView(generics.ListAPIView):
+    queryset = ServiceCategory.objects.all()
+    serializer_class = ServiceCategorySerializer
         
 class ServicesListCreateView(generics.ListCreateAPIView):
     serializer_class = ServicesSerializer
@@ -731,9 +922,9 @@ class ServicesListCreateView(generics.ListCreateAPIView):
         queryset = Services.objects.all()
         category = self.request.query_params.get("category", None)
 
-        # only filter if not "All" and not empty
         if category and category != "All":
-            queryset = queryset.filter(category=category)
+            queryset = queryset.filter(category_id=category)  # ✅ use category_id
         return queryset
+
 
 
