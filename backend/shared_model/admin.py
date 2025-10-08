@@ -11,7 +11,7 @@ admin.site.register(Victim)
 
 admin.site.register(Session)
 admin.site.register(SessionType)
-#admin.site.register(Question)
+admin.site.register(Question)
 
 admin.site.register(Services)
 admin.site.register(ServiceCategory)

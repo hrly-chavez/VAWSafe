@@ -124,6 +124,10 @@ class search_victim_facial(APIView):
 #========================================SESSIONS====================================================
 
 class scheduled_session_lists(generics.ListAPIView):
+    """
+    GET: List all sessions (Pending & Ongoing) assigned to the logged-in social worker.
+    Used for the main Sessions page.
+    """
     serializer_class = SocialWorkerSessionSerializer
     permission_classes = [IsAuthenticated]
 
@@ -136,7 +140,11 @@ class scheduled_session_lists(generics.ListAPIView):
             ).order_by("sess_status", "sess_next_sched")   
         return Session.objects.none()
 
-class scheduled_session_detail(generics.RetrieveUpdateAPIView):  # View + Update
+class scheduled_session_detail(generics.RetrieveUpdateAPIView):  
+    """
+    GET: Retrieve a single session detail.
+    PATCH: Update session info (e.g., type, description, location).
+    """
     serializer_class = SocialWorkerSessionDetailSerializer
     permission_classes = [IsAuthenticated]
 
@@ -151,6 +159,7 @@ class scheduled_session_detail(generics.RetrieveUpdateAPIView):  # View + Update
         return Session.objects.none()
 
 class SessionTypeListView(generics.ListAPIView):
+    """GET: List all available session types for dropdowns."""
     queryset = SessionType.objects.all()
     serializer_class = SessionTypeSerializer
     permission_classes = [IsAuthenticated]
@@ -160,7 +169,7 @@ class SessionTypeListView(generics.ListAPIView):
 @permission_classes([IsAuthenticated])
 def social_worker_mapped_questions(request):
     """
-    Get mapped questions for a given session number and one or more session types.
+    GET: Returns mapped questions for a specific session number and session type(s).
     Example: /api/social_worker/mapped-questions/?session_num=1&session_types=1,2
     """
     session_num = request.query_params.get("session_num")
@@ -183,8 +192,8 @@ def social_worker_mapped_questions(request):
 @permission_classes([IsAuthenticated])
 def start_session(request, sess_id):
     """
-    Start a scheduled session assigned to the logged-in social worker.
-    Hydrates mapped questions into SessionQuestions.
+    POST: Marks a session as Ongoing and hydrates mapped questions into SessionQuestion records.
+    Used when a social worker starts a pending session.
     """
     user = request.user
     try:
@@ -224,7 +233,8 @@ def start_session(request, sess_id):
 @permission_classes([IsAuthenticated])
 def add_custom_question(request, sess_id):
     """
-    Add one or more custom ad-hoc questions to a session.
+    POST: Adds one or more ad-hoc (custom) questions to a session.
+    Used by the 'Add Custom Questions' modal.
     """
     user = request.user
     try:
@@ -258,7 +268,8 @@ def add_custom_question(request, sess_id):
 @permission_classes([IsAuthenticated])
 def finish_session(request, sess_id):
     """
-    Save answers, selected services, and mark session as Done.
+    POST: Saves all answers, updates services and description, and marks session as Done.
+    Triggered when the social worker finishes a session.
     """
     user = request.user
     try:
@@ -325,6 +336,10 @@ def close_case(request, incident_id):
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def schedule_next_session(request):
+    """
+    GET: Lists current sessions (Pending/Ongoing).
+    POST: Creates a new session (schedules the next one).
+    """
     user = request.user
 
     if request.method == "GET":
@@ -350,7 +365,10 @@ def schedule_next_session(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_social_workers(request):
-    
+    """
+    GET: Returns list of social workers for assignment (searchable by name).
+    Used in NextSessionModal dropdown.
+    """
     q = request.query_params.get("q", "").strip()
     workers = Official.objects.filter(of_role="Social Worker")
 
@@ -368,14 +386,18 @@ def list_social_workers(request):
     ]
     return Response(data, status=200)
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def list_service_categories(request):
+    """GET: Returns all service categories for dropdown selection."""
+    categories = ServiceCategory.objects.all()
+    data = [{"id": c.id, "name": c.name} for c in categories]
+    return Response(data, status=200)
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def services_by_category(request, category_id):
-    """
-    List all active services under a given category.
-    Example: /api/social_worker/services/category/1/
-    """
+    """GET: Returns all active services under a selected service category."""
     services = Services.objects.filter(
         category_id=category_id,
         is_active=True
@@ -383,15 +405,7 @@ def services_by_category(request, category_id):
     serializer = ServicesSerializer(services, many=True)
     return Response(serializer.data, status=200)
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def list_service_categories(request):
-    """
-    Returns all available service categories.
-    """
-    categories = ServiceCategory.objects.all()
-    data = [{"id": c.id, "name": c.name} for c in categories]
-    return Response(data, status=200)
+
 
 
 #=======================================CASES==============================================================

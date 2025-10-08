@@ -453,7 +453,21 @@ class CaseReport(models.Model):  #ADMINISTRATIVE INFORMATION
     
     def __str__(self):
         return f"CaseReport for {self.victim.vic_last_name}, {self.victim.vic_first_name}"
+
+class Evidence(models.Model):
+    incident = models.ForeignKey(
+        "IncidentInformation",
+        on_delete=models.CASCADE,
+        related_name="evidences"
+    )
+    file = models.FileField(upload_to="incident_evidences/")
+    description = models.TextField(blank=True, null=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Evidence {self.id} for Incident {self.incident_id}"
     
+#=======================================SESSSION================================== 
 class Session(models.Model):
 
     SESSION_STAT =[
@@ -469,12 +483,12 @@ class Session(models.Model):
     sess_date_today = models.DateTimeField(null=True, blank=True)   #if start right away
     sess_location = models.CharField(max_length=200, null=True, blank=True)
     sess_description = models.TextField(null=True, blank=True)
-    sess_type = models.ManyToManyField("SessionType", related_name="sessions")
+    
     
     # foreign key
     incident_id = models.ForeignKey(IncidentInformation,to_field='incident_id', on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
     assigned_official = models.ForeignKey("Official",on_delete=models.SET_NULL,related_name="assigned_sessions",null=True,blank=True)
-
+    sess_type = models.ManyToManyField("SessionType", related_name="sessions")
     def __str__(self):
         victim_name = (
             f"{self.incident_id.vic_id.vic_last_name}, {self.incident_id.vic_id.vic_first_name}"
@@ -497,9 +511,11 @@ class SessionType(models.Model):
 
     def __str__(self):
         return self.name
-        
+
+#       =====Question=====
 class SessionTypeQuestion(models.Model):
     session_number = models.IntegerField()  # 1, 2, 3, 4, 5.
+    #Fk
     session_type = models.ForeignKey(SessionType, on_delete=models.CASCADE, related_name="type_questions")
     question = models.ForeignKey('Question', on_delete=models.CASCADE, related_name="type_questions")
 
@@ -526,6 +542,7 @@ class Question(models.Model): #HOLDER FOR ALL QUESTIONS
     ques_answer_type = models.CharField(max_length=20, choices=ANSWER_TYPES, null=True, blank=True)
     ques_is_active = models.BooleanField(default=False)
     created_at  = models.DateTimeField(default=now)
+    #FK
     created_by = models.ForeignKey(Official, on_delete=models.SET_NULL,null=True,blank=True,related_name="created_questions")
     
 
@@ -538,8 +555,7 @@ class SessionQuestion(models.Model):
     sq_id = models.AutoField(primary_key=True)
     sq_is_required = models.BooleanField(default=False)
 
-    session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='session_questions')
-    question = models.ForeignKey(Question, on_delete=models.PROTECT, related_name='session_questions', null=True, blank=True)
+    
 
      # For ad-hoc custom questions
     sq_custom_text = models.TextField(null=True, blank=True)
@@ -548,6 +564,9 @@ class SessionQuestion(models.Model):
     # Direct answer fields
     sq_value = models.TextField(null=True, blank=True)
     sq_note = models.TextField(null=True, blank=True)
+    #Fk
+    session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='session_questions')
+    question = models.ForeignKey(Question, on_delete=models.PROTECT, related_name='session_questions', null=True, blank=True)
 
     class Meta:
         unique_together = ('session', 'question')
@@ -556,21 +575,57 @@ class SessionQuestion(models.Model):
         if self.question:
             return f"Session {self.session.sess_id} - Q {self.question.ques_id} -> {self.sq_value or 'No answer'}"
         return f"Session {self.session.sess_id} - Custom Q -> {self.sq_value or 'No answer'}"
+#logging
+class ChangeLog(models.Model):
+    """
+    Tracks all administrative changes in the system.
+    Records who made a change, what model/record was affected,
+    what kind of action occurred, and a short description.
+    """
 
-# newly added
-class Evidence(models.Model):
-    incident = models.ForeignKey(
-        "IncidentInformation",
-        on_delete=models.CASCADE,
-        related_name="evidences"
+    ACTION_TYPES = [
+        ("CREATE", "Create"),
+        ("UPDATE", "Update"),
+        ("DELETE", "Deactivate/Activate"),
+        ("ASSIGN", "Assign/Reassign"),
+    ]
+
+    # Who made the change (Official, usually DSWD Admin)
+    user = models.ForeignKey(
+        "Official",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="change_logs"
     )
-    file = models.FileField(upload_to="incident_evidences/")
+
+    # The affected model name, e.g. "Question", "SessionTypeQuestion"
+    model_name = models.CharField(max_length=100)
+
+    # The primary key of the affected record
+    record_id = models.IntegerField()
+
+    # The type of action taken
+    action = models.CharField(max_length=20, choices=ACTION_TYPES)
+
+    # Short text summary (e.g., “Deactivated Question 15”, “Changed category from X to Y”)
     description = models.TextField(blank=True, null=True)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    # Optional: store before/after snapshot (JSON) for deep audit
+    old_data = models.JSONField(null=True, blank=True)
+    new_data = models.JSONField(null=True, blank=True)
+
+    # When the change occurred
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
 
     def __str__(self):
-        return f"Evidence {self.id} for Incident {self.incident_id}"
+        user_name = self.user.full_name if self.user else "System"
+        return f"[{self.model_name}] {self.action} by {user_name}"
 
+#        ====Service====
 class ServiceCategory(models.Model):
     CATEGORY_CHOICES = [
         ("Protection Services", "Protection Services"),
@@ -588,14 +643,17 @@ class ServiceCategory(models.Model):
 
 class Services(models.Model):
     serv_id = models.AutoField(primary_key=True)
-    assigned_place = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_place")
-    service_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="service_address")
+
 
     name = models.CharField(max_length=100, default="service")  # org/dept name
     contact_person = models.CharField(max_length=100, default="contact person")
     contact_number = models.CharField(max_length=100, default="contact number")
-    category = models.ForeignKey(ServiceCategory, on_delete=models.CASCADE, related_name="services")
     is_active = models.BooleanField(default=False)
+
+    #FK
+    category = models.ForeignKey(ServiceCategory, on_delete=models.CASCADE, related_name="services")
+    assigned_place = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_place")
+    service_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="service_address")
 
     def __str__(self):
         return f"{self.name} ({self.category.name})"
@@ -614,3 +672,5 @@ class ServiceGiven(models.Model):
     
     def __str__(self):
         return f"{self.serv_id.name if self.serv_id else 'Unknown Service'} for Session {self.session.sess_id}"
+
+#=================================================================================

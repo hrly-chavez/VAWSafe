@@ -78,10 +78,6 @@ class PerpetratorSerializer(serializers.ModelSerializer):
         model = Perpetrator
         fields = "__all__"
 
-# class IncidentInformationSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = IncidentInformation
-#         fields = "__all__"
 
 class SessionSerializer(serializers.ModelSerializer):
     victim_name = serializers.SerializerMethodField()
@@ -120,8 +116,6 @@ class IncidentInformationSerializer(serializers.ModelSerializer): #fetch case an
         model = IncidentInformation
         fields = "__all__"
         read_only_fields = ["incident_id", "incident_num"]
-
-
 
 class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
     perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)
@@ -244,8 +238,13 @@ class VAWDeskOfficerListSerializer(serializers.ModelSerializer):
             parts.append(obj.of_suffix)
         return " ".join(parts)
 
-#====================================SESSIONS========================================
+#====================================Questions========================================
 class QuestionSerializer(serializers.ModelSerializer):
+    """ Serializer for Question model.
+    - Returns all question fields.
+    - Adds 'created_by_name' for display in frontend.
+    - Adds 'mappings' showing which session types/numbers use this question.
+    """
     created_by_name = serializers.CharField(source="created_by.full_name", read_only=True)
     mappings = serializers.SerializerMethodField()
 
@@ -259,16 +258,29 @@ class QuestionSerializer(serializers.ModelSerializer):
             {
                 "session_number": m.session_number,
                 "session_type": m.session_type.name,
+                "session_type_id": m.session_type.id,
             }
             for m in obj.type_questions.all()
         ]
+    def update(self, instance, validated_data):
+        validated_data.pop("mappings", None)  # safely ignore read-only field
+        return super().update(instance, validated_data)
 
 class SessionTypeSerializer(serializers.ModelSerializer):
+    """
+    Serializer for SessionType model.
+    - Used to populate dropdowns for session type selection.
+    """
     class Meta:
         model = SessionType
         fields = ["id", "name"]
 
 class SessionTypeQuestionSerializer(serializers.ModelSerializer):
+    """
+    Serializer for SessionTypeQuestion model.
+    - Shows which question is assigned to which session type and number.
+    - Includes human-readable names for session type and question text.
+    """
     question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
     session_type_name = serializers.CharField(source="session_type.name", read_only=True)
 
@@ -284,9 +296,11 @@ class SessionTypeQuestionSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "question_text", "session_type_name"]
 
-
-# Bulk create Questions
 class BulkQuestionSerializer(serializers.Serializer):
+    """
+    Handles bulk creation of multiple questions in one request.
+    - Creates multiple Question objects using the current logged-in official.
+    """
     questions = QuestionSerializer(many=True)
 
     def create(self, validated_data):
@@ -299,11 +313,19 @@ class BulkQuestionSerializer(serializers.Serializer):
     
 # Attach Bulk serializer to QuestionSerializer
 class QuestionBulkItemSerializer(QuestionSerializer):
+    """
+    Links QuestionSerializer with BulkQuestionSerializer for list operations.
+    - Enables POSTing multiple questions at once.
+    """
+
     class Meta(QuestionSerializer.Meta):
         list_serializer_class = BulkQuestionSerializer
 
-
 class BulkAssignSerializer(serializers.Serializer):
+    """
+    Used for bulk assigning questions to multiple session types and numbers.
+    - Accepts lists of question IDs, session numbers, and session type IDs.
+    """
     questions = serializers.ListField(
         child=serializers.IntegerField(), allow_empty=False
     )
@@ -314,16 +336,15 @@ class BulkAssignSerializer(serializers.Serializer):
         child=serializers.IntegerField(), allow_empty=False
     )
 
-    
-# class OfficialSerializer(serializers.ModelSerializer):
-#     full_name = serializers.ReadOnlyField()
+class ChangeLogSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source="user.full_name", read_only=True)
 
-#     class Meta:
-#         model = Official
-#         fields = [
-#             "of_id", "full_name", "of_role", "of_contact", "of_photo",
-#             "province", "municipality", "barangay", "sitio", "street", "of_assigned_barangay", "status"
-#         ]
+    class Meta:
+        model = ChangeLog
+        fields = "__all__"
+
+#====================================================================================
+
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
@@ -370,37 +391,6 @@ class BarangaySerializer(serializers.ModelSerializer):
     class Meta:
         model = Barangay
         fields = "__all__"
-
-# class AddressSerializer(serializers.ModelSerializer):
-#     province = serializers.PrimaryKeyRelatedField(queryset=Province.objects.all(), allow_null=True, required=False)
-#     municipality = serializers.PrimaryKeyRelatedField(queryset=Municipality.objects.all(), allow_null=True, required=False)
-#     barangay = serializers.PrimaryKeyRelatedField(queryset=Barangay.objects.all(), allow_null=True, required=False)
-
-#     class Meta:
-#         model = Address
-#         fields = ["id", "province", "municipality", "barangay", "sitio", "street"]
-
-
-# class ServicesSerializer(serializers.ModelSerializer):
-#     assigned_place = AddressSerializer()
-#     service_address = AddressSerializer()
-
-#     class Meta:
-#         model = Services
-#         fields = ["serv_id", "name", "contact_person", "contact_number", "assigned_place", "service_address"]
-
-#     def create(self, validated_data):
-#         assigned_place_data = validated_data.pop("assigned_place", None)
-#         service_address_data = validated_data.pop("service_address", None)
-
-#         assigned_place = Address.objects.create(**assigned_place_data) if assigned_place_data else None
-#         service_address = Address.objects.create(**service_address_data) if service_address_data else None
-
-#         return Services.objects.create(
-#             assigned_place=assigned_place,
-#             service_address=service_address,
-#             **validated_data
-#         )
 
 class ServicesSerializer(serializers.ModelSerializer):
     assigned_place = AddressSerializer(required=False, allow_null=True)
