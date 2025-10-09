@@ -16,11 +16,12 @@ from rest_framework.decorators import action
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
 from PIL import Image
-from .utils.logging import log_changefrom django.utils import timezone
+from django.utils import timezone
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db.models.fields.files import FieldFile
 from datetime import date, datetime
 import json
+from dswd.utils.logging import log_change
 
 
 from django.utils.decorators import method_decorator

@@ -35,9 +35,7 @@ https://psa.gov.ph/system/files/scd/PSGC-1Q-2025-Publication-Datafile.xlsx
 1. create .env file inside backend folder
 2. ipaste ni nga sa .env
 - FERNET_KEYS=9UwJx2SMS03LUK6wC71Wjc7kw7nFoqZjsfzLxZGPMG8=
-3. install mo ani (nalimot ko pip freeze)
-  -    pip install django-environ
-  -    pip install django-fernet-fields2
+3. pip install -r requirements.txt
 4. if wala pa naka makemigrate and migrate buhata sa na
 5. if naay existing data sa official sa imong db i delete sa na kay mag conflict na sa updated nga datatype sa of_email ditso dayon sa 3.
 6. runserver na
