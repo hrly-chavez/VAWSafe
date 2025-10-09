@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import SessionTypeQuestionPreview from "./SessionTypeQuestionPreview";
 
-
 export default function Schedule({ victim, incident, back, next }) {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [time, setTime] = useState(new Date().toTimeString().slice(0, 5));
@@ -35,7 +34,7 @@ export default function Schedule({ victim, incident, back, next }) {
       // Format readable datetime
       const readableDate = new Date(res.data.sess_next_sched).toLocaleString(
         "en-US",
-        {dateStyle: "medium", timeStyle: "short",}
+        { dateStyle: "medium", timeStyle: "short" }
       );
 
       alert(` Session scheduled successfully!\nDate: ${readableDate}`);
@@ -53,20 +52,20 @@ export default function Schedule({ victim, incident, back, next }) {
     }
   };
   // Load session types from API
-useEffect(() => {
-  api
-    .get("/api/desk_officer/session-types/") 
-    .then((res) => {
-      const options = res.data.map((t) => ({
-        value: t.id,
-        label: t.name,
-      }));
-      setSessionTypes(options);
-    })
-    .catch((err) => console.error("Failed to fetch session types", err));
-}, []);
+  useEffect(() => {
+    api
+      .get("/api/desk_officer/session-types/")
+      .then((res) => {
+        const options = res.data.map((t) => ({
+          value: t.id,
+          label: t.name,
+        }));
+        setSessionTypes(options);
+      })
+      .catch((err) => console.error("Failed to fetch session types", err));
+  }, []);
 
-   useEffect(() => {
+  useEffect(() => {
     api
       .get("/api/desk_officer/officials/social-workers/")
       .then((res) => {
@@ -81,24 +80,25 @@ useEffect(() => {
   }, []);
 
   const handleStartSession = async () => {
-  try {
-    const payload = {
-      incident_id: incident?.incident_id,
-      started_now: true,
-      sess_type: [],
-    };
+    try {
+      const payload = {
+        incident_id: incident?.incident_id,
+        started_now: true,
+        sess_type: [],
+      };
 
-    const res = await api.post("/api/desk_officer/sessions/", payload);
+      const res = await api.post("/api/desk_officer/sessions/", payload);
 
-    const session = res.data;
+      const session = res.data;
 
-    
-    navigate("/desk_officer/session/start", { state: { session, victim, incident } });
-  } catch (err) {
-    console.error("Start session error:", err);
-    alert("Failed to start session");
-  }
-};
+      navigate("/desk_officer/session/start", {
+        state: { session, victim, incident },
+      });
+    } catch (err) {
+      console.error("Start session error:", err);
+      alert("Failed to start session");
+    }
+  };
 
   return (
     <div className="max-w-5xl mx-auto bg-white p-6 rounded-xl shadow-md space-y-6 mt-6">
@@ -152,28 +152,30 @@ useEffect(() => {
             placeholder="Select session types..."
           />
         </div>
-         {/* Assign Social Worker */}
+        {/* Assign Social Worker */}
         <div>
-        <label className="text-xs text-gray-600 block mb-1">
-          Assign Social Worker
-        </label>
-        <Select
-          options={officials}
-          value={officials.find((opt) => opt.value === selectedOfficial) || null}
-          onChange={(selected) =>
-            setSelectedOfficial(selected ? selected.value : null)
-          }
-          placeholder="Search and select social worker..."
-          isClearable
+          <label className="text-xs text-gray-600 block mb-1">
+            Assign Social Worker
+          </label>
+          <Select
+            options={officials}
+            value={
+              officials.find((opt) => opt.value === selectedOfficial) || null
+            }
+            onChange={(selected) =>
+              setSelectedOfficial(selected ? selected.value : null)
+            }
+            placeholder="Search and select social worker..."
+            isClearable
+          />
+        </div>
+        {/* Preview of mapped questions */}
+        <SessionTypeQuestionPreview
+          sessionNum={(incident?.sessions?.length || 0) + 1}
+          selectedTypes={selectedTypes}
         />
       </div>
-      {/* Preview of mapped questions */}
-        <SessionTypeQuestionPreview
-        sessionNum={(incident?.sessions?.length || 0) + 1}
-        selectedTypes={selectedTypes}
-      />
-      </div>
-     
+
       {/* Actions */}
       <div className="flex justify-end gap-4 pt-4">
         {back && (
