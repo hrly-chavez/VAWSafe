@@ -44,6 +44,9 @@ export const ROUTES = {
   SOCIAL_WORKER: "/social_worker",
   SOCIAL_WORKER_DASHBOARD: "/social_worker",
 
+  SOCIAL_WORKER_SCHEDULE: "/social_worker/schedule",
+
+
   SOCIAL_WORKER_CASE_RECORDS: "/social_worker/case-records",
   SOCIAL_WORKER_SESSIONS: "/social_worker/sessions",
   SOCIAL_WORKER_VIEW_SESSION: "/social_worker/sessions/:sess_id",

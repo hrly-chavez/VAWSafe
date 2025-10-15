@@ -57,31 +57,41 @@ export default function SessionDetails({ sessionId, onClose }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DetailItem label="Session Number" value={session.sess_num} />  {/*Session Number*/}
                 <DetailItem label="Status" value={session.sess_status} /> {/*status*/}
-                {/*Date*/}
-                <DetailItem    
-                    label="Date"
-                    value={
-                      session.sess_next_sched
-                        ? new Date(session.sess_next_sched).toLocaleString([], {
-                            year: "numeric",
-                            month: "numeric",
-                            day: "numeric",
-                            hour: "numeric",
-                            minute: "numeric",
-                            hour12: true,
-                          })
-                        : session.sess_date_today
-                        ? new Date(session.sess_date_today).toLocaleString([], {
-                            year: "numeric",
-                            month: "numeric",
-                            day: "numeric",
-                            hour: "numeric",
-                            minute: "numeric",
-                            hour12: true,
-                          })
-                        : "—"
-                    }
-                  />
+                
+                {/* Scheduled Date */}
+                <DetailItem
+                  label="Scheduled Date"
+                  value={
+                    session.sess_next_sched
+                      ? new Date(session.sess_next_sched).toLocaleString([], {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
+                      : "—"
+                  }
+                />
+
+                {/* Actual Start Date */}
+                <DetailItem
+                  label="Start Date"
+                  value={
+                    session.sess_date_today
+                      ? new Date(session.sess_date_today).toLocaleString([], {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
+                      : "—"
+                  }
+                />
+
 
                 {/* Location */}
                 <DetailItem label="Location" value={session.sess_location} />

@@ -10,7 +10,7 @@ from shared_model.permissions import IsRole
 from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import action
-
+from django.db.models import Q
 from deepface import DeepFace
 from PIL import Image
 from django.db import transaction
@@ -253,7 +253,7 @@ def register_victim(request):
                                 status=status.HTTP_400_BAD_REQUEST)
             perpetrator = p_ser.save()
 
-        # ✅ 4.5) Informant (optional)
+        #  4.5) Informant (optional)
         informant = None
         informant_data = parse_json_field("informant")
         if informant_data:
@@ -346,12 +346,50 @@ def create_session(request):
 
 @api_view(["GET"])
 def list_social_workers(request):
+    q = request.query_params.get("q", "").strip()
     workers = Official.objects.filter(of_role="Social Worker")
-    data = [
-        {"of_id": w.of_id, "full_name": w.full_name}
-        for w in workers
-    ]
-    return Response(data)
+
+    if q:
+        workers = workers.filter(
+            Q(of_fname__icontains=q)
+            | Q(of_lname__icontains=q)
+            | Q(of_m_initial__icontains=q)
+        )
+
+    # Prefetch their weekly availabilities
+    workers = workers.prefetch_related("availabilities", "unavailabilities", "of_assigned_barangay")
+
+    response_data = []
+    for w in workers:
+        # summarize weekly recurring availability
+        availability_summary = {
+            day: None for day, _ in OfficialAvailability.DAY_CHOICES
+        }
+        for a in w.availabilities.filter(is_active=True):
+            availability_summary[a.day_of_week] = f"{a.start_time.strftime('%H:%M')}–{a.end_time.strftime('%H:%M')}"
+
+        # temporary unavailability (if any)
+        unavail_list = [
+            {
+                "start_date": u.start_date,
+                "end_date": u.end_date,
+                "reason": u.reason,
+            }
+            for u in w.unavailabilities.all()
+        ]
+
+        response_data.append({
+            "of_id": w.of_id,
+            "full_name": w.full_name,
+            "specialization": w.of_specialization,
+            "barangay": w.of_assigned_barangay.name if w.of_assigned_barangay else None,
+            "contact": w.of_contact,
+            "availability": availability_summary,
+            "unavailability": unavail_list,
+        })
+
+    return Response(response_data, status=200)
+
 
 @api_view(["GET"])
 def list_session_types(request):

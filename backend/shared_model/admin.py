@@ -3,7 +3,7 @@ from .models import *
 from django.db import transaction
 from django.db.models import Prefetch
 from django.utils.html import format_html
-from django.urls import reverse  # ← add this
+from django.urls import reverse  
 from .face_embeddings import compute_arcface_embedding
 from django.db.models import IntegerField, Func, Q
 
@@ -180,9 +180,15 @@ class OfficialFaceSampleAdmin(admin.ModelAdmin):
     has_embedding.short_description = "Embedding?"
 
 
+
+
+
 admin.site.register(Victim)
 # admin.site.register(VictimFaceSample)
 # admin.site.register(IncidentInformation)
+
+admin.site.register(OfficialAvailability)
+admin.site.register(OfficialUnavailability)
 
 admin.site.register(Session)
 admin.site.register(SessionType)

@@ -59,7 +59,10 @@ export default function ChangeLogModal({ questionId, onClose }) {
                 {logs.map((log) => (
                     <tr key={log.id} className="hover:bg-gray-50">
                     <td className="border p-2">
-                        {new Date(log.created_at).toLocaleString()}
+                        {new Date(log.created_at).toLocaleString([], { 
+                          dateStyle: "short", 
+                          timeStyle: "short" 
+                        })}
                     </td>
                     <td className="border p-2">{log.user_name || "System"}</td>
 

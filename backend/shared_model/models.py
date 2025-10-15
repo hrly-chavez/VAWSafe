@@ -71,7 +71,7 @@ class Address(models.Model):
         parts = [str(x) for x in [self.street, self.sitio, self.barangay, self.municipality, self.province] if x]
         return ", ".join(parts)
 
-# for system users
+#=============================  SYSTEM USER ==============================
 class Official(models.Model):
     ROLE_CHOICES = [
         ('DSWD', 'DSWD'),
@@ -128,7 +128,58 @@ class OfficialFaceSample(models.Model):
 
     def __str__(self):
         return f"FaceSample for {self.official.full_name}"
-    
+
+# =================== OFFICIAL SCHEDULING =====================
+
+class OfficialAvailability(models.Model):
+    """
+    Defines the recurring preferred working hours per day for each Social Worker 
+    Used by Desk Officers to check when officials are available to handle sessions.
+    """
+    DAY_CHOICES = [
+        ("Monday", "Monday"),
+        ("Tuesday", "Tuesday"),
+        ("Wednesday", "Wednesday"),
+        ("Thursday", "Thursday"),
+        ("Friday", "Friday"),
+        ("Saturday", "Saturday"),
+        ("Sunday", "Sunday"),
+    ]
+
+    official = models.ForeignKey("Official", on_delete=models.CASCADE, related_name="availabilities")
+    day_of_week = models.CharField(max_length=10, choices=DAY_CHOICES)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    remarks = models.CharField(max_length=200, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ("official", "day_of_week", "start_time", "end_time")
+        ordering = ["official", "day_of_week", "start_time"]
+
+    def __str__(self):
+        return f"{self.official.full_name} - {self.day_of_week} ({self.start_time}–{self.end_time})"
+
+
+class OfficialUnavailability(models.Model):
+    """
+    Records manual updates where an Official marks themselves unavailable for a range of dates.
+    Example: Sick Leave, Holiday, Seminar, etc.
+    """
+    official = models.ForeignKey("Official", on_delete=models.CASCADE, related_name="unavailabilities")
+    start_date = models.DateField()
+    end_date = models.DateField()
+    reason = models.CharField(max_length=100, null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-start_date"]
+
+    def __str__(self):
+        return f"{self.official.full_name} unavailable {self.start_date}–{self.end_date} ({self.reason})"
+
+#==================================
+
 class AuditLog(models.Model):
     ACTION_CHOICES = [
         ("deactivate", "Deactivate"),
@@ -170,7 +221,7 @@ class AuditLog(models.Model):
         # add other models here if you want custom labels
         return f"{self.target_model}({self.target_id})"
 
-
+#===================================================================================================================
 
 # starting here is for forms
 class Informant(models.Model):
@@ -526,7 +577,7 @@ class Session(models.Model):
     sess_num = models.IntegerField(null=True, blank=True)
     sess_status = models.CharField(max_length=20,choices=SESSION_STAT, default='Pending') 
     sess_next_sched = models.DateTimeField(null=True, blank=True) # if scheduled session
-    sess_date_today = models.DateTimeField(null=True, blank=True)   #if start right away
+    sess_date_today = models.DateTimeField(null=True, blank=True)   #if start now
     sess_location = models.CharField(max_length=200, null=True, blank=True)
     sess_description = models.TextField(null=True, blank=True)
     
