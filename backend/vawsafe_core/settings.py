@@ -74,6 +74,8 @@ INSTALLED_APPS = [
     #gibutangan nako ug apps.SharedModelConfig para sa face embeddings para sa /admin
     'shared_model.apps.SharedModelConfig',
     'auth_app',
+    #extensions
+    "django_extensions"
 ]
 
 MIDDLEWARE = [

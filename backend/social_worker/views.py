@@ -13,6 +13,10 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
 from shared_model.permissions import IsRole
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework import viewsets
+from datetime import date, timedelta
+from rest_framework.decorators import action
+
 
 class victim_list(generics.ListAPIView):
     serializer_class = VictimListSerializer
@@ -28,11 +32,19 @@ class victim_list(generics.ListAPIView):
         return Victim.objects.none()
 
 class victim_detail(generics.RetrieveAPIView):
-    queryset = Victim.objects.all()
     serializer_class = VictimDetailSerializer
     lookup_field = "vic_id"
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['Social Worker']
+
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, "official") and user.official.of_role == "Social Worker":
+            return Victim.objects.filter(
+                incidents__sessions__assigned_official=user.official
+            ).distinct()
+        return Victim.objects.none()
+
 
 # retrieve all information related to case (Social Worker)
 class VictimIncidentsView(generics.ListAPIView):
@@ -406,8 +418,6 @@ def services_by_category(request, category_id):
     return Response(serializer.data, status=200)
 
 
-
-
 #=======================================CASES==============================================================
 
 class SocialWorkerCaseList(generics.ListAPIView):
@@ -422,4 +432,106 @@ class SocialWorkerCaseList(generics.ListAPIView):
                 incident_status__in=["Pending", "Ongoing"]
             ).distinct()
         return IncidentInformation.objects.none()
+
+# ==================================== SOCIAL WORKER SCHEDULE  ================================
+class OfficialAvailabilityViewSet(viewsets.ModelViewSet):
+    """
+    Manage recurring preferred working hours for logged-in Social Worker.
+    - GET: List all availability for current user
+    - POST: Add new availability
+    - PUT/PATCH: Edit availability
+    - DELETE: Deactivate availability (set is_active=False)
+    """
+    serializer_class = OfficialAvailabilitySerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Social Worker"]
+
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, "official") and user.official.of_role == "Social Worker":
+            # include all, even inactive, so get_object() works for deactivation
+            return OfficialAvailability.objects.filter(official=user.official)
+        return OfficialAvailability.objects.none()
+
+
+    def destroy(self, request, *args, **kwargs):
+        """Soft delete: deactivate instead of removing."""
+        instance = self.get_object()
+        if instance.official != request.user.official:
+            return Response({"detail": "You can only deactivate your own availability."}, status=403)
+        instance.is_active = False
+        instance.save()
+        return Response({"detail": "Availability deactivated successfully."}, status=200)
+
+    @action(detail=True, methods=["patch"], url_path="reactivate")
+    def reactivate(self, request, pk=None):
+        """Re-enable a previously deactivated availability."""
+        instance = self.get_object()
+        if instance.official != request.user.official:
+            return Response({"detail": "You can only reactivate your own availability."}, status=403)
+        instance.is_active = True
+        instance.save()
+        return Response({"detail": "Availability reactivated successfully."}, status=200)
+
+class OfficialUnavailabilityViewSet(viewsets.ModelViewSet):
+
+
+    """
+    Manage temporary unavailability records (like sick leave or holidays) for the current Social Worker.
+    """
+    serializer_class = OfficialUnavailabilitySerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Social Worker"]
+
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, "official") and user.official.of_role == "Social Worker":
+            return OfficialUnavailability.objects.filter(official=user.official)
+        return OfficialUnavailability.objects.none()
+
+
+class OfficialScheduleOverviewViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Social Worker"]
+
+    @action(detail=False, methods=["get"])
+    def week(self, request):
+        """
+        Returns combined availability and unavailability for the selected week.
+        Query params: ?start_date=YYYY-MM-DD
+        """
+        user = request.user
+        if not hasattr(user, "official"):
+            return Response({"detail": "Not linked to an official."}, status=400)
+
+        official = user.official
+        start_str = request.query_params.get("start_date")
+        if not start_str:
+            return Response({"detail": "start_date required"}, status=400)
+
+        try:
+            start_date = date.fromisoformat(start_str)
+        except ValueError:
+            return Response({"detail": "Invalid start_date format"}, status=400)
+
+        end_date = start_date + timedelta(days=6)
+
+        # recurring pattern
+        availabilities = OfficialAvailability.objects.filter(
+            official=official
+        ).values("id", "day_of_week", "start_time", "end_time", "remarks", "is_active")
+
+        # temporary blocks
+        unavailabilities = OfficialUnavailability.objects.filter(
+            official=official,
+            start_date__lte=end_date,
+            end_date__gte=start_date,
+        ).values("start_date", "end_date", "reason", "notes")
+
+        return Response({
+            "start_date": start_date,
+            "end_date": end_date,
+            "availabilities": list(availabilities),
+            "unavailabilities": list(unavailabilities),
+        })
 

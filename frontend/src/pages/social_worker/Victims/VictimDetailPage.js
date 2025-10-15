@@ -220,29 +220,38 @@ export default function VictimDetailPage() {
                         {session.sess_status}
                       </span>
                     </p>
-                      {/* Date */}
-                    <p className="text-sm"> 
-                    <span className="font-medium">Date:</span>{" "}
-                    {session.sess_next_sched
-                      ? new Date(session.sess_next_sched).toLocaleString([], {
-                          year: "numeric",
-                          month: "numeric",
-                          day: "numeric",
-                          hour: "numeric",
-                          minute: "numeric",
-                          hour12: true,
-                        })
-                      : session.sess_date_today
-                      ? new Date(session.sess_date_today).toLocaleString([], {
-                          year: "numeric",
-                          month: "numeric",
-                          day: "numeric",
-                          hour: "numeric",
-                          minute: "numeric",
-                          hour12: true,
-                        })
-                      : "—"}
+                  
+                {/* Scheduled Date */}
+                <p className="text-sm">
+                  <span className="font-medium">Scheduled Date:</span>{" "}
+                  {session.sess_next_sched
+                    ? new Date(session.sess_next_sched).toLocaleString([], {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true,
+                      })
+                    : "—"}
+                </p>
+
+                {/* Actual Start Date — only show if available */}
+                {session.sess_date_today && (
+                  <p className="text-sm">
+                    <span className="font-medium">Started On:</span>{" "}
+                    {new Date(session.sess_date_today).toLocaleString([], {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
                   </p>
+                )}
+
+
                     {/* location */}
                     <p className="text-sm">
                       <span className="font-medium">Location:</span>{" "}

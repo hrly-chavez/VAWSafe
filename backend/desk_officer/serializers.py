@@ -230,7 +230,7 @@ class GenerateSessionQuestionsSerializer(serializers.Serializer):
         child=serializers.IntegerField(), allow_empty=False
     )
 
-#======================================SESSION================================================= 
+#======================================================================================= 
 
 # Account Management
 class OfficialSerializer(serializers.ModelSerializer):
