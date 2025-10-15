@@ -2,7 +2,8 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.conf import settings
 from django.utils.timezone import now
-from fernet_fields import EncryptedCharField, EncryptedTextField
+from fernet_fields import EncryptedCharField, EncryptedDateField, EncryptedIntegerField
+from django.contrib.auth import get_user_model
 
 # for address
 class Province(models.Model):  
@@ -86,20 +87,20 @@ class Official(models.Model):
     ]
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="official", null=True, blank=True)
     of_id = models.AutoField(primary_key=True)
-    of_fname = models.CharField(max_length=50)
-    of_lname = models.CharField(max_length=50)
+    of_fname = EncryptedCharField(max_length=255)
+    of_lname = EncryptedCharField(max_length=255)
     # of_email = models.CharField(max_length=100, blank=True, null=True)
     of_email = EncryptedCharField(max_length=255, blank=True, null=True)
-    of_m_initial = models.CharField(max_length=50, null=True, blank=True)
-    of_suffix = models.CharField(max_length=50, null=True, blank=True)
-    of_sex = models.CharField(max_length=1, null=True, blank=True)
-    of_dob = models.DateField(null=True, blank=True)
-    of_pob = models.CharField(max_length=255, null=True, blank=True)
-    of_contact = models.CharField(max_length=20, null=True, blank=True)
+    of_m_initial = EncryptedCharField(max_length=255, null=True, blank=True)
+    of_suffix = EncryptedCharField(max_length=255, null=True, blank=True)
+    of_sex = EncryptedCharField(max_length=255, null=True, blank=True)
+    of_dob = EncryptedDateField(null=True, blank=True)
+    of_pob = EncryptedCharField(max_length=255, null=True, blank=True)
+    of_contact = EncryptedCharField(max_length=255, null=True, blank=True)
     of_role = models.CharField(max_length=50, choices=ROLE_CHOICES, blank=True, null=True)
-    of_specialization = models.CharField(max_length=100, null=True, blank=True)
+    of_specialization = EncryptedCharField(max_length=255, null=True, blank=True)
     of_photo = models.ImageField(upload_to='photos/', null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    status = models.CharField(max_length=25, choices=STATUS_CHOICES, default="pending")
 
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, related_name="official_address", null=True, blank=True)
 
@@ -145,43 +146,64 @@ class AuditLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.action} {self._target_label()} by DSWD {self._actor_label()} @ {self.created_at:%Y-%m-%d %H:%M}"
+        actor_name = self.get_actor_name()
+        target_label = self.get_target_label()
+        return f"{self.action.title()} on {target_label} by {actor_name} @ {self.created_at:%Y-%m-%d %H:%M}"
 
-    def _actor_label(self):
+    # --- Helper methods ---
+    #para ni sa kinsa nga official ang ga edit
+    def get_actor_name(self):
+        """Get full name of actor if available."""
         if self.actor and hasattr(self.actor, "official"):
-            try:
-                return self.actor.official.full_name
-            except Exception:
-                pass
-        return getattr(self.actor, "username", self.actor_id)
+            official = self.actor.official
+            if hasattr(official, "full_name"):
+                return official.full_name
+            return f"{official.of_fname} {official.of_lname}"
+        return getattr(self.actor, "username", "Unknown")
 
-    def _target_label(self):
-        # Show nicer labels per model type; fallback to "Model(id)"
-        if self.target_model == "Official":
-            try:
-                # Import inside the method to avoid circular imports at module load
+    #kani kay kung kinsa nga official ang gi edit
+    def get_target_label(self):
+        """
+        Get a readable label for the target object.
+        If it's an Official, return full name.
+        Otherwise, return ModelName(ID).
+        """
+        try:
+            # ✅ Example for 'Official' target
+            if self.target_model.lower() == "official":
                 from shared_model.models import Official
-                off = Official.objects.only("of_fname","of_lname","of_m_initial","of_suffix").get(pk=int(self.target_id))
-                # use your @property full_name if available
-                name = getattr(off, "full_name", f"{off.of_fname} {off.of_lname}")
-                return f"Official {name} [{off.pk}]"
-            except Exception:
-                return f"Official({self.target_id})"
-        # add other models here if you want custom labels
+                off = Official.objects.only("of_fname", "of_lname").get(pk=int(self.target_id))
+                full_name = getattr(off, "full_name", f"{off.of_fname} {off.of_lname}")
+                return f"Official {full_name} (ID: {off.pk})"
+
+            # ✅ Example if you later want to add support for Victim
+            elif self.target_model.lower() == "victim":
+                from shared_model.models import Victim
+                vic = Victim.objects.only("vi_fname", "vi_lname").get(pk=int(self.target_id))
+                full_name = getattr(vic, "full_name", f"{vic.vi_fname} {vic.vi_lname}")
+                return f"Victim {full_name} (ID: {vic.pk})"
+
+        except Exception:
+            pass
+
+        # Default fallback
         return f"{self.target_model}({self.target_id})"
 
+    class Meta:
+        verbose_name = "Audit Log"
+        verbose_name_plural = "Audit Logs"
 
 
 # starting here is for forms
 class Informant(models.Model):
-    inf_fname = models.CharField(max_length=50, blank=True, null=True)
-    inf_mname = models.CharField(max_length=50, blank=True, null=True)
-    inf_lname = models.CharField(max_length=50, blank=True, null=True)
-    inf_extension = models.CharField(max_length=50, blank=True, null=True)
-    inf_birth_date = models.DateField(blank=True, null=True)
-    inf_relationship_to_victim = models.CharField(max_length=50, blank=True, null=True)
-    inf_contact = models.CharField(max_length=11, blank=True, null=True)
-    inf_occupation = models.CharField(max_length=50, blank=True, null=True)
+    inf_fname = EncryptedCharField(max_length=255, blank=True, null=True)
+    inf_mname = EncryptedCharField(max_length=255, blank=True, null=True)
+    inf_lname = EncryptedCharField(max_length=255, blank=True, null=True)
+    inf_extension = EncryptedCharField(max_length=255, blank=True, null=True)
+    inf_birth_date = EncryptedDateField(blank=True, null=True)
+    inf_relationship_to_victim = EncryptedCharField(max_length=255, blank=True, null=True)
+    inf_contact = EncryptedCharField(max_length=255, blank=True, null=True)
+    inf_occupation = EncryptedCharField(max_length=255, blank=True, null=True)
     
     # foreign key
     inf_address = models.ForeignKey(Address, on_delete=models.CASCADE, null=True, blank=True)
@@ -269,36 +291,36 @@ class Victim(models.Model):
     ]
     
     vic_id = models.AutoField(primary_key=True)
-    vic_last_name = models.CharField(max_length=100)
-    vic_first_name = models.CharField(max_length=100)
-    vic_middle_name = models.CharField(max_length=100, blank=True, null=True)
-    vic_extension = models.CharField(max_length=10, blank=True, null=True)
-    vic_sex = models.CharField(max_length=10, choices=SEX_CHOICES)
-    vic_is_SOGIE = models.CharField(max_length=50, choices=SOGIE_CHOICES, default='No')
-    vic_specific_sogie = models.CharField(max_length=50, blank=True, null=True)
-    vic_birth_date = models.DateField( null=True, blank=True)
-    vic_birth_place = models.CharField(max_length=100, null=True, blank=True)
+    vic_last_name = EncryptedCharField(max_length=512)
+    vic_first_name = EncryptedCharField(max_length=512)
+    vic_middle_name = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_extension = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_sex = EncryptedCharField(max_length=512, choices=SEX_CHOICES)
+    vic_is_SOGIE = EncryptedCharField(max_length=512, choices=SOGIE_CHOICES, default='No')
+    vic_specific_sogie = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_birth_date = EncryptedDateField( null=True, blank=True)
+    vic_birth_place = EncryptedCharField(max_length=512, null=True, blank=True)
 
     # if victime is minor, indicate guardian information and child class
-    vic_guardian_fname = models.CharField(max_length=100, blank=True, null=True)
-    vic_guardian_mname = models.CharField(max_length=100, blank=True, null=True)
-    vic_guardian_lname = models.CharField(max_length=100, blank=True, null=True)
-    vic_guardian_contact = models.CharField(max_length=100, blank=True, null=True)
-    vic_child_class = models.CharField(max_length=50, choices=CHILD_CLASS, default="Orphan")
+    vic_guardian_fname = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_guardian_mname = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_guardian_lname = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_guardian_contact = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_child_class = EncryptedCharField(max_length=512, choices=CHILD_CLASS, default="Orphan")
 
-    vic_civil_status = models.CharField(max_length=50, choices=CIVIL_STATUS_CHOICES, default='SINGLE')
-    vic_educational_attainment = models.CharField(max_length=50, choices=EDUCATIONAL_ATTAINMENT_CHOICES, default='No Formal Education')
-    vic_nationality = models.CharField(max_length=50, choices=NATIONALITY_CHOICES, default='Filipino')
-    vic_ethnicity = models.CharField(max_length=50, blank=True, null=True)
-    vic_main_occupation = models.CharField(max_length=100, blank=True, null=True)
+    vic_civil_status = EncryptedCharField(max_length=512, choices=CIVIL_STATUS_CHOICES, default='SINGLE')
+    vic_educational_attainment = EncryptedCharField(max_length=512, choices=EDUCATIONAL_ATTAINMENT_CHOICES, default='No Formal Education')
+    vic_nationality = EncryptedCharField(max_length=512, choices=NATIONALITY_CHOICES, default='Filipino')
+    vic_ethnicity = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_main_occupation = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_monthly_income = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    vic_employment_status = models.CharField(max_length=50, choices=EMPLOYMENT_STATUS_CHOICES, default='Not Applicable')
-    vic_migratory_status = models.CharField(max_length=50, choices=MIGRATORY_STATUS_CHOICES, default='Not Applicable')
-    vic_religion = models.CharField(max_length=50, choices=RELIGION_CHOICES, default='Roman Catholic')
-    vic_current_address = models.CharField(max_length=100, default="Homeless")
+    vic_employment_status = EncryptedCharField(max_length=512, choices=EMPLOYMENT_STATUS_CHOICES, default='Not Applicable')
+    vic_migratory_status = EncryptedCharField(max_length=512, choices=MIGRATORY_STATUS_CHOICES, default='Not Applicable')
+    vic_religion = EncryptedCharField(max_length=512, choices=RELIGION_CHOICES, default='Roman Catholic')
+    vic_current_address = EncryptedCharField(max_length=512, default="Homeless")
     vic_is_displaced = models.BooleanField(default=False)
-    vic_PWD_type = models.CharField(max_length=50, choices=PWD_CHOICES, default='None')
-    vic_contact_number = models.CharField(max_length=15, blank=True, null=True)
+    vic_PWD_type = EncryptedCharField(max_length=512, choices=PWD_CHOICES, default='None')
+    vic_contact_number = EncryptedCharField(max_length=512, blank=True, null=True)
     
     province = models.ForeignKey("province", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
     municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
@@ -337,33 +359,33 @@ class Perpetrator(models.Model):
     ]
 
     perp_id = models.AutoField(primary_key=True)
-    per_first_name = models.CharField(max_length=100)
-    per_middle_name = models.CharField(max_length=100, blank=True, null=True)
-    per_last_name = models.CharField(max_length=100)
-    per_sex = models.CharField(max_length=10, choices=[
+    per_first_name = EncryptedCharField(max_length=512)
+    per_middle_name = EncryptedCharField(max_length=255, blank=True, null=True)
+    per_last_name = EncryptedCharField(max_length=512)
+    per_sex = EncryptedCharField(max_length=255, choices=[
         ('Male', 'Male'),
         ('Female', 'Female')
     ], blank=True, null=True)
-    per_birth_date = models.DateField(blank=True, null=True)
-    per_birth_place = models.CharField(max_length=255, blank=True, null=True)
+    per_birth_date = EncryptedDateField(blank=True, null=True)
+    per_birth_place = EncryptedCharField(max_length=512, blank=True, null=True)
     
     # if perpetrator is minor, indicate guardian information and child class
-    per_guardian_first_name = models.CharField(max_length=100, blank=True, null=True)
-    per_guardian_middle_name = models.CharField(max_length=100, blank=True, null=True)
-    per_guardian_last_name = models.CharField(max_length=100, blank=True, null=True)
-    per_guardian_contact = models.CharField(max_length=50, blank=True, null=True)
-    per_guardian_child_category = models.CharField(max_length=50, blank=True, null=True)
+    per_guardian_first_name = EncryptedCharField(max_length=512, blank=True, null=True)
+    per_guardian_middle_name = EncryptedCharField(max_length=255, blank=True, null=True)
+    per_guardian_last_name = EncryptedCharField(max_length=512, blank=True, null=True)
+    per_guardian_contact = EncryptedCharField(max_length=512, blank=True, null=True)
+    per_guardian_child_category = EncryptedCharField(max_length=512, blank=True, null=True)
     
-    per_nationality = models.CharField(max_length=50, blank=True, null=True)
-    per_main_occupation = models.CharField(max_length=100, blank=True, null=True)
-    per_religion = models.CharField(max_length=50, blank=True, null=True)
-    per_current_address = models.CharField(max_length=100, default="Homeless")
+    per_nationality = EncryptedCharField(max_length=255, blank=True, null=True)
+    per_main_occupation = EncryptedCharField(max_length=512, blank=True, null=True)
+    per_religion = EncryptedCharField(max_length=255, blank=True, null=True)
+    per_current_address = EncryptedCharField(max_length=512, default="Homeless")
 
     # relationship to victim
-    per_relationship_type = models.CharField(max_length=50, choices=RELATIONSHIP_TO_VICTIM, blank=True, null=True)
-    per_relationship_subtype = models.CharField(max_length=100, blank=True, null=True)
+    per_relationship_type = EncryptedCharField(max_length=255, choices=RELATIONSHIP_TO_VICTIM, blank=True, null=True)
+    per_relationship_subtype = EncryptedCharField(max_length=512, blank=True, null=True)
     
-    per_contact = models.IntegerField(null=True,blank=True)
+    per_contact = EncryptedIntegerField(null=True,blank=True)
 
     def __str__(self):
         return f"{self.per_last_name}, {self.per_first_name}"
@@ -718,5 +740,59 @@ class ServiceGiven(models.Model):
     
     def __str__(self):
         return f"{self.serv_id.name if self.serv_id else 'Unknown Service'} for Session {self.session.sess_id}"
+    
+User = get_user_model()
+
+class LoginTracker(models.Model):
+    STATUS_CHOICES = [
+        ("Success", "Success"),
+        ("Failed", "Failed"),
+    ]
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="login_logs",
+        null=True,        # ✅ Allow null for failed logins
+        blank=True
+    )
+    username_attempted = models.CharField(max_length=150, null=True, blank=True)
+    role = models.CharField(max_length=50, blank=True, null=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True, null=True)
+    login_time = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="Success")
+
+    def __str__(self):
+        """Readable string for admin and logs."""
+        name = self.get_official_name()
+        return f"{name} | {self.role or 'Unknown Role'} | {self.status} @ {self.login_time:%Y-%m-%d %H:%M}"
+
+    # -------------------------------
+    # 🔽 Helper function at the bottom
+    # -------------------------------
+    def get_official_name(self):
+        """
+        Returns linked official's full name if available.
+        Falls back to username_attempted or 'Unknown' if user is null.
+        """
+        try:
+            if self.user:
+                official = getattr(self.user, "official", None)
+                if official and hasattr(official, "full_name"):
+                    return official.full_name
+                return self.user.username
+            elif self.username_attempted:
+                return f"{self.username_attempted} (attempted)"
+        except Exception:
+            pass
+        return "Unknown"
+
+    get_official_name.short_description = "Official Name"
+
+    class Meta:
+        verbose_name = "Login Tracker"
+        verbose_name_plural = "Login Tracker Logs"
+
 
 #=================================================================================

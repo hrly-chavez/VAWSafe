@@ -7,12 +7,13 @@ from rest_framework import status, permissions, views
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from shared_model.permissions import IsRole
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken
-from shared_model.models import Official, OfficialFaceSample
-from .serializers import OfficialSerializer, OfficialFaceSampleSerializer
+from shared_model.models import Official, OfficialFaceSample, LoginTracker
+from .serializers import OfficialSerializer, OfficialFaceSampleSerializer, LoginTrackerSerializer
 from rest_framework.decorators import api_view, permission_classes
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -25,6 +26,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from .cookie_utils import set_auth_cookies, clear_auth_cookies
 from django.utils.decorators import method_decorator
+from rest_framework import viewsets
+from .signals import get_client_ip
 
 
 from deepface import DeepFace
@@ -34,12 +37,12 @@ from vawsafe_core.blink_model.blink_utils import detect_blink
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 
-def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-    return {
-        "refresh": str(refresh),
-        "access": str(refresh.access_token),
-    }
+# def get_tokens_for_user(user):
+#     refresh = RefreshToken.for_user(user)
+#     return {
+#         "refresh": str(refresh),
+#         "access": str(refresh.access_token),
+#     }
 
 #gamit ni sa cookies
 # 1) Whoami (used by frontend to restore session)
@@ -582,15 +585,37 @@ class face_login(APIView):
                     "threshold": self.SIMILARITY_THRESHOLD
                 }, status=status.HTTP_200_OK)
 
+                # Log successful facial login
+                ip = get_client_ip(request)
+                user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+                LoginTracker.objects.create(
+                    user=best_match.user,
+                    role=best_match.of_role,
+                    ip_address=ip,
+                    user_agent=user_agent,
+                    status="Success"
+                )
+
                 # 👉 Set HttpOnly cookies
                 set_auth_cookies(resp, access, str(refresh))
                 return resp
+            
+                
 
             accuracy = best_score * 100 if best_score > 0 else 0
             print(
                 f"[FACE LOGIN]  NO MATCH | Best Score: {best_score:.4f} | "
                 f"Accuracy: {accuracy:.2f}% | "
                 f"Threshold: {self.SIMILARITY_THRESHOLD} | Result: FALSE"
+            )
+
+            LoginTracker.objects.create(
+                user=None,
+                role=None,
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                status="Failed"
             )
 
             return Response({"match": False, "message": "No matching face found."}, status=status.HTTP_404_NOT_FOUND)
@@ -854,6 +879,17 @@ class CookieTokenObtainPairView(views.APIView):
 
         # 👉 Set HttpOnly cookies (access + refresh)
         set_auth_cookies(resp, tokens["access"], tokens.get("refresh"))
+
+        # Track successful login
+        ip = get_client_ip(request)
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+        LoginTracker.objects.create(
+            user=user,
+            role=role,
+            ip_address=ip,
+            user_agent=user_agent,
+            status="Success"
+        )
         return resp
 
 class ForgotPasswordFaceView(APIView):
@@ -1006,6 +1042,19 @@ class ResetPasswordView(APIView):
         user.save()
 
         return Response({"success": True, "message": "Password reset successful"}, status=status.HTTP_200_OK)
+    
+class LoginTrackerViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = LoginTracker.objects.all().order_by('-login_time')
+    serializer_class = LoginTrackerSerializer
+    # permission_classes = [IsAuthenticated, IsRole]
+    # allowed_roles = ['DSWD']
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, 'official') and user.official.of_role != 'DSWD':
+            return self.queryset.filter(user=user)
+        return self.queryset  # DSWD sees all
     
 
 
