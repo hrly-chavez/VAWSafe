@@ -19,9 +19,15 @@ urlpatterns = [
     path("officials/social-workers/", list_social_workers, name="list-social-workers"),
     path("sessions/", schedule_next_session, name="social-worker-sessions"),
     path("cases/<int:incident_id>/close/", close_case, name="close-case"),
+    #Service
     path("services/category/<int:category_id>/", services_by_category, name="services-by-category"),
     path("service-categories/", list_service_categories, name="service-categories"),
+    path("services/<int:service_id>/", update_service_feedback, name="update-service-feedback"),
+    path("services/<int:service_id>/upload/", upload_service_proof, name="upload-service-proof"),
+
+
     path("cases/", SocialWorkerCaseList.as_view(), name="list-of-cases"),
+    
 
     # --- Availability CRUD ---
     path("availability/",OfficialAvailabilityViewSet.as_view({"get": "list", "post": "create"}),name="availability-list"),
