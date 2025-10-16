@@ -1,6 +1,7 @@
 // src/pages/social_worker/Victims/SessionDetails.js
 import React, { useEffect, useState } from "react";
 import api from "../../../api/axios";
+import ServiceList from "./SessionDetails/ServiceList";
 
 export default function SessionDetails({ sessionId, onClose }) {
   const [session, setSession] = useState(null);
@@ -57,31 +58,41 @@ export default function SessionDetails({ sessionId, onClose }) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DetailItem label="Session Number" value={session.sess_num} />  {/*Session Number*/}
                 <DetailItem label="Status" value={session.sess_status} /> {/*status*/}
-                {/*Date*/}
-                <DetailItem    
-                    label="Date"
-                    value={
-                      session.sess_next_sched
-                        ? new Date(session.sess_next_sched).toLocaleString([], {
-                            year: "numeric",
-                            month: "numeric",
-                            day: "numeric",
-                            hour: "numeric",
-                            minute: "numeric",
-                            hour12: true,
-                          })
-                        : session.sess_date_today
-                        ? new Date(session.sess_date_today).toLocaleString([], {
-                            year: "numeric",
-                            month: "numeric",
-                            day: "numeric",
-                            hour: "numeric",
-                            minute: "numeric",
-                            hour12: true,
-                          })
-                        : "—"
-                    }
-                  />
+                
+                {/* Scheduled Date */}
+                <DetailItem
+                  label="Scheduled Date"
+                  value={
+                    session.sess_next_sched
+                      ? new Date(session.sess_next_sched).toLocaleString([], {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
+                      : "—"
+                  }
+                />
+
+                {/* Actual Start Date */}
+                <DetailItem
+                  label="Start Date"
+                  value={
+                    session.sess_date_today
+                      ? new Date(session.sess_date_today).toLocaleString([], {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
+                      : "—"
+                  }
+                />
+
 
                 {/* Location */}
                 <DetailItem label="Location" value={session.sess_location} />
@@ -99,20 +110,20 @@ export default function SessionDetails({ sessionId, onClose }) {
               </div>
 
              {/* Session Types */}
-{session.sess_type_display && session.sess_type_display.length > 0 && (
-  <div>
-    <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
-      Session Types
-    </h3>
-    <div className="p-3 border rounded-md bg-gray-50 space-y-1">
-      {session.sess_type_display.map((type, idx) => (
-        <p key={idx} className="text-sm font-medium text-gray-800">
-          {type.name}
-        </p>
-      ))}
-    </div>
-  </div>
-)}
+            {session.sess_type_display && session.sess_type_display.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
+                  Session Type(s)
+                </h3>
+                <div className="p-3 border rounded-md bg-gray-50 space-y-1">
+                  {session.sess_type_display.map((type, idx) => (
+                    <p key={idx} className="text-sm font-medium text-gray-800">
+                      {type.name}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            )}
 
 
 
@@ -196,6 +207,24 @@ export default function SessionDetails({ sessionId, onClose }) {
                   <p className="text-sm text-gray-500">No custom questions answered.</p>
                 )}
               </div>
+
+                {/* SERVICE */}
+                <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
+                  Services Given
+                </h3>
+                <ServiceList
+              services={session.services_given}
+              onFeedbackUpdate={async () => {
+                try {
+                  const res = await api.get(`/api/social_worker/sessions/${sessionId}/`);
+                  setSession(res.data); // Refresh the session data
+                } catch (err) {
+                  console.error("Failed to refresh session data", err);
+                }
+              }}
+            />
+
+
 
             </>
           ) : (

@@ -8,9 +8,16 @@ export default function DSWDServices() {
   const [category, setCategory] = useState("All");
   const [showModal, setShowModal] = useState(false);
 
+  const [categories, setCategories] = useState([]);
+
   const [provinces, setProvinces] = useState([]);
   const [municipalities, setMunicipalities] = useState([]);
   const [barangays, setBarangays] = useState([]);
+
+
+  useEffect(() => {
+    api.get("/api/dswd/service-categories/").then(res => setCategories(res.data));
+  }, []);
 
   useEffect(() => {
     api.get("/api/dswd/provinces/").then(res => setProvinces(res.data));
@@ -52,7 +59,7 @@ export default function DSWDServices() {
 
   // Form state
   const [formData, setFormData] = useState({
-    category: "Others",
+    category: "",
     name: "",
     contact_person: "",
     contact_number: "",
@@ -72,16 +79,7 @@ export default function DSWDServices() {
     }
   });
 
-  const categories = [
-    "All",
-    "Protection",
-    "Legal",
-    "Pyscho-Social",
-    "Medical",
-    "Medico-Legal",
-    "Livelihood and Employment",
-    "Others"
-  ];
+
 
   // fetch services with optional category filter
   const fetchServices = (selectedCategory = "All") => {
@@ -109,21 +107,24 @@ export default function DSWDServices() {
 
   const handleChange = (e, field, nested = null) => {
     const { name, value } = e.target;
+    const processedValue = name === "category" ? Number(value) : value;
+
     if (nested) {
       setFormData({
         ...formData,
         [nested]: {
           ...formData[nested],
-          [name]: value
+          [name]: processedValue
         }
       });
     } else {
       setFormData({
         ...formData,
-        [name]: value
+        [name]: processedValue
       });
     }
   };
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -151,10 +152,14 @@ export default function DSWDServices() {
             onChange={(e) => setCategory(e.target.value)}
             className="h-10 w-48 rounded-lg border px-3 text-sm"
           >
+            <option value="All">All</option>
             {categories.map((cat) => (
-              <option key={cat}>{cat}</option>
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
             ))}
           </select>
+
 
           <button
             onClick={() => setShowModal(true)}
@@ -215,10 +220,17 @@ export default function DSWDServices() {
                 onChange={handleChange}
                 className="w-full border rounded px-3 py-2"
               >
-                {categories.filter(c => c !== "All").map((c) => (
-                  <option key={c}>{c}</option>
+                <option value="" disabled>
+                  -- Select Category --
+                </option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
                 ))}
               </select>
+
+
 
               <input
                 type="text"

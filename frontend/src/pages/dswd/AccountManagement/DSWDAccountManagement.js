@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import RegisterUser from "../../RegisterUser";
 
 import {
   PencilSquareIcon,
@@ -15,10 +16,29 @@ export default function AccountManagement() {
   const [error, setError] = useState(""); 
   const navigate = useNavigate();
 
+  // NEW: filter state: 'active' | 'archived' | 'all'
+  const [filter, setFilter] = useState("active");
+
+  // mao ni ang modal para sa register user
+  const [showRegisterModal, setShowRegisterModal] = useState(false); 
+
   useEffect(() => {
-    api.get("/api/dswd/officials/")
+    setLoading(true);
+    setError("");
+
+    const includeArchived = filter !== "active"; // fetch archived only when needed
+    const url = includeArchived ? "/api/dswd/officials/?include_archived=1" : "/api/dswd/officials/";
+
+    api.get(url)
       .then((res) => {
-        setOfficials(res.data);
+        // client-side post filter for convenience
+        let data = res.data || [];
+        if (filter === "active") {
+          data = data.filter(o => !o.deleted_at);
+        } else if (filter === "archived") {
+          data = data.filter(o => !!o.deleted_at);
+        }
+        setOfficials(data);
         setLoading(false);
       })
       .catch((err) => {
@@ -26,7 +46,8 @@ export default function AccountManagement() {
         setError("Unable to load officials.");
         setLoading(false);
       });
-  }, []);
+  }, [filter]);
+
 
 
   // Users Color Role
@@ -48,10 +69,28 @@ export default function AccountManagement() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-bold text-[#292D96]">Permissions & Accounts › User Management</h1>
-        <button className="bg-yellow-400 hover:bg-yellow-500 text-white font-semibold px-4 py-2 rounded shadow">
-          Add User
-        </button>
+
+        <div className="flex items-center gap-3">
+          {/* Filter */}
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="border rounded px-3 py-2 text-sm"
+            title="Filter"
+          >
+            <option value="active">Active</option>
+            <option value="archived">Archived</option>
+          </select>
+
+          <button
+            onClick={() => setShowRegisterModal(true)}
+            className="bg-yellow-400 hover:bg-yellow-500 text-white font-semibold px-4 py-2 rounded shadow"
+          >
+            Add User
+          </button>
+        </div>
       </div>
+
 
       {/* Table */}
       <div className="mt-6 rounded-2xl border border-neutral-200 bg-white p-4 shadow-lg">
@@ -109,27 +148,54 @@ export default function AccountManagement() {
                     {/* Action Buttons */}
                     <td className="px-4 py-3 text-left">
                       <div className="flex items-center gap-2">
-                        {/* View Button */}
                         <button
                           onClick={() => navigate(`/dswd/account-management/${official.of_id}`)}
-                          className="flex items-center gap-1 bg-[#292D96] text-white px-3 py-1 rounded text-sm shadow hover:bg-[#1f237d]"
-                        >
+                          className="flex items-center gap-1 bg-[#292D96] text-white px-3 py-1 rounded text-sm shadow hover:bg-[#1f237d]">
                           <EyeIcon className="h-4 w-4" />
                           View
                         </button>
 
-                        {/* Edit Button */}
-                        <button className="flex items-center gap-1 bg-green-600 text-white px-3 py-1 rounded text-sm shadow hover:bg-green-700">
-                          <PencilSquareIcon className="h-4 w-4" />
-                          Edit
-                        </button>
+                        {/* Quick Unarchive (only shows if archived) */}
+                        {official.deleted_at && (
+                          <button
+                            onClick={async () => {
+                              const reason = window.prompt("Reason for unarchive?");
+                              if (reason === null) return;
+                              try {
+                                await api.post(`/api/dswd/officials/${official.of_id}/unarchive/`, { reason });
+                                // refetch using current filter so the list updates
+                                const includeArchived = filter !== "active";
+                                const url = includeArchived
+                                  ? "/api/dswd/officials/?include_archived=1"
+                                  : "/api/dswd/officials/";
+                                const res = await api.get(url);
+                                let data = res.data || [];
+                                if (filter === "active") data = data.filter(o => !o.deleted_at);
+                                else if (filter === "archived") data = data.filter(o => !!o.deleted_at);
+                                setOfficials(data);
+                                alert("Unarchived. Use 'Reactivate' on the details page to allow login again.");
+                              } catch (e) {
+                                console.error(e);
+                                alert("Failed to unarchive.");
+                              }
+                            }}
+                            className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded text-sm shadow"
+                          >
+                            Unarchive
+                          </button>
+                        )}
 
-                        {/* Remove Button */}
-                        <button className="flex items-center justify-center bg-red-500 text-white w-8 h-8 rounded-full shadow hover:bg-red-600">
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
+
+                        {/* Example future delete (VAWDesk only)
+                        {String(official.of_role || "").toLowerCase() === "vawdesk" && !official.deleted_at && (
+                          <button className="flex items-center justify-center bg-red-500 text-white w-8 h-8 rounded-full shadow hover:bg-red-600">
+                            <TrashIcon className="h-4 w-4" />
+                          </button>
+                        )} */}
                       </div>
+
                     </td>
+
                   </tr>
                 ))
               )}
@@ -156,6 +222,12 @@ export default function AccountManagement() {
           <button className="px-2 py-1 border rounded hover:bg-gray-100">Last</button>
         </div>
       </div>
+      {showRegisterModal &&(
+        <RegisterUser
+          onClose={() => setShowRegisterModal(false)}
+          defaultRole= {["Social Worker", "VAWDesk"]}
+        />
+      )}
     </div>
   );
 }

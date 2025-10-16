@@ -75,8 +75,6 @@ export default function Victims() {
                         <td>
                           <div className="action-buttons">
                             <Link to={`/social_worker/victims/${v.vic_id}`} className="btn-view">View</Link>
-                            <Link to={`/social_worker/victims/${v.vic_id}/edit`} className="btn-edit">Edit</Link>
-                            <button onClick={() => handleDelete(v.vic_id)} className="btn-delete">Delete</button>
                           </div>
                         </td>
                       </tr>

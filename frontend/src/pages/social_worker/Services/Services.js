@@ -1,12 +1,8 @@
+//src/pages/social_worker_Services/Services.js
 import React from "react";
 import { Link } from "react-router-dom";
 import "./Services.css";
 
-/**
- * Social Worker > Services page
- * - Full-bleed wrapper to match DSWD width without touching SidebarLayout.css
- * - Card layout inside, responsive on all screen sizes
- */
 export default function Services() {
   return (
     <div>

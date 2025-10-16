@@ -24,7 +24,7 @@ urlpatterns = [
     path("vawdesk_officer/", ViewVAWDeskOfficer.as_view(), name="view_vawdesk_officer"),
     path("vawdesk_officer/<int:of_id>/", ViewVAWDeskOfficerDetail.as_view(), name="view_vawdesk_officer_detail"),
       
-     # Questions library
+  #Questions library==================
     path("questions/", QuestionListCreate.as_view(), name="question-list-create"),
     path("questions/choices/", QuestionChoices.as_view(), name="question-choices"),
     path("questions/<int:pk>/", QuestionDetail.as_view(), name="question-detail"),
@@ -33,10 +33,16 @@ urlpatterns = [
     # SessionTypeQuestion mappings
     path("session-type-questions/", SessionTypeQuestionListCreate.as_view(), name="sessiontypequestion-list-create"),
     path("session-type-questions/<int:pk>/", SessionTypeQuestionDetail.as_view(), name="sessiontypequestion-detail"),
-    # Session types (dropdown support)
+    # Session types
     path("session-types/", SessionTypeList.as_view(), name="sessiontype-list"),
+
+    path("change-logs/", ChangeLogListView.as_view(), name="change-log-list"),
+
+  #======================
+
     #services
     path("services/", ServicesListCreateView.as_view(), name="services-list-create"),
+    path("service-categories/", ServiceCategoryListView.as_view(), name="service-categories"),
 
     path('', include(router.urls)),
 ] + router.urls
