@@ -378,7 +378,10 @@ import VictimInfo from "./VictimInfo";
 import IncidentInfo from "./IncidentInfo";
 import PerpetratorInfo from "./PerpetratorInfo";
 import CaptureVictimFacial from "./VictimFacial";
-import SchedulePage from "../Session/Schedule";
+
+// ! gibalhin nako ug lain page -> bpoapplication.js
+// import SchedulePage from "../Session/Schedule";
+
 import Evidences from "./Evidences";
 
 // imported constants
@@ -439,7 +442,9 @@ export default function RegisterVictim() {
   });
   const [statusMessage, setStatusMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showSchedulePage, setShowSchedulePage] = useState(null);
+
+  // ! gibalhin nako ug lain page -> bpoapplication.js
+  // const [showSchedulePage, setShowSchedulePage] = useState(null);
 
   const cancel = () => {
     alert("Form cancelled!");
@@ -568,7 +573,17 @@ export default function RegisterVictim() {
       // ✅ axios request
       const res = await api.post("/api/desk_officer/victims/register/", fd);
 
-      console.log(res.data.incident.incident_id);
+      console.log(res.data);
+
+      // * this is for getting pk of incident information which will be used for bpo application
+      const victimData = res.data?.victim;
+      const incidentData = res.data?.incident;
+
+      localStorage.setItem("victimData", JSON.stringify(victimData));
+      localStorage.setItem("incidentData", JSON.stringify(incidentData));
+
+      console.log(victimData);
+      console.log(incidentData);
 
       if (!res.data || res.data.success === false) {
         const errors = res.data?.errors;
@@ -591,11 +606,14 @@ export default function RegisterVictim() {
       setStatusMessage("✅ Victim registered successfully!");
       setLoading(false);
 
+      // ! gibalhin nako ug lain page -> bpoapplication.js
       // Pass victim + incident to SchedulePage
-      setShowSchedulePage({
-        victim: res.data.victim,
-        incident: res.data.incident,
-      });
+      // setShowSchedulePage({
+      //   victim: res.data.victim,
+      //   incident: res.data.incident,
+      // });
+
+      navigate("/desk_officer/bpo-application");
     } catch (err) {
       console.error("Register victim exception:", err);
       setStatusMessage(" Something went wrong.");
@@ -765,14 +783,15 @@ export default function RegisterVictim() {
         )}
       </div>
 
+      {/* // ! gibalhin nako ug lain page -> bpoapplication.js */}
       {/* Show schedule page after success */}
-      {showSchedulePage && (
+      {/* {showSchedulePage && (
         <SchedulePage
           embedded={true}
           victim={showSchedulePage.victim}
           incident={showSchedulePage.incident}
         />
-      )}
+      )} */}
     </div>
   );
 }
