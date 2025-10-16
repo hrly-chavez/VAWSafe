@@ -272,6 +272,7 @@ export default function Schedule({ victim, incident, back, next }) {
 
                   <div className="flex justify-end mt-3">
                     <button
+                      type="button"
                       onClick={() => setSelectedOfficial(sw.of_id)}
                       className={`px-3 py-1 rounded-md text-sm font-semibold transition ${
                         selectedOfficial === sw.of_id
