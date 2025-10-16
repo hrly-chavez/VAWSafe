@@ -789,7 +789,7 @@ class ServiceGiven(models.Model):
 
     service_pic = models.ImageField(upload_to='service_forms/', null=True, blank=True) 
     service_status = models.CharField(max_length=20, choices=SERVICE_STATUS, default='Pending')
-    
+    service_feedback = models.TextField(null=True, blank=True, help_text="Remarks or feedback about the service given")
     def __str__(self):
         return f"{self.serv_id.name if self.serv_id else 'Unknown Service'} for Session {self.session.sess_id}"
     

@@ -319,10 +319,21 @@ class SessionListCreateView(generics.ListCreateAPIView):
         # Only return sessions that are Pending or Ongoing
         return Session.objects.filter(sess_status__in=['Pending', 'Ongoing']).order_by('-sess_next_sched')
 
-class SessionDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Session.objects.all()
+class SessionDetailView(generics.RetrieveAPIView):
+    """
+    GET: Retrieve a single session detail for Desk Officer.
+    Uniform with Social Worker’s display — includes services, questions, etc.
+    Read-only (Desk Officer cannot edit services or session data).
+    """
     serializer_class = DeskOfficerSessionDetailSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['VAWDesk']
     lookup_field = "sess_id"
+
+    def get_queryset(self):
+        return Session.objects.all().select_related("assigned_official", "incident_id").prefetch_related(
+            "sess_type", "session_questions", "services_given__serv_id__category", "services_given__of_id"
+        )
 
 
 @api_view(["POST"])

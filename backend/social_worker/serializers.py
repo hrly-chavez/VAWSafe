@@ -265,6 +265,7 @@ class ServiceGivenSerializer(serializers.ModelSerializer):
             "service",        
             "service_status",
             "service_pic",
+            "service_feedback",
         ]
 #===========
 class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer): 
