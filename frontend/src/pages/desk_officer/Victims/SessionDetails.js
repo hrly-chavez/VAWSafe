@@ -1,6 +1,7 @@
 // src/pages/desk_officer/Victims/SessionDetails.js
 import React, { useEffect, useState } from "react";
 import api from "../../../api/axios";
+import ServiceList from "./SessionDetails/ServiceList"; 
 
 export default function SessionDetails({ sessionId, onClose }) {
   const [session, setSession] = useState(null);
@@ -15,6 +16,7 @@ export default function SessionDetails({ sessionId, onClose }) {
         const res = await api.get(`/api/desk_officer/sessions/${sessionId}/`);
         setSession(res.data);
       } catch (err) {
+        console.error("Failed to load session details:", err);
         setError("Failed to load session details");
       } finally {
         setLoading(false);
@@ -54,34 +56,42 @@ export default function SessionDetails({ sessionId, onClose }) {
             <p className="text-red-600">{error}</p>
           ) : session ? (
             <>
-              {/* Top Grid */}
+              {/* === SESSION INFO === */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <DetailItem label="Session Number" value={session.sess_num} />
                 <DetailItem label="Status" value={session.sess_status} />
+
                 <DetailItem
-                    label="Date"
-                    value={
-                      session.sess_next_sched
-                        ? new Date(session.sess_next_sched).toLocaleString([], {
-                            year: "numeric",
-                            month: "numeric",
-                            day: "numeric",
-                            hour: "numeric",
-                            minute: "numeric",
-                            hour12: true,
-                          })
-                        : session.sess_date_today
-                        ? new Date(session.sess_date_today).toLocaleString([], {
-                            year: "numeric",
-                            month: "numeric",
-                            day: "numeric",
-                            hour: "numeric",
-                            minute: "numeric",
-                            hour12: true,
-                          })
-                        : "—"
-                    }
-                  />
+                  label="Scheduled Date"
+                  value={
+                    session.sess_next_sched
+                      ? new Date(session.sess_next_sched).toLocaleString([], {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
+                      : "—"
+                  }
+                />
+
+                <DetailItem
+                  label="Start Date"
+                  value={
+                    session.sess_date_today
+                      ? new Date(session.sess_date_today).toLocaleString([], {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })
+                      : "—"
+                  }
+                />
                 <DetailItem label="Location" value={session.sess_location} />
                 <DetailItem
                   label="Assigned Official"
@@ -89,7 +99,7 @@ export default function SessionDetails({ sessionId, onClose }) {
                 />
               </div>
 
-              {/* Description */}
+              {/* === DESCRIPTION === */}
               <div>
                 <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
                   Description
@@ -99,115 +109,123 @@ export default function SessionDetails({ sessionId, onClose }) {
                 </p>
               </div>
 
-              {/* Session Types */}
-{session.sess_type && session.sess_type.length > 0 && (
-  <div>
-    <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
-      Session Types
-    </h3>
-    <div className="p-3 border rounded-md bg-gray-50 space-y-1">
-      {session.sess_type.map((type, idx) =>
-        typeof type === "object" ? (
-          <p key={idx} className="text-sm font-medium text-gray-800">
-            {type.name}
-          </p>
-        ) : (
-          <p key={idx} className="text-sm font-medium text-gray-800">
-            {type}
-          </p>
-        )
-      )}
-    </div>
-  </div>
-)}
+              {/* === SESSION TYPES === */}
+              {session.sess_type_display && session.sess_type_display.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
+                    Session Type(s)
+                  </h3>
+                  <div className="p-3 border rounded-md bg-gray-50 space-y-1">
+                    {session.sess_type_display.map((type, idx) => (
+                      <p key={idx} className="text-sm font-medium text-gray-800">
+                        {type.name}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-
-             {/* Mapped Questions */}
-<div>
-  <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
-    Mapped Questions
-  </h3>
-  {session.session_questions &&
-  session.session_questions.filter((q) => q.question_text).length > 0 ? (
-    <div className="space-y-4">
-      {Object.entries(
-        session.session_questions
-          .filter((q) => q.question_text)
-          .reduce((acc, q) => {
-            const cat = q.question_category || "Uncategorized";
-            if (!acc[cat]) acc[cat] = [];
-            acc[cat].push(q);
-            return acc;
-          }, {})
-      ).map(([category, qs]) => (
-        <div key={category}>
-          <h4 className="text-md font-semibold text-gray-700 mb-2">
-            {category}
-          </h4>
-          <div className="space-y-3">
-            {qs.map((q) => (
-              <div
-                key={q.sq_id}
-                className="p-3 border rounded-md bg-gray-50"
-              >
-                <p className="text-sm font-medium text-gray-800">
-                  {q.question_text}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-semibold">Answer:</span>{" "}
-                  {q.sq_value || "—"}
-                </p>
-                {q.sq_note && (
-                  <p className="text-sm text-gray-500 italic">
-                    Note: {q.sq_note}
+              {/* === MAPPED QUESTIONS === */}
+              <div>
+                <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
+                  Mapped Questions
+                </h3>
+                {session.questions &&
+                session.questions.filter((q) => q.question_text).length > 0 ? (
+                  <div className="space-y-4">
+                    {Object.entries(
+                      session.questions
+                        .filter((q) => q.question_text)
+                        .reduce((acc, q) => {
+                          const cat = q.question_category || "Uncategorized";
+                          if (!acc[cat]) acc[cat] = [];
+                          acc[cat].push(q);
+                          return acc;
+                        }, {})
+                    ).map(([category, qs]) => (
+                      <div key={category}>
+                        <h4 className="text-md font-semibold text-gray-700 mb-2">
+                          {category}
+                        </h4>
+                        <div className="space-y-3">
+                          {qs.map((q) => (
+                            <div
+                              key={q.sq_id}
+                              className="p-3 border rounded-md bg-gray-50"
+                            >
+                              <p className="text-sm font-medium text-gray-800">
+                                {q.question_text}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                <span className="font-semibold">Answer:</span>{" "}
+                                {q.sq_value || "—"}
+                              </p>
+                              {q.sq_note && (
+                                <p className="text-sm text-gray-500 italic">
+                                  Note: {q.sq_note}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    No mapped questions answered.
                   </p>
                 )}
               </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  ) : (
-    <p className="text-sm text-gray-500">No mapped questions answered.</p>
-  )}
-</div>
 
-{/* Custom Questions */}
-<div>
-  <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
-    Custom Questions
-  </h3>
-  {session.session_questions &&
-  session.session_questions.filter((q) => q.sq_custom_text).length > 0 ? (
-    <div className="space-y-3">
-      {session.session_questions
-        .filter((q) => q.sq_custom_text)
-        .map((q) => (
-          <div
-            key={q.sq_id}
-            className="p-3 border rounded-md bg-gray-50"
-          >
-            <p className="text-sm font-medium text-gray-800">
-              {q.sq_custom_text}
-            </p>
-            <p className="text-sm text-gray-600">
-              <span className="font-semibold">Answer:</span>{" "}
-              {q.sq_value || "—"}
-            </p>
-            {q.sq_note && (
-              <p className="text-sm text-gray-500 italic">
-                Note: {q.sq_note}
-              </p>
-            )}
-          </div>
-        ))}
-    </div>
-  ) : (
-    <p className="text-sm text-gray-500">No custom questions answered.</p>
-  )}
-</div>
+              {/* === CUSTOM QUESTIONS === */}
+              <div>
+                <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
+                  Custom Questions
+                </h3>
+                {session.questions &&
+                session.questions.filter((q) => q.sq_custom_text).length > 0 ? (
+                  <div className="space-y-3">
+                    {session.questions
+                      .filter((q) => q.sq_custom_text)
+                      .map((q) => (
+                        <div
+                          key={q.sq_id}
+                          className="p-3 border rounded-md bg-gray-50"
+                        >
+                          <p className="text-sm font-medium text-gray-800">
+                            {q.sq_custom_text}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            <span className="font-semibold">Answer:</span>{" "}
+                            {q.sq_value || "—"}
+                          </p>
+                          {q.sq_note && (
+                            <p className="text-sm text-gray-500 italic">
+                              Note: {q.sq_note}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    No custom questions answered.
+                  </p>
+                )}
+              </div>
 
+              {/* === SERVICES GIVEN (Read-Only) === */}
+              <div>
+                <h3 className="text-lg font-semibold text-[#292D96] mt-6 mb-2">
+                  Services Given
+                </h3>
+                {session.services_given && session.services_given.length > 0 ? (
+                  <ServiceList services={session.services_given} />
+                ) : (
+                  <p className="text-sm text-gray-500">No services recorded.</p>
+                )}
+              </div>
             </>
           ) : (
             <p>No session found.</p>

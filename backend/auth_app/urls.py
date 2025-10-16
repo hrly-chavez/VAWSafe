@@ -1,5 +1,10 @@
 from django.urls import path
 from .views import *
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'login-tracker', LoginTrackerViewSet, basename='login-tracker')
+
 urlpatterns = [
     path('add-user/', create_official.as_view(), name='add-user'),
     path('face-login/', face_login.as_view(), name='face-login'),
@@ -13,4 +18,4 @@ urlpatterns = [
     path('refresh/', CookieTokenRefreshView.as_view()),
     path('logout/', logout),
     path('me/', me),
-]
+] + router.urls

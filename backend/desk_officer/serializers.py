@@ -204,11 +204,50 @@ class SessionQuestionSerializer(serializers.ModelSerializer):  # Generated + ans
             "sq_value",
             "sq_note",
         ]
+# ====== SERVICES ======
+class DeskOfficerServiceGivenSerializer(serializers.ModelSerializer):
+    """
+    Read-only service serializer for Desk Officer — uniform with Social Worker version.
+    Displays full details of each service given under a session.
+    """
+    service = serializers.SerializerMethodField()
+    handled_by = serializers.CharField(source="of_id.full_name", read_only=True)
 
-class DeskOfficerSessionDetailSerializer(serializers.ModelSerializer): #show session and session answer in card
+    class Meta:
+        model = ServiceGiven
+        fields = [
+            "id",
+            "service",           # nested service details (organization, category, contacts)
+            "handled_by",        # social worker who handled it
+            "service_status",
+            "service_feedback",
+            "service_pic",
+        ]
+
+    def get_service(self, obj):
+        """Return nested service details (name, category, contact info, etc.)"""
+        if not obj.serv_id:
+            return None
+        service = obj.serv_id
+        return {
+            "serv_id": service.serv_id,
+            "name": service.name,
+            "category": service.category.name if service.category else None,
+            "contact_person": service.contact_person,
+            "contact_number": service.contact_number,
+        }
+
+# ====== SESSION DETAILS ======
+class DeskOfficerSessionDetailSerializer(serializers.ModelSerializer):
+    """
+    Full session detail serializer for Desk Officer.
+    Uniform with Social Worker’s version but read-only.
+    Includes questions, session types, and linked services.
+    """
     official_name = serializers.CharField(source="assigned_official.full_name", read_only=True)
-    sess_type = SessionTypeSerializer(many=True, read_only=True)
-    session_questions = SessionQuestionSerializer(many=True, read_only=True)
+    sess_type_display = SessionTypeSerializer(source="sess_type", many=True, read_only=True)
+    questions = SessionQuestionSerializer(source="session_questions", many=True, read_only=True)
+    services_given = DeskOfficerServiceGivenSerializer(many=True, read_only=True)
 
     class Meta:
         model = Session
@@ -221,16 +260,16 @@ class DeskOfficerSessionDetailSerializer(serializers.ModelSerializer): #show ses
             "sess_location",
             "sess_description",
             "official_name",
-            "sess_type",          # names not IDs
-            "session_questions",  # answered questions
+            "sess_type_display",
+            "questions",
+            "services_given",
         ]
-
 class GenerateSessionQuestionsSerializer(serializers.Serializer):
     session_types = serializers.ListField(
         child=serializers.IntegerField(), allow_empty=False
     )
 
-#======================================SESSION================================================= 
+#======================================================================================= 
 
 # Account Management
 class OfficialSerializer(serializers.ModelSerializer):

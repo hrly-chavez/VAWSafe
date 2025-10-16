@@ -3,7 +3,7 @@ from .models import *
 from django.db import transaction
 from django.db.models import Prefetch
 from django.utils.html import format_html
-from django.urls import reverse  # ← add this
+from django.urls import reverse  
 from .face_embeddings import compute_arcface_embedding
 from django.db.models import IntegerField, Func, Q
 
@@ -180,9 +180,15 @@ class OfficialFaceSampleAdmin(admin.ModelAdmin):
     has_embedding.short_description = "Embedding?"
 
 
+
+
+
 admin.site.register(Victim)
 # admin.site.register(VictimFaceSample)
 # admin.site.register(IncidentInformation)
+
+admin.site.register(OfficialAvailability)
+admin.site.register(OfficialUnavailability)
 
 admin.site.register(Session)
 admin.site.register(SessionType)
@@ -190,8 +196,34 @@ admin.site.register(Question)
 
 admin.site.register(Services)
 admin.site.register(ServiceCategory)
+admin.site.register(Perpetrator)
 
-admin.site.register(AuditLog)
+#para sa kinsay ni edit ani nga official
+@admin.register(AuditLog)
+class AuditLogAdmin(admin.ModelAdmin):
+    list_display = ("get_actor_name", "action", "get_target_label", "reason", "created_at")
+    list_filter = ("action", "created_at")
+    search_fields = (
+        "actor__username",
+        "actor__official__of_fname",
+        "actor__official__of_lname",
+        "target_model",
+        "target_id",
+    )
+
+    def get_actor_name(self, obj):
+        return obj.get_actor_name()
+    get_actor_name.short_description = "Actor Name"
+
+    def get_target_label(self, obj):
+        return obj.get_target_label()
+    get_target_label.short_description = "Target"
+#para sa kinsay ni login ug when ni login
+@admin.register(LoginTracker)
+class LoginTrackerAdmin(admin.ModelAdmin):
+    list_display = ('get_official_name', 'role', 'ip_address', 'login_time', 'status')
+    list_filter = ('role', 'status', 'login_time')
+    search_fields = ('user__username', 'user__official__of_fname', 'user__official__of_lname', 'ip_address')
 
 # admin.site.register(Province)
 # admin.site.register(Municipality)

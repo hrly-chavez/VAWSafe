@@ -74,6 +74,8 @@ INSTALLED_APPS = [
     #gibutangan nako ug apps.SharedModelConfig para sa face embeddings para sa /admin
     'shared_model.apps.SharedModelConfig',
     'auth_app',
+    #extensions
+    "django_extensions"
 ]
 
 MIDDLEWARE = [
@@ -95,7 +97,8 @@ ROOT_URLCONF = 'vawsafe_core.urls'
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "auth_app.authentication.CookieJWTAuthentication",
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        #tangtangon ni kay gigamit ang authentication.py sa auth_app
+        # "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',

@@ -3,7 +3,8 @@ from shared_model.models import *
 from datetime import date
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-
+from datetime import datetime, time
+from rest_framework.exceptions import ValidationError
 # --- Lightweight list serializer ---
 class VictimListSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
@@ -264,6 +265,7 @@ class ServiceGivenSerializer(serializers.ModelSerializer):
             "service",        
             "service_status",
             "service_pic",
+            "service_feedback",
         ]
 #===========
 class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer): 
@@ -324,12 +326,13 @@ class CloseCaseSerializer(serializers.ModelSerializer):
 #=======================================CASES==========================================================
 
 class IncidentSerializer(serializers.ModelSerializer): #For case Column & Rows of Case
+
     victim_name = serializers.SerializerMethodField()
     gender = serializers.SerializerMethodField()
     case_no = serializers.SerializerMethodField()
     official_name = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
-
+    vic_id = serializers.IntegerField(source="vic_id.vic_id", read_only=True)
     class Meta:
         model = IncidentInformation
         fields = [
@@ -342,6 +345,7 @@ class IncidentSerializer(serializers.ModelSerializer): #For case Column & Rows o
             "gender",
             "official_name",
             "location",
+            "vic_id",
         ]
 
     def get_victim_name(self, obj):
@@ -358,3 +362,92 @@ class IncidentSerializer(serializers.ModelSerializer): #For case Column & Rows o
 
     def get_location(self, obj):
         return obj.incident_location or None
+    
+# ===================================== SCHEDULING =====================================
+
+class OfficialAvailabilitySerializer(serializers.ModelSerializer):
+    day_display = serializers.CharField(source="get_day_of_week_display", read_only=True)
+
+    class Meta:
+        model = OfficialAvailability
+        fields = ["id", "day_of_week", "day_display", "start_time", "end_time", "remarks", "is_active"]
+
+    def validate(self, data):
+        #Ensure valid time range and prevent overlap for same official/day.
+        user = self.context["request"].user
+        official = getattr(user, "official", None)
+        if not official:
+            raise ValidationError("Only officials can create availability records.")
+
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        day_of_week = data.get("day_of_week")
+
+        if start_time >= end_time:
+            raise ValidationError("End time must be after start time.")
+
+        # Overlap check
+        existing = OfficialAvailability.objects.filter(
+            official=official, day_of_week=day_of_week, is_active=True
+        )
+        if self.instance:
+            existing = existing.exclude(id=self.instance.id)
+
+        for avail in existing:
+            if (start_time < avail.end_time and end_time > avail.start_time):
+                raise ValidationError(f"Overlaps with existing slot {avail.start_time}-{avail.end_time} on {avail.day_of_week}.")
+
+        return data
+
+    def create(self, validated_data):
+        validated_data["official"] = self.context["request"].user.official
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        # Only allow editing within own record
+        request = self.context["request"]
+        if instance.official != request.user.official:
+            raise ValidationError("You can only update your own schedule.")
+        return super().update(instance, validated_data)
+
+class OfficialUnavailabilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OfficialUnavailability
+        fields = ["id", "start_date", "end_date", "reason", "notes"]
+
+    def validate(self, data):
+        #Ensure valid date range and no overlap with existing unavailability."""
+        user = self.context["request"].user
+        official = getattr(user, "official", None)
+        if not official:
+            raise ValidationError("Only officials can create unavailability records.")
+
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
+
+        if start_date > end_date:
+            raise ValidationError("End date must be after start date.")
+
+        # Check overlap
+        existing = OfficialUnavailability.objects.filter(official=official)
+        if self.instance:
+            existing = existing.exclude(id=self.instance.id)
+
+        for u in existing:
+            if (start_date <= u.end_date and end_date >= u.start_date):
+                raise ValidationError(
+                    f"Overlaps with existing unavailability ({u.start_date} - {u.end_date}, {u.reason})."
+                )
+
+        return data
+
+    def create(self, validated_data):
+        validated_data["official"] = self.context["request"].user.official
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        request = self.context["request"]
+        if instance.official != request.user.official:
+            raise ValidationError("You can only update your own unavailability.")
+        return super().update(instance, validated_data)
+    

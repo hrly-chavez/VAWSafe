@@ -55,8 +55,8 @@ export default function CaseRecords() {
                           <td>{c.incident_status}</td>
                           <td>{c.violence_type}</td>
                           <td>
-                            <Link to={`/social_worker/case-records/${c.incident_id}`}>
-                              View Form
+                            <Link to={`/social_worker/victims/${c.vic_id}`}>
+                              View Victim Profile
                             </Link>
                           </td>
                         </tr>
