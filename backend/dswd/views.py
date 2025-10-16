@@ -114,14 +114,30 @@ class VictimIncidentsView(generics.ListAPIView):
         # If Victim's PK is vic_id, filter like this:
         return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by('incident_num')
     
-class SessionDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Session.objects.all()
-    serializer_class = DeskOfficerSessionDetailSerializer
-    lookup_field = "sess_id"
+class SessionDetailView(generics.RetrieveAPIView):
+    """
+    GET: Retrieve full session details for DSWD Admin.
+    Includes all linked services and questions.
+    Read-only.
+    """
+    serializer_class = DSWDSessionDetailSerializer
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ["DSWD"]
-    
+    lookup_field = "sess_id"
 
+    def get_queryset(self):
+        return (
+            Session.objects
+            .all()
+            .select_related("assigned_official", "incident_id")
+            .prefetch_related(
+                "sess_type",
+                "session_questions",
+                "services_given__serv_id__category",
+                "services_given__of_id"
+            )
+        )
+  
 class search_victim_facial(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
@@ -196,7 +212,6 @@ class search_victim_facial(APIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
     
-
 class ViewSocialWorker(generics.ListAPIView):
     serializer_class = SocialWorkerListSerializer
 
@@ -222,7 +237,6 @@ class ViewSocialWorker(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
     
-    
 class ViewSocialWorkerDetail(generics.RetrieveAPIView):
     serializer_class = SocialWorkerDetailSerializer
     lookup_field = "of_id"
@@ -245,8 +259,7 @@ class ViewSocialWorkerDetail(generics.RetrieveAPIView):
     
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
-    
-    
+     
 class ViewVAWDeskOfficer(generics.ListAPIView):
     serializer_class = VAWDeskOfficerListSerializer
 
@@ -293,7 +306,6 @@ class ViewVAWDeskOfficerDetail(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
     
-
 #====================================QUESTIONS========================================
 
 class QuestionListCreate(generics.ListCreateAPIView): 

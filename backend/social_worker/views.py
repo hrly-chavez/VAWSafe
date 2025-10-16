@@ -423,27 +423,6 @@ def services_by_category(request, category_id):
 
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
-def update_service_feedback(request, service_id):
-    """
-    PATCH: Updates feedback for a specific service given.
-    Example: PATCH /api/social_worker/services/<service_id>/
-    Body: { "service_feedback": "Victim successfully assisted by PNP." }
-    """
-    user = request.user
-    try:
-        service = ServiceGiven.objects.get(pk=service_id, of_id=user.official)
-        #service = ServiceGiven.objects.get(pk=service_id) if want to let others update
-    except ServiceGiven.DoesNotExist:
-        return Response({"error": "Service record not found or not assigned to you."}, status=404)
-
-    serializer = ServiceGivenSerializer(service, data=request.data, partial=True)
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=200)
-    return Response(serializer.errors, status=400)
-
-@api_view(["PATCH"])
-@permission_classes([IsAuthenticated])
 def upload_service_proof(request, service_id):
     """
     PATCH: Upload service proof image and optional feedback.

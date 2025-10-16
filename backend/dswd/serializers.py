@@ -48,10 +48,69 @@ class SessionQuestionSerializer(serializers.ModelSerializer):  # Generated + ans
             "sq_note",    
         ]
 
-class DeskOfficerSessionDetailSerializer(serializers.ModelSerializer): #show session and session answer in card
+# class DeskOfficerSessionDetailSerializer(serializers.ModelSerializer): #show session and session answer in card
+#     official_name = serializers.CharField(source="assigned_official.full_name", read_only=True)
+#     sess_type = SessionTypeSerializer(many=True, read_only=True)
+#     session_questions = SessionQuestionSerializer(many=True, read_only=True)
+
+#     class Meta:
+#         model = Session
+#         fields = [
+#             "sess_id",
+#             "sess_num",
+#             "sess_status",
+#             "sess_next_sched",
+#             "sess_date_today",
+#             "sess_location",
+#             "sess_description",
+#             "official_name",
+#             "sess_type",          # names not IDs
+#             "session_questions",  # answered questions
+#         ]
+
+
+# ====== SERVICES GIVEN (part of Session Detail) ======
+class DSWDServiceGivenSerializer(serializers.ModelSerializer):
+    """
+    Read-only serializer showing all details of services given in a session.
+    Uniform with Social Worker and Desk Officer versions.
+    """
+    service = serializers.SerializerMethodField()
+    handled_by = serializers.CharField(source="of_id.full_name", read_only=True)
+
+    class Meta:
+        model = ServiceGiven
+        fields = [
+            "id",
+            "service",           # nested info
+            "handled_by",        # social worker name
+            "service_status",
+            "service_feedback",
+            "service_pic",
+        ]
+
+    def get_service(self, obj):
+        """Return nested service info (organization, category, contacts)."""
+        if not obj.serv_id:
+            return None
+        service = obj.serv_id
+        return {
+            "serv_id": service.serv_id,
+            "name": service.name,
+            "category": service.category.name if service.category else None,
+            "contact_person": service.contact_person,
+            "contact_number": service.contact_number,
+        }
+
+# ====== DSWD SESSION DETAIL ======
+class DSWDSessionDetailSerializer(serializers.ModelSerializer):
+    """
+    DSWD view-only session detail with services, questions, and metadata.
+    """
     official_name = serializers.CharField(source="assigned_official.full_name", read_only=True)
-    sess_type = SessionTypeSerializer(many=True, read_only=True)
-    session_questions = SessionQuestionSerializer(many=True, read_only=True)
+    sess_type_display = SessionTypeSerializer(source="sess_type", many=True, read_only=True)
+    questions = SessionQuestionSerializer(source="session_questions", many=True, read_only=True)
+    services_given = DSWDServiceGivenSerializer(many=True, read_only=True)
 
     class Meta:
         model = Session
@@ -64,10 +123,12 @@ class DeskOfficerSessionDetailSerializer(serializers.ModelSerializer): #show ses
             "sess_location",
             "sess_description",
             "official_name",
-            "sess_type",          # names not IDs
-            "session_questions",  # answered questions
+            "sess_type_display",
+            "questions",
+            "services_given",
         ]
 
+#==================================================================
 class CaseReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = CaseReport
@@ -77,7 +138,6 @@ class PerpetratorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Perpetrator
         fields = "__all__"
-
 
 class SessionSerializer(serializers.ModelSerializer):
     victim_name = serializers.SerializerMethodField()
@@ -157,18 +217,15 @@ class SocialWorkerListSerializer(serializers.ModelSerializer):
             parts.append(obj.of_suffix)
         return " ".join(parts)
     
-
 class OfficialFaceSampleSerializer(serializers.ModelSerializer):
     class Meta:
         model = OfficialFaceSample
         fields = ["photo"]  # keep it light; omit embeddings in API responses
 
-
 class VictimMiniSerializer(serializers.ModelSerializer):
     class Meta:
         model = Victim
         fields = ["vic_id", "vic_first_name", "vic_last_name", "vic_sex"]
-
 
 class IncidentMiniSerializer(serializers.ModelSerializer):
     victim = VictimMiniSerializer(source="vic_id", read_only=True)
@@ -186,7 +243,6 @@ class IncidentMiniSerializer(serializers.ModelSerializer):
             "perpetrator",
         ]
 
-
 class SessionMiniSerializer(serializers.ModelSerializer):
     incident = IncidentMiniSerializer(source="incident_id", read_only=True)
 
@@ -199,7 +255,6 @@ class SessionMiniSerializer(serializers.ModelSerializer):
             "sess_next_sched",
             "incident",
         ]
-
 
 class SocialWorkerDetailSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
@@ -344,7 +399,6 @@ class ChangeLogSerializer(serializers.ModelSerializer):
 
 #====================================================================================
 
-
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
@@ -394,7 +448,6 @@ class OfficialSerializer(serializers.ModelSerializer):
         if obj.user_id:
             return bool(obj.user.is_active)
         return None
-
 
 class AuditLogSerializer(serializers.ModelSerializer):
     actor_name = serializers.SerializerMethodField()

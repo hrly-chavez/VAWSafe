@@ -1,7 +1,7 @@
 // src/pages/social_worker/Victims/SessionDetails.js
 import React, { useEffect, useState } from "react";
 import api from "../../../api/axios";
-import ServiceList from "./ServiceList";
+import ServiceList from "./SessionDetails/ServiceList";
 
 export default function SessionDetails({ sessionId, onClose }) {
   const [session, setSession] = useState(null);
@@ -113,7 +113,7 @@ export default function SessionDetails({ sessionId, onClose }) {
             {session.sess_type_display && session.sess_type_display.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-[#292D96] mt-4 mb-2">
-                  Session Types
+                  Session Type(s)
                 </h3>
                 <div className="p-3 border rounded-md bg-gray-50 space-y-1">
                   {session.sess_type_display.map((type, idx) => (

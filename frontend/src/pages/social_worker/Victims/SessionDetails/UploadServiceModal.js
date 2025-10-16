@@ -1,6 +1,6 @@
 // src/pages/social_worker/Victims/UploadServiceModal.js
 import React, { useState } from "react";
-import api from "../../../api/axios";
+import api from "../../../../api/axios";
 
 export default function UploadServiceModal({ service, onClose, onSuccess }) {
   const [feedback, setFeedback] = useState(service?.service_feedback || "");

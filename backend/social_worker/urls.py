@@ -22,7 +22,6 @@ urlpatterns = [
     #Service
     path("services/category/<int:category_id>/", services_by_category, name="services-by-category"),
     path("service-categories/", list_service_categories, name="service-categories"),
-    path("services/<int:service_id>/", update_service_feedback, name="update-service-feedback"),
     path("services/<int:service_id>/upload/", upload_service_proof, name="upload-service-proof"),
 
 

@@ -1,6 +1,6 @@
-// src/pages/social_worker/Victims/ServiceList.js
+// src/pages/social_worker/Victims/SessionDetails/ServiceList.js
 import React, { useState } from "react";
-import api from "../../../api/axios";
+import api from "../../../../api/axios";
 import UploadServiceModal from "./UploadServiceModal";
 import ImagePreviewModal from "./ImagePreviewModal";
 
