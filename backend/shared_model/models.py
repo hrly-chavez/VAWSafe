@@ -342,10 +342,11 @@ class Victim(models.Model):
         ('Others', 'Others'),
     ]
     
+    # user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="victim", null=True, blank=True)
     vic_id = models.AutoField(primary_key=True)
-    vic_last_name = EncryptedCharField(max_length=512)
     vic_first_name = EncryptedCharField(max_length=512)
     vic_middle_name = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_last_name = EncryptedCharField(max_length=512)
     vic_extension = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_sex = EncryptedCharField(max_length=512, choices=SEX_CHOICES)
     vic_is_SOGIE = EncryptedCharField(max_length=512, choices=SOGIE_CHOICES, default='No')
