@@ -565,7 +565,7 @@ class BPOApplicationVictimChildrenList(models.Model):
     bpo_application = models.ForeignKey(BPOApplication, on_delete=models.CASCADE, blank=True, null=True) 
 
 class CaseReport(models.Model):  #ADMINISTRATIVE INFORMATION
-    victim = models.OneToOneField(Victim, on_delete=models.CASCADE, related_name="case_report")
+    # victim = models.OneToOneField(Victim, on_delete=models.CASCADE, related_name="case_report")
 
     handling_org = models.CharField(max_length=255,null=True, blank=True)
     office_address = models.CharField(max_length=255,null=True, blank=True)

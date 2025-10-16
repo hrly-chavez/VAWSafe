@@ -185,7 +185,7 @@ class OfficialFaceSampleAdmin(admin.ModelAdmin):
 
 admin.site.register(Victim)
 # admin.site.register(VictimFaceSample)
-# admin.site.register(IncidentInformation)
+admin.site.register(IncidentInformation)
 
 admin.site.register(OfficialAvailability)
 admin.site.register(OfficialUnavailability)
