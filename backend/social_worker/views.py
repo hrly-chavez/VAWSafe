@@ -45,7 +45,6 @@ class victim_detail(generics.RetrieveAPIView):
             ).distinct()
         return Victim.objects.none()
 
-
 # retrieve all information related to case (Social Worker)
 class VictimIncidentsView(generics.ListAPIView):
     serializer_class = IncidentInformationSerializer
@@ -55,8 +54,7 @@ class VictimIncidentsView(generics.ListAPIView):
     def get_queryset(self):
         vic_id = self.kwargs.get("vic_id")
         return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by('incident_num')
-
-    
+   
 class search_victim_facial(APIView):
 
     parser_classes = [MultiPartParser, FormParser]

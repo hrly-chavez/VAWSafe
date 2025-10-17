@@ -161,7 +161,6 @@ class OfficialAvailability(models.Model):
     def __str__(self):
         return f"{self.official.full_name} - {self.day_of_week} ({self.start_time}–{self.end_time})"
 
-
 class OfficialUnavailability(models.Model):
     """
     Records manual updates where an Official marks themselves unavailable for a range of dates.
@@ -220,14 +219,14 @@ class AuditLog(models.Model):
         Otherwise, return ModelName(ID).
         """
         try:
-            # ✅ Example for 'Official' target
+            #  Example for 'Official' target
             if self.target_model.lower() == "official":
                 from shared_model.models import Official
                 off = Official.objects.only("of_fname", "of_lname").get(pk=int(self.target_id))
                 full_name = getattr(off, "full_name", f"{off.of_fname} {off.of_lname}")
                 return f"Official {full_name} (ID: {off.pk})"
 
-            # ✅ Example if you later want to add support for Victim
+            #  Example if you later want to add support for Victim
             elif self.target_model.lower() == "victim":
                 from shared_model.models import Victim
                 vic = Victim.objects.only("vi_fname", "vi_lname").get(pk=int(self.target_id))
@@ -244,7 +243,7 @@ class AuditLog(models.Model):
         verbose_name = "Audit Log"
         verbose_name_plural = "Audit Logs"
 
-#===================================================================================================================
+#==================================================================================================
 
 # starting here is for forms
 class Informant(models.Model):
@@ -620,13 +619,14 @@ class Session(models.Model):
 class SessionType(models.Model):
     SESSION_TYPES = [
         ('Intake / Initial Assessment', 'Intake / Initial Assessment'),
+        ('Case Study / Psychosocial Assessment', 'Case Study / Psychosocial Assessment'),
+        ('Intervention Planning / Case Conference', 'Intervention Planning / Case Conference'),
         ('Counseling', 'Counseling'),
         ('Follow-up', 'Follow-up'),
-        ('Legal Support','Legal Support'),
-        ('Shelter / Reintegration','Shelter / Reintegration'),
-        ('Case Closure','Case Closure'),
-        ('Others', 'Others')
+        ('Case Closure', 'Case Closure'),
+        ('Others', 'Others'),
     ]
+
     name = models.CharField(max_length=100, choices=SESSION_TYPES)
 
     def __str__(self):
@@ -646,15 +646,16 @@ class Question(models.Model): #HOLDER FOR ALL QUESTIONS
     ANSWER_TYPES = [
         ('Yes/No', 'Yes/No'),
         ('Text', 'Text'),
-        ('Multiple Choice', 'Multiple Choice')
     ]
     QUESTION_CATEGORIES = [
-        ('Safety Assessment','Safety Assessment'),
-        ('Physical Health Assessment','Physical Health Assessment'),
-        ('Emotional / Psychological Assessment','Emotional / Psychological Assessment'),
-        ('Social & Family Support Assessment','Social & Family Support Assessment'),
-        ('Financial / Livelihood Assessment','Financial / Livelihood Assessment'),
-        ('Legal / Protective Measures','Legal / Protective Measures'),
+        ('Safety Assessment', 'Safety Assessment'),
+        ('Physical Health Assessment', 'Physical Health Assessment'),
+        ('Emotional / Psychological Assessment', 'Emotional / Psychological Assessment'),
+        ('Social & Family Support Assessment', 'Social & Family Support Assessment'),
+        ('Financial / Livelihood Assessment', 'Financial / Livelihood Assessment'),
+        ('Legal / Protective Measures', 'Legal / Protective Measures'),
+        ('Education / Child Development Assessment', 'Education / Child Development Assessment'),
+        ('Housing / Environment Assessment', 'Housing / Environment Assessment'),
     ]
     ques_id = models.AutoField(primary_key=True)
     ques_category = models.CharField(choices=QUESTION_CATEGORIES, max_length=100, null=True, blank=True)
@@ -792,7 +793,8 @@ class ServiceGiven(models.Model):
     service_feedback = models.TextField(null=True, blank=True, help_text="Remarks or feedback about the service given")
     def __str__(self):
         return f"{self.serv_id.name if self.serv_id else 'Unknown Service'} for Session {self.session.sess_id}"
-    
+
+#=================================================================================    
 User = get_user_model()
 
 class LoginTracker(models.Model):
@@ -847,4 +849,3 @@ class LoginTracker(models.Model):
         verbose_name_plural = "Login Tracker Logs"
 
 
-#=================================================================================

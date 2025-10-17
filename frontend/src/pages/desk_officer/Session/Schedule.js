@@ -212,9 +212,6 @@ const formatTo12Hour = (range) => {
             <select className="border px-3 py-2 rounded-md text-sm text-gray-500">
               <option>Filter by Barangay (Coming Soon)</option>
             </select>
-            <select className="border px-3 py-2 rounded-md text-sm text-gray-500">
-              <option>Filter by Specialization (Coming Soon)</option>
-            </select>
           </div>
 
           {/* Cards Section */}
