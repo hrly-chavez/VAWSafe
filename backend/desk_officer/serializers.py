@@ -2,6 +2,11 @@ from rest_framework import serializers
 from shared_model.models import *
 from datetime import date
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username"]
+
 class ProvinceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Province

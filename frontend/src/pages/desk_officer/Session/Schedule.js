@@ -88,23 +88,23 @@ export default function Schedule({ victim, incident, back, next }) {
     fetchSocialWorkers();
   }, []);
   // Helper: Convert "HH:MM–HH:MM" to "hh:mm AM/PM – hh:mm AM/PM"
-const formatTo12Hour = (range) => {
-  try {
-    const [start, end] = range.split("–");
-    const format = (t) => {
-      if (!t) return "";
-      const [h, m] = t.split(":");
-      const hour = parseInt(h, 10);
-      const suffix = hour >= 12 ? "PM" : "AM";
-      const hr12 = hour % 12 || 12;
-      return `${hr12}:${m}${suffix}`;
-    };
-    return `${format(start)}–${format(end)}`;
-  } catch {
-    return range;
-  }
-};
-// Do not touch this function
+  const formatTo12Hour = (range) => {
+    try {
+      const [start, end] = range.split("–");
+      const format = (t) => {
+        if (!t) return "";
+        const [h, m] = t.split(":");
+        const hour = parseInt(h, 10);
+        const suffix = hour >= 12 ? "PM" : "AM";
+        const hr12 = hour % 12 || 12;
+        return `${hr12}:${m}${suffix}`;
+      };
+      return `${format(start)}–${format(end)}`;
+    } catch {
+      return range;
+    }
+  };
+  // Do not touch this function
   const handleStartSession = async () => {
     try {
       const payload = {
@@ -269,6 +269,7 @@ const formatTo12Hour = (range) => {
 
                   <div className="flex justify-end mt-3">
                     <button
+                      type="button"
                       onClick={() => setSelectedOfficial(sw.of_id)}
                       className={`px-3 py-1 rounded-md text-sm font-semibold transition ${
                         selectedOfficial === sw.of_id

@@ -49,3 +49,4 @@ vaw_app/package-lock.json
 backend/.env
 **/.env
 backend/backups/
+backend/shared_model/migrations/__init__.py
