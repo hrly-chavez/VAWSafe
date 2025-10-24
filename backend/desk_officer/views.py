@@ -14,6 +14,8 @@ from django.db.models import Q
 from deepface import DeepFace
 from PIL import Image
 from django.db import transaction
+from django.utils.crypto import get_random_string
+from django.contrib.auth.models import User
 
 from shared_model.models import *
 from .serializers import *
@@ -296,6 +298,26 @@ def register_victim(request):
                     file=file
                 )
 
+        # -------------------------------
+        # 6) CREATE VICTIM ACCOUNT (new)
+        # -------------------------------
+        fname = victim_data.get("vic_first_name", "").strip().lower()
+        lname = victim_data.get("vic_last_name", "").strip().lower()
+        base_username = f"{fname}{lname}".replace(" ", "") or get_random_string(8)
+
+        username = base_username
+        counter = 0
+        while User.objects.filter(username=username).exists():
+            counter += 1
+            username = f"{base_username}{counter}"
+
+        generated_password = get_random_string(length=12)
+        user = User.objects.create_user(username=username, password=generated_password)
+
+        # Optionally associate user with victim
+        victim.user = user  # <-- comment this out if Victim model has no FK to User
+        victim.save()
+
         return Response({
             "success": True,
             "victim": VictimSerializer(victim).data,
@@ -303,6 +325,8 @@ def register_victim(request):
             "incident": IncidentInformationSerializer(incident).data if incident else None,
             "perpetrator": PerpetratorSerializer(perpetrator).data if perpetrator else None,
             "informant": InformantSerializer(informant).data if informant else None,
+            "username": username,
+            "password": generated_password,
         }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
@@ -310,7 +334,7 @@ def register_victim(request):
         transaction.set_rollback(True)
         return Response({"success": False, "error": str(e)},
                         status=status.HTTP_400_BAD_REQUEST)
-
+        
 #=======================================================================SESSION FUNCTIONS
 class SessionListCreateView(generics.ListCreateAPIView):
     serializer_class = SessionSerializer
@@ -337,13 +361,17 @@ class SessionDetailView(generics.RetrieveAPIView):
 
 
 @api_view(["POST"])
-def create_session(request): 
-    #Purpose: To create a new session record (schedule or start immediately).
+def create_session(request):
+    """
+    Purpose: To create a new session record (schedule or start immediately).
+    Now supports assigning up to 3 officials (ManyToMany).
+    """
     data = request.data.copy()
     started_now = data.pop("started_now", False)
 
     serializer = SessionSerializer(data=data)
     if serializer.is_valid():
+        # Save session with appropriate status
         if started_now:
             session = serializer.save(
                 sess_status="Ongoing",
@@ -351,6 +379,15 @@ def create_session(request):
             )
         else:
             session = serializer.save(sess_status="Pending")
+
+        # Validate maximum of 3 assigned officials
+        if session.assigned_official.count() > 3:
+            session.delete()  # rollback invalid session creation
+            return Response(
+                {"error": "You can assign up to 3 workers only."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         return Response(SessionSerializer(session).data, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

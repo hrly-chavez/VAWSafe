@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import api from "../../../api/axios";
 
-export default function AddAvailabilityModal({ onClose, onSuccess }) {
+export default function AddAvailabilityModal({ onClose, onSuccess, existingAvailabilities = [] }) {
   const [day, setDay] = useState("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -16,6 +16,16 @@ export default function AddAvailabilityModal({ onClose, onSuccess }) {
       setError("Please fill all required fields.");
       return;
     }
+
+    const alreadyExists = existingAvailabilities.some(
+      (a) => a.day_of_week === day && a.is_active
+    );
+
+    if (alreadyExists) {
+      setError(`You already have an availability set for ${day}.`);
+      return;
+    }
+
     setLoading(true);
     setError("");
 
@@ -26,7 +36,7 @@ export default function AddAvailabilityModal({ onClose, onSuccess }) {
         end_time: endTime,
         remarks: remarks,
       });
-      onSuccess?.(); // refresh parent
+      onSuccess?.();
       onClose();
     } catch (err) {
       console.error("Failed to add availability:", err);
