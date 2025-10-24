@@ -76,8 +76,10 @@ class Address(models.Model):
 class Official(models.Model):
     ROLE_CHOICES = [
         ('DSWD', 'DSWD'),
-        ('VAWDesk', 'VAWDesk'),
         ('Social Worker', 'Social Worker'),
+        ('Nurse', 'Nurse'),
+        ('Psychometrician', 'Psychometrician'),
+
     ]   
 
     STATUS_CHOICES = [
@@ -327,11 +329,6 @@ class Victim(models.Model):
         ('Visual Disability', 'Visual Disability'),
     ]
     
-    SEX_CHOICES = [
-        ('Male', 'Male'),
-        ('Female', 'Female'),
-    ]
-    
     RELIGION_CHOICES = [
         ('Roman Catholic', 'Roman Catholic'),
         ('Islam', 'Islam'),
@@ -347,7 +344,7 @@ class Victim(models.Model):
     vic_middle_name = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_last_name = EncryptedCharField(max_length=512)
     vic_extension = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_sex = EncryptedCharField(max_length=512, choices=SEX_CHOICES)
+    vic_sex = EncryptedCharField(max_length=512, default='Female')
     vic_is_SOGIE = EncryptedCharField(max_length=512, choices=SOGIE_CHOICES, default='No')
     vic_specific_sogie = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_birth_date = EncryptedDateField( null=True, blank=True)
@@ -497,7 +494,7 @@ class IncidentInformation(models.Model): #Case in the frontend
     informant = models.ForeignKey(Informant, on_delete=models.CASCADE, null=True, blank=True)
     vic_id = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name='incidents')
     perp_id = models.ForeignKey(Perpetrator, on_delete=models.CASCADE,to_field='perp_id', related_name='related_incidents',null=True, blank=True)
-    of_id = models.ForeignKey(Official, on_delete=models.SET_NULL, related_name='handled_incidents',null=True, blank=True)
+    of_id = models.ForeignKey(Official, on_delete=models.SET_NULL, related_name='handled_incidents', null=True, blank=True)
     
     # for address
     province = models.ForeignKey("province", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
@@ -541,13 +538,7 @@ class IncidentInformation(models.Model): #Case in the frontend
     def __str__(self):
         return f"Incident {self.incident_id}"
 
-class BPOApplication(models.Model):
-    commission_date = models.DateTimeField()
-    consent_circumstances = models.TextField(blank=True, null=True)
-
-    incident = models.ForeignKey(IncidentInformation, on_delete=models.CASCADE, blank=True, null=True)
-
-class BPOApplicationVictimChildrenList(models.Model):
+class VictimChildrenList(models.Model):
     fname = models.CharField(max_length=50, blank=True, null=True)
     mname = models.CharField(max_length=50, blank=True, null=True)
     lname = models.CharField(max_length=50, blank=True, null=True)
@@ -556,7 +547,7 @@ class BPOApplicationVictimChildrenList(models.Model):
     sex = models.CharField(max_length=10, null=True, blank=True)
 
     # foreign key
-    bpo_application = models.ForeignKey(BPOApplication, on_delete=models.CASCADE, blank=True, null=True) 
+    victim = models.ForeignKey(Victim, on_delete=models.CASCADE, blank=True, null=True) 
 
 class CaseReport(models.Model):  #ADMINISTRATIVE INFORMATION
     # victim = models.OneToOneField(Victim, on_delete=models.CASCADE, related_name="case_report")

@@ -1,6 +1,5 @@
 //src/routes/routes.js
 export const ROUTES = {
-
   LOGIN: "/login",
   MANUAL_LOGIN: "/login/manual",
   REGISTER: "/register",
@@ -43,9 +42,9 @@ export const ROUTES = {
   // SOCIAL WORKER
   SOCIAL_WORKER: "/social_worker",
   SOCIAL_WORKER_DASHBOARD: "/social_worker",
+  SOCIAL_WORKER_REGISTER_VICTIM: "/social-worker/register_victim",
 
   SOCIAL_WORKER_SCHEDULE: "/social_worker/schedule",
-
 
   SOCIAL_WORKER_CASE_RECORDS: "/social_worker/case-records",
   SOCIAL_WORKER_SESSIONS: "/social_worker/sessions",
@@ -58,7 +57,9 @@ export const ROUTES = {
   SOCIAL_WORKER_VICTIM_DETAIL: "/social_worker/victims/:vic_id",
   SOCIAL_WORKER_SEARCH_FACIAL: "/social_worker/victims/search-facial",
 
-  
+  //nurse
+  NURSE_DASHBOARD: "nurse/",
+
   // landing page
   LANDING: "/landing",
 };
