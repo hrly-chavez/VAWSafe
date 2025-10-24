@@ -1,120 +1,179 @@
-import { motion } from "framer-motion";
-import { useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { motion, useAnimation } from "framer-motion";
 
 const services = [
   {
-    title: "Protective Services",
-    image: "/images/program.jpg",
-    description: "Provides safety and protection for vulnerable individuals, especially women and children.",
+    icon: "/images/social_services.png",
+    title: "Social Services",
+    description:
+      "Offers help restore and develop residents’ social functioning and prepare them for reintegration or family reunification.",
   },
   {
-    title: "Psychosocial Support",
-    image: "/images/program1.jpg",
-    description: "Offers emotional and psychological assistance to help survivors recover and reintegrate.",
+    icon: "/images/home_life_services.png",
+    title: "Home-life/Group Living Services",
+    description:
+      "Provides residents with meals, clothing, and toiletries to ensure comfort, dignity, and daily living needs are met.",
   },
   {
-    title: "Medical and Health Services",
-    image: "/images/program2.jpg",
-    description: "Ensures access to essential medical care and health support for affected individuals.",
+    icon: "/images/medical_services.png",
+    title: "Medical Services",
+    description:
+      "Provides regular medical and dental checkups, consultations, treatments, and referrals to ensure residents’ overall health and well-being.",
   },
   {
-    title: "Legal and Justice Services",
-    image: "/images/program3.jpg",
-    description: "Connects survivors with legal professionals and justice mechanisms for protection and redress.",
+    icon: "/images/psych_services.png",
+    title: "Psychological/Psychiatric Services",
+    description:
+      "Conducts assessments and treatments to evaluate mental health and provide interventions that promote healing and recovery.",
   },
   {
-    title: "Shelter and Crisis Intervention",
-    image: "/images/program4.jpg",
-    description: "Provides temporary shelter and immediate crisis response for those in danger or distress.",
+    icon: "/images/legal_services.png",
+    title: "Legal Services",
+    description:
+      "Provides legal assistance and referrals for victims pursuing cases, ensuring safe transport and social worker support during court appearances.",
   },
   {
-    title: "Livelihood and Reintegration",
-    image: "/images/program5.png",
-    description: "Supports economic empowerment and reintegration into society through skills and resources.",
+    icon: "/images/educ_services.png",
+    title: "Educational Services",
+    description:
+      "Offers opportunities for formal or non-formal education to help residents pursue or improve their educational status.",
   },
   {
-    title: "Hotlines and Emergency Services",
-    image: "/images/program6.png",
-    description: "Offers 24/7 emergency assistance and hotline access for urgent VAWC-related support.",
+    icon: "/images/counsel_services.png",
+    title: "Counseling Services",
+    description:
+      "Provides guidance and support through counseling to help residents overcome challenges and resolve personal issues.",
+  },
+  {
+    icon: "/images/care_services.png",
+    title: "After Care Services",
+    description:
+      "Ensures continued rehabilitation and support after discharge, preventing re-victimization and promoting stable reintegration.",
   },
 ];
 
 export default function ProgramsServices() {
-  const scrollRef = useRef(null);
+  const [expanded, setExpanded] = useState(false);
+  const controls = useAnimation();
+
+  // Function to start the auto-scroll animation
+  const startAutoScroll = () => {
+    controls.set({ x: "0%" });
+    controls.start({
+      x: ["0%", "-50%"],
+      transition: {
+        x: {
+          repeat: Infinity,
+          repeatType: "loop",
+          duration: 45,
+          ease: "linear",
+        },
+      },
+    });
+  };
 
   useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    let scrollAmount = 0;
+    if (!expanded) {
+      startAutoScroll();
+    } else {
+      controls.stop();
+    }
+  }, [expanded]);
 
-    const interval = setInterval(() => {
-      if (scrollContainer) {
-        scrollContainer.scrollLeft += 1;
-        scrollAmount += 1;
-
-        if (
-          scrollAmount >=
-          scrollContainer.scrollWidth - scrollContainer.clientWidth
-        ) {
-          scrollContainer.scrollLeft = 0;
-          scrollAmount = 0;
-        }
-      }
-    }, 20);
-
-    return () => clearInterval(interval);
-  }, []);
+  const handleToggle = () => {
+    if (expanded) {
+      setExpanded(false);
+      startAutoScroll();
+    } else {
+      setExpanded(true);
+      controls.stop();
+    }
+  };
 
   return (
-    <div className="bg-white">
-      {/* Banner */}
-      <div className="w-full bg-[#292D96] text-white py-8 px-6 sm:px-12 text-center shadow-md">
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-wide uppercase">
-          Programs & Services
-        </h2>
-        <p className="mt-2 text-white/80 text-sm sm:text-base max-w-3xl mx-auto">
-          Explore the range of support services offered by DSWD and its partners to empower individuals and communities.
-        </p>
-      </div>
+    <div
+      className="relative bg-white py-16 px-6 sm:px-12 text-center"
+      style={{
+        backgroundImage: "url('/images/service_background.png')",
+        backgroundRepeat: "no-repeat",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Content */}
+      <div className="relative z-10 max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-12">
+          <p className="text-sm font-semibold tracking-widest text-[#1a1a40]/70 uppercase">
+            Category
+          </p>
+          <h2 className="text-3xl sm:text-4xl font-bold text-[#1a1a40] mt-2">
+            We Offer Best Services
+          </h2>
+        </div>
 
-      {/* Auto-Moving Carousel */}
-      <div className="px-6 py-12 min-h-[300px] sm:min-h-[360px]">
-        <div
-          ref={scrollRef}
-          style={{
-            scrollbarWidth: "none", // Firefox
-            msOverflowStyle: "none", // IE 10+
-          }}
-          className="flex gap-6 overflow-x-auto scroll-smooth pb-4"
-        >
-          <style>
-            {`
-      div::-webkit-scrollbar {
-        display: none;
-      }
-    `}
-          </style>
-          {services.map((service, idx) => (
+        {/* Services Section */}
+        <div className="relative w-full overflow-hidden py-4">
+          {!expanded ? (
             <motion.div
-              key={idx}
-              whileHover={{ scale: 1.05 }}
-              className="inline-block min-w-[280px] sm:min-w-[320px] bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 h-full"
-
+              animate={controls}
+              className="flex gap-8 w-[200%] items-stretch"
             >
-              <div className="h-[180px] sm:h-[200px] w-full overflow-hidden relative">
-                <img
-                  src={service.image}
-                  alt={service.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-[#292D96]/80 text-white opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4 text-center">
-                  <p className="text-sm">{service.description}</p>
+              {[...services, ...services].map((service, idx) => (
+                <div
+                  key={idx}
+                  className="min-w-[250px] bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 flex flex-col items-center text-center"
+                >
+                  <div className="w-16 h-16 mb-4 flex items-center justify-center rounded-xl overflow-hidden">
+                    <img
+                      src={service.icon}
+                      alt={service.title}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                  <h3 className="text-lg font-semibold text-black mb-2">
+                    {service.title}
+                  </h3>
+                  <p className="text-sm text-black leading-relaxed">
+                    {service.description}
+                  </p>
                 </div>
-              </div>
-              <div className="p-4 text-center">
-                <h3 className="text-[#292D96] font-semibold text-lg">{service.title}</h3>
-              </div>
+              ))}
             </motion.div>
-          ))}
+          ) : (
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 justify-center items-stretch">
+              {services.map((service, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 flex flex-col items-center text-center"
+                >
+                  <div className="w-16 h-16 mb-4 flex items-center justify-center rounded-xl overflow-hidden">
+                    <img
+                      src={service.icon}
+                      alt={service.title}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                  <h3 className="text-lg font-semibold text-black mb-2">
+                    {service.title}
+                  </h3>
+                  <p className="text-sm text-black leading-relaxed">
+                    {service.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Expand/Collapse Button */}
+        <div className="mt-10">
+          <button
+            onClick={handleToggle}
+            className="bg-[#292D96] hover:bg-[#1a1a40] text-white px-6 py-2 rounded-lg shadow-md transition-all duration-300"
+          >
+            {expanded ? "Collapse" : "Expand All"}
+          </button>
         </div>
       </div>
     </div>
