@@ -359,7 +359,7 @@ class CloseCaseSerializer(serializers.ModelSerializer):
 
         return data
 
-#=======================================CASES==========================================================
+#=======================================CASES===============================================
 
 class IncidentSerializer(serializers.ModelSerializer): #For case Column & Rows of Case
 
