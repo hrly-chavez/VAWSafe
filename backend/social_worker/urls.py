@@ -2,6 +2,8 @@ from django.urls import path
 from .views import *
 
 urlpatterns = [
+    path("register-victim/", register_victim, name="register-victim"),
+
     # --- Existing endpoints ---
     path("victims/", victim_list.as_view(), name="victim-list"),
     path("victims/<int:vic_id>/", victim_detail.as_view(), name="victim-detail"),
