@@ -740,7 +740,6 @@ class ServiceCategory(models.Model):
         ("Legal Assistance", "Legal Assistance"),
         ("Psycho-Social Services", "Psycho-Social Services"),
         ("Medical Services", "Medical Services"),
-        ("Medico-Legal Services", "Medico-Legal Services"),
         ("Livelihood and Employment Assistance", "Livelihood and Employment Assistance"),
         ("Other Institutions", "Other Institutions"),
     ]
@@ -760,7 +759,7 @@ class Services(models.Model):
 
     #FK
     category = models.ForeignKey(ServiceCategory, on_delete=models.CASCADE, related_name="services")
-    assigned_place = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_place")
+    # assigned_place = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_place")
     service_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="service_address")
 
     def __str__(self):

@@ -271,6 +271,89 @@ def check_dswd_exists(request):
 #                 "status": official.status
 #             }, status=status.HTTP_202_ACCEPTED)
 
+#========================================================
+
+#check face user first
+#unya nani i work kanang wa na sa dev phase
+# class SearchOfficialFacial(APIView):
+#     parser_classes = [MultiPartParser, FormParser]
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         uploaded_files = request.FILES.getlist("of_photos")
+
+#         if not uploaded_files:
+#             return Response({"error": "No images uploaded."}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Save the temporary images
+#         chosen_frames = []
+#         for uploaded_file in uploaded_files:
+#             try:
+#                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+#                 temp_image.write(uploaded_file.read())
+#                 temp_image.flush()
+#                 temp_image.close()
+#                 chosen_frames.append(temp_image.name)
+#             except Exception as e:
+#                 return Response({"error": f"Failed to save uploaded image: {str(e)}"}, status=400)
+
+#         # Step 1: Compare the uploaded face images with all OfficialFaceSamples
+#         best_match = None
+#         best_sample = None
+#         lowest_distance = float("inf")
+
+#         try:
+#             for sample in OfficialFaceSample.objects.select_related("official"):
+#                 for chosen_frame in chosen_frames:
+#                     try:
+#                         result = DeepFace.verify(
+#                             img1_path=chosen_frame,
+#                             img2_path=sample.photo.path,
+#                             model_name="ArcFace",
+#                             enforce_detection=True
+#                         )
+
+#                         official = sample.official
+#                         print(f"[DEBUG] Compared with {official.of_fname} {official.of_lname}, distance: {result['distance']:.4f}, verified: {result['verified']}")
+
+#                         # If faces match (verified) and the distance is the lowest, we have a match
+#                         if result["verified"] and result["distance"] < lowest_distance:
+#                             lowest_distance = result["distance"]
+#                             best_match = official
+#                             best_sample = sample
+
+#                     except Exception as ve:
+#                         print(f"[WARN] Skipping {sample.official.of_fname} {sample.official.of_lname} due to error: {str(ve)}")
+#                         continue
+
+#             if best_match:
+#                 serializer = OfficialSerializer(best_match, context={"request": request})
+#                 return Response({
+#                     "match": True,
+#                     "official_id": best_match.of_id,
+#                     "official_data": serializer.data
+#                 }, status=status.HTTP_200_OK)
+
+#             # No match found
+#             return Response({
+#                 "match": False,
+#                 "message": "The official is not registered."
+#             }, status=status.HTTP_404_NOT_FOUND)
+
+#         except Exception as e:
+#             traceback.print_exc()
+#             return Response({
+#                 "match": False,
+#                 "error": str(e),
+#                 "suggestion": "Something went wrong with face verification."
+#             }, status=status.HTTP_400_BAD_REQUEST)
+
+#         finally:
+#             # Clean up the temporary image files
+#             for chosen_frame in chosen_frames:
+#                 if os.path.exists(chosen_frame):
+#                     os.remove(chosen_frame)
+
 class create_official(APIView):
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [AllowAny]
