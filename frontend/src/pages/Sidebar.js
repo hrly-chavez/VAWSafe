@@ -18,8 +18,6 @@
 //     }
 //   };
 
-
-
 //   // Load user from localStorage if auth context not available yet
 //   useEffect(() => {
 //     if (auth?.user) {
@@ -37,7 +35,6 @@
 //     }
 //   }, [auth]);
 
-
 //   // Generate sidebar items based on role
 //   const getSidebarItems = () => {
 //     const role = user?.role?.toLowerCase();
@@ -45,7 +42,7 @@
 //     if (role === "social worker") {
 //       return [
 //         { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/social_worker" },
-//         { icon: "/images/heart.png", label: "VAWC Victims", path: "/social_worker/victims" },   
+//         { icon: "/images/heart.png", label: "VAWC Victims", path: "/social_worker/victims" },
 //         { icon: "/images/case.png", label: "Case Records", path: "/social_worker/case-records" },
 //         { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/social_worker/sessions" },
 //         { icon: "/images/peace.png", label: "Services", path: "/social_worker/services" },
@@ -62,7 +59,7 @@
 //         { icon: "/images/peace.png", label: "Services", path: "/dswd/services" },
 //         { icon: "/images/peace.png", label: "Questions Management", path: "/dswd/questions" },
 //         // { icon: "/images/account-settings.png", label: "Account Management", path: "/dswd/account-management" },
-//         { icon: "/images/account-settings.png", label: "Account Management", 
+//         { icon: "/images/account-settings.png", label: "Account Management",
 //           children: [
 //             { label: "User Management", path: "/dswd/account-management"},
 //             { label: "Pending Account", path: "/dswd/account-management/pending"}
@@ -235,46 +232,124 @@ export default function Sidebar() {
 
     if (role === "social worker") {
       return [
-        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/social_worker" },
-        { icon: "/images/heart.png", label: "VAWC Victims", path: "/social_worker/victims" },
-        { icon: "/images/case.png", label: "Case Records", path: "/social_worker/case-records" },
-        { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/social_worker/sessions" },
-        { icon: "/images/calendar.png", label: "My Schedule", path: "/social_worker/schedule" },
-        { icon: "/images/peace.png", label: "Services", path: "/social_worker/services" },
-        { icon: "/images/logout.png", label: "Log Out", path: "/login", isLogout: true },
+        {
+          icon: "/images/dashboardnew.png",
+          label: "Dashboard",
+          path: "/social_worker",
+        },
+        {
+          icon: "/images/heart.png",
+          label: "VAWC Victims",
+          path: "/social_worker/victims",
+        },
+        {
+          icon: "/images/case.png",
+          label: "Case Records",
+          path: "/social_worker/case-records",
+        },
+        {
+          icon: "/images/meeting.png",
+          label: "Scheduled Sessions",
+          path: "/social_worker/sessions",
+        },
+        {
+          icon: "/images/calendar.png",
+          label: "My Schedule",
+          path: "/social_worker/schedule",
+        },
+        {
+          icon: "/images/peace.png",
+          label: "Services",
+          path: "/social_worker/services",
+        },
+        {
+          icon: "/images/logout.png",
+          label: "Log Out",
+          path: "/login",
+          isLogout: true,
+        },
       ];
     }
 
     if (role === "dswd") {
       return [
         { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/dswd" },
-        { icon: "/images/heart.png", label: "VAWC Victims", path: "/dswd/victims" },
+        {
+          icon: "/images/heart.png",
+          label: "VAWC Victims",
+          path: "/dswd/victims",
+        },
         // { icon: "/images/customer.png", label: "Social Workers", path: "/dswd/social-workers" },
         // { icon: "/images/founder.png", label: "VAW Desk Officer", path: "/dswd/vawdesk-officer" },
-        { icon: "/images/peace.png", label: "Services", path: "/dswd/services" },
-        { icon: "/images/peace.png", label: "Questions Management", path: "/dswd/questions" },
+        {
+          icon: "/images/peace.png",
+          label: "Services",
+          path: "/dswd/services",
+        },
+        {
+          icon: "/images/peace.png",
+          label: "Questions Management",
+          path: "/dswd/questions",
+        },
         {
           icon: "/images/account-settings.png",
           label: "Account Management",
           children: [
             { label: "User Management", path: "/dswd/account-management" },
-            { label: "Pending Account", path: "/dswd/account-management/pending" },
+            {
+              label: "Pending Account",
+              path: "/dswd/account-management/pending",
+            },
           ],
         },
-        { icon: "/images/logout.png", label: "Log Out", path: "/login", isLogout: true },
+        {
+          icon: "/images/logout.png",
+          label: "Log Out",
+          path: "/login",
+          isLogout: true,
+        },
       ];
     }
 
     if (role === "vawdesk" || role === "desk officer") {
       return [
-        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/desk_officer" },
-        { icon: "/images/add.png", label: "Register Victim", path: "/desk_officer/register_victim" },
-        { icon: "/images/heart.png", label: "VAWC Victims", path: "/desk_officer/victims" },
-        { icon: "/images/customer.png", label: "Social Workers", path: "/desk_officer/social-workers" },
-        { icon: "/images/peace.png", label: "Services", path: "/desk_officer/services" },
-        { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/desk_officer/session" },
-        { icon: "/images/case.png", label: "Case Records", path: "/desk_officer/case-records" },
-        { icon: "/images/logout.png", label: "Log Out", path: "/login", isLogout: true },
+        {
+          icon: "/images/dashboardnew.png",
+          label: "Dashboard",
+          path: "/desk_officer",
+        },
+        {
+          icon: "/images/add.png",
+          label: "Register Victim",
+          path: "/desk_officer/register_victim",
+        },
+        {
+          icon: "/images/heart.png",
+          label: "VAWC Victims",
+          path: "/desk_officer/victims",
+        },
+        {
+          icon: "/images/customer.png",
+          label: "Social Workers",
+          path: "/desk_officer/social-workers",
+        },
+        {
+          icon: "/images/peace.png",
+          label: "Services",
+          path: "/desk_officer/services",
+        },
+        {
+          icon: "/images/meeting.png",
+          label: "Scheduled Sessions",
+          path: "/desk_officer/session",
+        },
+        // { icon: "/images/case.png", label: "Case Records", path: "/desk_officer/case-records" },
+        {
+          icon: "/images/logout.png",
+          label: "Log Out",
+          path: "/login",
+          isLogout: true,
+        },
       ];
     }
 
@@ -315,22 +390,39 @@ export default function Sidebar() {
                   }
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-md transition hover:bg-[#3F3F64] hover:scale-[1.02] hover:shadow-md"
                 >
-                  <img src={item.icon} alt={item.label} className="h-[22px] w-[22px] object-contain opacity-80 group-hover:opacity-100 transition" />
-                  <span className="text-sm font-medium text-white">{item.label}</span>
+                  <img
+                    src={item.icon}
+                    alt={item.label}
+                    className="h-[22px] w-[22px] object-contain opacity-80 group-hover:opacity-100 transition"
+                  />
+                  <span className="text-sm font-medium text-white">
+                    {item.label}
+                  </span>
                   <svg
                     className={`ml-auto h-4 w-4 transform transition-transform ${
                       openDropdownIndex === idx ? "rotate-90" : ""
                     }`}
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </button>
 
                 {openDropdownIndex === idx && (
                   <div className="ml-8 mt-1 space-y-1">
                     {item.children.map((subItem, subIdx) => (
-                      <Link key={subIdx} to={subItem.path} className="group block no-underline">
+                      <Link
+                        key={subIdx}
+                        to={subItem.path}
+                        className="group block no-underline"
+                      >
                         <div className="flex items-center gap-3 px-4 py-3 rounded-md transition hover:bg-[#3F3F64] hover:scale-[1.02] hover:shadow-md">
                           <div className="h-[22px] w-[22px] flex items-center justify-center bg-[#44446A] rounded-full text-white text-xs font-bold">
                             {subItem.label.charAt(0)}
@@ -349,10 +441,20 @@ export default function Sidebar() {
 
           if (item.isLogout) {
             return (
-              <button key={idx} onClick={handleLogout} className="w-full text-left group block no-underline">
+              <button
+                key={idx}
+                onClick={handleLogout}
+                className="w-full text-left group block no-underline"
+              >
                 <div className="flex items-center gap-3 px-4 py-3 rounded-md transition hover:bg-[#3F3F64] hover:scale-[1.02] hover:shadow-md">
-                  <img src={item.icon} alt={item.label} className="h-[22px] w-[22px] object-contain opacity-80 group-hover:opacity-100 transition" />
-                  <span className="text-sm font-medium text-white">{item.label}</span>
+                  <img
+                    src={item.icon}
+                    alt={item.label}
+                    className="h-[22px] w-[22px] object-contain opacity-80 group-hover:opacity-100 transition"
+                  />
+                  <span className="text-sm font-medium text-white">
+                    {item.label}
+                  </span>
                 </div>
               </button>
             );
@@ -361,7 +463,11 @@ export default function Sidebar() {
           return (
             <Link key={idx} to={item.path} className="group block no-underline">
               <div className="flex items-center gap-3 px-4 py-3 rounded-md transition hover:bg-[#3F3F64] hover:scale-[1.02] hover:shadow-md">
-                <img src={item.icon} alt={item.label} className="h-[22px] w-[22px] object-contain opacity-80 group-hover:opacity-100 transition" />
+                <img
+                  src={item.icon}
+                  alt={item.label}
+                  className="h-[22px] w-[22px] object-contain opacity-80 group-hover:opacity-100 transition"
+                />
                 <span className="text-sm font-medium text-white group-hover:text-white">
                   {item.label}
                 </span>
@@ -373,4 +479,3 @@ export default function Sidebar() {
     </aside>
   );
 }
-
