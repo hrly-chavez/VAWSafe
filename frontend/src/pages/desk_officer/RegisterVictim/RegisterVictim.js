@@ -403,6 +403,8 @@ export default function RegisterVictim() {
     ...makeInitialState(PERP_KEYS),
     victimPhotos: [], // extra fields you want
     evidences: [],
+
+    vic_sex: "Female",
   });
 
   const victimPhotos = formDataState.victimPhotos || [];
