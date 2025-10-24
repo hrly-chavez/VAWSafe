@@ -16,19 +16,20 @@ export default function Schedule({ victim, incident, back, next }) {
 
   // New states for social workers display
   const [officials, setOfficials] = useState([]);
-  const [selectedOfficial, setSelectedOfficial] = useState("");
+  const [selectedOfficials, setSelectedOfficials] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loadingSW, setLoadingSW] = useState(true);
 
   const handleSubmitSchedule = async () => {
     try {
       const payload = {
-        incident_id: incident?.incident_id,
-        sess_next_sched: `${date}T${time}:00Z`,
-        sess_location: location,
-        sess_type: selectedTypes.map((t) => t.value),
-        assigned_official: selectedOfficial || null,
-      };
+      incident_id: incident?.incident_id,
+      sess_next_sched: `${date}T${time}:00Z`,
+      sess_location: location,
+      sess_type: selectedTypes.map((t) => t.value),
+      assigned_official: selectedOfficials, // now a list
+    };
+
 
       const res = await api.post(
         "/api/desk_officer/sessions/create_sched/",
@@ -206,15 +207,6 @@ const formatTo12Hour = (range) => {
               }}
               className="border px-3 py-2 rounded-md w-64 text-sm"
             />
-            <select className="border px-3 py-2 rounded-md text-sm text-gray-500">
-              <option>Filter by Municipality (Coming Soon)</option>
-            </select>
-            <select className="border px-3 py-2 rounded-md text-sm text-gray-500">
-              <option>Filter by Barangay (Coming Soon)</option>
-            </select>
-            <select className="border px-3 py-2 rounded-md text-sm text-gray-500">
-              <option>Filter by Specialization (Coming Soon)</option>
-            </select>
           </div>
 
           {/* Cards Section */}
@@ -230,19 +222,13 @@ const formatTo12Hour = (range) => {
                 <div
                   key={sw.of_id}
                   className={`border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition ${
-                    selectedOfficial === sw.of_id ? "ring-2 ring-blue-500" : ""
-                  }`}
+                    selectedOfficials.includes(sw.of_id) ? "ring-2 ring-blue-500" : ""
+                  }`} 
                 >
                   <div className="mb-2">
                     <h4 className="font-semibold text-blue-800">
                       {sw.full_name}
                     </h4>
-                    <p className="text-xs text-gray-500">
-                      {sw.specialization || "—"}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {sw.barangay || "No assigned barangay"}
-                    </p>
                     <p className="text-xs text-gray-500">
                       Contact: {sw.contact || "N/A"}
                     </p>
@@ -272,17 +258,31 @@ const formatTo12Hour = (range) => {
 
                   <div className="flex justify-end mt-3">
                     <button
-                      onClick={() => setSelectedOfficial(sw.of_id)}
+                      onClick={() =>
+                        setSelectedOfficials((prev) =>
+                          prev.includes(sw.of_id)
+                            ? prev.filter((id) => id !== sw.of_id) // deselect
+                            : prev.length < 3
+                            ? [...prev, sw.of_id] // select new
+                            : prev // ignore if already 3
+                        )
+                      }
+                      disabled={
+                        !selectedOfficials.includes(sw.of_id) && selectedOfficials.length >= 3
+                      }
                       className={`px-3 py-1 rounded-md text-sm font-semibold transition ${
-                        selectedOfficial === sw.of_id
+                        selectedOfficials.includes(sw.of_id)
                           ? "bg-blue-600 text-white"
                           : "bg-blue-100 text-blue-700 hover:bg-blue-200"
                       }`}
                     >
-                      {selectedOfficial === sw.of_id
+                      {selectedOfficials.includes(sw.of_id)
                         ? "Selected"
+                        : selectedOfficials.length >= 3
+                        ? "Max 3 Selected"
                         : "Assign This Worker"}
                     </button>
+
                   </div>
                 </div>
               ))}

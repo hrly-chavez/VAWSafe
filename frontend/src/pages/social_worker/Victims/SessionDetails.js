@@ -97,7 +97,15 @@ export default function SessionDetails({ sessionId, onClose }) {
                 {/* Location */}
                 <DetailItem label="Location" value={session.sess_location} />
                 {/* Official */}
-                <DetailItem label="Assigned Official" value={session.official_name} />   
+                <DetailItem
+                  label="Assigned Officials"
+                  value={
+                    session.official_names && session.official_names.length > 0
+                      ? session.official_names.join(", ")
+                      : "—"
+                  }
+                />
+                  
               </div>
                     
               <div>

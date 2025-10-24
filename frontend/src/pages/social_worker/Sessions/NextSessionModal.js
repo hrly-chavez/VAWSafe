@@ -7,7 +7,7 @@ import api from "../../../api/axios";
 export default function NextSessionModal({ show, onClose, session }) {
   const [allTypes, setAllTypes] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
-  const [selectedOfficial, setSelectedOfficial] = useState(null);
+  const [selectedOfficials, setSelectedOfficials] = useState([]);
   const [location, setLocation] = useState("");
   const [dateTime, setDateTime] = useState("");
 
@@ -36,25 +36,31 @@ export default function NextSessionModal({ show, onClose, session }) {
     }
   };
 
-  const handleSubmit = async () => {
-    try {
-      const payload = {
-        incident_id: session?.incident?.incident_id, // ✅ required
-        sess_location: location,
-        sess_type: selectedTypes.map((t) => t.id),
-        sess_next_sched: dateTime,
-        assigned_official: selectedOfficial?.value,
-      };
+ const handleSubmit = async () => {
+  try {
+    const payload = {
+      incident_id: session?.incident?.incident_id,
+      sess_location: location,
+      sess_type: selectedTypes.map((t) => t.id),
+      sess_next_sched: dateTime,
+      assigned_official: selectedOfficials.map((o) => o.value),
+    };
 
-      await api.post(`/api/social_worker/sessions/`, payload);
-      console.log("Submitting payload:", payload);
-      alert("Next session scheduled successfully!");
-      onClose(true);
-    } catch (err) {
-      console.error("Failed to schedule next session", err);
+    console.log("Submitting payload:", payload);
+    await api.post(`/api/social_worker/sessions/`, payload);
+    alert("Next session scheduled successfully!");
+    onClose(true);
+  } catch (err) {
+    console.error("Failed to schedule next session", err);
+    if (err.response?.data) {
+      alert("Error: " + JSON.stringify(err.response.data, null, 2));
+    } else {
       alert("Failed to schedule next session.");
     }
-  };
+  }
+};
+
+
 
   if (!show || !session) return null;
 
@@ -121,15 +127,23 @@ export default function NextSessionModal({ show, onClose, session }) {
           <div>
             <label className="block text-sm font-medium">Assigned Official</label>
             <AsyncSelect
+              isMulti
               cacheOptions
               defaultOptions
               loadOptions={loadOfficials}
-              value={selectedOfficial}
-              onChange={(val) => setSelectedOfficial(val)}
-              placeholder="Search for a social worker..."
+              value={selectedOfficials}
+              onChange={(val) => {
+                // limit to max 3 officials
+                if (val.length <= 3) setSelectedOfficials(val);
+              }}
+              placeholder="Search and select up to 3 social workers..."
               getOptionLabel={(option) => option.label}
               getOptionValue={(option) => option.value}
             />
+            <p className="text-xs text-gray-500 mt-1">
+              You can assign up to 3 social workers.
+            </p>
+
           </div>
         </div>
 

@@ -337,13 +337,17 @@ class SessionDetailView(generics.RetrieveAPIView):
 
 
 @api_view(["POST"])
-def create_session(request): 
-    #Purpose: To create a new session record (schedule or start immediately).
+def create_session(request):
+    """
+    Purpose: To create a new session record (schedule or start immediately).
+    Now supports assigning up to 3 officials (ManyToMany).
+    """
     data = request.data.copy()
     started_now = data.pop("started_now", False)
 
     serializer = SessionSerializer(data=data)
     if serializer.is_valid():
+        # Save session with appropriate status
         if started_now:
             session = serializer.save(
                 sess_status="Ongoing",
@@ -351,6 +355,15 @@ def create_session(request):
             )
         else:
             session = serializer.save(sess_status="Pending")
+
+        # Validate maximum of 3 assigned officials
+        if session.assigned_official.count() > 3:
+            session.delete()  # rollback invalid session creation
+            return Response(
+                {"error": "You can assign up to 3 workers only."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         return Response(SessionSerializer(session).data, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

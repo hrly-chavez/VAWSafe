@@ -599,15 +599,16 @@ class Session(models.Model):
     sess_id = models.AutoField(primary_key=True)
     sess_num = models.IntegerField(null=True, blank=True)
     sess_status = models.CharField(max_length=20,choices=SESSION_STAT, default='Pending') 
-    sess_next_sched = models.DateTimeField(null=True, blank=True) # if scheduled session
-    sess_date_today = models.DateTimeField(null=True, blank=True)   #if start now
+    sess_next_sched = models.DateTimeField(null=True, blank=True) # scheduled session
+    sess_date_today = models.DateTimeField(null=True, blank=True) # date started now
     sess_location = models.CharField(max_length=200, null=True, blank=True)
     sess_description = models.TextField(null=True, blank=True)
     
     
     # foreign key
     incident_id = models.ForeignKey(IncidentInformation,to_field='incident_id', on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
-    assigned_official = models.ForeignKey("Official",on_delete=models.SET_NULL,related_name="assigned_sessions",null=True,blank=True)
+    assigned_official = models.ManyToManyField("Official",related_name="assigned_sessions",blank=True)
+
     sess_type = models.ManyToManyField("SessionType", related_name="sessions")
     def __str__(self):
         victim_name = (
@@ -793,6 +794,10 @@ class ServiceGiven(models.Model):
     def __str__(self):
         return f"{self.serv_id.name if self.serv_id else 'Unknown Service'} for Session {self.session.sess_id}"
     
+
+
+#=================================================================================
+
 User = get_user_model()
 
 class LoginTracker(models.Model):
@@ -845,6 +850,3 @@ class LoginTracker(models.Model):
     class Meta:
         verbose_name = "Login Tracker"
         verbose_name_plural = "Login Tracker Logs"
-
-
-#=================================================================================

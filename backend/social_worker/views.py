@@ -146,11 +146,16 @@ class scheduled_session_lists(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return Session.objects.filter(
-                assigned_official=user.official,
-                sess_status__in=["Pending", "Ongoing"]  
-            ).order_by("sess_status", "sess_next_sched")   
+            return (
+                Session.objects.filter(
+                    assigned_official__in=[user.official],
+                    sess_status__in=["Pending", "Ongoing"]
+                )
+                .distinct()
+                .order_by("sess_status", "sess_next_sched")
+            )
         return Session.objects.none()
+
 
 class scheduled_session_detail(generics.RetrieveUpdateAPIView):  
     """
@@ -502,7 +507,6 @@ class OfficialAvailabilityViewSet(viewsets.ModelViewSet):
 
 class OfficialUnavailabilityViewSet(viewsets.ModelViewSet):
 
-
     """
     Manage temporary unavailability records (like sick leave or holidays) for the current Social Worker.
     """
@@ -515,7 +519,6 @@ class OfficialUnavailabilityViewSet(viewsets.ModelViewSet):
         if hasattr(user, "official") and user.official.of_role == "Social Worker":
             return OfficialUnavailability.objects.filter(official=user.official)
         return OfficialUnavailability.objects.none()
-
 
 class OfficialScheduleOverviewViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsRole]
