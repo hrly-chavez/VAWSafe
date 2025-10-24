@@ -102,6 +102,17 @@ export default function Sidebar() {
           ],
         },
         {
+          icon: "/images/dashboardnew.png",
+          label: "Reports",
+          children: [
+            { label: "Daily Reports", path: "/dswd/account-management" },
+            {
+              label: "Monthly Reports",
+              path: "/dswd/account-management/pending",
+            },
+          ],
+        },
+        {
           icon: "/images/logout.png",
           label: "Log Out",
           path: "/login",

@@ -275,9 +275,9 @@ class create_official(APIView):
             official.save()
 
         # -----------------------
-        # Face Embeddings (Social Worker / DSWD only)
+        # Face Embeddings (Social Worker / DSWD / Nurse / Psychometrician only)
         # -----------------------
-        if role in ["Social Worker", "DSWD", "Nurse", "Pyschometrician"]:
+        if role in ["Social Worker", "DSWD", "Nurse", "Psychometrician"]:
             created_count = 0
             for file in photo_files:
                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")

@@ -531,7 +531,7 @@ useEffect(() => {
             </div>
 
             {/* Credential Display */}
-            {credentials && credentials.username && (of_role === "Social Worker" || of_role === "DSWD") && (
+            {credentials && credentials.username && (of_role === "Social Worker" || of_role === "DSWD" || of_role === "Nurse" || of_role === "Psychometrician") && (
               <div className="mt-4 p-4 border border-green-500 bg-green-100 text-green-900 rounded-lg shadow">
                 <h4 className="font-bold mb-2">Generated Credentials:</h4>
                 <p><strong>Username:</strong> {credentials.username}</p>
