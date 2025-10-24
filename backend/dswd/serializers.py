@@ -129,11 +129,6 @@ class DSWDSessionDetailSerializer(serializers.ModelSerializer):
         ]
 
 #==================================================================
-class CaseReportSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CaseReport
-        fields = "__all__"
-
 class PerpetratorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Perpetrator
@@ -186,7 +181,6 @@ class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
 
 class VictimDetailSerializer(serializers.ModelSerializer):
     face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
-    case_report = CaseReportSerializer(read_only=True)
     incidents = IncidentWithPerpetratorSerializer(many=True, read_only=True)
 
     class Meta:

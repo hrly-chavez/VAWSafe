@@ -41,11 +41,6 @@ class VictimSerializer(serializers.ModelSerializer):
     def get_full_name(self, obj):
         return obj.full_name
         
-class CaseReportSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CaseReport
-        fields = "__all__"
-
 class PerpetratorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Perpetrator
@@ -61,7 +56,6 @@ class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
 class VictimDetailSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
     face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
-    case_report = CaseReportSerializer(read_only=True)
     incidents = IncidentWithPerpetratorSerializer(many=True, read_only=True)
     class Meta:
         model = Victim
@@ -304,7 +298,6 @@ class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):
     """
     victim = VictimSerializer(source="incident_id.vic_id", read_only=True)
     incident = IncidentWithPerpetratorSerializer(source="incident_id", read_only=True)
-    case_report = CaseReportSerializer(source="incident_id.vic_id.case_report", read_only=True)
     official_names = serializers.SerializerMethodField()  # ← FIXED
     sess_type = serializers.PrimaryKeyRelatedField(
         many=True, queryset=SessionType.objects.all(), write_only=True
