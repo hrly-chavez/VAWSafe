@@ -606,7 +606,7 @@ class Session(models.Model):
     
     
     # foreign key
-    incident_id = models.ForeignKey(IncidentInformation,to_field='incident_id', on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
+    incident_id = models.ForeignKey(IncidentInformation, on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
     assigned_official = models.ManyToManyField("Official",related_name="assigned_sessions",blank=True)
 
     incident_id = models.ForeignKey(IncidentInformation, on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
@@ -797,7 +797,7 @@ class ServiceGiven(models.Model):
     service_feedback = models.TextField(null=True, blank=True, help_text="Remarks or feedback about the service given")
     def __str__(self):
         return f"{self.serv_id.name if self.serv_id else 'Unknown Service'} for Session {self.session.sess_id}"
-    
+#================================================================================= 
 User = get_user_model()
 
 class LoginTracker(models.Model):
@@ -852,4 +852,3 @@ class LoginTracker(models.Model):
         verbose_name_plural = "Login Tracker Logs"
 
 
-#=================================================================================
