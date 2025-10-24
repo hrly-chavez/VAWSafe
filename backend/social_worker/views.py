@@ -565,29 +565,50 @@ def schedule_next_session(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+# @api_view(["GET"])
+# @permission_classes([IsAuthenticated])
+# def list_social_workers(request):
+#     """
+#     GET: Returns list of social workers for assignment (searchable by name).
+#     Used in NextSessionModal dropdown.
+#     """
+#     q = request.query_params.get("q", "").strip()
+#     workers = Official.objects.filter(of_role="Social Worker")
+
+#     if q:
+#      workers = workers.filter(
+#         Q(of_fname__icontains=q) |
+#         Q(of_lname__icontains=q) |
+#         Q(of_m_initial__icontains=q)
+#     )
+
+#     workers = workers[:20]
+#     data = [
+#         {"of_id": w.of_id, "full_name": w.full_name}
+#         for w in workers
+#     ]
+#     return Response(data, status=200)
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_social_workers(request):
     """
-    GET: Returns list of social workers for assignment (searchable by name).
-    Used in NextSessionModal dropdown.
+    GET: Returns list of social workers for assignment with unavailability.
     """
     q = request.query_params.get("q", "").strip()
     workers = Official.objects.filter(of_role="Social Worker")
 
     if q:
-     workers = workers.filter(
-        Q(of_fname__icontains=q) |
-        Q(of_lname__icontains=q) |
-        Q(of_m_initial__icontains=q)
-    )
+        workers = workers.filter(
+            Q(of_fname__icontains=q) |
+            Q(of_lname__icontains=q) |
+            Q(of_m_initial__icontains=q)
+        )
 
-    workers = workers[:20]
-    data = [
-        {"of_id": w.of_id, "full_name": w.full_name}
-        for w in workers
-    ]
-    return Response(data, status=200)
+    workers = workers.prefetch_related('unavailabilities')[:20]
+
+    serializer = SocialWorkerAssignSerializer(workers, many=True)
+    return Response(serializer.data, status=200)
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
