@@ -167,7 +167,6 @@ class SessionSerializer(serializers.ModelSerializer):
 
         return session
 
-
 class IncidentInformationSerializer(serializers.ModelSerializer): #fetch case and session in victim info
     sessions = SessionSerializer(many=True, read_only=True)  #  add sessions
     perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)  
