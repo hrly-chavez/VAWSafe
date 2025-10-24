@@ -47,23 +47,8 @@ class VictimFaceSampleSerializer(serializers.ModelSerializer):
         fields = ["photo", "embedding"]
         read_only_fields = ["embedding"]
 
-class CaseReportSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CaseReport
-        fields = [
-            "handling_org", "office_address", "report_type",
-            "informant_name", "informant_relationship", "informant_contact",
-            
-        ]
-
-class InformantSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Informant
-        fields = "__all__"
-
 class VictimSerializer(serializers.ModelSerializer):
     face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
-    case_report = CaseReportSerializer(read_only=True)
     full_name = serializers.ReadOnlyField()
     class Meta:
         model = Victim
@@ -191,7 +176,6 @@ class IncidentInformationSerializer(serializers.ModelSerializer): #fetch case an
 
 class VictimDetailSerializer(serializers.ModelSerializer): #together with IncidentInformationSerializer
     face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
-    case_report = CaseReportSerializer(read_only=True)
     incidents = IncidentInformationSerializer(many=True, read_only=True)
 
     class Meta:

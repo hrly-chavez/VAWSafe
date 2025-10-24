@@ -163,18 +163,30 @@ useEffect(() => {
     formData.append("address.sitio", sitio);
     formData.append("address.street", street);
 
-
+    // Add all photos to FormData
     for (let i = 0; i < photos.length; i++) {
       const blob = await fetch(photos[i]).then((res) => res.blob());
       const photoFile = new File([blob], `photo_${i + 1}.jpg`, { type: "image/jpeg" });
       formData.append("of_photos", photoFile);
     }
 
-    setLoading(true);
-    setStatus("");
-    setCredentials(null);
-
+    // Step 1: Check if the face already exists
     try {
+      //unya nani i push if dli na dev phase
+      // const checkResponse = await fetch("http://localhost:8000/api/auth/search-official/", {
+      //   method: "POST",
+      //   body: formData,
+      // });
+
+      // const checkData = await checkResponse.json();
+
+      // // If a match is found (verified = true), stop registration
+      // if (checkData.match && checkData.match === true) {
+      //   alert("A matching official was found. Registration cannot proceed.");
+      //   return;  // Stop further submission
+      // }
+
+      // Step 2: Proceed to register the user if no match is found
       const response = await fetch("http://localhost:8000/api/auth/add-user/", {
         method: "POST",
         body: formData,
@@ -195,23 +207,21 @@ useEffect(() => {
 
       // } else 
       if (of_role === "DSWD") {
-          setStatus("DSWD account created successfully!");
-          setCredentials({
-              username: data.username,
-              password: data.password,
-              role: data.role,
-          });
-
+        setStatus("DSWD account created successfully!");
+        setCredentials({
+          username: data.username,
+          password: data.password,
+          role: data.role,
+        });
       } else {
-          setStatus("Registration successful!");
-          setCredentials({
-              username: data.username,
-              password: data.password,
-              role: data.role,
-              assigned_barangay_name: data.assigned_barangay_name,
-          });
+        setStatus("Registration successful!");
+        setCredentials({
+          username: data.username,
+          password: data.password,
+          role: data.role,
+          assigned_barangay_name: data.assigned_barangay_name,
+        });
       }
-
 
       // Reset form
       setPhotos([]);
@@ -220,18 +230,14 @@ useEffect(() => {
       setEmail("");
       setSitio("");
       setStreet("");
-
-      if (!dswdExists) setRole("DSWD"); // keep role DSWD if first-time
-      else setRole(defaultRole || "DSWD");
       setCurrentIndex(0);
 
     } catch (err) {
       console.error("Registration error:", err);
       setStatus("Registration failed. Please check the input or camera.");
-    } finally {
-      setLoading(false);
     }
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -525,7 +531,7 @@ useEffect(() => {
             </div>
 
             {/* Credential Display */}
-            {credentials && credentials.username && (of_role === "Social Worker" || of_role === "DSWD") && (
+            {credentials && credentials.username && (of_role === "Social Worker" || of_role === "DSWD" || of_role === "Nurse" || of_role === "Psychometrician") && (
               <div className="mt-4 p-4 border border-green-500 bg-green-100 text-green-900 rounded-lg shadow">
                 <h4 className="font-bold mb-2">Generated Credentials:</h4>
                 <p><strong>Username:</strong> {credentials.username}</p>

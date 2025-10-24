@@ -41,11 +41,6 @@ class VictimSerializer(serializers.ModelSerializer):
     def get_full_name(self, obj):
         return obj.full_name
         
-class CaseReportSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CaseReport
-        fields = "__all__"
-
 class PerpetratorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Perpetrator
@@ -61,7 +56,6 @@ class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
 class VictimDetailSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
     face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
-    case_report = CaseReportSerializer(read_only=True)
     incidents = IncidentWithPerpetratorSerializer(many=True, read_only=True)
     class Meta:
         model = Victim
@@ -304,7 +298,6 @@ class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):
     """
     victim = VictimSerializer(source="incident_id.vic_id", read_only=True)
     incident = IncidentWithPerpetratorSerializer(source="incident_id", read_only=True)
-    case_report = CaseReportSerializer(source="incident_id.vic_id.case_report", read_only=True)
     official_names = serializers.SerializerMethodField()  # ← FIXED
     sess_type = serializers.PrimaryKeyRelatedField(
         many=True, queryset=SessionType.objects.all(), write_only=True
@@ -406,7 +399,7 @@ class OfficialAvailabilitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OfficialAvailability
-        fields = ["id", "day_of_week", "day_display", "start_time", "end_time", "remarks", "is_active"]
+        fields = '__all__'
 
     def validate(self, data):
         #Ensure valid time range and prevent overlap for same official/day.
@@ -449,7 +442,7 @@ class OfficialAvailabilitySerializer(serializers.ModelSerializer):
 class OfficialUnavailabilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = OfficialUnavailability
-        fields = ["id", "start_date", "end_date", "reason", "notes"]
+        fields = '__all__'
 
     def validate(self, data):
         #Ensure valid date range and no overlap with existing unavailability."""
@@ -487,3 +480,4 @@ class OfficialUnavailabilitySerializer(serializers.ModelSerializer):
             raise ValidationError("You can only update your own unavailability.")
         return super().update(instance, validated_data)
     
+

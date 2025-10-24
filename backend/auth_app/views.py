@@ -18,7 +18,6 @@ from rest_framework.decorators import api_view, permission_classes
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.cache import cache
-import uuid
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_str, force_bytes
 from django.conf import settings
@@ -28,7 +27,9 @@ from .cookie_utils import set_auth_cookies, clear_auth_cookies
 from django.utils.decorators import method_decorator
 from rest_framework import viewsets
 from .signals import get_client_ip
-
+from django.http import Http404
+from shared_model.views import serve_encrypted_file
+from cryptography.fernet import Fernet
 
 from deepface import DeepFace
 from PIL import Image
@@ -36,13 +37,6 @@ from django.utils.crypto import get_random_string
 from vawsafe_core.blink_model.blink_utils import detect_blink
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
-
-# def get_tokens_for_user(user):
-#     refresh = RefreshToken.for_user(user)
-#     return {
-#         "refresh": str(refresh),
-#         "access": str(refresh.access_token),
-#     }
 
 #gamit ni sa cookies
 # 1) Whoami (used by frontend to restore session)
@@ -82,194 +76,88 @@ def check_dswd_exists(request):
     return Response({"dswd_exists": exists})
 
 
+#========================================================
 
-# class create_official(APIView):
+#check face user first
+#unya nani i work kanang wa na sa dev phase
+# class SearchOfficialFacial(APIView):
 #     parser_classes = [MultiPartParser, FormParser]
 #     permission_classes = [AllowAny]
 
 #     def post(self, request):
-#         serializer = OfficialSerializer(data=request.data)
-#         if not serializer.is_valid():
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         uploaded_files = request.FILES.getlist("of_photos")
 
-#         role = serializer.validated_data.get("of_role", "").strip()
-#         user = None
-#         username = None
-#         generated_password = None
+#         if not uploaded_files:
+#             return Response({"error": "No images uploaded."}, status=status.HTTP_400_BAD_REQUEST)
 
-#         # -----------------------
-#         # DSWD Registration Logic
-#         # -----------------------
-#         if role == "DSWD":
-#             if Official.objects.filter(of_role="DSWD").exists():
-#                 return Response(
-#                     {"error": "A DSWD account already exists. Cannot create another automatically."},
-#                     status=status.HTTP_400_BAD_REQUEST
-#                 )
-#             fname = request.data.get("of_fname", "").strip().lower()
-#             lname = request.data.get("of_lname", "").strip().lower()
-#             base_username = f"{fname}{lname}".replace(" ", "")
-#             username = base_username or get_random_string(8)
-
-#             counter = 0
-#             while User.objects.filter(username=username).exists():
-#                 counter += 1
-#                 username = f"{base_username}{counter}"
-
-#             generated_password = get_random_string(length=12)
-#             user = User.objects.create_user(username=username, password=generated_password)
-#             status_value = "approved"
-
-#         # -----------------------
-#         # Social Worker
-#         # -----------------------
-#         elif role == "Social Worker":
-#             fname = request.data.get("of_fname", "").strip().lower()
-#             lname = request.data.get("of_lname", "").strip().lower()
-#             base_username = f"{fname}{lname}".replace(" ", "")
-#             username = base_username or get_random_string(8)
-
-#             counter = 0
-#             while User.objects.filter(username=username).exists():
-#                 counter += 1
-#                 username = f"{base_username}{counter}"
-
-#             generated_password = get_random_string(length=12)
-#             user = User.objects.create_user(username=username, password=generated_password)
-#             status_value = "approved"
-
-#         # -----------------------
-#         # VAWDesk
-#         # -----------------------
-#         elif role == "VAWDesk":
-#             status_value = "pending"
-#         else:
-#             return Response({"error": f"Invalid role: {role}"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         # -----------------------
-#         # Create Official
-#         # -----------------------
-#         # official = Official.objects.create(
-#         #     user=user,
-#         #     status=status_value,
-#         #     **serializer.validated_data
-#         # )
-#         official = serializer.save(
-#             user=user,
-#             status=status_value
-#         )
-
-#         # -----------------------
-#         # Handle uploaded photos
-#         # -----------------------
-#         photo_files = request.FILES.getlist("of_photos") or []
-#         if not photo_files:
-#             single_photo = request.FILES.get("of_photo")
-#             if single_photo:
-#                 photo_files = [single_photo]
-
-#         if photo_files:
-#             official.of_photo = photo_files[0]
-#             official.save()
-
-#         # -----------------------
-#         # Process face embeddings
-#         # -----------------------
-#         if role in ["Social Worker", "DSWD"]:
-#             created_count = 0
-#             for index, file in enumerate(photo_files):
+#         # Save the temporary images
+#         chosen_frames = []
+#         for uploaded_file in uploaded_files:
+#             try:
 #                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
-#                 try:
-#                     image = Image.open(file).convert("RGB")
-#                     image.save(temp_image, format="JPEG")
-#                     temp_image.flush()
-#                     temp_image.close()
+#                 temp_image.write(uploaded_file.read())
+#                 temp_image.flush()
+#                 temp_image.close()
+#                 chosen_frames.append(temp_image.name)
+#             except Exception as e:
+#                 return Response({"error": f"Failed to save uploaded image: {str(e)}"}, status=400)
 
-#                     embeddings = DeepFace.represent(
-#                         img_path=temp_image.name,
-#                         model_name="ArcFace",
-#                         enforce_detection=True
-#                     )
+#         # Step 1: Compare the uploaded face images with all OfficialFaceSamples
+#         best_match = None
+#         best_sample = None
+#         lowest_distance = float("inf")
 
-#                     if isinstance(embeddings, list):
-#                         if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
-#                             embedding_vector = embeddings[0]["embedding"]
-#                         elif all(isinstance(x, float) for x in embeddings):
-#                             embedding_vector = embeddings
-#                         else:
-#                             raise ValueError("Unexpected list format from DeepFace.")
-#                     elif isinstance(embeddings, dict) and "embedding" in embeddings:
-#                         embedding_vector = embeddings["embedding"]
-#                     else:
-#                         raise ValueError("Unexpected format from DeepFace.represent()")
+#         try:
+#             for sample in OfficialFaceSample.objects.select_related("official"):
+#                 for chosen_frame in chosen_frames:
+#                     try:
+#                         result = DeepFace.verify(
+#                             img1_path=chosen_frame,
+#                             img2_path=sample.photo.path,
+#                             model_name="ArcFace",
+#                             enforce_detection=True
+#                         )
 
-#                     OfficialFaceSample.objects.create(
-#                         official=official,
-#                         photo=file,
-#                         embedding=embedding_vector
-#                     )
-#                     created_count += 1
+#                         official = sample.official
+#                         print(f"[DEBUG] Compared with {official.of_fname} {official.of_lname}, distance: {result['distance']:.4f}, verified: {result['verified']}")
 
-#                 except Exception as e:
-#                     traceback.print_exc()
-#                 finally:
-#                     if os.path.exists(temp_image.name):
-#                         os.remove(temp_image.name)
+#                         # If faces match (verified) and the distance is the lowest, we have a match
+#                         if result["verified"] and result["distance"] < lowest_distance:
+#                             lowest_distance = result["distance"]
+#                             best_match = official
+#                             best_sample = sample
 
-#             if created_count == 0:
-#                 return Response(
-#                     {"error": "Face registration failed. Please upload clearer photos."},
-#                     status=status.HTTP_400_BAD_REQUEST
-#                 )
+#                     except Exception as ve:
+#                         print(f"[WARN] Skipping {sample.official.of_fname} {sample.official.of_lname} due to error: {str(ve)}")
+#                         continue
 
-#             # -----------------------
-#             # Send Email with credentials
-#             # -----------------------
-#             email_address = serializer.validated_data.get("of_email")  # make sure OfficialSerializer includes of_email
-#             if email_address:
-#                 subject = f"Your {role} Account Credentials"
-#                 message = (
-#                     f"Hello {official.of_fname} {official.of_lname},\n\n"
-#                     f"Your {role} account has been created and approved.\n\n"
-#                     f"Username: {username}\n"
-#                     f"Password: {generated_password}\n\n"
-#                     f"Please log in and change your password immediately."
-#                 )
-#                 send_mail(
-#                     subject,
-#                     message,
-#                     settings.DEFAULT_FROM_EMAIL,
-#                     [email_address],
-#                     fail_silently=False,
-#                 )
+#             if best_match:
+#                 serializer = OfficialSerializer(best_match, context={"request": request})
+#                 return Response({
+#                     "match": True,
+#                     "official_id": best_match.of_id,
+#                     "official_data": serializer.data
+#                 }, status=status.HTTP_200_OK)
 
+#             # No match found
 #             return Response({
-#                 "message": f"{role} registered. {created_count} face sample(s) saved.",
-#                 "official_id": official.of_id,
-#                 "username": username,
-#                 "password": generated_password,
-#                 "role": official.of_role,
-#                 "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
-#                 "assigned_barangay_name": official.of_assigned_barangay.name if official.of_assigned_barangay else None
-#             }, status=status.HTTP_201_CREATED)
+#                 "match": False,
+#                 "message": "The official is not registered."
+#             }, status=status.HTTP_404_NOT_FOUND)
 
-#         # -----------------------
-#         # VAWDesk: save photos only
-#         # -----------------------
-#         if role == "VAWDesk":
-#             for file in photo_files:
-#                 OfficialFaceSample.objects.create(
-#                     official=official,
-#                     photo=file,
-#                     embedding=None
-#                 )
-
+#         except Exception as e:
+#             traceback.print_exc()
 #             return Response({
-#                 "message": "VAWDesk registration submitted. Awaiting DSWD approval.",
-#                 "official_id": official.of_id,
-#                 "role": official.of_role,
-#                 "status": official.status
-#             }, status=status.HTTP_202_ACCEPTED)
+#                 "match": False,
+#                 "error": str(e),
+#                 "suggestion": "Something went wrong with face verification."
+#             }, status=status.HTTP_400_BAD_REQUEST)
+
+#         finally:
+#             # Clean up the temporary image files
+#             for chosen_frame in chosen_frames:
+#                 if os.path.exists(chosen_frame):
+#                     os.remove(chosen_frame)
 
 class create_official(APIView):
     parser_classes = [MultiPartParser, FormParser]
@@ -387,9 +275,9 @@ class create_official(APIView):
             official.save()
 
         # -----------------------
-        # Face Embeddings (Social Worker / DSWD only)
+        # Face Embeddings (Social Worker / DSWD / Nurse / Psychometrician only)
         # -----------------------
-        if role in ["Social Worker", "DSWD", "Nurse", "Pyschometrician"]:
+        if role in ["Social Worker", "DSWD", "Nurse", "Psychometrician"]:
             created_count = 0
             for file in photo_files:
                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
@@ -635,150 +523,6 @@ class face_login(APIView):
             return Response({"match": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-#old face login
-# class face_login(APIView):
-#     parser_classes = [MultiPartParser, FormParser]
-#     throttle_classes = [ScopedRateThrottle]
-#     throttle_scope = 'face_login'
-#     permission_classes = [AllowAny]
-
-#     SIMILARITY_THRESHOLD = 0.65  # adjust based on testing
-
-#     def post(self, request):
-#         uploaded_frames = [file for name, file in request.FILES.items() if name.startswith("frame")]
-#         if not uploaded_frames:
-#             return Response({"error": "No frame(s) provided"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         best_match = None
-#         best_sample = None
-#         best_score = -1.0  # cosine similarity (higher = better)
-
-#         try:
-#             for file in uploaded_frames:
-#                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
-#                 image = Image.open(file).convert("RGB")
-#                 image.save(temp_image, format="JPEG")
-#                 temp_image.flush()
-#                 temp_image.close()
-
-#                 try:
-#                     # Generate embedding for uploaded frame
-#                     embeddings = DeepFace.represent(
-#                         img_path=temp_image.name,
-#                         model_name="ArcFace",
-#                         enforce_detection=True
-#                     )
-
-#                     # Handle different DeepFace.represent() return types
-#                     frame_embedding = None
-#                     if isinstance(embeddings, list):
-#                         if len(embeddings) > 0 and isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
-#                             frame_embedding = embeddings[0]["embedding"]
-#                         elif all(isinstance(x, (int, float)) for x in embeddings):
-#                             # Direct list of floats
-#                             frame_embedding = embeddings
-#                     elif isinstance(embeddings, dict) and "embedding" in embeddings:
-#                         frame_embedding = embeddings["embedding"]
-
-#                     if frame_embedding is None:
-#                         print(f"[WARN] No usable embedding from {file}")
-#                         continue
-
-#                     frame_embedding = np.array(frame_embedding).reshape(1, -1)
-
-#                     # Compare with stored samples
-#                     for sample in OfficialFaceSample.objects.select_related("official"):
-#                         official = sample.official
-#                         embedding = sample.embedding
-
-#                         if embedding:
-#                             sample_embedding = np.array(embedding).reshape(1, -1)
-#                             score = cosine_similarity(frame_embedding, sample_embedding)[0][0]
-#                             # Print verification info for each comparison
-#                             accuracy = score * 100
-#                             is_match = "TRUE" if score >= self.SIMILARITY_THRESHOLD else "FALSE"
-#                             print(
-#                                 f"[FACE LOGIN] Verifying {official.full_name} | "
-#                                 f"Score: {score:.4f} | Accuracy: {accuracy:.2f}% | "
-#                                 f"Threshold: {self.SIMILARITY_THRESHOLD} | Result: {is_match}")
-#                             if score > best_score:
-#                                 best_score = score
-#                                 best_match = official
-#                                 best_sample = sample
-#                         else:
-#                             # Fallback to DeepFace.verify
-#                             try:
-#                                 result = DeepFace.verify(
-#                                     img1_path=temp_image.name,
-#                                     img2_path=sample.photo.path,
-#                                     model_name="ArcFace",
-#                                     enforce_detection=True
-#                                 )
-#                                 if result.get("verified"):
-#                                     score = 1.0 / (1.0 + result["distance"])
-#                                     if score > best_score:
-#                                         best_score = score
-#                                         best_match = official
-#                                         best_sample = sample
-#                             except Exception as ve:
-#                                 print(f"[WARN] Fallback failed for {official.full_name}: {ve}")
-#                                 continue
-
-#                 finally:
-#                     if os.path.exists(temp_image.name):
-#                         os.remove(temp_image.name)
-
-#             #  Apply similarity threshold
-#             if best_match and best_score >= self.SIMILARITY_THRESHOLD:
-#                 accuracy = best_score * 100  # convert cosine similarity to %
-#                 print(
-#                     f"[FACE LOGIN]  MATCH FOUND | Name: {best_match.full_name} | "
-#                     f"Similarity: {best_score:.4f} | Accuracy: {accuracy:.2f}% | "
-#                     f"Threshold: {self.SIMILARITY_THRESHOLD} | Result: TRUE"
-#                 )
-
-#                 tokens = get_tokens_for_user(best_match.user)
-
-#                 if getattr(best_match, "of_photo", None) and best_match.of_photo:
-#                     rel_url = best_match.of_photo.url
-#                 elif best_sample and best_sample.photo:
-#                     rel_url = best_sample.photo.url
-#                 else:
-#                     rel_url = None
-
-#                 profile_photo_url = request.build_absolute_uri(rel_url) if rel_url else None
-
-#                 return Response({
-#                     "match": True,
-#                     "official_id": best_match.of_id,
-#                     "name": best_match.full_name,
-#                     "fname": best_match.of_fname,
-#                     "lname": best_match.of_lname,
-#                     "username": best_match.user.username,
-#                     "role": best_match.of_role,
-#                     "profile_photo_url": profile_photo_url,
-#                     "tokens": tokens,
-#                     "similarity_score": float(best_score),
-#                     "threshold": self.SIMILARITY_THRESHOLD
-#                 }, status=200)
-
-#             accuracy = best_score * 100 if best_score > 0 else 0
-#             print(
-#                 f"[FACE LOGIN]  NO MATCH | Best Score: {best_score:.4f} | "
-#                 f"Accuracy: {accuracy:.2f}% | "
-#                 f"Threshold: {self.SIMILARITY_THRESHOLD} | Result: FALSE"
-#             )
-
-#             return Response({
-#                 "match": False,
-#                 "message": f"No matching face found."
-#             }, status=404)
-
-#         except Exception as e:
-#             traceback.print_exc()
-#             return Response({"match": False, "error": str(e)}, status=400)
-
-
 class blick_check(APIView):
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [AllowAny]
@@ -825,33 +569,6 @@ class blick_check(APIView):
             "message": "No blink detected. Please blink clearly."
         }, status=403)
 
-#this is old manual_login function
-# class manual_login(APIView):
-#     permission_classes = [AllowAny]
-
-#     def post(self, request):
-#         username = request.data.get("username")
-#         password = request.data.get("password")
-
-#         user = authenticate(request, username=username, password=password)
-#         if not user:
-#             return Response({"match": False, "message": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
-
-#         try:
-#             official = Official.objects.get(user=user)
-#         except Official.DoesNotExist:
-#             return Response({"match": False, "message": "Linked official not found"}, status=status.HTTP_404_NOT_FOUND)
-
-#         tokens = get_tokens_for_user(user)
-#         return Response({
-#             "match": True,
-#             "official_id": official.of_id,
-#             "name": official.full_name,
-#             "username": user.username,
-#             "role": official.of_role,
-#             "profile_photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
-#             "tokens": tokens
-#         }, status=200)
     
 #manual login ni sya para sa cookie instead of localstorage
 class CookieTokenObtainPairView(views.APIView):
@@ -905,16 +622,31 @@ class CookieTokenObtainPairView(views.APIView):
 class ForgotPasswordFaceView(APIView):
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [AllowAny]
+    SIMILARITY_THRESHOLD = 0.65  # same as face_login
+
+    def decrypt_temp_file(self, encrypted_path):
+        """Decrypt .enc image into a temporary .jpg file."""
+        fernet = Fernet(settings.FERNET_KEY)
+        with open(encrypted_path, "rb") as enc_file:
+            encrypted_data = enc_file.read()
+        decrypted_data = fernet.decrypt(encrypted_data)
+
+        temp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+        temp.write(decrypted_data)
+        temp.flush()
+        temp.close()
+        return temp.name
 
     def post(self, request):
         uploaded_file = request.FILES.get("frame")
         if not uploaded_file:
             return Response({"success": False, "message": "No image uploaded."}, status=400)
 
-        # Save temp image
+        # Save webcam frame temporarily
         try:
             temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
-            temp_image.write(uploaded_file.read())
+            image = Image.open(uploaded_file).convert("RGB")
+            image.save(temp_image, format="JPEG")
             temp_image.flush()
             temp_image.close()
             chosen_frame = temp_image.name
@@ -922,40 +654,102 @@ class ForgotPasswordFaceView(APIView):
             return Response({"success": False, "message": f"Failed to save image: {str(e)}"}, status=400)
 
         best_match = None
-        lowest_distance = float("inf")
+        best_sample = None
+        best_score = -1.0
+        decrypted_temp_files = []
 
         try:
+            # Generate embedding for uploaded frame
+            embeddings = DeepFace.represent(
+                img_path=chosen_frame,
+                model_name="ArcFace",
+                enforce_detection=True
+            )
+
+            # Handle DeepFace return formats
+            frame_embedding = None
+            if isinstance(embeddings, list):
+                if len(embeddings) > 0 and isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
+                    frame_embedding = embeddings[0]["embedding"]
+                elif all(isinstance(x, (int, float)) for x in embeddings):
+                    frame_embedding = embeddings
+            elif isinstance(embeddings, dict) and "embedding" in embeddings:
+                frame_embedding = embeddings["embedding"]
+
+            if frame_embedding is None:
+                return Response({"success": False, "message": "Could not extract face embedding."}, status=400)
+
+            frame_embedding = np.array(frame_embedding).reshape(1, -1)
+
+            # Compare with stored embeddings
             for sample in OfficialFaceSample.objects.select_related("official"):
+                official = sample.official
+                embedding = sample.embedding
+
                 try:
-                    result = DeepFace.verify(
-                        img1_path=chosen_frame,
-                        img2_path=sample.photo.path,
-                        model_name="ArcFace",
-                        enforce_detection=True
-                    )
+                    if embedding:
+                        # Compare embeddings directly
+                        sample_embedding = np.array(embedding).reshape(1, -1)
+                        score = cosine_similarity(frame_embedding, sample_embedding)[0][0]
+                        accuracy = score * 100
+                        is_match = score >= self.SIMILARITY_THRESHOLD
+                        print(
+                            f"[FORGOT-PASS] Comparing with {official.full_name} | "
+                            f"Score: {score:.4f} | Accuracy: {accuracy:.2f}% | "
+                            f"Threshold: {self.SIMILARITY_THRESHOLD} | Result: {is_match}"
+                        )
+                        if score > best_score:
+                            best_score = score
+                            best_match = official
+                            best_sample = sample
+                    else:
+                        # Fallback to encrypted image comparison
+                        photo_path = sample.photo.path
+                        if photo_path.lower().endswith(".enc"):
+                            photo_path = self.decrypt_temp_file(photo_path)
+                            decrypted_temp_files.append(photo_path)
 
-                    official = sample.official
-                    print(f"[DEBUG] Compared with {official.of_fname} {official.of_lname}, "
-                          f"distance: {result['distance']:.4f}, verified: {result['verified']}")
-
-                    if result["verified"] and result["distance"] < lowest_distance:
-                        lowest_distance = result["distance"]
-                        best_match = official
+                        result = DeepFace.verify(
+                            img1_path=chosen_frame,
+                            img2_path=photo_path,
+                            model_name="ArcFace",
+                            enforce_detection=True
+                        )
+                        if result.get("verified"):
+                            score = 1.0 / (1.0 + result["distance"])
+                            if score > best_score:
+                                best_score = score
+                                best_match = official
+                                best_sample = sample
 
                 except Exception as ve:
-                    print(f"[WARN] Skipping {sample.official.of_fname} {sample.official.of_lname}: {str(ve)}")
+                    print(f"[WARN] Skipping {official.full_name}: {str(ve)}")
                     continue
 
-            if best_match:
+            # Evaluate result
+            if best_match and best_score >= self.SIMILARITY_THRESHOLD:
+                accuracy = best_score * 100
+                print(
+                    f"[FORGOT-PASS] MATCH FOUND | Name: {best_match.full_name} | "
+                    f"Similarity: {best_score:.4f} | Accuracy: {accuracy:.2f}% | "
+                    f"Threshold: {self.SIMILARITY_THRESHOLD} | Result: TRUE"
+                )
                 return Response({
                     "success": True,
                     "official": {
                         "id": best_match.of_id,
                         "username": best_match.user.username,
-                        "full_name": f"{best_match.of_fname} {best_match.of_lname}",
-                    }
+                        "full_name": best_match.full_name,
+                    },
+                    "similarity_score": float(best_score),
+                    "threshold": self.SIMILARITY_THRESHOLD,
                 }, status=200)
 
+            accuracy = best_score * 100 if best_score > 0 else 0
+            print(
+                f"[FORGOT-PASS] NO MATCH | Best Score: {best_score:.4f} | "
+                f"Accuracy: {accuracy:.2f}% | Threshold: {self.SIMILARITY_THRESHOLD}"
+            )
             return Response({"success": False, "message": "No matching account found."}, status=404)
 
         except Exception as e:
@@ -963,8 +757,12 @@ class ForgotPasswordFaceView(APIView):
             return Response({"success": False, "message": str(e)}, status=400)
 
         finally:
-            if chosen_frame and os.path.exists(chosen_frame):
+            # Clean up all temp files
+            if os.path.exists(chosen_frame):
                 os.remove(chosen_frame)
+            for f in decrypted_temp_files:
+                if os.path.exists(f):
+                    os.remove(f)
 
     
 User = get_user_model()
@@ -1065,34 +863,6 @@ class LoginTrackerViewSet(viewsets.ReadOnlyModelViewSet):
         if hasattr(user, 'official') and user.official.of_role != 'DSWD':
             return self.queryset.filter(user=user)
         return self.queryset  # DSWD sees all
-    
-
-
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        user = self.user
-        # attach user info + official role if exists
-        user_info = {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-        }
-        try:
-            official = Official.objects.get(user=user)
-            user_info.update({
-                "official_id": official.of_id,
-                "role": official.of_role
-            })
-        except Official.DoesNotExist:
-            user_info.update({"official_id": None, "role": None})
-
-        data["user"] = user_info
-        return data
-
-class MyTokenObtainPairView(TokenObtainPairView):
-    serializer_class = MyTokenObtainPairSerializer
-
 
 # 4) Refresh -> read refresh from cookie; set new cookies; return 204
 class CookieTokenRefreshView(views.APIView):
@@ -1123,3 +893,16 @@ def logout(request):
     resp = Response(status=204)
     clear_auth_cookies(resp)
     return resp
+
+#para ni sa file encryption kay diri naka store ang face_samples
+class ServeOfficialFacePhotoView(APIView):
+    # permission_classes = [IsAuthenticated, IsRole]
+    # allowed_roles = ['DSWD', 'VAWDesk', 'Social Worker']
+    permission_classes = [AllowAny]
+
+    def get(self, request, sample_id):
+        try:
+            sample = OfficialFaceSample.objects.get(id=sample_id)
+        except OfficialFaceSample.DoesNotExist:
+            raise Http404("Official face sample not found")
+        return serve_encrypted_file(sample, sample.photo, content_type='image/jpeg')
