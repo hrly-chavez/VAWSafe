@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import *
 from rest_framework.routers import DefaultRouter
+from . import views
 
 router = DefaultRouter()
 router.register(r'login-tracker', LoginTrackerViewSet, basename='login-tracker')
@@ -18,7 +19,11 @@ urlpatterns = [
     #later na sa ni i comment out
     # path('search-official/', SearchOfficialFacial.as_view(), name='search_official_facial'),
 
+    #for authentication and authorization
     path('refresh/', CookieTokenRefreshView.as_view()),
     path('logout/', logout),
     path('me/', me),
+
+    #file encryption
+    path('official-face/<int:sample_id>/view/', ServeOfficialFacePhotoView.as_view(), name='serve_official_face_photo'),
 ] + router.urls
