@@ -444,16 +444,10 @@ class Perpetrator(models.Model):
   
 class IncidentInformation(models.Model): #Case in the frontend
     VIOLENCE_TYPE = [
-        ('Intimate partner violence against women and their children', 'Intimate partner violence against women and their children'),
-        ('Rape', 'Rape'),
-        ('Trafficking in persons', 'Trafficking in persons'),
-        ('Sexual harassment', 'Sexual harassment'),
-        ('Child abuse, exploitation, and discrimination', 'Child abuse, exploitation, and discrimination'),
-        ('Gender-based Streets and Public Spaces Sexual Harassment', 'Gender-based Streets and Public Spaces Sexual Harassment'),
-        ('Photo and video voyeurism', 'Photo and video voyeurism'),
-        ('Child pornography', 'Child pornography'),
-        ('Acts of lasciviousness', 'Acts of lasciviousness'),
-        ('Concubinage', 'Concubinage'),
+        ('Physical', 'Physical'),
+        ('Sexual', 'Sexual'),
+        ('Psychological', 'Psychological'),
+        ('Economic', 'Economic'),
     ]
 
     TYPE_OF_PLACE = [
