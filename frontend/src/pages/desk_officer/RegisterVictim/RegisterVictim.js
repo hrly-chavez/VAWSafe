@@ -378,7 +378,10 @@ import VictimInfo from "./VictimInfo";
 import IncidentInfo from "./IncidentInfo";
 import PerpetratorInfo from "./PerpetratorInfo";
 import CaptureVictimFacial from "./VictimFacial";
-import SchedulePage from "../Session/Schedule";
+
+// ! gibalhin nako ug lain page -> bpoapplication.js
+// import SchedulePage from "../Session/Schedule";
+
 import Evidences from "./Evidences";
 
 // imported constants
@@ -439,7 +442,9 @@ export default function RegisterVictim() {
   });
   const [statusMessage, setStatusMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showSchedulePage, setShowSchedulePage] = useState(null);
+
+  // ! gibalhin nako ug lain page -> bpoapplication.js
+  // const [showSchedulePage, setShowSchedulePage] = useState(null);
 
   const cancel = () => {
     alert("Form cancelled!");
@@ -511,31 +516,32 @@ export default function RegisterVictim() {
           victimPayload[k] = v;
         }
       });
-      
+
       if (formDataState.vic_current_address) {
         victimPayload.vic_current_address = formDataState.vic_current_address;
       }
 
       const caseReportPayload = hasAny(formDataState, CASE_REPORT_KEYS)
         ? Object.fromEntries(
-          CASE_REPORT_KEYS.map((k) => [k, formDataState[k] ?? ""])
-        )
+            CASE_REPORT_KEYS.map((k) => [k, formDataState[k] ?? ""])
+          )
         : null;
 
       const incidentPayload = hasAny(formDataState, INCIDENT_KEYS)
         ? Object.fromEntries(
-          INCIDENT_KEYS.map((k) => [
-            k,
-            typeof formDataState[k] === "boolean"
-              ? !!formDataState[k]
-              : formDataState[k] ?? "",
-          ])
-        )
+            INCIDENT_KEYS.map((k) => [
+              k,
+              typeof formDataState[k] === "boolean"
+                ? !!formDataState[k]
+                : formDataState[k] ?? "",
+            ])
+          )
         : null;
 
       if (incidentPayload) {
         incidentPayload.province = formDataState.selectedProvince || null;
-        incidentPayload.municipality = formDataState.selectedMunicipality || null;
+        incidentPayload.municipality =
+          formDataState.selectedMunicipality || null;
         incidentPayload.barangay = formDataState.selectedBarangay || null;
 
         // Optional: resolve Sitio and Street IDs if needed
@@ -567,6 +573,18 @@ export default function RegisterVictim() {
       // ✅ axios request
       const res = await api.post("/api/desk_officer/victims/register/", fd);
 
+      console.log(res.data);
+
+      // * this is for getting pk of incident information which will be used for bpo application
+      const victimData = res.data?.victim;
+      const incidentData = res.data?.incident;
+
+      localStorage.setItem("victimData", JSON.stringify(victimData));
+      localStorage.setItem("incidentData", JSON.stringify(incidentData));
+
+      console.log(victimData);
+      console.log(incidentData);
+
       if (!res.data || res.data.success === false) {
         const errors = res.data?.errors;
         let msg = res.data?.error || "❌ Registration failed.";
@@ -588,11 +606,14 @@ export default function RegisterVictim() {
       setStatusMessage("✅ Victim registered successfully!");
       setLoading(false);
 
+      // ! gibalhin nako ug lain page -> bpoapplication.js
       // Pass victim + incident to SchedulePage
-      setShowSchedulePage({
-        victim: res.data.victim,
-        incident: res.data.incident,
-      });
+      // setShowSchedulePage({
+      //   victim: res.data.victim,
+      //   incident: res.data.incident,
+      // });
+
+      navigate("/desk_officer/bpo-application");
     } catch (err) {
       console.error("Register victim exception:", err);
       setStatusMessage(" Something went wrong.");
@@ -724,12 +745,13 @@ export default function RegisterVictim() {
         {/* Status banner */}
         {statusMessage && (
           <div
-            className={`mt-4 p-3 rounded text-sm ${statusMessage.startsWith("✅")
-              ? "bg-green-100 text-green-800"
-              : statusMessage.startsWith("⏳")
+            className={`mt-4 p-3 rounded text-sm ${
+              statusMessage.startsWith("✅")
+                ? "bg-green-100 text-green-800"
+                : statusMessage.startsWith("⏳")
                 ? "bg-yellow-100 text-yellow-800"
                 : "bg-red-100 text-red-800"
-              }`}
+            }`}
           >
             {statusMessage}
           </div>
@@ -748,10 +770,11 @@ export default function RegisterVictim() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold shadow transition-all ${loading
-                ? "bg-gray-400 cursor-not-allowed text-white"
-                : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
-                }`}
+              className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold shadow transition-all ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed text-white"
+                  : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
+              }`}
             >
               <CheckCircleIcon className="h-5 w-5 text-white" />
               {loading ? "Registering..." : "Register"}
@@ -760,14 +783,15 @@ export default function RegisterVictim() {
         )}
       </div>
 
+      {/* // ! gibalhin nako ug lain page -> bpoapplication.js */}
       {/* Show schedule page after success */}
-      {showSchedulePage && (
+      {/* {showSchedulePage && (
         <SchedulePage
           embedded={true}
           victim={showSchedulePage.victim}
           incident={showSchedulePage.incident}
         />
-      )}
+      )} */}
     </div>
   );
 }

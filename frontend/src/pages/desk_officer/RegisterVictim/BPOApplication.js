@@ -1,7 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SchedulePage from "../Session/Schedule";
 
 const BPOApplicationForm = () => {
+  const [showSchedulePage, setShowSchedulePage] = useState(null);
+  const victimData = JSON.parse(localStorage.getItem("victimData") || "{}");
+  const incidentData = JSON.parse(localStorage.getItem("incidentData") || "{}");
+
+  useEffect(() => {
+    setShowSchedulePage({
+      victim: victimData,
+      incident: incidentData,
+    });
+
+    console.log(victimData);
+    console.log(incidentData);
+  }, []);
+
   const [children, setChildren] = useState([
     {
       firstName: "",
@@ -54,7 +68,7 @@ const BPOApplicationForm = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block font-medium">Name of Applicant</label>
-            <input className="input" />
+            <input className="input" readOnly={true} />
           </div>
           <div>
             <label className="block font-medium">Address</label>
@@ -85,23 +99,38 @@ const BPOApplicationForm = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block font-medium">Name of Victim/s</label>
-            <input className="input" />
+            <input
+              className="input"
+              type="text"
+              value={victimData.full_name}
+              readOnly
+            />
           </div>
           <div>
             <label className="block font-medium">Date/s of Birth</label>
-            <input className="input" type="date" />
+            <input
+              className="input"
+              value={victimData.vic_birth_date || null}
+              type="date"
+              readOnly
+            />
           </div>
           <div>
             <label className="block font-medium">Address</label>
-            <input className="input" />
+            <input className="input" value={null} readOnly />
           </div>
           <div>
             <label className="block font-medium">Tel. No.</label>
-            <input className="input" />
+            <input
+              className="input"
+              value={victimData.vic_contact_number || null}
+              readOnly
+            />
           </div>
         </div>
       </div>
 
+      {/* TODO */}
       {children.map((child, index) => (
         <div
           key={index}
@@ -219,7 +248,7 @@ const BPOApplicationForm = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block font-medium">Name of Respondent</label>
-            <input className="input" />
+            <input className="input" value={null} />
           </div>
           <div>
             <label className="block font-medium">Date of Birth</label>
@@ -312,11 +341,13 @@ const BPOApplicationForm = () => {
       </div>
 
       {/* Show schedule page after success */}
-      <SchedulePage
-        embedded={true}
-        // victim={showSchedulePage.victim}
-        // incident={showSchedulePage.incident}
-      />
+      {showSchedulePage && (
+        <SchedulePage
+          embedded={true}
+          victim={showSchedulePage.victim}
+          incident={showSchedulePage.incident}
+        />
+      )}
     </form>
   );
 };

@@ -457,7 +457,6 @@ class create_official(APIView):
                 "status": official.status
             }, status=status.HTTP_202_ACCEPTED)
 
-
 class face_login(APIView):
     parser_classes = [MultiPartParser, FormParser]
     throttle_classes = [ScopedRateThrottle]
