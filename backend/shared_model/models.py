@@ -248,22 +248,6 @@ class AuditLog(models.Model):
 #==================================================================================================
 
 # starting here is for forms
-class Informant(models.Model):
-    inf_fname = EncryptedCharField(max_length=255, blank=True, null=True)
-    inf_mname = EncryptedCharField(max_length=255, blank=True, null=True)
-    inf_lname = EncryptedCharField(max_length=255, blank=True, null=True)
-    inf_extension = EncryptedCharField(max_length=255, blank=True, null=True)
-    inf_birth_date = EncryptedDateField(blank=True, null=True)
-    inf_relationship_to_victim = EncryptedCharField(max_length=255, blank=True, null=True)
-    inf_contact = EncryptedCharField(max_length=255, blank=True, null=True)
-    inf_occupation = EncryptedCharField(max_length=255, blank=True, null=True)
-    
-    # foreign key
-    inf_address = models.ForeignKey(Address, on_delete=models.CASCADE, null=True, blank=True)
-
-    def __str__(self):
-        return f"{self.inf_fname} {self.inf_lname}" if self.inf_fname else "Unnamed Informant"
-
 class Victim(models.Model): 
     CIVIL_STATUS_CHOICES = [
         ('SINGLE', 'Single'),
@@ -491,7 +475,6 @@ class IncidentInformation(models.Model): #Case in the frontend
     is_calamity_area = models.BooleanField(default=False)
 
     # foreign keys
-    informant = models.ForeignKey(Informant, on_delete=models.CASCADE, null=True, blank=True)
     vic_id = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name='incidents')
     perp_id = models.ForeignKey(Perpetrator, on_delete=models.CASCADE,to_field='perp_id', related_name='related_incidents',null=True, blank=True)
     of_id = models.ForeignKey(Official, on_delete=models.SET_NULL, related_name='handled_incidents', null=True, blank=True)
@@ -548,16 +531,6 @@ class VictimChildrenList(models.Model):
 
     # foreign key
     victim = models.ForeignKey(Victim, on_delete=models.CASCADE, blank=True, null=True) 
-
-class CaseReport(models.Model):  #ADMINISTRATIVE INFORMATION
-    # victim = models.OneToOneField(Victim, on_delete=models.CASCADE, related_name="case_report")
-
-    handling_org = models.CharField(max_length=255,null=True, blank=True)
-    office_address = models.CharField(max_length=255,null=True, blank=True)
-    report_type = models.CharField(max_length=255,null=True, blank=True)
-    
-    def __str__(self):
-        return f"CaseReport for {self.victim.vic_last_name}, {self.victim.vic_first_name}"
 
 class Evidence(models.Model):
     incident = models.ForeignKey(
