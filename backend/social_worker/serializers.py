@@ -406,7 +406,7 @@ class OfficialAvailabilitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OfficialAvailability
-        fields = ["id", "day_of_week", "day_display", "start_time", "end_time", "remarks", "is_active"]
+        fields = '__all__'
 
     def validate(self, data):
         #Ensure valid time range and prevent overlap for same official/day.
@@ -449,7 +449,7 @@ class OfficialAvailabilitySerializer(serializers.ModelSerializer):
 class OfficialUnavailabilitySerializer(serializers.ModelSerializer):
     class Meta:
         model = OfficialUnavailability
-        fields = ["id", "start_date", "end_date", "reason", "notes"]
+        fields = '__all__'
 
     def validate(self, data):
         #Ensure valid date range and no overlap with existing unavailability."""
@@ -487,3 +487,4 @@ class OfficialUnavailabilitySerializer(serializers.ModelSerializer):
             raise ValidationError("You can only update your own unavailability.")
         return super().update(instance, validated_data)
     
+
