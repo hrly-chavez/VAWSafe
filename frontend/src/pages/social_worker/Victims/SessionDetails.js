@@ -96,15 +96,23 @@ export default function SessionDetails({ sessionId, onClose }) {
 
                 {/* Location */}
                 <DetailItem label="Location" value={session.sess_location} />
+
                 {/* Official */}
                 <DetailItem
                   label="Assigned Officials"
                   value={
-                    session.official_names && session.official_names.length > 0
-                      ? session.official_names.join(", ")
-                      : "—"
+                    session.official_names && session.official_names.length > 0 ? (
+                      <ul className="list-disc list-inside space-y-1">
+                        {session.official_names.map((name, idx) => (
+                          <li key={idx}>{name}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      "—"
+                    )
                   }
                 />
+
                   
               </div>
                     
