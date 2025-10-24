@@ -136,7 +136,6 @@ export default function App() {
               <Route path={ROUTES.SOCIAL_WORKER_VIEW_SESSION}element={<ViewSessions />}/>
               <Route path={ROUTES.SOCIAL_WORKER_START_SESSION}element={<SocialWorkerStartSession />}/>
               <Route path={ROUTES.SOCIAL_WORKER_SCHEDULE} element={<Schedule />} />
-
             </Route>
 
             {/* Nurse group */}
