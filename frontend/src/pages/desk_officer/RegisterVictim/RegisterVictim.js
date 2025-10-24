@@ -6,7 +6,6 @@
 // import api from "../../../api/axios";
 
 // // imported pages
-// import AdministrativeInfo from "./AdministrativeInfo";
 // import VictimInfo from "./VictimInfo";
 // import IncidentInfo from "./IncidentInfo";
 // import PerpetratorInfo from "./PerpetratorInfo";
@@ -62,7 +61,6 @@
 
 //   const [openSections, setOpenSections] = useState({
 //     facialCapture: false,
-//     adminInfo: false,
 //     victimInfo: false,
 //     incidentInfo: false,
 //     perpInfo: false,
@@ -224,25 +222,6 @@
 //           )}
 //         </div>
 
-//         {/* Other Sections */}
-//         {/* Admin Info */}
-//         <div className="mb-4">
-//           <button
-//             onClick={() => toggleSection("adminInfo")}
-//             className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
-//           >
-//             {openSections.adminInfo ? "▼" : "▶"} Barangay Client Card
-//           </button>
-//           {openSections.adminInfo && (
-//             <div className="mt-4 border-l-4 border-blue-500 pl-4">
-//               <AdministrativeInfo
-//                 formDataState={formDataState}
-//                 setFormDataState={setFormDataState}
-//               />
-//             </div>
-//           )}
-//         </div>
-
 //         {/* Victim Info */}
 //         <div className="mb-4">
 //           <button
@@ -373,14 +352,13 @@ import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import api from "../../../api/axios";
 
 // imported pages
-import AdministrativeInfo from "./AdministrativeInfo";
 import VictimInfo from "./VictimInfo";
 import IncidentInfo from "./IncidentInfo";
 import PerpetratorInfo from "./PerpetratorInfo";
 import CaptureVictimFacial from "./VictimFacial";
 
 // ! gibalhin nako ug lain page -> bpoapplication.js
-// import SchedulePage from "../Session/Schedule";
+import SchedulePage from "../Session/Schedule";
 
 import Evidences from "./Evidences";
 
@@ -432,7 +410,6 @@ export default function RegisterVictim() {
 
   const [openSections, setOpenSections] = useState({
     facialCapture: false,
-    adminInfo: false,
     victimInfo: false,
     incidentInfo: false,
     perpInfo: false,
@@ -444,7 +421,7 @@ export default function RegisterVictim() {
   const [loading, setLoading] = useState(false);
 
   // ! gibalhin nako ug lain page -> bpoapplication.js
-  // const [showSchedulePage, setShowSchedulePage] = useState(null);
+  const [showSchedulePage, setShowSchedulePage] = useState(null);
 
   const cancel = () => {
     alert("Form cancelled!");
@@ -608,10 +585,10 @@ export default function RegisterVictim() {
 
       // ! gibalhin nako ug lain page -> bpoapplication.js
       // Pass victim + incident to SchedulePage
-      // setShowSchedulePage({
-      //   victim: res.data.victim,
-      //   incident: res.data.incident,
-      // });
+      setShowSchedulePage({
+        victim: res.data.victim,
+        incident: res.data.incident,
+      });
 
       navigate("/desk_officer/bpo-application");
     } catch (err) {
@@ -648,25 +625,6 @@ export default function RegisterVictim() {
             <div className="mt-4 border-l-4 border-blue-500 pl-4">
               <CaptureVictimFacial
                 victimPhotos={victimPhotos}
-                setFormDataState={setFormDataState}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Other Sections */}
-        {/* Admin Info */}
-        <div className="mb-4">
-          <button
-            onClick={() => toggleSection("adminInfo")}
-            className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
-          >
-            {openSections.adminInfo ? "▼" : "▶"} Barangay Client Card
-          </button>
-          {openSections.adminInfo && (
-            <div className="mt-4 border-l-4 border-blue-500 pl-4">
-              <AdministrativeInfo
-                formDataState={formDataState}
                 setFormDataState={setFormDataState}
               />
             </div>
@@ -785,13 +743,13 @@ export default function RegisterVictim() {
 
       {/* // ! gibalhin nako ug lain page -> bpoapplication.js */}
       {/* Show schedule page after success */}
-      {/* {showSchedulePage && (
+      {showSchedulePage && (
         <SchedulePage
           embedded={true}
           victim={showSchedulePage.victim}
           incident={showSchedulePage.incident}
         />
-      )} */}
+      )}
     </div>
   );
 }
