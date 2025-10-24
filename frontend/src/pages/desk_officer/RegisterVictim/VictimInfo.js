@@ -399,7 +399,6 @@
 //   );
 // }
 
-
 //VictimInfo.js
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -414,8 +413,8 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
       today.getFullYear() -
       birth.getFullYear() -
       (today.getMonth() < birth.getMonth() ||
-        (today.getMonth() === birth.getMonth() &&
-          today.getDate() < birth.getDate())
+      (today.getMonth() === birth.getMonth() &&
+        today.getDate() < birth.getDate())
         ? 1
         : 0);
     return age < 18;
@@ -444,7 +443,8 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
 
   const [municipalityQuery, setMunicipalityQuery] = useState("");
   const [selectedMunicipality, setSelectedMunicipality] = useState("");
-  const [showMunicipalityDropdown, setShowMunicipalityDropdown] = useState(false);
+  const [showMunicipalityDropdown, setShowMunicipalityDropdown] =
+    useState(false);
 
   const [barangayQuery, setBarangayQuery] = useState("");
   const [selectedBarangay, setSelectedBarangay] = useState("");
@@ -455,15 +455,19 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
 
   // Fetch provinces
   useEffect(() => {
-    axios.get("http://localhost:8000/api/desk_officer/provinces/")
-      .then((res) => setProvinces(res.data))   // <-- store provinces
+    axios
+      .get("http://localhost:8000/api/desk_officer/provinces/")
+      .then((res) => setProvinces(res.data)) // <-- store provinces
       .catch((err) => console.error("Failed to load provinces:", err));
   }, []);
 
   // Fetch municipalities based on selected province
   useEffect(() => {
     if (selectedProvince) {
-      axios.get(`http://localhost:8000/api/desk_officer/provinces/${selectedProvince}/municipalities/`)
+      axios
+        .get(
+          `http://localhost:8000/api/desk_officer/provinces/${selectedProvince}/municipalities/`
+        )
         .then((res) => setMunicipalities(res.data))
         .catch((err) => console.error("Failed to load municipalities:", err));
     } else {
@@ -475,7 +479,10 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
   // Fetch barangays based on selected municipality
   useEffect(() => {
     if (selectedMunicipality) {
-      axios.get(`http://localhost:8000/api/desk_officer/municipalities/${selectedMunicipality}/barangays/`)
+      axios
+        .get(
+          `http://localhost:8000/api/desk_officer/municipalities/${selectedMunicipality}/barangays/`
+        )
         .then((res) => setBarangays(res.data))
         .catch((err) => console.error("Failed to load barangays:", err));
     } else {
@@ -484,9 +491,15 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
   }, [selectedMunicipality]);
 
   useEffect(() => {
-    const provinceName = provinces.find((c) => c.id === parseInt(selectedProvince))?.name;
-    const municipalityName = municipalities.find((m) => m.id === parseInt(selectedMunicipality))?.name;
-    const barangayName = barangays.find((b) => b.id === parseInt(selectedBarangay))?.name;
+    const provinceName = provinces.find(
+      (c) => c.id === parseInt(selectedProvince)
+    )?.name;
+    const municipalityName = municipalities.find(
+      (m) => m.id === parseInt(selectedMunicipality)
+    )?.name;
+    const barangayName = barangays.find(
+      (b) => b.id === parseInt(selectedBarangay)
+    )?.name;
 
     const parts = [
       street.trim(), // optional manual input
@@ -555,20 +568,6 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
 
       {/* Sex + SOGIE */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Sex
-          </label>
-          <select
-            className="input w-full"
-            value={formDataState.vic_sex || ""}
-            onChange={(e) => handleChange("vic_sex", e.target.value)}
-          >
-            <option value="" disabled>Select Sex</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-          </select>
-        </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             SOGIE
@@ -577,7 +576,9 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input w-full"
             onChange={(e) => handleChange("vic_is_SOGIE", e.target.value)}
           >
-            <option value="" disabled>Select SOGIE</option>
+            <option value="" disabled>
+              Select SOGIE
+            </option>
             <option value="Yes">Yes</option>
             <option value="No">No</option>
             <option value="Does not want to identify">
@@ -595,7 +596,9 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
               className="input"
               type="text"
               placeholder="e.g. Transgender Woman, Gay, Lesbian, Bisexual"
-              onChange={(e) => handleChange("vic_specific_sogie", e.target.value)}
+              onChange={(e) =>
+                handleChange("vic_specific_sogie", e.target.value)
+              }
             />
           </div>
         )}
@@ -618,7 +621,9 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
       {/* Address */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="flex flex-col mb-6 relative">
-          <label className="text-sm font-medium text-gray-700 mb-2">Province</label>
+          <label className="text-sm font-medium text-gray-700 mb-2">
+            Province
+          </label>
           <input
             type="text"
             className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -658,7 +663,9 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         </div>
 
         <div className="flex flex-col mb-6 relative">
-          <label className="text-sm font-medium text-gray-700 mb-2">Municipality</label>
+          <label className="text-sm font-medium text-gray-700 mb-2">
+            Municipality
+          </label>
           <input
             type="text"
             className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -670,7 +677,9 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
               setSelectedMunicipality("");
             }}
             onFocus={() => setShowMunicipalityDropdown(true)}
-            onBlur={() => setTimeout(() => setShowMunicipalityDropdown(false), 150)}
+            onBlur={() =>
+              setTimeout(() => setShowMunicipalityDropdown(false), 150)
+            }
             disabled={!selectedProvince}
           />
 
@@ -699,7 +708,9 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         </div>
 
         <div className="flex flex-col mb-6 relative">
-          <label className="text-sm font-medium text-gray-700 mb-2">Barangay</label>
+          <label className="text-sm font-medium text-gray-700 mb-2">
+            Barangay
+          </label>
           <input
             type="text"
             className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -830,26 +841,34 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
                   className="input w-full"
                   type="text"
                   placeholder="First Name"
-                  onChange={(e) => handleChange("vic_guardian_fname", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("vic_guardian_fname", e.target.value)
+                  }
                 />
                 <input
                   className="input w-full"
                   type="text"
                   placeholder="Middle Name"
-                  onChange={(e) => handleChange("vic_guardian_mname", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("vic_guardian_mname", e.target.value)
+                  }
                 />
                 <input
                   className="input w-full"
                   type="text"
                   placeholder="Last Name"
-                  onChange={(e) => handleChange("vic_guardian_lname", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("vic_guardian_lname", e.target.value)
+                  }
                 />
                 <input
                   className="input w-full"
                   type="text"
                   placeholder="Contact Number"
                   maxLength={11}
-                  onChange={(e) => handleChange("vic_guardian_contact", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("vic_guardian_contact", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -862,9 +881,13 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
               <select
                 className="input w-full"
                 value={formDataState.vic_child_class || ""}
-                onChange={(e) => handleChange("vic_child_class", e.target.value)}
+                onChange={(e) =>
+                  handleChange("vic_child_class", e.target.value)
+                }
               >
-                <option value="" disabled>Select classification</option>
+                <option value="" disabled>
+                  Select classification
+                </option>
                 <option value="Orphan">Orphan</option>
                 <option value="Unaccompanied">Unaccompanied</option>
                 <option value="Separated">Separated</option>
@@ -875,30 +898,37 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         </div>
       )}
 
-
       {/* Nationality + Ethnicity + Religion */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-2">Nationality</label>
+          <label className="text-sm font-medium text-gray-700 mb-2">
+            Nationality
+          </label>
           <select
             className="input"
             value={formDataState.vic_nationality || ""}
             onChange={(e) => handleChange("vic_nationality", e.target.value)}
           >
-            <option value="" disabled>Select Nationality</option>
+            <option value="" disabled>
+              Select Nationality
+            </option>
             <option value="Filipino">Filipino</option>
             <option value="Others">Others</option>
           </select>
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-2">Religion</label>
+          <label className="text-sm font-medium text-gray-700 mb-2">
+            Religion
+          </label>
           <select
             className="input"
             value={formDataState.vic_religion || ""}
             onChange={(e) => handleChange("vic_religion", e.target.value)}
           >
-            <option value="" disabled>Select Religion</option>
+            <option value="" disabled>
+              Select Religion
+            </option>
             <option value="Roman Catholic">Roman Catholic</option>
             <option value="Protestant">Protestant</option>
             <option value="Evangelical">Evangelical</option>
@@ -908,15 +938,18 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
           </select>
         </div>
 
-
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-2">Ethnicity</label>
+          <label className="text-sm font-medium text-gray-700 mb-2">
+            Ethnicity
+          </label>
           <select
             className="input"
             value={formDataState.vic_ethnicity || ""}
             onChange={(e) => handleChange("vic_ethnicity", e.target.value)}
           >
-            <option value="" disabled>Select Ethnicity</option>
+            <option value="" disabled>
+              Select Ethnicity
+            </option>
             <option value="Cebuano">Cebuano</option>
             <option value="Boholano">Boholano</option>
             <option value="Tagalog">Tagalog</option>
@@ -939,7 +972,9 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             value={formDataState.vic_civil_status || ""}
             onChange={(e) => handleChange("vic_civil_status", e.target.value)}
           >
-            <option value="" disabled>Select Civil Status</option>
+            <option value="" disabled>
+              Select Civil Status
+            </option>
             <option value="SINGLE">Single</option>
             <option value="MARRIED">Married</option>
             <option value="WIDOWED">Widowed</option>
@@ -949,16 +984,24 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         </div>
 
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">Migratory Status</label>
+          <label className="text-sm font-medium text-gray-700 mb-1">
+            Migratory Status
+          </label>
           <select
             className="input"
             value={formDataState.vic_migratory_status || ""}
-            onChange={(e) => handleChange("vic_migratory_status", e.target.value)}
+            onChange={(e) =>
+              handleChange("vic_migratory_status", e.target.value)
+            }
           >
-            <option value="" disabled>Select Migratory Status</option>
+            <option value="" disabled>
+              Select Migratory Status
+            </option>
             <option value="Current OFW">Current OFW</option>
             <option value="Former/Returning OFW">Former/Returning OFW</option>
-            <option value="Seeking employment abroad">Seeking employment abroad</option>
+            <option value="Seeking employment abroad">
+              Seeking employment abroad
+            </option>
             <option value="Not Applicable">Not Applicable</option>
           </select>
         </div>
@@ -967,13 +1010,19 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
       {/* Employment Status + Educational Status */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-2">Employment Status</label>
+          <label className="text-sm font-medium text-gray-700 mb-2">
+            Employment Status
+          </label>
           <select
             className="input"
             value={formDataState.vic_employment_status || ""}
-            onChange={(e) => handleChange("vic_employment_status", e.target.value)}
+            onChange={(e) =>
+              handleChange("vic_employment_status", e.target.value)
+            }
           >
-            <option value="" disabled>Select Employment Status</option>
+            <option value="" disabled>
+              Select Employment Status
+            </option>
             <option value="Employed">Employed</option>
             <option value="Self-employed">Self-employed</option>
             <option value="Informal Sector">Informal Sector</option>
@@ -993,7 +1042,9 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
               handleChange("vic_educational_attainment", e.target.value)
             }
           >
-            <option value="" disabled>Select Educational Level</option>
+            <option value="" disabled>
+              Select Educational Level
+            </option>
             <option value="No Formal Education">No Formal Education</option>
             <option value="Elementary Level/Graduate">
               Elementary Level/Graduate
@@ -1021,36 +1072,54 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             <input
               type="checkbox"
               checked={!!formDataState.vic_is_displaced}
-              onChange={(e) => handleChange("vic_is_displaced", e.target.checked)}
+              onChange={(e) =>
+                handleChange("vic_is_displaced", e.target.checked)
+              }
             />
             <label className="text-sm font-medium text-gray-700">
               Is the client internally displaced?
             </label>
           </div>
           <p className="text-sm text-gray-500 italic">
-            Check the box if <span className="font-medium text-green-700">Yes</span>, uncheck if <span className="font-medium text-red-700">No</span>.
+            Check the box if{" "}
+            <span className="font-medium text-green-700">Yes</span>, uncheck if{" "}
+            <span className="font-medium text-red-700">No</span>.
           </p>
         </div>
 
         {/* Right: PWD Type Dropdown (conditional) */}
         {formDataState.vic_is_displaced ? (
           <div className="flex flex-col justify-center">
-            <label className="text-sm font-medium text-gray-700 mb-2">PWD Type</label>
+            <label className="text-sm font-medium text-gray-700 mb-2">
+              PWD Type
+            </label>
             <select
               className="input w-full"
               value={formDataState.vic_PWD_type || ""}
               onChange={(e) => handleChange("vic_PWD_type", e.target.value)}
             >
-              <option value="" disabled>Select PWD Type</option>
+              <option value="" disabled>
+                Select PWD Type
+              </option>
               <option value="None">None</option>
-              <option value="Deaf or Hard of Hearing">Deaf or Hard of Hearing</option>
-              <option value="Intellectual Disability">Intellectual Disability</option>
+              <option value="Deaf or Hard of Hearing">
+                Deaf or Hard of Hearing
+              </option>
+              <option value="Intellectual Disability">
+                Intellectual Disability
+              </option>
               <option value="Learning Disability">Learning Disability</option>
               <option value="Mental Disability">Mental Disability</option>
-              <option value="Orthopedic Disability">Orthopedic Disability</option>
+              <option value="Orthopedic Disability">
+                Orthopedic Disability
+              </option>
               <option value="Physical Disability">Physical Disability</option>
-              <option value="Psychological Disability">Psychological Disability</option>
-              <option value="Speech and Language Disability">Speech and Language Disability</option>
+              <option value="Psychological Disability">
+                Psychological Disability
+              </option>
+              <option value="Speech and Language Disability">
+                Speech and Language Disability
+              </option>
               <option value="Visual Disability">Visual Disability</option>
             </select>
           </div>
