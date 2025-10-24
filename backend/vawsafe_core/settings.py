@@ -14,6 +14,7 @@ from pathlib import Path
 #kani sya para mo load ang backend/.env para sa encryption
 import environ
 import os
+from cryptography.fernet import Fernet
 
 #para ni sya sa encryption para ma migrate ang attribute nga encryptedcharfield etc
 import django.utils.encoding
@@ -36,9 +37,21 @@ SECRET_KEY = 'django-insecure--n8q#^8nc-n(=ww(*d4frzqy=q2eno_w!ek5=4msh6ct(ryrb!
 env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
+#pag load ug new fernetkey
+#python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+
 
 #kuhaon ang fernet key sa backend/.env
 FERNET_KEYS = env.list("FERNET_KEYS", default=[])
+
+# Primary key for file encryption (EncryptedFileSystemStorage)
+# Reuse first FERNET_KEYS entry if available, or generate a fallback
+if FERNET_KEYS:
+    FERNET_KEY = FERNET_KEYS[0].encode()
+else:
+    # fallback key (only used if .env is missing)
+     # fallback only for dev (avoid in production)
+    FERNET_KEY = Fernet.generate_key()
 
 
 # SECURITY WARNING: don't run with debug turned on in production!
