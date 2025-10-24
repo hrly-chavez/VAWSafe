@@ -42,7 +42,7 @@ export const ROUTES = {
   // SOCIAL WORKER
   SOCIAL_WORKER: "/social_worker",
   SOCIAL_WORKER_DASHBOARD: "/social_worker",
-  SOCIAL_WORKER_REGISTER_VICTIM: "/social-worker/register_victim",
+  SOCIAL_WORKER_REGISTER_VICTIM: "/social_worker/register-victim",
 
   SOCIAL_WORKER_SCHEDULE: "/social_worker/schedule",
 
