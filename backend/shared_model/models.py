@@ -76,8 +76,10 @@ class Address(models.Model):
 class Official(models.Model):
     ROLE_CHOICES = [
         ('DSWD', 'DSWD'),
-        ('VAWDesk', 'VAWDesk'),
         ('Social Worker', 'Social Worker'),
+        ('Nurse', 'Nurse'),
+        ('Psychometrician', 'Psychometrician'),
+
     ]   
 
     STATUS_CHOICES = [

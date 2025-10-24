@@ -80,7 +80,8 @@ const LoginPage = () => {
   const handleContinue = () => {
     const role = (welcomeData?.role || "").toLowerCase();
     if (role === "social worker") navigate("/social_worker/dashboard");
-    else if (role === "vawdesk") navigate("/desk_officer");
+    else if (role === "nurse") navigate("/nurse");
+    else if (role === "psychometrician") navigate("/psychometrician");
     else if (role === "dswd") navigate("/dswd");
   };
 
@@ -265,8 +266,9 @@ const LoginPage = () => {
         const role = (loginData.role || "").toLowerCase();
         setTimeout(() => {
           if (role === "dswd") navigate("/dswd");
-          else if (role === "vawdesk") navigate("/desk_officer");
           else if (role === "social worker") navigate("/social_worker");
+          else if (role === "nurse") navigate("/nurse");
+          else if (role === "psychometrician") navigate("/psychometrician");
           else navigate("/login");
         }, 5000);
       } else {
@@ -465,7 +467,8 @@ const LoginPage = () => {
 
         const role = (data.role || "").toLowerCase();
         if (role === "social worker") navigate("/social_worker");
-        else if (role === "vawdesk") navigate("/desk_officer");
+        else if (role === "nurse") navigate("/nurse");
+        else if (role === "psychometrician") navigate("/psychometrician");
         else if (role === "dswd") navigate("/dswd");
       } else {
         if (data.message?.toLowerCase().includes("username")) {
@@ -834,7 +837,7 @@ const LoginPage = () => {
             setShowRegisterModal(false);
             setAutoDSWDRegister(false); // reset after closing modal
           }}
-          defaultRole={autoDSWDRegister ? "DSWD" : "VAWDesk"}
+          defaultRole={autoDSWDRegister ? "DSWD" : "Social Worker"}
         />
       )}
 

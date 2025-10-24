@@ -58,6 +58,9 @@ export const ROUTES = {
   SOCIAL_WORKER_VICTIM_DETAIL: "/social_worker/victims/:vic_id",
   SOCIAL_WORKER_SEARCH_FACIAL: "/social_worker/victims/search-facial",
 
+  //nurse
+  NURSE_DASHBOARD: "nurse/",
+
   
   // landing page
   LANDING: "/landing",
