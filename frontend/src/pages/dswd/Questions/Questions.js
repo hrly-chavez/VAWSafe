@@ -120,7 +120,7 @@ import { PencilSquareIcon, TrashIcon, MagnifyingGlassIcon } from "@heroicons/rea
 import api from "../../../api/axios";
 import AddQuestion from "./AddQuestion";
 import EditQuestion from "./EditQuestion";
-import ChangeLogModal from "./ChangeLogModal"; 
+import ChangeLogModal from "./ChangeLogModal";
 
 export default function Questions() {
   const [questions, setQuestions] = useState([]);
@@ -129,7 +129,7 @@ export default function Questions() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
-  const [showLogModal, setShowLogModal] = useState(false); 
+  const [showLogModal, setShowLogModal] = useState(false);
   const [selectedLogId, setSelectedLogId] = useState(null);
 
   const fetchQuestions = async () => {
@@ -155,25 +155,25 @@ export default function Questions() {
       q.ques_category.toLowerCase().includes(query)
     );
   });
-const handleToggleActive = async (id, isActive) => {
-  const actionText = isActive ? "deactivate" : "activate";
+  const handleToggleActive = async (id, isActive) => {
+    const actionText = isActive ? "deactivate" : "activate";
 
-  // Show confirmation dialog
-  const confirmed = window.confirm(
-    `Are you sure you want to ${actionText} this question?`
-  );
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      `Are you sure you want to ${actionText} this question?`
+    );
 
-  if (!confirmed) return;
+    if (!confirmed) return;
 
-  try {
-    await api.delete(`/api/dswd/questions/${id}/`);
-    alert(`Question ${isActive ? "deactivated" : "activated"} successfully.`);
-    fetchQuestions(); // refresh the list
-  } catch (err) {
-    console.error("Failed to toggle active state:", err.response?.data || err);
-    alert("Something went wrong. Please try again.");
-  }
-};
+    try {
+      await api.delete(`/api/dswd/questions/${id}/`);
+      alert(`Question ${isActive ? "deactivated" : "activated"} successfully.`);
+      fetchQuestions(); // refresh the list
+    } catch (err) {
+      console.error("Failed to toggle active state:", err.response?.data || err);
+      alert("Something went wrong. Please try again.");
+    }
+  };
 
 
   return (
@@ -217,6 +217,8 @@ const handleToggleActive = async (id, isActive) => {
               <th className="border p-3 text-left">Category</th>
               <th className="border p-3 text-left">Question</th>
               <th className="border p-3 text-left">Answer Type</th>
+              <th className="border p-3 text-left">Assigned To</th>
+              <th className="border p-3 text-left">Created By</th>
               <th className="border p-3 text-center">Actions</th>
             </tr>
           </thead>
@@ -229,9 +231,8 @@ const handleToggleActive = async (id, isActive) => {
               </tr>
             ) : questions.length > 0 ? (
               questions.map((q) => (
-                <tr key={q.ques_id} className={`hover:bg-gray-50 ${ !q.ques_is_active ? "opacity-60 bg-gray-100" : ""}`}>
+                <tr key={q.ques_id} className={`hover:bg-gray-50 ${!q.ques_is_active ? "opacity-60 bg-gray-100" : ""}`}>
 
-                  <td className="border p-3">{q.ques_id}</td>
                   <td className="border p-3">{q.ques_category}</td>
                   <td className="border p-3">{q.ques_question_text}</td>
                   <td className="border p-3">{q.ques_answer_type}</td>
@@ -251,24 +252,23 @@ const handleToggleActive = async (id, isActive) => {
                   <td className="border p-3">{q.created_by_name || "—"}</td>
                   {/* Button */}
                   <td className="border p-3 text-center">
-                <button onClick={() => { setEditingQuestion(q.ques_id);setShowEditModal(true);}}
-                  className="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500 mr-2">
-                  Edit
-                </button>
+                    <button onClick={() => { setEditingQuestion(q.ques_id); setShowEditModal(true); }}
+                      className="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500 mr-2">
+                      Edit
+                    </button>
 
-                <button onClick={() => handleToggleActive(q.ques_id, q.ques_is_active)}className={`px-2 py-1 rounded text-white ${
-                    q.ques_is_active
-                      ? "bg-red-500 hover:bg-red-600"
-                      : "bg-green-500 hover:bg-green-600"
-                  }`}>
-                  {q.ques_is_active ? "Deactivate" : "Activate"}
-                </button>
+                    <button onClick={() => handleToggleActive(q.ques_id, q.ques_is_active)} className={`px-2 py-1 rounded text-white ${q.ques_is_active
+                        ? "bg-red-500 hover:bg-red-600"
+                        : "bg-green-500 hover:bg-green-600"
+                      }`}>
+                      {q.ques_is_active ? "Deactivate" : "Activate"}
+                    </button>
 
-                <button onClick={() => { setSelectedLogId(q.ques_id); setShowLogModal(true);}}
-                  className="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 ml-2">
-                  View Logs
-                </button>
-              </td>
+                    <button onClick={() => { setSelectedLogId(q.ques_id); setShowLogModal(true); }}
+                      className="px-2 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 ml-2">
+                      View Logs
+                    </button>
+                  </td>
 
                 </tr>
 
@@ -293,22 +293,22 @@ const handleToggleActive = async (id, isActive) => {
           }}
         />
       )}
-    {/* Edit Question Modal */}
+      {/* Edit Question Modal */}
       {showEditModal && (
-      <EditQuestion
-        show={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        questionId={editingQuestion}
-        onUpdated={() => fetchQuestions()}
-      />
-    )}
-    {/* Change Logs Modal */}
-    {showLogModal && (
-      <ChangeLogModal
-        questionId={selectedLogId}
-        onClose={() => setShowLogModal(false)}
-      />
-    )}
+        <EditQuestion
+          show={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          questionId={editingQuestion}
+          onUpdated={() => fetchQuestions()}
+        />
+      )}
+      {/* Change Logs Modal */}
+      {showLogModal && (
+        <ChangeLogModal
+          questionId={selectedLogId}
+          onClose={() => setShowLogModal(false)}
+        />
+      )}
 
 
     </div>
