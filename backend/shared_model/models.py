@@ -80,8 +80,10 @@ class Address(models.Model):
 class Official(models.Model):
     ROLE_CHOICES = [
         ('DSWD', 'DSWD'),
-        ('VAWDesk', 'VAWDesk'),
         ('Social Worker', 'Social Worker'),
+        ('Nurse', 'Nurse'),
+        ('Psychometrician', 'Psychometrician'),
+
     ]   
 
     STATUS_CHOICES = [
@@ -165,7 +167,6 @@ class OfficialAvailability(models.Model):
     def __str__(self):
         return f"{self.official.full_name} - {self.day_of_week} ({self.start_time}–{self.end_time})"
 
-
 class OfficialUnavailability(models.Model):
     """
     Records manual updates where an Official marks themselves unavailable for a range of dates.
@@ -224,14 +225,14 @@ class AuditLog(models.Model):
         Otherwise, return ModelName(ID).
         """
         try:
-            # ✅ Example for 'Official' target
+            #  Example for 'Official' target
             if self.target_model.lower() == "official":
                 from shared_model.models import Official
                 off = Official.objects.only("of_fname", "of_lname").get(pk=int(self.target_id))
                 full_name = getattr(off, "full_name", f"{off.of_fname} {off.of_lname}")
                 return f"Official {full_name} (ID: {off.pk})"
 
-            # ✅ Example if you later want to add support for Victim
+            #  Example if you later want to add support for Victim
             elif self.target_model.lower() == "victim":
                 from shared_model.models import Victim
                 vic = Victim.objects.only("vi_fname", "vi_lname").get(pk=int(self.target_id))
@@ -248,7 +249,7 @@ class AuditLog(models.Model):
         verbose_name = "Audit Log"
         verbose_name_plural = "Audit Logs"
 
-#===================================================================================================================
+#==================================================================================================
 
 # starting here is for forms
 class Informant(models.Model):
@@ -332,11 +333,6 @@ class Victim(models.Model):
         ('Visual Disability', 'Visual Disability'),
     ]
     
-    SEX_CHOICES = [
-        ('Male', 'Male'),
-        ('Female', 'Female'),
-    ]
-    
     RELIGION_CHOICES = [
         ('Roman Catholic', 'Roman Catholic'),
         ('Islam', 'Islam'),
@@ -346,12 +342,13 @@ class Victim(models.Model):
         ('Others', 'Others'),
     ]
     
+    # user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="victim", null=True, blank=True)
     vic_id = models.AutoField(primary_key=True)
-    vic_last_name = EncryptedCharField(max_length=512)
     vic_first_name = EncryptedCharField(max_length=512)
     vic_middle_name = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_last_name = EncryptedCharField(max_length=512)
     vic_extension = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_sex = EncryptedCharField(max_length=512, choices=SEX_CHOICES)
+    vic_sex = EncryptedCharField(max_length=512, default='Female')
     vic_is_SOGIE = EncryptedCharField(max_length=512, choices=SOGIE_CHOICES, default='No')
     vic_specific_sogie = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_birth_date = EncryptedDateField( null=True, blank=True)
@@ -448,16 +445,10 @@ class Perpetrator(models.Model):
   
 class IncidentInformation(models.Model): #Case in the frontend
     VIOLENCE_TYPE = [
-        ('Intimate partner violence against women and their children', 'Intimate partner violence against women and their children'),
-        ('Rape', 'Rape'),
-        ('Trafficking in persons', 'Trafficking in persons'),
-        ('Sexual harassment', 'Sexual harassment'),
-        ('Child abuse, exploitation, and discrimination', 'Child abuse, exploitation, and discrimination'),
-        ('Gender-based Streets and Public Spaces Sexual Harassment', 'Gender-based Streets and Public Spaces Sexual Harassment'),
-        ('Photo and video voyeurism', 'Photo and video voyeurism'),
-        ('Child pornography', 'Child pornography'),
-        ('Acts of lasciviousness', 'Acts of lasciviousness'),
-        ('Concubinage', 'Concubinage'),
+        ('Physical', 'Physical'),
+        ('Sexual', 'Sexual'),
+        ('Psychological', 'Psychological'),
+        ('Economic', 'Economic'),
     ]
 
     TYPE_OF_PLACE = [
@@ -507,7 +498,7 @@ class IncidentInformation(models.Model): #Case in the frontend
     informant = models.ForeignKey(Informant, on_delete=models.CASCADE, null=True, blank=True)
     vic_id = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name='incidents')
     perp_id = models.ForeignKey(Perpetrator, on_delete=models.CASCADE,to_field='perp_id', related_name='related_incidents',null=True, blank=True)
-    of_id = models.ForeignKey(Official, on_delete=models.SET_NULL, related_name='handled_incidents',null=True, blank=True)
+    of_id = models.ForeignKey(Official, on_delete=models.SET_NULL, related_name='handled_incidents', null=True, blank=True)
     
     # for address
     province = models.ForeignKey("province", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
@@ -551,25 +542,19 @@ class IncidentInformation(models.Model): #Case in the frontend
     def __str__(self):
         return f"Incident {self.incident_id}"
 
-class BPOApplication(models.Model):
-    commission_date = models.DateTimeField()
-    consent_circumstances = models.TextField(blank=True, null=True)
-
-    incident = models.ForeignKey(IncidentInformation, on_delete=models.CASCADE, blank=True, null=True)
-
-class BPOApplicationVictimChildrenList(models.Model):
-    fname = EncryptedCharField(max_length=512, blank=True, null=True)
-    mname = EncryptedCharField(max_length=512, blank=True, null=True)
-    lname = EncryptedCharField(max_length=512, blank=True, null=True)
-    extension = EncryptedCharField(max_length=512, blank=True, null=True)
-    birth_date = EncryptedDateField( null=True, blank=True)
-    sex = EncryptedCharField(max_length=255, null=True, blank=True)
+class VictimChildrenList(models.Model):
+    fname = models.CharField(max_length=50, blank=True, null=True)
+    mname = models.CharField(max_length=50, blank=True, null=True)
+    lname = models.CharField(max_length=50, blank=True, null=True)
+    extension = models.CharField(max_length=50, blank=True, null=True)
+    birth_date = models.DateField( null=True, blank=True)
+    sex = models.CharField(max_length=10, null=True, blank=True)
 
     # foreign key
-    bpo_application = models.ForeignKey(BPOApplication, on_delete=models.CASCADE, blank=True, null=True) 
+    victim = models.ForeignKey(Victim, on_delete=models.CASCADE, blank=True, null=True) 
 
 class CaseReport(models.Model):  #ADMINISTRATIVE INFORMATION
-    victim = models.OneToOneField(Victim, on_delete=models.CASCADE, related_name="case_report")
+    # victim = models.OneToOneField(Victim, on_delete=models.CASCADE, related_name="case_report")
 
     handling_org = EncryptedCharField(max_length=512,null=True, blank=True)
     office_address = EncryptedCharField(max_length=512,null=True, blank=True)
@@ -610,9 +595,10 @@ class Session(models.Model):
     
     
     # foreign key
-    incident_id = models.ForeignKey(IncidentInformation,to_field='incident_id', on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
-    assigned_official = models.ForeignKey("Official",on_delete=models.SET_NULL,related_name="assigned_sessions",null=True,blank=True)
+    incident_id = models.ForeignKey(IncidentInformation, on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
+    assigned_official = models.ManyToManyField("Official",related_name="assigned_sessions",blank=True)
     sess_type = models.ManyToManyField("SessionType", related_name="sessions")
+    
     def __str__(self):
         victim_name = (
             f"{self.incident_id.vic_id.vic_last_name}, {self.incident_id.vic_id.vic_first_name}"
@@ -624,13 +610,14 @@ class Session(models.Model):
 class SessionType(models.Model):
     SESSION_TYPES = [
         ('Intake / Initial Assessment', 'Intake / Initial Assessment'),
+        ('Case Study / Psychosocial Assessment', 'Case Study / Psychosocial Assessment'),
+        ('Intervention Planning / Case Conference', 'Intervention Planning / Case Conference'),
         ('Counseling', 'Counseling'),
         ('Follow-up', 'Follow-up'),
-        ('Legal Support','Legal Support'),
-        ('Shelter / Reintegration','Shelter / Reintegration'),
-        ('Case Closure','Case Closure'),
-        ('Others', 'Others')
+        ('Case Closure', 'Case Closure'),
+        ('Others', 'Others'),
     ]
+
     name = models.CharField(max_length=100, choices=SESSION_TYPES)
 
     def __str__(self):
@@ -650,15 +637,16 @@ class Question(models.Model): #HOLDER FOR ALL QUESTIONS
     ANSWER_TYPES = [
         ('Yes/No', 'Yes/No'),
         ('Text', 'Text'),
-        ('Multiple Choice', 'Multiple Choice')
     ]
     QUESTION_CATEGORIES = [
-        ('Safety Assessment','Safety Assessment'),
-        ('Physical Health Assessment','Physical Health Assessment'),
-        ('Emotional / Psychological Assessment','Emotional / Psychological Assessment'),
-        ('Social & Family Support Assessment','Social & Family Support Assessment'),
-        ('Financial / Livelihood Assessment','Financial / Livelihood Assessment'),
-        ('Legal / Protective Measures','Legal / Protective Measures'),
+        ('Safety Assessment', 'Safety Assessment'),
+        ('Physical Health Assessment', 'Physical Health Assessment'),
+        ('Emotional / Psychological Assessment', 'Emotional / Psychological Assessment'),
+        ('Social & Family Support Assessment', 'Social & Family Support Assessment'),
+        ('Financial / Livelihood Assessment', 'Financial / Livelihood Assessment'),
+        ('Legal / Protective Measures', 'Legal / Protective Measures'),
+        ('Education / Child Development Assessment', 'Education / Child Development Assessment'),
+        ('Housing / Environment Assessment', 'Housing / Environment Assessment'),
     ]
     ques_id = models.AutoField(primary_key=True)
     ques_category = EncryptedCharField(choices=QUESTION_CATEGORIES, max_length=512, null=True, blank=True)
@@ -793,10 +781,10 @@ class ServiceGiven(models.Model):
 
     service_pic = models.ImageField(upload_to='service_forms/', null=True, blank=True) 
     service_status = models.CharField(max_length=20, choices=SERVICE_STATUS, default='Pending')
-    
+    service_feedback = models.TextField(null=True, blank=True, help_text="Remarks or feedback about the service given")
     def __str__(self):
         return f"{self.serv_id.name if self.serv_id else 'Unknown Service'} for Session {self.session.sess_id}"
-    
+#================================================================================= 
 User = get_user_model()
 
 class LoginTracker(models.Model):
@@ -851,4 +839,3 @@ class LoginTracker(models.Model):
         verbose_name_plural = "Login Tracker Logs"
 
 
-#=================================================================================

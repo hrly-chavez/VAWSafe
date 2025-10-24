@@ -45,7 +45,6 @@ class victim_detail(generics.RetrieveAPIView):
             ).distinct()
         return Victim.objects.none()
 
-
 # retrieve all information related to case (Social Worker)
 class VictimIncidentsView(generics.ListAPIView):
     serializer_class = IncidentInformationSerializer
@@ -55,8 +54,7 @@ class VictimIncidentsView(generics.ListAPIView):
     def get_queryset(self):
         vic_id = self.kwargs.get("vic_id")
         return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by('incident_num')
-
-    
+   
 class search_victim_facial(APIView):
 
     parser_classes = [MultiPartParser, FormParser]
@@ -146,16 +144,22 @@ class scheduled_session_lists(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return Session.objects.filter(
-                assigned_official=user.official,
-                sess_status__in=["Pending", "Ongoing"]  
-            ).order_by("sess_status", "sess_next_sched")   
+            return (
+                Session.objects.filter(
+                    assigned_official__in=[user.official],
+                    sess_status__in=["Pending", "Ongoing"]
+                )
+                .distinct()
+                .order_by("sess_status", "sess_next_sched")
+            )
         return Session.objects.none()
+
 
 class scheduled_session_detail(generics.RetrieveUpdateAPIView):  
     """
     GET: Retrieve a single session detail.
     PATCH: Update session info (e.g., type, description, location).
+    this also handles the display for service in the frontend
     """
     serializer_class = SocialWorkerSessionDetailSerializer
     permission_classes = [IsAuthenticated]
@@ -417,6 +421,32 @@ def services_by_category(request, category_id):
     serializer = ServicesSerializer(services, many=True)
     return Response(serializer.data, status=200)
 
+# ==== Service ====
+#scheduled_session_detail handles the display of the service
+
+@api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
+def upload_service_proof(request, service_id):
+    """
+    PATCH: Upload service proof image and optional feedback.
+    Accepts multipart form data.
+    Automatically sets status to Done when proof is uploaded.
+    """
+    user = request.user
+    try:
+        service = ServiceGiven.objects.get(pk=service_id, of_id=user.official)
+        # service = ServiceGiven.objects.get(pk=service_id)  # if allow admin edits
+    except ServiceGiven.DoesNotExist:
+        return Response({"error": "Service record not found or not assigned to you."}, status=404)
+
+    data = request.data.copy()
+    data["service_status"] = "Done"  #  automatically mark as Done
+
+    serializer = ServiceGivenSerializer(service, data=data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=200)
+    return Response(serializer.errors, status=400)
 
 #=======================================CASES==============================================================
 
@@ -475,7 +505,6 @@ class OfficialAvailabilityViewSet(viewsets.ModelViewSet):
 
 class OfficialUnavailabilityViewSet(viewsets.ModelViewSet):
 
-
     """
     Manage temporary unavailability records (like sick leave or holidays) for the current Social Worker.
     """
@@ -488,7 +517,6 @@ class OfficialUnavailabilityViewSet(viewsets.ModelViewSet):
         if hasattr(user, "official") and user.official.of_role == "Social Worker":
             return OfficialUnavailability.objects.filter(official=user.official)
         return OfficialUnavailability.objects.none()
-
 
 class OfficialScheduleOverviewViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsRole]

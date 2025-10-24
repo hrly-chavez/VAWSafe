@@ -55,10 +55,12 @@ export default function AccountManagement() {
     switch ((role || "").toLowerCase()) {
       case "social worker":
         return "bg-yellow-500";
-      case "vawdesk":
+      case "nurse":
         return "bg-blue-600";
       case "dswd":
         return "bg-green-600";
+      case "psychometrician":
+        return "bg-red-600";
       default:
         return "bg-gray-400";
     }
@@ -184,14 +186,6 @@ export default function AccountManagement() {
                             Unarchive
                           </button>
                         )}
-
-
-                        {/* Example future delete (VAWDesk only)
-                        {String(official.of_role || "").toLowerCase() === "vawdesk" && !official.deleted_at && (
-                          <button className="flex items-center justify-center bg-red-500 text-white w-8 h-8 rounded-full shadow hover:bg-red-600">
-                            <TrashIcon className="h-4 w-4" />
-                          </button>
-                        )} */}
                       </div>
 
                     </td>
@@ -225,7 +219,7 @@ export default function AccountManagement() {
       {showRegisterModal &&(
         <RegisterUser
           onClose={() => setShowRegisterModal(false)}
-          defaultRole= {["Social Worker", "VAWDesk"]}
+          defaultRole= {["Social Worker", "Nurse", "Psychometrician"]}
         />
       )}
     </div>

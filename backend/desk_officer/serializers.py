@@ -2,6 +2,11 @@ from rest_framework import serializers
 from shared_model.models import *
 from datetime import date
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username"]
+
 class ProvinceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Province
@@ -92,11 +97,14 @@ class SessionSerializer(serializers.ModelSerializer):
     sess_type = serializers.PrimaryKeyRelatedField(
         many=True, queryset=SessionType.objects.all()
     )
+    assigned_official = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Official.objects.all(), required=False
+    )
 
     class Meta:
         model = Session
         fields = "__all__"
-        read_only_fields = ["sess_id", "sess_num","sess_updated_at"]
+        read_only_fields = ["sess_id", "sess_num", "sess_updated_at"]
 
     def get_victim_name(self, obj):
         if obj.incident_id and obj.incident_id.vic_id:
@@ -110,9 +118,14 @@ class SessionSerializer(serializers.ModelSerializer):
 
     def get_location(self, obj):
         return obj.sess_location or "—"
-    
+
+    def get_official_name(self, obj):
+        officials = obj.assigned_official.all()
+        return [official.full_name for official in officials] if officials else []
+
     def create(self, validated_data):
         session_types = validated_data.pop("sess_type", [])
+        officials = validated_data.pop("assigned_official", [])
         incident = validated_data.get("incident_id")
 
         if incident:
@@ -126,19 +139,33 @@ class SessionSerializer(serializers.ModelSerializer):
 
         session = super().create(validated_data)
         session.sess_type.set(session_types)
+        session.assigned_official.set(officials)
+
+        # Enforce up to 3 workers
+        if session.assigned_official.count() > 3:
+            raise serializers.ValidationError(
+                {"assigned_official": "You can assign up to 3 workers only."}
+            )
+
         return session
 
     def update(self, instance, validated_data):
         session_types = validated_data.pop("sess_type", None)
+        officials = validated_data.pop("assigned_official", None)
         validated_data["sess_updated_at"] = date.today()
 
         session = super().update(instance, validated_data)
         if session_types is not None:
             session.sess_type.set(session_types)
-        return session
+        if officials is not None:
+            session.assigned_official.set(officials)
 
-    def get_official_name(self, obj):
-        return obj.assigned_official.full_name if obj.assigned_official else None
+        if session.assigned_official.count() > 3:
+            raise serializers.ValidationError(
+                {"assigned_official": "You can assign up to 3 workers only."}
+            )
+
+        return session
 
 class IncidentInformationSerializer(serializers.ModelSerializer): #fetch case and session in victim info
     sessions = SessionSerializer(many=True, read_only=True)  #  add sessions
@@ -204,11 +231,50 @@ class SessionQuestionSerializer(serializers.ModelSerializer):  # Generated + ans
             "sq_value",
             "sq_note",
         ]
+# ====== SERVICES ======
+class DeskOfficerServiceGivenSerializer(serializers.ModelSerializer):
+    """
+    Read-only service serializer for Desk Officer — uniform with Social Worker version.
+    Displays full details of each service given under a session.
+    """
+    service = serializers.SerializerMethodField()
+    handled_by = serializers.CharField(source="of_id.full_name", read_only=True)
 
-class DeskOfficerSessionDetailSerializer(serializers.ModelSerializer): #show session and session answer in card
-    official_name = serializers.CharField(source="assigned_official.full_name", read_only=True)
-    sess_type = SessionTypeSerializer(many=True, read_only=True)
-    session_questions = SessionQuestionSerializer(many=True, read_only=True)
+    class Meta:
+        model = ServiceGiven
+        fields = [
+            "id",
+            "service",           # nested service details (organization, category, contacts)
+            "handled_by",        # social worker who handled it
+            "service_status",
+            "service_feedback",
+            "service_pic",
+        ]
+
+    def get_service(self, obj):
+        """Return nested service details (name, category, contact info, etc.)"""
+        if not obj.serv_id:
+            return None
+        service = obj.serv_id
+        return {
+            "serv_id": service.serv_id,
+            "name": service.name,
+            "category": service.category.name if service.category else None,
+            "contact_person": service.contact_person,
+            "contact_number": service.contact_number,
+        }
+
+# ====== SESSION DETAILS ======
+class DeskOfficerSessionDetailSerializer(serializers.ModelSerializer):
+    """
+    Full session detail serializer for Desk Officer.
+    Updated to support multiple assigned officials.
+    Includes questions, session types, and linked services.
+    """
+    official_names = serializers.SerializerMethodField()
+    sess_type_display = SessionTypeSerializer(source="sess_type", many=True, read_only=True)
+    questions = SessionQuestionSerializer(source="session_questions", many=True, read_only=True)
+    services_given = DeskOfficerServiceGivenSerializer(many=True, read_only=True)
 
     class Meta:
         model = Session
@@ -220,10 +286,16 @@ class DeskOfficerSessionDetailSerializer(serializers.ModelSerializer): #show ses
             "sess_date_today",
             "sess_location",
             "sess_description",
-            "official_name",
-            "sess_type",          # names not IDs
-            "session_questions",  # answered questions
+            "official_names",
+            "sess_type_display",
+            "questions",
+            "services_given",
         ]
+
+    def get_official_names(self, obj):
+        """Return all assigned social workers' full names."""
+        officials = obj.assigned_official.all()
+        return [official.full_name for official in officials] if officials else []
 
 class GenerateSessionQuestionsSerializer(serializers.Serializer):
     session_types = serializers.ListField(

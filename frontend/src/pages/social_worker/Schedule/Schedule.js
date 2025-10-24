@@ -6,6 +6,7 @@ import AddAvailabilityModal from "./AddAvailabilityModal";
 import EditAvailabilityModal from "./EditAvailabilityModal";
 import AddUnavailabilityModal from "./AddUnavailabilityModal";
 import EditUnavailabilityModal from "./EditUnavailabilityModal";
+import Availability from "./Availability";
 
 
 export default function Schedule() {
@@ -27,12 +28,19 @@ export default function Schedule() {
   const [currentWeekStart, setCurrentWeekStart] = useState(new Date());
 
   const getWeekRange = (startDate) => {
-    const start = new Date(startDate);
-    const end = new Date(start);
-    end.setDate(start.getDate() + 6);
-    const options = { month: "short", day: "numeric" };
-    return `${start.toLocaleDateString("en-US", options)} – ${end.toLocaleDateString("en-US", options)}`;
-  };
+  const base = new Date(startDate);
+
+  // Align the week range to Sunday–Saturday
+  const sunday = new Date(base);
+  sunday.setDate(base.getDate() - base.getDay());
+
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+
+  const options = { month: "short", day: "numeric" };
+  return `${sunday.toLocaleDateString("en-US", options)} – ${saturday.toLocaleDateString("en-US", options)}`;
+};
+
 
   const handlePreviousWeek = () => {
     const newDate = new Date(currentWeekStart);
@@ -304,70 +312,24 @@ const days = getDaysOfWeek(currentWeekStart);
       </div>
 
       {/* Availability List */}
-      <div className="bg-white rounded-2xl shadow-md border border-gray-100">
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-lg font-semibold text-[#2F2F4F] flex items-center gap-2">
-            <Clock size={20} />
-            Preferred Weekly Schedule
-          </h2>
-        </div>
+      <Availability
+      availabilities={availabilities}
+      unavailabilities={unavailabilities}
+      fetchScheduleOverview={fetchScheduleOverview}
+      setSelectedSlot={setSelectedSlot}
+      setShowEditModal={setShowEditModal}
+    />
 
-        <div className="divide-y divide-gray-100">
-          {availabilities.length > 0 ? (
-            availabilities.map((slot, idx) => (
-              <div
-                key={idx}
-                className="flex justify-between items-center px-6 py-4 hover:bg-gray-50 transition"
-              >
-                <div>
-                  <p className="font-medium text-[#2F2F4F]">{slot.day_of_week}</p>
-                  <p className="text-sm text-gray-600">
-                    {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
-                  </p>
-                  <p className="text-xs text-gray-500 italic">{slot.remarks || "No remarks"}</p>
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      setSelectedSlot(slot);
-                      setShowEditModal(true);
-                    }}
-                    className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
-                  >
-                    <Edit3 size={16} /> Edit
-                  </button>
-                  {slot.is_active ? (
-                  <button onClick={async () => {
-                      if (window.confirm("Deactivate this availability?")) {
-                        await api.delete(`/api/social_worker/availability/${slot.id}/`);
-                        fetchScheduleOverview();}}}
-                    className="flex items-center gap-1 text-sm text-red-600 hover:text-red-800">
-                    Deactivate
-                  </button>
-                ) : (
-                  <button
-                    onClick={async () => {
-                      if (window.confirm("Reactivate this availability?")) {
-                        await api.patch(`/api/social_worker/availability/${slot.id}/reactivate/`);
-                        fetchScheduleOverview();}}}
-                    className="flex items-center gap-1 text-sm text-green-600 hover:text-green-800">
-                    Activate
-                  </button>
-                )}
-
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="p-4 text-center text-gray-500 text-sm">No availability set yet.</p>
-          )}
-        </div>
-      </div>
 
       {/* Modals */}
       {showModal && (
-        <AddAvailabilityModal onClose={() => setShowModal(false)} onSuccess={fetchScheduleOverview} />
+        <AddAvailabilityModal
+          onClose={() => setShowModal(false)}
+          onSuccess={fetchScheduleOverview}
+          existingAvailabilities={availabilities}
+        />
       )}
+
       {showEditModal && (
         <EditAvailabilityModal slot={selectedSlot} onClose={() => setShowEditModal(false)}onSuccess={fetchScheduleOverview}/>
       )}

@@ -59,7 +59,7 @@ export default function Sessions() {
                     <th>Schedule Date</th>
                     <th>Location</th>
                     <th>Status</th>
-                    <th>Assigned Social Worker</th>
+                    <th>Assigned Official(s)</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -87,7 +87,11 @@ export default function Sessions() {
                           </span>
                         </td>
                         {/* Official */}
-                        <td>{s.official_name || "—"}</td>
+                        <td>
+                          {s.official_names && s.official_names.length > 0
+                            ? s.official_names.join(", ")
+                            : "—"}
+                        </td>
                         <td className="flex gap-2">
                           <Link
                             to={`/social_worker/sessions/${s.sess_id}`}

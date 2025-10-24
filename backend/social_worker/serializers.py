@@ -77,7 +77,7 @@ class VictimDetailSerializer(serializers.ModelSerializer):
             )
         return None
 #=====================================SESSIONS=============================================
-class SocialWorkerSessionCRUDSerializer(serializers.ModelSerializer): 
+class SocialWorkerSessionCRUDSerializer(serializers.ModelSerializer):
     """
     Handles creation and editing of session records.
     - Auto-increments session number per incident.
@@ -87,14 +87,34 @@ class SocialWorkerSessionCRUDSerializer(serializers.ModelSerializer):
     victim_name = serializers.SerializerMethodField()
     case_no = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
-    official_name = serializers.SerializerMethodField()
-    sess_type = serializers.PrimaryKeyRelatedField(many=True, queryset=SessionType.objects.all())
-    assigned_official = serializers.PrimaryKeyRelatedField(queryset=Official.objects.all(), required=True)
+    official_names = serializers.SerializerMethodField() 
+    sess_type = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=SessionType.objects.all()
+    )
+    assigned_official = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Official.objects.all(), required=False
+    )
 
     class Meta:
         model = Session
-        fields = "__all__"
+        fields = [
+            "sess_id",
+            "sess_num",
+            "sess_status",
+            "sess_next_sched",
+            "sess_date_today",
+            "sess_location",
+            "sess_description",
+            "incident_id",
+            "sess_type",
+            "assigned_official",
+            "victim_name",
+            "case_no",
+            "location",
+            "official_names",
+        ]
         read_only_fields = ["sess_id", "sess_num"]
+
     # --- Display helpers ---
     def get_victim_name(self, obj):
         if obj.incident_id and obj.incident_id.vic_id:
@@ -109,12 +129,14 @@ class SocialWorkerSessionCRUDSerializer(serializers.ModelSerializer):
     def get_location(self, obj):
         return obj.sess_location or "—"
 
-    def get_official_name(self, obj):
-        return obj.assigned_official.full_name if obj.assigned_official else None
+    def get_official_names(self, obj):
+        officials = obj.assigned_official.all()
+        return [official.full_name for official in officials] if officials else []
 
     # --- Auto-increment session number when creating ---
     def create(self, validated_data):
         session_types = validated_data.pop("sess_type", [])
+        officials = validated_data.pop("assigned_official", [])
         incident = validated_data.get("incident_id")
 
         if incident:
@@ -128,13 +150,18 @@ class SocialWorkerSessionCRUDSerializer(serializers.ModelSerializer):
 
         session = super().create(validated_data)
         session.sess_type.set(session_types)
+        session.assigned_official.set(officials)
         return session
-      # --- Update session and its related types ---
+
     def update(self, instance, validated_data):
         session_types = validated_data.pop("sess_type", None)
+        officials = validated_data.pop("assigned_official", None)
+
         session = super().update(instance, validated_data)
         if session_types is not None:
             session.sess_type.set(session_types)
+        if officials is not None:
+            session.assigned_official.set(officials)
         return session
 
 class SessionTypeSerializer(serializers.ModelSerializer):
@@ -150,7 +177,7 @@ class SocialWorkerSessionSerializer(serializers.ModelSerializer):
     """
     victim_name = serializers.SerializerMethodField()
     case_no = serializers.SerializerMethodField()
-    official_name = serializers.SerializerMethodField()
+    official_names = serializers.SerializerMethodField()
     location = serializers.SerializerMethodField()
 
     class Meta:
@@ -163,7 +190,7 @@ class SocialWorkerSessionSerializer(serializers.ModelSerializer):
             "sess_type",
             "victim_name",
             "case_no",
-            "official_name",
+            "official_names",
             "location",
         ]
 
@@ -177,8 +204,9 @@ class SocialWorkerSessionSerializer(serializers.ModelSerializer):
             return obj.incident_id.incident_num
         return None
 
-    def get_official_name(self, obj):
-        return obj.assigned_official.full_name if obj.assigned_official else None
+    def get_official_names(self, obj):
+        officials = obj.assigned_official.all()
+        return [official.full_name for official in officials] if officials else []
 
     def get_location(self, obj):
         return obj.sess_location or None
@@ -265,6 +293,7 @@ class ServiceGivenSerializer(serializers.ModelSerializer):
             "service",        
             "service_status",
             "service_pic",
+            "service_feedback",
         ]
 #===========
 class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer): 
@@ -276,10 +305,14 @@ class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):
     victim = VictimSerializer(source="incident_id.vic_id", read_only=True)
     incident = IncidentWithPerpetratorSerializer(source="incident_id", read_only=True)
     case_report = CaseReportSerializer(source="incident_id.vic_id.case_report", read_only=True)
-    official_name = serializers.CharField(source="assigned_official.full_name", read_only=True)
-    sess_type = serializers.PrimaryKeyRelatedField(many=True, queryset=SessionType.objects.all(),write_only=True) #  Accept IDs for update
+    official_names = serializers.SerializerMethodField()  # ← FIXED
+    sess_type = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=SessionType.objects.all(), write_only=True
+    )
     sess_type_display = SessionTypeSerializer(source="sess_type", many=True, read_only=True)
-    questions = SocialWorkerSessionQuestionSerializer(source="session_questions", many=True, read_only=True)
+    questions = SocialWorkerSessionQuestionSerializer(
+        source="session_questions", many=True, read_only=True
+    )
     services_given = ServiceGivenSerializer(many=True, read_only=True)
 
     class Meta:
@@ -297,10 +330,14 @@ class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):
             "victim",
             "incident",
             "case_report",
-            "official_name",
+            "official_names",      # ← FIXED
             "questions",
             "services_given",
         ]
+
+    def get_official_names(self, obj):
+        officials = obj.assigned_official.all()
+        return [official.full_name for official in officials] if officials else []
 
 class CloseCaseSerializer(serializers.ModelSerializer):
     """Used to mark a VAWC incident case as closed."""
@@ -322,7 +359,7 @@ class CloseCaseSerializer(serializers.ModelSerializer):
 
         return data
 
-#=======================================CASES==========================================================
+#=======================================CASES===============================================
 
 class IncidentSerializer(serializers.ModelSerializer): #For case Column & Rows of Case
 

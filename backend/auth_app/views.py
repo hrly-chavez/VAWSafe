@@ -134,8 +134,35 @@ class create_official(APIView):
             user = User.objects.create_user(username=username, password=generated_password)
             status_value = "approved"
 
-        elif role == "VAWDesk":
-            status_value = "pending"
+        elif role == "Nurse":
+            fname = request.data.get("of_fname", "").strip().lower()
+            lname = request.data.get("of_lname", "").strip().lower()
+            base_username = f"{fname}{lname}".replace(" ", "") or get_random_string(8)
+
+            username = base_username
+            counter = 0
+            while User.objects.filter(username=username).exists():
+                counter += 1
+                username = f"{base_username}{counter}"
+
+            generated_password = get_random_string(length=12)
+            user = User.objects.create_user(username=username, password=generated_password)
+            status_value = "approved"
+
+        elif role == "Psychometrician":
+            fname = request.data.get("of_fname", "").strip().lower()
+            lname = request.data.get("of_lname", "").strip().lower()
+            base_username = f"{fname}{lname}".replace(" ", "") or get_random_string(8)
+
+            username = base_username
+            counter = 0
+            while User.objects.filter(username=username).exists():
+                counter += 1
+                username = f"{base_username}{counter}"
+
+            generated_password = get_random_string(length=12)
+            user = User.objects.create_user(username=username, password=generated_password)
+            status_value = "approved"
         else:
             return Response({"error": f"Invalid role: {role}"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -167,7 +194,7 @@ class create_official(APIView):
         # -----------------------
         # Face Embeddings (Social Worker / DSWD only)
         # -----------------------
-        if role in ["Social Worker", "DSWD"]:
+        if role in ["Social Worker", "DSWD", "Nurse", "Pyschometrician"]:
             created_count = 0
             for file in photo_files:
                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
@@ -244,23 +271,6 @@ class create_official(APIView):
                 "assigned_barangay_name": official.of_assigned_barangay.name if official.of_assigned_barangay else None
             }, status=status.HTTP_201_CREATED)
 
-        # -----------------------
-        # VAWDesk logic
-        # -----------------------
-        if role == "VAWDesk":
-            for file in photo_files:
-                OfficialFaceSample.objects.create(
-                    official=official,
-                    photo=file,
-                    embedding=None
-                )
-
-            return Response({
-                "message": "VAWDesk registration submitted. Awaiting DSWD approval.",
-                "official_id": official.of_id,
-                "role": official.of_role,
-                "status": official.status
-            }, status=status.HTTP_202_ACCEPTED)
 
 
 class face_login(APIView):
