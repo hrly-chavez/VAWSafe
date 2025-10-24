@@ -1,4 +1,3 @@
-
 // src/components/Sidebar.js
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useContext } from "react";
@@ -31,6 +30,11 @@ export default function Sidebar() {
           icon: "/images/dashboardnew.png",
           label: "Dashboard",
           path: "/social_worker",
+        },
+        {
+          icon: "/images/add.png",
+          label: "Register Victim",
+          path: "/social_worker/register-victim",
         },
         {
           icon: "/images/heart.png",
@@ -147,8 +151,6 @@ export default function Sidebar() {
         },
       ];
     }
-
-
 
     return [];
   };
