@@ -30,4 +30,8 @@ urlpatterns = [
     path("sessions/<int:sess_id>/start/", start_session, name="start-session"),
     path("sessions/<int:sess_id>/finish/", finish_session, name="finish-session"),
 
+    #file encryption
+    path('evidence/<int:evidence_id>/download/', ServeEvidenceFileView.as_view(), name='serve_evidence_file'),
+    path('victim-face/<int:sample_id>/view/', ServeVictimFacePhotoView.as_view(), name='serve_victim_face_photo'),
+
 ] + router.urls

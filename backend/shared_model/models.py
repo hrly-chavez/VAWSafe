@@ -2,8 +2,12 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.conf import settings
 from django.utils.timezone import now
-from fernet_fields import EncryptedCharField, EncryptedDateField, EncryptedIntegerField
+from fernet_fields import EncryptedCharField, EncryptedDateField, EncryptedIntegerField, EncryptedTextField, EncryptedDateTimeField
 from django.contrib.auth import get_user_model
+from shared_model.storage import EncryptedFileSystemStorage
+
+#para ni sa file encryption sa mga filepath
+encrypted_storage = EncryptedFileSystemStorage()
 
 # for address
 class Province(models.Model):  
@@ -126,7 +130,7 @@ class Official(models.Model):
 
 class OfficialFaceSample(models.Model):
     official = models.ForeignKey(Official, on_delete=models.CASCADE, related_name='face_samples')
-    photo = models.ImageField(upload_to='face_samples/')
+    photo = models.ImageField(upload_to='face_samples/', storage=encrypted_storage)
     embedding = ArrayField(models.FloatField(), null=True, blank=True)
 
     def __str__(self):
@@ -365,7 +369,7 @@ class Victim(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True
     )
     # Profile photo (first photo uploaded)
-    vic_photo = models.ImageField(upload_to='victim_photos/', null=True, blank=True)
+    vic_photo = models.ImageField(upload_to='victim_photos/', null=True, blank=True, storage=encrypted_storage)
 
     def __str__(self):
         return self.vic_last_name
@@ -376,7 +380,7 @@ class Victim(models.Model):
  
 class VictimFaceSample(models.Model):
     victim = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name="face_samples")
-    photo = models.ImageField(upload_to='victim_face_samples/')
+    photo = models.ImageField(upload_to='victim_face_samples/', storage=encrypted_storage)
     embedding = ArrayField(models.FloatField(), null=True, blank=True)
 
     def __str__(self):
@@ -458,20 +462,20 @@ class IncidentInformation(models.Model): #Case in the frontend
     
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     incident_id = models.AutoField(primary_key=True)
-    incident_num = models.IntegerField(null=True,blank=True) #case number
-    incident_status= models.CharField(max_length=20, choices=INCIDENT_CHOICES,default='Pending') #case status
-    violence_type = models.CharField(max_length=100, choices=VIOLENCE_TYPE, null=True, blank=True)
-    violence_subtype = models.CharField(max_length=100, null=True, blank=True)
+    incident_num = EncryptedIntegerField(null=True,blank=True) #case number
+    incident_status= EncryptedCharField(max_length=512, choices=INCIDENT_CHOICES,default='Pending') #case status
+    violence_type = EncryptedCharField(max_length=512, choices=VIOLENCE_TYPE, null=True, blank=True)
+    violence_subtype = EncryptedCharField(max_length=512, null=True, blank=True)
     
-    incident_description = models.TextField(blank=True, null=True)
-    incident_date = models.DateField(blank=True, null=True)
+    incident_description = EncryptedTextField(blank=True, null=True)
+    incident_date = EncryptedDateField(blank=True, null=True)
     incident_time = models.TimeField(blank=True, null=True)
-    incident_location = models.CharField(max_length=255, blank=True, null=True) # Specific landmark (like near jollibee)
-    type_of_place = models.CharField(max_length=50, choices=TYPE_OF_PLACE, blank=True, null=True)
+    incident_location = EncryptedCharField(max_length=512, blank=True, null=True) # Specific landmark (like near jollibee)
+    type_of_place = EncryptedCharField(max_length=512, choices=TYPE_OF_PLACE, blank=True, null=True)
     is_via_electronic_means = models.BooleanField(default=False)
-    electronic_means = models.CharField(max_length=50, blank=True, null=True)
+    electronic_means = EncryptedCharField(max_length=512, blank=True, null=True)
     is_conflict_area = models.BooleanField(default=False)
-    conflict_area = models.CharField(max_length=50, choices=CONFLICT_AREA_CHOICES, blank=True, null=True)
+    conflict_area = EncryptedCharField(max_length=512, choices=CONFLICT_AREA_CHOICES, blank=True, null=True)
     is_calamity_area = models.BooleanField(default=False)
 
     # foreign keys
@@ -538,8 +542,8 @@ class Evidence(models.Model):
         on_delete=models.CASCADE,
         related_name="evidences"
     )
-    file = models.FileField(upload_to="incident_evidences/")
-    description = models.TextField(blank=True, null=True)
+    file = models.FileField(upload_to="incident_evidences/", storage=encrypted_storage)
+    description = EncryptedTextField(blank=True, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -556,11 +560,11 @@ class Session(models.Model):
     
     sess_id = models.AutoField(primary_key=True)
     sess_num = models.IntegerField(null=True, blank=True)
-    sess_status = models.CharField(max_length=20,choices=SESSION_STAT, default='Pending') 
-    sess_next_sched = models.DateTimeField(null=True, blank=True) # scheduled session
-    sess_date_today = models.DateTimeField(null=True, blank=True) # date started now
-    sess_location = models.CharField(max_length=200, null=True, blank=True)
-    sess_description = models.TextField(null=True, blank=True)
+    sess_status = EncryptedCharField(max_length=512,choices=SESSION_STAT, default='Pending') 
+    sess_next_sched = EncryptedDateTimeField(null=True, blank=True) # if scheduled session
+    sess_date_today = EncryptedDateTimeField(null=True, blank=True)   #if start now
+    sess_location = EncryptedCharField(max_length=512, null=True, blank=True)
+    sess_description = EncryptedTextField(null=True, blank=True)
     
     
     # foreign key
@@ -613,11 +617,11 @@ class Question(models.Model): #HOLDER FOR ALL QUESTIONS
         ('Psychometrician', 'Psychometrician'),
     ]
     ques_id = models.AutoField(primary_key=True)
-    ques_category = models.CharField(choices=QUESTION_CATEGORIES, max_length=100, null=True, blank=True)
-    ques_question_text = models.TextField(null=True, blank=True)
-    ques_answer_type = models.CharField(max_length=20, choices=ANSWER_TYPES, null=True, blank=True)
+    ques_category = EncryptedCharField(choices=QUESTION_CATEGORIES, max_length=512, null=True, blank=True)
+    ques_question_text = EncryptedTextField(null=True, blank=True)
+    ques_answer_type = EncryptedCharField(max_length=512, choices=ANSWER_TYPES, null=True, blank=True)
     ques_is_active = models.BooleanField(default=False)
-    created_at  = models.DateTimeField(default=now)
+    created_at  = EncryptedDateTimeField(default=now)
     #FK
     created_by = models.ForeignKey(Official, on_delete=models.SET_NULL,null=True,blank=True,related_name="created_questions")
     
@@ -634,12 +638,12 @@ class SessionQuestion(models.Model):
     
 
      # For ad-hoc custom questions
-    sq_custom_text = models.TextField(null=True, blank=True)
-    sq_custom_answer_type = models.CharField(max_length=20, choices=Question.ANSWER_TYPES, null=True, blank=True)
+    sq_custom_text = EncryptedTextField(null=True, blank=True)
+    sq_custom_answer_type = EncryptedCharField(max_length=512, choices=Question.ANSWER_TYPES, null=True, blank=True)
 
     # Direct answer fields
-    sq_value = models.TextField(null=True, blank=True)
-    sq_note = models.TextField(null=True, blank=True)
+    sq_value = EncryptedTextField(null=True, blank=True)
+    sq_note = EncryptedTextField(null=True, blank=True)
     #Fk
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='session_questions')
     question = models.ForeignKey(Question, on_delete=models.PROTECT, related_name='session_questions', null=True, blank=True)
