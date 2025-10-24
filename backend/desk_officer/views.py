@@ -14,6 +14,8 @@ from django.db.models import Q
 from deepface import DeepFace
 from PIL import Image
 from django.db import transaction
+from django.http import Http404
+from shared_model.views import serve_encrypted_file
 
 from shared_model.models import *
 from .serializers import *
@@ -565,3 +567,27 @@ class AssignBarangayView(generics.UpdateAPIView):
     serializer_class = OfficialSerializer
     queryset = Official.objects.filter(of_role__iexact="Social Worker")
     lookup_field = "of_id"
+
+#para ni sa file encryption kay diri naka store ang incident_evidence,ug ang victim_face_samples
+
+class ServeEvidenceFileView(APIView):
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = [AllowAny]
+
+    def get(self, request, evidence_id):
+        try:
+            evidence = Evidence.objects.get(id=evidence_id)
+        except Evidence.DoesNotExist:
+            raise Http404("Evidence not found")
+        return serve_encrypted_file(evidence, evidence.file)
+
+class ServeVictimFacePhotoView(APIView):
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = [AllowAny]
+
+    def get(self, request, sample_id):
+        try:
+            sample = VictimFaceSample.objects.get(id=sample_id)
+        except VictimFaceSample.DoesNotExist:
+            raise Http404("Victim face sample not found")
+        return serve_encrypted_file(sample, sample.photo, content_type='image/jpeg')

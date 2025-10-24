@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import *
 from rest_framework.routers import DefaultRouter
+from . import views
 
 router = DefaultRouter()
 router.register(r'login-tracker', LoginTrackerViewSet, basename='login-tracker')
@@ -15,7 +16,11 @@ urlpatterns = [
     path("verify-email/", VerifyEmailView.as_view(), name="verify-email"),
     path("reset-pass/", ResetPasswordView.as_view(), name="reset-pass"),
 
+    #for authentication and authorization
     path('refresh/', CookieTokenRefreshView.as_view()),
     path('logout/', logout),
     path('me/', me),
+
+    #file encryption
+    path('official-face/<int:sample_id>/view/', ServeOfficialFacePhotoView.as_view(), name='serve_official_face_photo'),
 ] + router.urls
