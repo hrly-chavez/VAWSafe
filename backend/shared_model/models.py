@@ -491,6 +491,7 @@ class IncidentInformation(models.Model): #Case in the frontend
     # foreign keys
     informant = models.ForeignKey(Informant, on_delete=models.CASCADE, null=True, blank=True)
     vic_id = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name='incidents')
+    perp_id = models.ForeignKey(Perpetrator, on_delete=models.CASCADE,to_field='perp_id', related_name='related_incidents',null=True, blank=True)
     of_id = models.ForeignKey(Official, on_delete=models.SET_NULL, related_name='handled_incidents', null=True, blank=True)
     
     # for address
