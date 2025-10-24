@@ -62,6 +62,9 @@ const DSWDServices = lazy(() =>import("./pages/dswd/ServiceDSWD/DSWDServices"));
 const DSWDAccountManagement = lazy(() =>import("./pages/dswd/AccountManagement/DSWDAccountManagement"));
 const DSWDQuestions = lazy(() => import("./pages/dswd/Questions/Questions"));
 
+//Nurse
+const NurseDashboard = lazy(() => import("./pages/nurse/Dashboard/NurseDashboard"));
+
 export default function App() {
   return (
     <AuthProvider>
@@ -133,6 +136,14 @@ export default function App() {
               <Route path={ROUTES.SOCIAL_WORKER_VIEW_SESSION}element={<ViewSessions />}/>
               <Route path={ROUTES.SOCIAL_WORKER_START_SESSION}element={<SocialWorkerStartSession />}/>
               <Route path={ROUTES.SOCIAL_WORKER_SCHEDULE} element={<Schedule />} />
+
+            </Route>
+
+            {/* Nurse group */}
+            <Route element={<ProtectedRoute roles={["Nurse"]}>
+                  <SidebarLayout />
+                </ProtectedRoute>}>
+              <Route path={ROUTES.NURSE_DASHBOARD} element={<NurseDashboard />}/>
 
             </Route>
 
