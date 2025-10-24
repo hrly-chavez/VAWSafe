@@ -644,14 +644,9 @@ class Question(models.Model): #HOLDER FOR ALL QUESTIONS
         ('Text', 'Text'),
     ]
     QUESTION_CATEGORIES = [
-        ('Safety Assessment', 'Safety Assessment'),
-        ('Physical Health Assessment', 'Physical Health Assessment'),
-        ('Emotional / Psychological Assessment', 'Emotional / Psychological Assessment'),
-        ('Social & Family Support Assessment', 'Social & Family Support Assessment'),
-        ('Financial / Livelihood Assessment', 'Financial / Livelihood Assessment'),
-        ('Legal / Protective Measures', 'Legal / Protective Measures'),
-        ('Education / Child Development Assessment', 'Education / Child Development Assessment'),
-        ('Housing / Environment Assessment', 'Housing / Environment Assessment'),
+        ('Social Worker', 'Social Worker'),
+        ('Nurse', 'Nurse'),
+        ('Psychometrician', 'Psychometrician'),
     ]
     ques_id = models.AutoField(primary_key=True)
     ques_category = models.CharField(choices=QUESTION_CATEGORIES, max_length=100, null=True, blank=True)
