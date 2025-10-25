@@ -357,7 +357,7 @@ import IncidentInfo from "./IncidentInfo";
 import PerpetratorInfo from "./PerpetratorInfo";
 import CaptureVictimFacial from "./VictimFacial";
 
-import SchedulePage from "../Session/Schedule";
+import SchedulePage from "../Sessions/Schedule";
 
 import Evidences from "./Evidences";
 
@@ -425,7 +425,7 @@ export default function RegisterVictim() {
 
   const cancel = () => {
     alert("Form cancelled!");
-    navigate("/desk_officer/");
+    navigate("/social_worker/");
   };
 
   const toggleSection = (section) => {
@@ -548,7 +548,7 @@ export default function RegisterVictim() {
       evidenceFiles.forEach((f) => fd.append("evidences", f.file));
 
       // ✅ axios request
-      const res = await api.post("/api/desk_officer/victims/register/", fd);
+      const res = await api.post("/api/social_worker/register-victim/", fd);
 
       console.log(res.data);
 

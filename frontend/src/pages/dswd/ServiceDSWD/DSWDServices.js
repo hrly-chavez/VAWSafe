@@ -63,13 +63,13 @@ export default function DSWDServices() {
     name: "",
     contact_person: "",
     contact_number: "",
-    assigned_place: {
-      province: "",
-      municipality: "",
-      barangay: "",
-      sitio: "",
-      street: ""
-    },
+    // assigned_place: {
+    //   province: "",
+    //   municipality: "",
+    //   barangay: "",
+    //   sitio: "",
+    //   street: ""
+    // },
     service_address: {
       province: "",
       municipality: "",
@@ -179,7 +179,7 @@ export default function DSWDServices() {
                 <th className="px-4 py-3">No.</th>
                 <th className="px-4 py-3">Category</th>
                 <th className="px-4 py-3">Service Name</th>
-                <th className="px-4 py-3">Assigned</th>
+                {/* <th className="px-4 py-3">Assigned</th> */}
                 <th className="px-4 py-3">Address</th>
                 <th className="px-4 py-3">Contact Person</th>
                 <th className="px-4 py-3">Contact Number</th>
@@ -194,7 +194,7 @@ export default function DSWDServices() {
                     <td className="px-4 py-3">{i + 1}</td>
                     <td className="px-4 py-3">{s.category}</td>
                     <td className="px-4 py-3">{s.name}</td>
-                    <td className="px-4 py-3">{s.assigned_place}</td>
+                    {/* <td className="px-4 py-3">{s.assigned_place}</td> */}
                     <td className="px-4 py-3">{s.service_address}</td>
                     <td className="px-4 py-3">{s.contact_person}</td>
                     <td className="px-4 py-3">{s.contact_number}</td>
@@ -256,68 +256,6 @@ export default function DSWDServices() {
                 onChange={handleChange}
                 className="w-full border rounded px-3 py-2"
               />
-
-              <div>
-                <h4 className="font-medium">Assigned Place</h4>
-
-                {/* Province Dropdown */}
-                <select
-                  value={formData.assigned_place.province}
-                  onChange={(e) => handleProvinceChange(e, "assigned_place")}
-                  className="w-full border rounded px-3 py-2 mt-1"
-                >
-                  <option value="">Select Province</option>
-                  {provinces.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-
-                {/* Municipality Dropdown */}
-                <select
-                  value={formData.assigned_place.municipality}
-                  onChange={(e) => handleMunicipalityChange(e, "assigned_place")}
-                  className="w-full border rounded px-3 py-2 mt-1"
-                  disabled={!formData.assigned_place.province}
-                >
-                  <option value="">Select Municipality</option>
-                  {municipalities.map(m => (
-                    <option key={m.id} value={m.id}>{m.name}</option>
-                  ))}
-                </select>
-
-                {/* Barangay Dropdown */}
-                <select
-                  value={formData.assigned_place.barangay}
-                  onChange={(e) => handleBarangayChange(e, "assigned_place")}
-                  className="w-full border rounded px-3 py-2 mt-1"
-                  disabled={!formData.assigned_place.municipality}
-                >
-                  <option value="">Select Barangay</option>
-                  {barangays.map(b => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
-
-                {/* Sitio text input */}
-                <input
-                  type="text"
-                  name="sitio"
-                  placeholder="Sitio"
-                  value={formData.assigned_place.sitio}
-                  onChange={(e) => handleChange(e, "sitio", "assigned_place")}
-                  className="w-full border rounded px-3 py-2 mt-1"
-                />
-
-                {/* Street text input */}
-                <input
-                  type="text"
-                  name="street"
-                  placeholder="Street"
-                  value={formData.assigned_place.street}
-                  onChange={(e) => handleChange(e, "street", "assigned_place")}
-                  className="w-full border rounded px-3 py-2 mt-1"
-                />
-              </div>
 
               <div>
                 <h4 className="font-medium">Service Address</h4>

@@ -252,22 +252,6 @@ class AuditLog(models.Model):
 #==================================================================================================
 
 # starting here is for forms
-class Informant(models.Model):
-    inf_fname = EncryptedCharField(max_length=255, blank=True, null=True)
-    inf_mname = EncryptedCharField(max_length=255, blank=True, null=True)
-    inf_lname = EncryptedCharField(max_length=255, blank=True, null=True)
-    inf_extension = EncryptedCharField(max_length=255, blank=True, null=True)
-    inf_birth_date = EncryptedDateField(blank=True, null=True)
-    inf_relationship_to_victim = EncryptedCharField(max_length=255, blank=True, null=True)
-    inf_contact = EncryptedCharField(max_length=255, blank=True, null=True)
-    inf_occupation = EncryptedCharField(max_length=255, blank=True, null=True)
-    
-    # foreign key
-    inf_address = models.ForeignKey(Address, on_delete=models.CASCADE, null=True, blank=True)
-
-    def __str__(self):
-        return f"{self.inf_fname} {self.inf_lname}" if self.inf_fname else "Unnamed Informant"
-
 class Victim(models.Model): 
     CIVIL_STATUS_CHOICES = [
         ('SINGLE', 'Single'),
@@ -495,7 +479,6 @@ class IncidentInformation(models.Model): #Case in the frontend
     is_calamity_area = models.BooleanField(default=False)
 
     # foreign keys
-    informant = models.ForeignKey(Informant, on_delete=models.CASCADE, null=True, blank=True)
     vic_id = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name='incidents')
     perp_id = models.ForeignKey(Perpetrator, on_delete=models.CASCADE,to_field='perp_id', related_name='related_incidents',null=True, blank=True)
     of_id = models.ForeignKey(Official, on_delete=models.SET_NULL, related_name='handled_incidents', null=True, blank=True)
@@ -524,7 +507,7 @@ class IncidentInformation(models.Model): #Case in the frontend
             self.city = self.barangay.municipality.city
         elif self.municipality:
             self.city = self.municipality.city
-
+        
         super().save(*args, **kwargs)
 
     def clean(self):
@@ -552,16 +535,6 @@ class VictimChildrenList(models.Model):
 
     # foreign key
     victim = models.ForeignKey(Victim, on_delete=models.CASCADE, blank=True, null=True) 
-
-class CaseReport(models.Model):  #ADMINISTRATIVE INFORMATION
-    # victim = models.OneToOneField(Victim, on_delete=models.CASCADE, related_name="case_report")
-
-    handling_org = EncryptedCharField(max_length=512,null=True, blank=True)
-    office_address = EncryptedCharField(max_length=512,null=True, blank=True)
-    report_type = EncryptedCharField(max_length=512,null=True, blank=True)
-    
-    def __str__(self):
-        return f"CaseReport for {self.victim.vic_last_name}, {self.victim.vic_first_name}"
 
 class Evidence(models.Model):
     incident = models.ForeignKey(
@@ -623,30 +596,46 @@ class SessionType(models.Model):
     def __str__(self):
         return self.name
 
-#       =====Question=====
-class SessionTypeQuestion(models.Model):
-    session_number = models.IntegerField()  # 1, 2, 3, 4, 5.
-    #Fk
-    session_type = models.ForeignKey(SessionType, on_delete=models.CASCADE, related_name="type_questions")
-    question = models.ForeignKey('Question', on_delete=models.CASCADE, related_name="type_questions")
+class Session(models.Model):
 
-    class Meta:
-        unique_together = ('session_number', 'session_type', 'question')
-
+    SESSION_STAT =[
+        ('Pending', 'Pending'),
+        ('Ongoing', 'Ongoing'), 
+        ('Done', 'Done'),
+    ]
+    
+    sess_id = models.AutoField(primary_key=True)
+    sess_num = models.IntegerField(null=True, blank=True)
+    sess_status = EncryptedCharField(max_length=512,choices=SESSION_STAT, default='Pending') 
+    sess_next_sched = EncryptedDateTimeField(null=True, blank=True) # if scheduled session
+    sess_date_today = EncryptedDateTimeField(null=True, blank=True)   #if start now
+    sess_location = EncryptedCharField(max_length=512, null=True, blank=True)
+    sess_description = EncryptedTextField(null=True, blank=True)
+    
+    
+    # foreign key
+    incident_id = models.ForeignKey(IncidentInformation, on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
+    assigned_official = models.ManyToManyField("Official",related_name="assigned_sessions",blank=True)
+    sess_type = models.ManyToManyField("SessionType", related_name= "sessions")
+    
+    def __str__(self):
+        victim_name = (
+            f"{self.incident_id.vic_id.vic_last_name}, {self.incident_id.vic_id.vic_first_name}"
+            if self.incident_id and self.incident_id.vic_id
+            else "No Victim"
+        )
+        return f"Session {self.sess_id} - Victim: {victim_name}" 
+    
+#=====Question=====
 class Question(models.Model): #HOLDER FOR ALL QUESTIONS
     ANSWER_TYPES = [
         ('Yes/No', 'Yes/No'),
         ('Text', 'Text'),
     ]
     QUESTION_CATEGORIES = [
-        ('Safety Assessment', 'Safety Assessment'),
-        ('Physical Health Assessment', 'Physical Health Assessment'),
-        ('Emotional / Psychological Assessment', 'Emotional / Psychological Assessment'),
-        ('Social & Family Support Assessment', 'Social & Family Support Assessment'),
-        ('Financial / Livelihood Assessment', 'Financial / Livelihood Assessment'),
-        ('Legal / Protective Measures', 'Legal / Protective Measures'),
-        ('Education / Child Development Assessment', 'Education / Child Development Assessment'),
-        ('Housing / Environment Assessment', 'Housing / Environment Assessment'),
+        ('Social Worker', 'Social Worker'),
+        ('Nurse', 'Nurse'),
+        ('Psychometrician', 'Psychometrician'),
     ]
     ques_id = models.AutoField(primary_key=True)
     ques_category = EncryptedCharField(choices=QUESTION_CATEGORIES, max_length=512, null=True, blank=True)
@@ -662,6 +651,15 @@ class Question(models.Model): #HOLDER FOR ALL QUESTIONS
         category = self.ques_category or "Uncategorized"
         text = (self.ques_question_text or "")[:50]
         return f"[{category}] {text}"
+
+class SessionTypeQuestion(models.Model):
+    session_number = models.IntegerField()  # 1, 2, 3, 4, 5.
+    #Fk
+    session_type = models.ForeignKey(SessionType, on_delete=models.CASCADE, related_name="type_questions")
+    question = models.ForeignKey('Question', on_delete=models.CASCADE, related_name="type_questions")
+
+    class Meta:
+        unique_together = ('session_number', 'session_type', 'question')
 
 class SessionQuestion(models.Model):
     sq_id = models.AutoField(primary_key=True)
@@ -744,7 +742,6 @@ class ServiceCategory(models.Model):
         ("Legal Assistance", "Legal Assistance"),
         ("Psycho-Social Services", "Psycho-Social Services"),
         ("Medical Services", "Medical Services"),
-        ("Medico-Legal Services", "Medico-Legal Services"),
         ("Livelihood and Employment Assistance", "Livelihood and Employment Assistance"),
         ("Other Institutions", "Other Institutions"),
     ]
@@ -764,7 +761,7 @@ class Services(models.Model):
 
     #FK
     category = models.ForeignKey(ServiceCategory, on_delete=models.CASCADE, related_name="services")
-    assigned_place = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_place")
+    # assigned_place = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="assigned_place")
     service_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name="service_address")
 
     def __str__(self):

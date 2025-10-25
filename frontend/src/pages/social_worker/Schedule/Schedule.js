@@ -80,20 +80,27 @@ const days = getDaysOfWeek(currentWeekStart);
   // ==============================
   //  Fetch Combined Data
   // ==============================
-  const fetchScheduleOverview = async () => {
-    try {
-      setLoading(true);
-      const startDate = currentWeekStart.toISOString().split("T")[0];
-      const res = await api.get(`/api/social_worker/schedule-overview/week/?start_date=${startDate}`);
-      setAvailabilities(res.data.availabilities);
-      setUnavailabilities(res.data.unavailabilities);
-    } catch (err) {
-      console.error("Failed to load schedule overview:", err);
-      setError("Failed to load schedule overview.");
-    } finally {
-      setLoading(false);
-    }
-  };
+ const fetchScheduleOverview = async () => {
+  try {
+    setLoading(true);
+
+    // Align API query to start of week (Sunday)
+    const base = new Date(currentWeekStart);
+    const sunday = new Date(base);
+    sunday.setDate(base.getDate() - base.getDay());
+    const startDate = sunday.toISOString().split("T")[0];
+
+    const res = await api.get(`/api/social_worker/schedule-overview/week/?start_date=${startDate}`);
+    setAvailabilities(res.data.availabilities);
+    setUnavailabilities(res.data.unavailabilities);
+  } catch (err) {
+    console.error("Failed to load schedule overview:", err);
+    setError("Failed to load schedule overview.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchScheduleOverview();

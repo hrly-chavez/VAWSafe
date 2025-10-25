@@ -15,6 +15,9 @@ urlpatterns = [
     path("forgot-pass/", ForgotPasswordFaceView.as_view(), name="forgot-pass"),
     path("verify-email/", VerifyEmailView.as_view(), name="verify-email"),
     path("reset-pass/", ResetPasswordView.as_view(), name="reset-pass"),
+    #search face first before createuser
+    #later na sa ni i comment out
+    # path('search-official/', SearchOfficialFacial.as_view(), name='search_official_facial'),
 
     #for authentication and authorization
     path('refresh/', CookieTokenRefreshView.as_view()),

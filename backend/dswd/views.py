@@ -45,13 +45,13 @@ class ViewVictim(generics.ListAPIView):
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        vic_sex = self.request.query_params.get("vic_sex")
+        # vic_sex = self.request.query_params.get("vic_sex")
         province = self.request.query_params.get("province")
         municipality = self.request.query_params.get("municipality")
         barangay = self.request.query_params.get("barangay")
 
-        if vic_sex and vic_sex != "All":
-            queryset = queryset.filter(vic_sex=vic_sex)
+        # if vic_sex and vic_sex != "All":
+        #     queryset = queryset.filter(vic_sex=vic_sex)
 
         if province and province != "All":
             queryset = queryset.filter(province_id=province)
@@ -638,9 +638,7 @@ class OfficialViewSet(ModelViewSet):
 
     def get_queryset(self):
         qs = Official.objects.filter(
-            of_role__in=["Social Worker", "VAWDesk"]
-        ).exclude(
-            of_role="VAWDesk", status="pending"
+            of_role__in=["Social Worker", "Nurse", "Psychometrician"]
         )
 
         # include_archived=1 to see archived in lists
