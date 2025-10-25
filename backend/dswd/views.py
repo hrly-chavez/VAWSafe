@@ -638,7 +638,7 @@ class OfficialViewSet(ModelViewSet):
 
     def get_queryset(self):
         qs = Official.objects.filter(
-            of_role__in=["Social Worker", "Nurse", "Pyschometrician"]
+            of_role__in=["Social Worker", "Nurse", "Psychometrician"]
         )
 
         # include_archived=1 to see archived in lists

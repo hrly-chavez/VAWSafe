@@ -114,7 +114,7 @@ class SocialWorkerSessionCRUDSerializer(serializers.ModelSerializer):
         if obj.incident_id and obj.incident_id.vic_id:
             return obj.incident_id.vic_id.full_name
         return None
-
+    
     def get_case_no(self, obj):
         if obj.incident_id:
             return obj.incident_id.incident_num

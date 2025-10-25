@@ -507,7 +507,7 @@ class IncidentInformation(models.Model): #Case in the frontend
             self.city = self.barangay.municipality.city
         elif self.municipality:
             self.city = self.municipality.city
-
+        
         super().save(*args, **kwargs)
 
     def clean(self):
@@ -550,6 +550,22 @@ class Evidence(models.Model):
         return f"Evidence {self.id} for Incident {self.incident_id}"
     
 #=======================================SESSSION================================== 
+class SessionType(models.Model):
+    SESSION_TYPES = [
+        ('Intake / Initial Assessment', 'Intake / Initial Assessment'),
+        ('Case Study / Psychosocial Assessment', 'Case Study / Psychosocial Assessment'),
+        ('Intervention Planning / Case Conference', 'Intervention Planning / Case Conference'),
+        ('Counseling', 'Counseling'),
+        ('Follow-up', 'Follow-up'),
+        ('Case Closure', 'Case Closure'),
+        ('Others', 'Others'),
+    ]
+
+    name = models.CharField(max_length=100, choices=SESSION_TYPES)
+
+    def __str__(self):
+        return self.name
+
 class Session(models.Model):
 
     SESSION_STAT =[
@@ -580,32 +596,7 @@ class Session(models.Model):
         )
         return f"Session {self.sess_id} - Victim: {victim_name}" 
     
-class SessionType(models.Model):
-    SESSION_TYPES = [
-        ('Intake / Initial Assessment', 'Intake / Initial Assessment'),
-        ('Case Study / Psychosocial Assessment', 'Case Study / Psychosocial Assessment'),
-        ('Intervention Planning / Case Conference', 'Intervention Planning / Case Conference'),
-        ('Counseling', 'Counseling'),
-        ('Follow-up', 'Follow-up'),
-        ('Case Closure', 'Case Closure'),
-        ('Others', 'Others'),
-    ]
-
-    name = models.CharField(max_length=100, choices=SESSION_TYPES)
-
-    def __str__(self):
-        return self.name
-
-#       =====Question=====
-class SessionTypeQuestion(models.Model):
-    session_number = models.IntegerField()  # 1, 2, 3, 4, 5.
-    #Fk
-    session_type = models.ForeignKey(SessionType, on_delete=models.CASCADE, related_name="type_questions")
-    question = models.ForeignKey('Question', on_delete=models.CASCADE, related_name="type_questions")
-
-    class Meta:
-        unique_together = ('session_number', 'session_type', 'question')
-
+#=====Question=====
 class Question(models.Model): #HOLDER FOR ALL QUESTIONS
     ANSWER_TYPES = [
         ('Yes/No', 'Yes/No'),
@@ -631,20 +622,28 @@ class Question(models.Model): #HOLDER FOR ALL QUESTIONS
         text = (self.ques_question_text or "")[:50]
         return f"[{category}] {text}"
 
+class SessionTypeQuestion(models.Model):
+    session_number = models.IntegerField()  # 1, 2, 3, 4, 5.
+    #Fk
+    session_type = models.ForeignKey(SessionType, on_delete=models.CASCADE, related_name="type_questions")
+    question = models.ForeignKey('Question', on_delete=models.CASCADE, related_name="type_questions")
+
+    class Meta:
+        unique_together = ('session_number', 'session_type', 'question')
+
 class SessionQuestion(models.Model):
     sq_id = models.AutoField(primary_key=True)
     sq_is_required = models.BooleanField(default=False)
 
-    
-
-     # For ad-hoc custom questions
-    sq_custom_text = EncryptedTextField(null=True, blank=True)
-    sq_custom_answer_type = EncryptedCharField(max_length=512, choices=Question.ANSWER_TYPES, null=True, blank=True)
+    # For ad-hoc custom questions
+    sq_custom_text = models.TextField(null=True, blank=True)
+    sq_custom_answer_type = models.CharField(max_length=20, choices=Question.ANSWER_TYPES, null=True, blank=True)
 
     # Direct answer fields
-    sq_value = EncryptedTextField(null=True, blank=True)
-    sq_note = EncryptedTextField(null=True, blank=True)
-    #Fk
+    sq_value = models.TextField(null=True, blank=True)
+    sq_note = models.TextField(null=True, blank=True)
+    
+    #foreign keys
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='session_questions')
     question = models.ForeignKey(Question, on_delete=models.PROTECT, related_name='session_questions', null=True, blank=True)
 
