@@ -59,6 +59,18 @@ export const ROUTES = {
 
   //nurse
   NURSE_DASHBOARD: "nurse/",
+  NURSE_SCHEDULE: "/nurse/schedule",
+  NURSE_CASE_RECORDS: "/nurse/case-records",
+  NURSE_SESSIONS: "/nurse/sessions",
+  NURSE_VIEW_SESSION: "/nurse/sessions/:sess_id",
+  NURSE_START_SESSION: "/nurse/sessions/:sess_id/start",
+  NURSE_SERVICES: "/nurse/services",
+  NURSE_VICTIMS: "/nurse/victims",
+  NURSE_VICTIM_DETAIL: "/nurse/victims/:vic_id",
+  NURSE_SEARCH_FACIAL: "/nurse/victims/search-facial",
+
+  // psychometrician
+  PSYCHOMETRICIAN_DASHBOARD: "psychometrician/",
 
   // landing page
   LANDING: "/landing",
