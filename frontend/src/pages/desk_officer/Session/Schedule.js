@@ -32,7 +32,7 @@ export default function Schedule({ victim, incident, back, next }) {
       };
 
       const res = await api.post(
-        "/api/desk_officer/sessions/create_sched/",
+        "/api/social_worker/sessions/",
         payload
       );
 
