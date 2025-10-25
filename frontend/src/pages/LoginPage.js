@@ -1,5 +1,6 @@
 // LoginPage.js
 import React, { useRef, useState, useEffect, useContext } from "react";
+import { useLocation } from "react-router-dom";
 import Webcam from "react-webcam";
 import { useNavigate } from "react-router-dom";
 import "./LoginPage.css";
@@ -582,6 +583,14 @@ const LoginPage = () => {
   useEffect(() => {
     setAnimateIn(true);
   }, []);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.openRegister) {
+      setShowRegisterModal(true);
+    }
+  }, [location.state]);
 
   return (
     <div

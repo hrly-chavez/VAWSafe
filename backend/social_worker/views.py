@@ -33,7 +33,7 @@ def register_victim(request):
     Unified endpoint:
     - Creates Victim (+ profile photo)
     - Stores victim face samples + embeddings (best-effort)
-    - Optionally creates CaseReport, IncidentInformation, Perpetrator
+    - Optionally creates IncidentInformation, Perpetrator
     """
 
     def parse_json_field(key):
@@ -116,16 +116,7 @@ def register_victim(request):
                 return Response({"success": False, "error": "No photos could be saved."},
                                 status=status.HTTP_400_BAD_REQUEST)
 
-        # 3) CaseReport (optional)
-        case_report = None
-        case_report_data = parse_json_field("case_report")
-        if case_report_data:
-            c_ser = CaseReportSerializer(data=case_report_data)
-            if not c_ser.is_valid():
-                print("[case_report] errors:", c_ser.errors)
-                return Response({"success": False, "errors": c_ser.errors},
-                                status=status.HTTP_400_BAD_REQUEST)
-            case_report = c_ser.save(victim=victim)
+        
 
         # 4) Perpetrator (optional)
         perpetrator = None
@@ -191,7 +182,6 @@ def register_victim(request):
         return Response({
             "success": True,
             "victim": VictimSerializer(victim).data,
-            "case_report": CaseReportSerializer(case_report).data if case_report else None,
             "incident": IncidentInformationSerializer(incident).data if incident else None,
             "perpetrator": PerpetratorSerializer(perpetrator).data if perpetrator else None,
             "username": username,
