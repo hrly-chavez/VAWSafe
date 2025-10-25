@@ -586,7 +586,7 @@ class Session(models.Model):
     # foreign key
     incident_id = models.ForeignKey(IncidentInformation, on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
     assigned_official = models.ManyToManyField("Official",related_name="assigned_sessions",blank=True)
-    sess_type = models.ManyToManyField("SessionType", related_name="sessions")
+    sess_type = models.ManyToManyField("SessionType", related_name= "sessions")
     
     def __str__(self):
         victim_name = (

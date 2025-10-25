@@ -309,27 +309,31 @@ class search_victim_facial(APIView):
     allowed_roles = ['Social Worker']
 
 #========================================SESSIONS====================================================
-
 class scheduled_session_lists(generics.ListAPIView):
-    """
-    GET: List all sessions (Pending & Ongoing) assigned to the logged-in social worker.
-    Used for the main Sessions page.
-    """
     serializer_class = SocialWorkerSessionSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return (
-                Session.objects.filter(
-                    assigned_official__in=[user.official],
-                    sess_status__in=["Pending", "Ongoing"]
-                )
-                .distinct()
-                .order_by("sess_status", "sess_next_sched")
-            )
-        return Session.objects.none()
+        if not hasattr(user, "official") or user.official.of_role != "Social Worker":
+            return Session.objects.none()
+
+        # Step 1: Get all sessions assigned to this official
+        assigned_sessions = Session.objects.filter(
+            assigned_official__in=[user.official]
+        ).distinct()
+
+        # Step 2: Filter manually (since sess_status is encrypted)
+        filtered_sessions = [
+            s for s in assigned_sessions
+            if s.sess_status in ("Pending", "Ongoing")
+        ]
+
+        # Step 3: Sort by status then schedule
+        filtered_sessions.sort(key=lambda s: (s.sess_status, s.sess_next_sched or now()))
+
+        return filtered_sessions
+
 
 class scheduled_session_detail(generics.RetrieveUpdateAPIView):  
     """
