@@ -322,7 +322,6 @@ class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):
             "sess_description",
             "victim",
             "incident",
-            "case_report",
             "official_names",      # ← FIXED
             "questions",
             "services_given",
