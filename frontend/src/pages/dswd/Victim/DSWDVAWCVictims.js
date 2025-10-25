@@ -55,7 +55,7 @@ export default function DSWDVAWCVictims() {
         setLoading(true);
 
         const params = {};
-        if (gender !== "All") params.vic_sex = gender;
+        // if (gender !== "All") params.vic_sex = gender;
         if (province !== "All") params.province = province;
         if (municipality !== "All") params.municipality = municipality;
         if (barangay !== "All") params.barangay = barangay;
@@ -71,7 +71,8 @@ export default function DSWDVAWCVictims() {
     };
 
     fetchVictims();
-  }, [gender, province, municipality, barangay]); // re-fetch when filters change
+  }, [province, municipality, barangay]); // re-fetch when filters change
+    //[gender, province, municipality, barangay]); // re-fetch when filters change
 
   return (
     <>
@@ -85,22 +86,22 @@ export default function DSWDVAWCVictims() {
           {/* Left side: filters */}
           <div className="flex flex-wrap items-end gap-4">
             {/* Gender */}
-            <div className="flex flex-col">
+            {/* <div className="flex flex-col">
               <label
                 htmlFor="gender"
                 className="mb-1 text-sm font-medium text-neutral-800"
               >
                 Gender
-              </label>
+              </label> */}
               {/* Gender */}
-              <select value={gender} onChange={(e) => setGender(e.target.value)}
+              {/* <select value={gender} onChange={(e) => setGender(e.target.value)}
                 className="h-10 w-48 rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900 outline-none ring-0 focus:border-neutral-400 focus:outline-none"
                 >
                 <option>All</option>
                 <option>Male</option>
                 <option>Female</option>
               </select>
-            </div>
+            </div> */}
             <div className="flex flex-col">
               <label
                 htmlFor="type"
