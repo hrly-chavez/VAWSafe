@@ -331,7 +331,6 @@ class scheduled_session_lists(generics.ListAPIView):
             )
         return Session.objects.none()
 
-
 class scheduled_session_detail(generics.RetrieveUpdateAPIView):  
     """
     GET: Retrieve a single session detail.

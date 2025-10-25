@@ -1,4 +1,4 @@
-// src/pages/desk_officer/Session/Schedule.js
+// src/pages/social_worker/Sessions/Schedule.js
 import { useState, useEffect } from "react";
 import api from "../../../api/axios";
 import { CheckCircleIcon, PlayCircleIcon } from "@heroicons/react/24/solid";
@@ -21,45 +21,42 @@ export default function Schedule({ victim, incident, back, next }) {
   const [loadingSW, setLoadingSW] = useState(true);
 
   const handleSubmitSchedule = async () => {
-    try {
-      const payload = {
+  try {
+    const payload = {
       incident_id: incident?.incident_id,
       sess_next_sched: `${date}T${time}:00Z`,
       sess_location: location,
       sess_type: selectedTypes.map((t) => t.value),
-      assigned_official: selectedOfficials, // now a list
+      assigned_official: selectedOfficials.map((id) => id),
     };
 
+    const res = await api.post("/api/social_worker/sessions/", payload);
 
-      const res = await api.post(
-        "/api/desk_officer/sessions/create_sched/",
-        payload
+    const readableDate = new Date(res.data.sess_next_sched).toLocaleString(
+      "en-US",
+      { dateStyle: "medium", timeStyle: "short" }
+    );
+
+    alert(`Session scheduled successfully!\nDate: ${readableDate}`);
+    if (next) next();
+  } catch (err) {
+    if (err.response?.data) {
+      console.error("Schedule error:", err.response.data);
+      alert(
+        "Failed to schedule session:\n" +
+          JSON.stringify(err.response.data, null, 2)
       );
-
-      const readableDate = new Date(res.data.sess_next_sched).toLocaleString(
-        "en-US",
-        { dateStyle: "medium", timeStyle: "short" }
-      );
-
-      alert(`Session scheduled successfully!\nDate: ${readableDate}`);
-      if (next) next();
-    } catch (err) {
-      if (err.response?.data) {
-        console.error("Schedule error:", err.response.data);
-        alert(
-          "Failed to schedule session:\n" +
-            JSON.stringify(err.response.data, null, 2)
-        );
-      } else {
-        alert("Failed to schedule session: " + err.message);
-      }
+    } else {
+      alert("Failed to schedule session: " + err.message);
     }
-  };
+  }
+};
+
 
   // Load session types
   useEffect(() => {
     api
-      .get("/api/desk_officer/session-types/")
+      .get("/api/social_worker/session-types/")
       .then((res) => {
         const options = res.data.map((t) => ({
           value: t.id,
@@ -75,7 +72,7 @@ export default function Schedule({ victim, incident, back, next }) {
     try {
       setLoadingSW(true);
       const res = await api.get(
-        `/api/desk_officer/officials/social-workers/?q=${query}`
+        `/api/social_worker/officials/social-workers/?q=${query}`
       );
       setOfficials(res.data);
     } catch (err) {
@@ -84,6 +81,7 @@ export default function Schedule({ victim, incident, back, next }) {
       setLoadingSW(false);
     }
   };
+
 
   useEffect(() => {
     fetchSocialWorkers();
@@ -316,13 +314,13 @@ export default function Schedule({ victim, incident, back, next }) {
         </button>
 
         {/* (Keep commented Start Session button intact) */}
-        <button
+        {/* <button
           onClick={handleStartSession}
           className="flex items-center gap-2 px-6 py-2 rounded-md bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow hover:from-blue-600 hover:to-blue-700 transition-all"
         >
           <PlayCircleIcon className="h-5 w-5" />
           Start Session Now
-        </button>
+        </button> */}
       </div>
     </div>
   );
