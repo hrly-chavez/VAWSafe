@@ -520,7 +520,7 @@ class IncidentInformation(models.Model): #Case in the frontend
             self.city = self.barangay.municipality.city
         elif self.municipality:
             self.city = self.municipality.city
-
+        
         super().save(*args, **kwargs)
 
     def clean(self):
