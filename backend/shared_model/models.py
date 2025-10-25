@@ -507,6 +507,20 @@ class IncidentInformation(models.Model): #Case in the frontend
             self.city = self.barangay.municipality.city
         elif self.municipality:
             self.city = self.municipality.city
+
+        # ✅ Auto-generate victim-specific case number
+        if not self.incident_num and self.vic_id:
+            # Get the last incident for this victim
+            last_incident = (
+                IncidentInformation.objects
+                .filter(vic_id=self.vic_id)
+                .order_by('-incident_num')
+                .first()
+            )
+
+            # If victim has previous cases, increment, otherwise start at 1
+            next_num = (last_incident.incident_num + 1) if last_incident and last_incident.incident_num else 1
+            self.incident_num = next_num
         
         super().save(*args, **kwargs)
 
