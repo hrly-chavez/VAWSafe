@@ -1,9 +1,9 @@
+
 import { useState, useEffect } from "react";
 import api from "../../../api/axios";
 import { CheckCircleIcon, PlayCircleIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
-import SessionTypeQuestionPreview from "./SessionTypeQuestionPreview";
 import WorkerCardSection from "./WorkerCardSection";
 
 export default function Schedule({ victim, incident, back, next }) {
@@ -181,11 +181,7 @@ export default function Schedule({ victim, incident, back, next }) {
           />
         </div>
 
-        {/* Preview of Questions */}
-        <SessionTypeQuestionPreview
-          sessionNum={(incident?.sessions?.length || 0) + 1}
-          selectedTypes={selectedTypes}
-        />
+
       </div>
 
       {/* Actions */}
@@ -199,8 +195,8 @@ export default function Schedule({ victim, incident, back, next }) {
         )}
         <button
           onClick={handleSubmitSchedule}
-          className="flex items-center gap-2 px-6 py-2 rounded-md bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold shadow hover:from-green-600 hover:to-green-700 transition-all"
-        >
+          className="flex items-center gap-2 px-6 py-2 rounded-md bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold shadow hover:from-green-600 hover:to-green-700 transition-all">
+
           <CheckCircleIcon className="h-5 w-5" />
           Submit to Schedule Session
         </button>

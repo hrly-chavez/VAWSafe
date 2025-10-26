@@ -492,7 +492,18 @@ class IncidentInformation(models.Model): #Case in the frontend
 
 
     def save(self, *args, **kwargs):
-        # Auto-fill hierarchy like in Victim & Official
+        # Auto-assign case number if not already set
+        if not self.incident_num and self.vic_id_id:
+            last_case_num = (
+                IncidentInformation.objects
+                .filter(vic_id=self.vic_id)
+                .order_by("-incident_num")
+                .values_list("incident_num", flat=True)
+                .first()
+            )
+            self.incident_num = (last_case_num or 0) + 1
+
+        # Auto-fill hierarchy (same as before)
         if self.street:
             self.sitio = self.street.sitio
             self.barangay = self.street.sitio.barangay
@@ -507,8 +518,9 @@ class IncidentInformation(models.Model): #Case in the frontend
             self.city = self.barangay.municipality.city
         elif self.municipality:
             self.city = self.municipality.city
-        
+
         super().save(*args, **kwargs)
+
 
     def clean(self):
         """Ensure location hierarchy is consistent"""
@@ -585,9 +597,12 @@ class Session(models.Model):
     
     # foreign key
     incident_id = models.ForeignKey(IncidentInformation, on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
-    assigned_official = models.ManyToManyField("Official",related_name="assigned_sessions",blank=True)
+    assigned_official = models.ManyToManyField(Official,through='SessionProgress',related_name='official_sessions')
     sess_type = models.ManyToManyField("SessionType", related_name= "sessions")
     
+    def all_officials_done(self):
+        return not self.progress.filter(is_done=False).exists()
+
     def __str__(self):
         victim_name = (
             f"{self.incident_id.vic_id.vic_last_name}, {self.incident_id.vic_id.vic_first_name}"
@@ -595,7 +610,21 @@ class Session(models.Model):
             else "No Victim"
         )
         return f"Session {self.sess_id} - Victim: {victim_name}" 
-    
+
+class SessionProgress(models.Model):
+    session = models.ForeignKey('Session', on_delete=models.CASCADE, related_name='progress')
+    official = models.ForeignKey('Official', on_delete=models.CASCADE)
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+    is_done = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('session', 'official')
+
+    def __str__(self):
+        return f"{self.official} - {self.session} ({'Done' if self.is_done else 'Pending'})"
+
 #=====Question=====
 class Question(models.Model): #HOLDER FOR ALL QUESTIONS
     ANSWER_TYPES = [
@@ -643,6 +672,9 @@ class SessionQuestion(models.Model):
     sq_value = models.TextField(null=True, blank=True)
     sq_note = models.TextField(null=True, blank=True)
     
+     # Who answered this question (nullable for unanswered)
+    answered_by = models.ForeignKey('Official', on_delete=models.SET_NULL, null=True, blank=True, related_name='answered_session_questions')
+    answered_at = models.DateTimeField(null=True, blank=True)
     #foreign keys
     session = models.ForeignKey(Session, on_delete=models.CASCADE, related_name='session_questions')
     question = models.ForeignKey(Question, on_delete=models.PROTECT, related_name='session_questions', null=True, blank=True)
@@ -763,7 +795,7 @@ class LoginTracker(models.Model):
         User,
         on_delete=models.CASCADE,
         related_name="login_logs",
-        null=True,        # ✅ Allow null for failed logins
+        null=True,        #  Allow null for failed logins
         blank=True
     )
     username_attempted = models.CharField(max_length=150, null=True, blank=True)
