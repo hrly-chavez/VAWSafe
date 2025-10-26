@@ -564,36 +564,6 @@ class Evidence(models.Model):
         return f"Evidence {self.id} for Incident {self.incident_id}"
     
 #=======================================SESSSION================================== 
-class Session(models.Model):
-
-    SESSION_STAT =[
-        ('Pending', 'Pending'),
-        ('Ongoing', 'Ongoing'), 
-        ('Done', 'Done'),
-    ]
-    
-    sess_id = models.AutoField(primary_key=True)
-    sess_num = models.IntegerField(null=True, blank=True)
-    sess_status = EncryptedCharField(max_length=512,choices=SESSION_STAT, default='Pending') 
-    sess_next_sched = EncryptedDateTimeField(null=True, blank=True) # if scheduled session
-    sess_date_today = EncryptedDateTimeField(null=True, blank=True)   #if start now
-    sess_location = EncryptedCharField(max_length=512, null=True, blank=True)
-    sess_description = EncryptedTextField(null=True, blank=True)
-    
-    
-    # foreign key
-    incident_id = models.ForeignKey(IncidentInformation, on_delete=models.CASCADE, related_name='sessions',null=True, blank=True)
-    assigned_official = models.ManyToManyField("Official",related_name="assigned_sessions",blank=True)
-    sess_type = models.ManyToManyField("SessionType", related_name="sessions")
-    
-    def __str__(self):
-        victim_name = (
-            f"{self.incident_id.vic_id.vic_last_name}, {self.incident_id.vic_id.vic_first_name}"
-            if self.incident_id and self.incident_id.vic_id
-            else "No Victim"
-        )
-        return f"Session {self.sess_id} - Victim: {victim_name}" 
-    
 class SessionType(models.Model):
     SESSION_TYPES = [
         ('Intake / Initial Assessment', 'Intake / Initial Assessment'),
