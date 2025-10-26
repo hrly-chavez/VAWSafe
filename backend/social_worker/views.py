@@ -1,4 +1,4 @@
-import os, tempfile, traceback, json
+import os, tempfile, traceback, json, logging, threading
 
 from rest_framework import generics
 from rest_framework.views import APIView
@@ -13,11 +13,13 @@ from django.db import transaction
 
 from deepface import DeepFace
 from .serializers import *
+import time
 from datetime import date, timedelta
 from PIL import Image
 
 from shared_model.models import *
 from shared_model.permissions import IsRole
+from cryptography.fernet import Fernet
 
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
@@ -208,6 +210,22 @@ class victim_list(generics.ListAPIView):
             ).distinct()
         return Victim.objects.none()
 
+logger = logging.getLogger(__name__)
+
+def cleanup_decrypted_file_later(file_path, victim_id, delay=10):
+    """Helper function to delete the decrypted photo after a delay (in seconds)."""
+    # Sleep for the delay period
+    time.sleep(delay)  # This will correctly wait 10 seconds before deleting the file
+
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            logger.info(f"Successfully deleted decrypted photo for victim {victim_id}")
+        else:
+            logger.warning(f"Decrypted photo for victim {victim_id} not found for cleanup.")
+    except Exception as e:
+        logger.error(f"Failed to delete decrypted photo for victim {victim_id}: {e}")
+
 class victim_detail(generics.RetrieveAPIView):
     serializer_class = VictimDetailSerializer
     lookup_field = "vic_id"
@@ -222,6 +240,45 @@ class victim_detail(generics.RetrieveAPIView):
             ).distinct()
         return Victim.objects.none()
 
+    def retrieve(self, request, *args, **kwargs):
+        # Get the victim object
+        victim = self.get_object()
+
+        decrypted_photo_path = None
+
+        # Check if the vic_photo is encrypted
+        if victim.vic_photo.name.endswith('.enc'):
+            try:
+                # Decrypt the photo
+                logger.info(f"Decrypting photo for victim {victim.vic_id}")
+                fernet = Fernet(settings.FERNET_KEY)
+                with open(victim.vic_photo.path, "rb") as enc_file:
+                    encrypted_data = enc_file.read()
+
+                decrypted_data = fernet.decrypt(encrypted_data)
+
+                # Save the decrypted data to the MEDIA_ROOT directory temporarily
+                decrypted_photo_path = os.path.join(settings.MEDIA_ROOT, f"decrypted_{victim.vic_id}.jpg")
+                with open(decrypted_photo_path, 'wb') as decrypted_file:
+                    decrypted_file.write(decrypted_data)
+
+                # Update the victim's photo to the temporary decrypted file path
+                victim.vic_photo.name = os.path.relpath(decrypted_photo_path, settings.MEDIA_ROOT)
+
+            except Exception as e:
+                logger.error(f"Failed to decrypt photo for victim {victim.vic_id}: {e}")
+                return Response({"error": f"Failed to decrypt photo: {str(e)}"}, status=400)
+
+        # Use the serializer to return the victim data
+        serializer = self.get_serializer(victim)
+
+        # Start a background thread to delete the decrypted file after 10 seconds
+        if decrypted_photo_path:
+            threading.Thread(target=cleanup_decrypted_file_later, args=(decrypted_photo_path, victim.vic_id, 10)).start()
+
+        # Return the victim data immediately
+        return Response(serializer.data)
+
 # retrieve all information related to case (Social Worker)
 class VictimIncidentsView(generics.ListAPIView):
     serializer_class = IncidentInformationSerializer
@@ -233,8 +290,28 @@ class VictimIncidentsView(generics.ListAPIView):
         return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by('incident_num')
    
 class search_victim_facial(APIView):
-
     parser_classes = [MultiPartParser, FormParser]
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['Social Worker']
+
+    def decrypt_temp_file(self, encrypted_path):
+        """Decrypt .enc image into a temporary .jpg file."""
+        fernet = Fernet(settings.FERNET_KEY)
+        try:
+            with open(encrypted_path, "rb") as enc_file:
+                encrypted_data = enc_file.read()
+            decrypted_data = fernet.decrypt(encrypted_data)
+
+            # Save the decrypted data to a temporary file with delete=True
+            temp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+            temp.write(decrypted_data)
+            temp.flush()
+            temp.close()
+
+            return temp.name
+        except Exception as e:
+            print(f"Error decrypting file {encrypted_path}: {e}")
+            return None
 
     def post(self, request):
         uploaded_file = request.FILES.get("frame")
@@ -242,7 +319,7 @@ class search_victim_facial(APIView):
         if not uploaded_file:
             return Response({"error": "No image uploaded."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Save temp image
+        # Save the temporary image
         try:
             temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
             temp_image.write(uploaded_file.read())
@@ -252,17 +329,28 @@ class search_victim_facial(APIView):
         except Exception as e:
             return Response({"error": f"Failed to save uploaded image: {str(e)}"}, status=400)
 
-        # Step 1: Compare with all VictimFaceSamples
         best_match = None
         best_sample = None
         lowest_distance = float("inf")
+        decrypted_temp_files = []  # List to keep track of decrypted temp files
 
         try:
             for sample in VictimFaceSample.objects.select_related("victim"):
                 try:
+                    # Check if the photo is encrypted (.enc)
+                    photo_path = sample.photo.path
+                    if photo_path.lower().endswith(".enc"):
+                        decrypted_photo_path = self.decrypt_temp_file(photo_path)
+                        if decrypted_photo_path:
+                            photo_path = decrypted_photo_path
+                            decrypted_temp_files.append(decrypted_photo_path)  # Track decrypted files
+                        else:
+                            continue  # Skip this sample if decryption fails
+
+                    # Perform face verification
                     result = DeepFace.verify(
                         img1_path=chosen_frame,
-                        img2_path=sample.photo.path,
+                        img2_path=photo_path,
                         model_name="ArcFace",
                         enforce_detection=True
                     )
@@ -302,11 +390,14 @@ class search_victim_facial(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         finally:
+            # Clean up the temporary image files
             if chosen_frame and os.path.exists(chosen_frame):
                 os.remove(chosen_frame)
 
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker']
+            # Clean up decrypted temp files after comparison
+            for f in decrypted_temp_files:
+                if os.path.exists(f):
+                    os.remove(f)
 
 #========================================SESSIONS====================================================
 class scheduled_session_lists(generics.ListAPIView):

@@ -847,6 +847,7 @@ const LoginPage = () => {
             setAutoDSWDRegister(false); // reset after closing modal
           }}
           defaultRole={autoDSWDRegister ? "DSWD" : "Social Worker"}
+          // defaultRole="DSWD" // always set "DSWD" as default role
         />
       )}
 

@@ -339,7 +339,7 @@ useEffect(() => {
                   // Allow selection if DSWD exists
                   defaultRole ? (
                     Array.isArray(defaultRole) ? (
-                      // ✅ Case: DSWD can choose between multiple roles (e.g. ["Social Worker", "VAWDesk"])
+                      // Case 1: DSWD exists, check if defaultRole is provided
                       <div className="flex flex-col">
                         <label className="font-medium text-sm mb-1">Role</label>
                         <div className="relative">
@@ -359,7 +359,7 @@ useEffect(() => {
                         </div>
                       </div>
                     ) : (
-                      // ✅ Case: Single defaultRole passed (e.g. "Social Worker" or "VAWDesk")
+                      // Case 1.2: If defaultRole is a single string, display it as a readonly input
                       <div className="flex flex-col">
                         <label className="font-medium text-sm mb-1">Role</label>
                         <input
@@ -371,7 +371,7 @@ useEffect(() => {
                       </div>
                     )
                   ) : (
-                    // ✅ Case: Role needs to be selected manually (fallback)
+                    // Case 2: If no defaultRole is passed, allow manual role selection (fallback)
                     <div className="flex flex-col">
                       <label className="font-medium text-sm mb-1">Role</label>
                       <select
@@ -387,7 +387,7 @@ useEffect(() => {
                     </div>
                   )
                 ) : (
-                  // ✅ Case: Force DSWD role if first-time
+                  // Case 3: If DSWD does not exist, force "DSWD" as the role (first-time setup)
                   <div className="flex flex-col">
                     <label className="font-medium text-sm mb-1">Role</label>
                     <input

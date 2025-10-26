@@ -219,7 +219,8 @@ export default function AccountManagement() {
       {showRegisterModal &&(
         <RegisterUser
           onClose={() => setShowRegisterModal(false)}
-          defaultRole= {["Social Worker", "Nurse", "Psychometrician"]}
+          //if ang default role kay i uncomment bati kaayo ug result so tang tangon ni para ang katung morun kay ang 3 condition sa register user
+          // defaultRole= {["Social Worker", "Nurse", "Psychometrician"]}
         />
       )}
     </div>
