@@ -80,37 +80,32 @@ export default function Sidebar() {
         {
           icon: "/images/dashboardnew.png",
           label: "Dashboard",
-          path: "/social_worker",
-        },
-        {
-          icon: "/images/add.png",
-          label: "Register Victim",
-          path: "/social_worker/register-victim",
+          path: "/psychometrician",
         },
         {
           icon: "/images/heart.png",
           label: "VAWC Victims",
-          path: "/social_worker/victims",
+          path: "/psychometrician/victims",
         },
         {
           icon: "/images/case.png",
           label: "Case Records",
-          path: "/social_worker/case-records",
+          path: "/psychometrician/case-records",
         },
         {
           icon: "/images/meeting.png",
           label: "Scheduled Sessions",
-          path: "/social_worker/sessions",
+          path: "/psychometrician/sessions",
         },
         {
           icon: "/images/calendar.png",
           label: "My Schedule",
-          path: "/social_worker/schedule",
+          path: "/psychometrician/schedule",
         },
         {
           icon: "/images/peace.png",
           label: "Services",
-          path: "/social_worker/services",
+          path: "/psychometrician/services",
         },
         {
           icon: "/images/logout.png",

@@ -147,6 +147,31 @@ const NurseSchedule = lazy(() => import("./pages/nurse/Schedule/Schedule"));
 const PsychDashboard = lazy(() =>
   import("./pages/psychometrician/Dashboard/Dashboard")
 );
+const PsychCaseRecords = lazy(() =>
+  import("./pages/psychometrician/CaseRecords/CaseRecords")
+);
+const PsychSessions = lazy(() =>
+  import("./pages/psychometrician/Sessions/Sessions")
+);
+const PsychServices = lazy(() =>
+  import("./pages/psychometrician/Services/Services")
+);
+const PsychVictims = lazy(() =>
+  import("./pages/psychometrician/Victims/Victims")
+);
+const PsychVictimDetailPage = lazy(() =>
+  import("./pages/psychometrician/Victims/VictimDetailPage")
+);
+const PsychSearchVictimFacial = lazy(() =>
+  import("./pages/psychometrician/Victims/SearchVictimFacial")
+);
+const PsychViewSessions = lazy(() =>
+  import("./pages/psychometrician/Sessions/ViewSessions")
+);
+const PsychSocialWorkerStartSession = lazy(() =>
+  import("./pages/psychometrician/Sessions/StartSession")
+);
+const PsychSchedule = lazy(() => import("./pages/nurse/Schedule/Schedule"));
 
 export default function App() {
   return (
@@ -376,6 +401,42 @@ export default function App() {
               <Route
                 path={ROUTES.PSYCHOMETRICIAN_DASHBOARD}
                 element={<PsychDashboard />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_CASE_RECORDS}
+                element={<PsychCaseRecords />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_SESSIONS}
+                element={<PsychSessions />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_SERVICES}
+                element={<PsychServices />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_VICTIMS}
+                element={<PsychVictims />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_VICTIM_DETAIL}
+                element={<PsychVictimDetailPage />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_SEARCH_FACIAL}
+                element={<PsychSearchVictimFacial />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_VIEW_SESSION}
+                element={<PsychViewSessions />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_START_SESSION}
+                element={<PsychSocialWorkerStartSession />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_SCHEDULE}
+                element={<PsychSchedule />}
               />
             </Route>
 
