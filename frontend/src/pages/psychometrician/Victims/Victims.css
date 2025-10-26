@@ -1,0 +1,274 @@
+/* Make content full width for this page */
+:root .sw-layout > .sw-content {
+  max-width: none !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: clamp(16px, 1vw, 20px) !important;
+  flex: 1 1 auto;
+  box-sizing: border-box;
+}
+
+/* Page wrapper */
+.sw-victims-page {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Card styling */
+.sw-victims-card {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: clamp(16px, 1.8vw, 24px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Headings */
+.sw-victims-card .victimstext {
+  font-size: clamp(22px, 2.2vw, 28px);
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: #1f2937;
+}
+.sw-victims-card .list-text {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 16px 0;
+}
+
+/* Controls row */
+.sw-victims-card .row-one {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) repeat(2, minmax(180px, 260px));
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+/* Search bar */
+.sw-victims-card .search { position: relative; display: flex; align-items: center; }
+.sw-victims-card .searchbar {
+  width: 100%; height: 40px; padding: 0 40px 0 12px;
+  border: 1px solid #e5e7eb; border-radius: 10px; outline: none; font-size: 14px;
+}
+.sw-victims-card .search img { position: absolute; right: 10px; height: 18px; width: 18px; pointer-events: none; }
+
+/* Filters */
+.sw-victims-card .row-one-filter { display: grid; grid-auto-flow: column; grid-auto-columns: max-content; gap: 16px; }
+.sw-victims-card .filter-group { display: flex; flex-direction: column; gap: 6px; }
+.sw-victims-card .filter-group label { font-size: 13px; color: #374151; }
+.sw-victims-card .filter-group select {
+  height: 40px; min-width: 180px; padding: 0 12px; border: 1px solid #e5e7eb;
+  border-radius: 10px; background: #fff; font-size: 14px; outline: none;
+}
+
+/* Table */
+.sw-victims-card .table-container {
+  margin-top: 8px;
+  background: #ffffff;
+  border: 1px solid #f3f4f6;
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: min(62vh, 720px);
+  overflow: auto;
+}
+.sw-victims-card .table-victims {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.sw-victims-card .table-victims thead th {
+  position: sticky; top: 0; background: #f9fafb; color: #374151; font-weight: 600; font-size: 14px;
+  text-align: left; padding: 12px 14px; border-bottom: 1px solid #e5e7eb; z-index: 1;
+}
+.sw-victims-card .table-victims tbody td {
+  padding: 12px 14px; font-size: 14px; color: #111827; border-bottom: 1px solid #f3f4f6;
+}
+.sw-victims-card .table-victims tbody tr:hover { background: #f9fafb; }
+.sw-victims-card .table-victims a { color: #2563eb; text-decoration: none; }
+.sw-victims-card .table-victims a:hover { text-decoration: underline; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .sw-victims-card .row-one { grid-template-columns: 1fr; }
+  .sw-victims-card .row-one-filter { grid-auto-flow: row; grid-template-columns: 1fr 1fr; }
+  .sw-victims-card .filter-group select { min-width: 0; }
+}
+@media (max-width: 600px) {
+  .sw-victims-card .row-one-filter { grid-template-columns: 1fr; }
+  .sw-victims-card .table-victims { min-width: 600px; }
+}
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-view, .btn-edit, .btn-delete {
+  padding: 4px 10px;
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-view {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-edit {
+  background-color: #f1c40f;
+  color: black;
+}
+
+.btn-delete {
+  background-color: #e74c3c;
+  color: white;
+}
+/* Header row for list + button */
+.victim-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.btn-search-facial {
+  background-color: #10b981; /* green */
+  color: white;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-search-facial:hover {
+  background-color: #059669;
+}
+/* === Facial Search Modal === */
+.facial-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.facial-modal {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 500px;
+  max-width: 95%;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  position: relative;
+  animation: modalFadeIn 0.25s ease-out;
+}
+
+.facial-modal h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  text-align: center;
+  color: #1f2937;
+}
+
+.facial-modal .close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+
+.facial-modal .close-btn:hover {
+  color: #111827;
+}
+
+.facial-modal button {
+  width: 100%;
+  margin-top: 16px;
+  padding: 10px;
+  font-size: 15px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  background: #2563eb;
+  color: #fff;
+  transition: background 0.2s ease-in-out;
+}
+
+.facial-modal button:hover:not(:disabled) {
+  background: #1e4fc3;
+}
+
+.facial-modal p {
+  margin-top: 12px;
+  font-size: 14px;
+  text-align: center;
+  color: #dc2626; /* red for errors */
+}
+
+/* Webcam preview */
+.facial-modal .webcam-preview {
+  display: block;
+  margin: 0 auto;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+
+
+/* Modal header row (title + close button) */
+.facial-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.facial-modal .modal-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: #1f2937;
+}
+
+.facial-modal .modal-header .close-btn {
+  all: unset;
+  font-size: 20px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.facial-modal .modal-header .close-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+/* Animation */
+@keyframes modalFadeIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

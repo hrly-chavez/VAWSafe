@@ -71,6 +71,15 @@ export const ROUTES = {
 
   // psychometrician
   PSYCHOMETRICIAN_DASHBOARD: "psychometrician/",
+  PSYCHOMETRICIAN_SCHEDULE: "/psychometrician/schedule",
+  PSYCHOMETRICIAN_CASE_RECORDS: "/psychometrician/case-records",
+  PSYCHOMETRICIAN_SESSIONS: "/psychometrician/sessions",
+  PSYCHOMETRICIAN_VIEW_SESSION: "/psychometrician/sessions/:sess_id",
+  PSYCHOMETRICIAN_START_SESSION: "/psychometrician/sessions/:sess_id/start",
+  PSYCHOMETRICIAN_SERVICES: "/psychometrician/services",
+  PSYCHOMETRICIAN_VICTIMS: "/psychometrician/victims",
+  PSYCHOMETRICIAN_VICTIM_DETAIL: "/psychometrician/victims/:vic_id",
+  PSYCHOMETRICIAN_SEARCH_FACIAL: "/psychometrician/victims/search-facial",
 
   // landing page
   LANDING: "/landing",
