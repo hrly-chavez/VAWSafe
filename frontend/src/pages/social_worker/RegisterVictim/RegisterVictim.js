@@ -122,15 +122,6 @@ export default function RegisterVictim() {
       }
 
       // Victim payload
-      const informantPayload = {};
-      INFORMANT_FIELDS.forEach((k) => {
-        const v = formDataState[k];
-        if (v !== undefined && v !== null && v !== "") {
-          informantPayload[k] = v;
-        }
-      });
-
-      // Victim payload
       const victimPayload = {};
       VICTIM_FIELDS.forEach((k) => {
         const v = formDataState[k];
