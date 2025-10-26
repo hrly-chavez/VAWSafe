@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 // Helper: Convert 24-hour format to 12-hour
 const formatTo12Hour = (range) => {
@@ -50,6 +50,9 @@ export default function WorkerCardSection({
       year: "numeric",
     });
   };
+   useEffect(() => {
+    console.log("Officials data:", officials);
+  }, [officials]); // runs every time officials change
 
   return (
     <div>
@@ -94,6 +97,7 @@ export default function WorkerCardSection({
                 {/* Header Info */}
                 <div className="mb-2">
                   <h4 className="font-semibold text-blue-800">{worker.full_name}</h4>
+                  <p className="text-xs text-gray-600 italic">{worker.role || "No Role"}</p>
                   <p className="text-xs text-gray-500">Contact: {worker.contact || "N/A"}</p>
                 </div>
 

@@ -22,7 +22,9 @@ export default function StartSession() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [categoryServices, setCategoryServices] = useState([]);
   const [selectedServices, setSelectedServices] = useState([]);
-
+  const [progress, setProgress] = useState(null);   
+  const [role, setRole] = useState("");
+  const [isDone, setIsDone] = useState(false);
 
 
 
@@ -56,14 +58,16 @@ export default function StartSession() {
       const sess = detailRes.data;
 
       if (sess.sess_status === "Pending") {
-        // Start the session (hydrate questions)
-        const res = await api.post(`/api/social_worker/sessions/${sess_id}/start/`);
-        setQuestions(res.data.questions);
-        setSession(res.data);
+        const response = await api.post(`/api/social_worker/sessions/${sess_id}/start/`);
+        setSession(response.data);
+        setQuestions(response.data.questions || []);
+        setRole(response.data?.my_progress?.official_role || response.data?.my_progress?.role || "");
+        setIsDone(response.data?.my_progress?.is_done || false);
       } else if (sess.sess_status === "Ongoing") {
-        // Just load existing questions
         setQuestions(sess.questions || []);
         setSession(sess);
+        setRole(sess?.my_progress?.official_role || sess?.my_progress?.role || "");
+        setIsDone(sess?.my_progress?.is_done || false);
       } else {
         alert("This session is already finished.");
         navigate(-1);
@@ -97,10 +101,17 @@ export default function StartSession() {
       sess_description: session?.sess_description || "",
       services: selectedServices.map((s) => s.value),
     };
-    await api.post(`/api/social_worker/sessions/${sess_id}/finish/`, payload);
-    alert("Session finished successfully!");
-    setShowFollowupModal(true); // open modal 
-  } catch (err) {
+    const response = await api.post(`/api/social_worker/sessions/${sess_id}/finish/`, payload);
+    alert("Your part of the session is now marked as completed.");
+
+    // backend returns "all_finished": true/false
+    if (response.data.all_finished) {
+      setShowFollowupModal(true); // only show when everyone finished
+    } else {
+      navigate("/social_worker/sessions"); // go back quietly
+    }
+
+  } catch (err) {       
     console.error("Failed to finish session", err);
     alert("Failed to finish session.");
   }
@@ -109,20 +120,34 @@ export default function StartSession() {
 
   if (loading) return <p className="p-6">Loading session...</p>;
 
-  // Group by category
-  const grouped = questions.reduce((acc, q) => {
-    const cat = q.question_category || "Uncategorized";
-    if (!acc[cat]) acc[cat] = [];
-    acc[cat].push(q);
-    return acc;
-  }, {});
+
+  // Group by category and filter questions by role
+  const grouped = questions
+    .filter(q => {
+      // If no category (custom/ad-hoc), allow everyone
+      if (!q.question_category) return true;
+      // Only include questions that match this official’s role
+      return q.question_category.toLowerCase().trim() === role.toLowerCase().trim();
+    })
+    .reduce((acc, q) => {
+      const cat = q.question_category || "Uncategorized";
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(q);
+      return acc;
+    }, {});
+
+
 
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-6">
       <h2 className="text-2xl font-bold text-green-700 mb-4">
         Start Session & Answer Questions
       </h2>
-
+      {role && (
+        <p className="text-sm text-gray-600 mb-2">
+          Showing questions for role: <span className="font-semibold text-green-700">{role}</span>
+        </p>
+      )}
       {Object.keys(grouped).length === 0 && (
         <p className="text-sm text-gray-500">No questions available.</p>
       )}
@@ -166,16 +191,24 @@ export default function StartSession() {
                   )}
 
                  {(q.question_answer_type || q.sq_custom_answer_type) === "Text" && (
-                    <textarea
-                      value={q.sq_value || ""}
-                      onChange={(e) =>
-                        handleChange(q.sq_id, "sq_value", e.target.value)
-                      }
-                      className="w-full border rounded p-2"
-                      rows={3}
-                      placeholder="Enter your answer..."
-                    />
+                    <>
+                      <textarea
+                          value={q.sq_value || ""}
+                          onChange={(e) => handleChange(q.sq_id, "sq_value", e.target.value)}
+                          className="w-full border rounded p-2"
+                          rows={3}
+                          placeholder="Enter your answer..."
+                          disabled={isDone}
+                        />
+
+                      {q.answered_by && q.answered_by !== progress.official_id && (
+                        <p className="text-xs text-gray-500 mt-1 italic">
+                          Answered by {q.answered_by_name}
+                        </p>
+                      )}
+                    </>
                   )}
+
 
                   {(q.question_answer_type || q.sq_custom_answer_type) === "Multiple Choice" && (
                     <input
@@ -223,7 +256,7 @@ export default function StartSession() {
             {/* Category Dropdown */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Select Service Category
+                Select Service Category 
               </label>
               <Select
                 value={selectedCategory}
@@ -275,12 +308,19 @@ export default function StartSession() {
       {/* Actions */}
       {questions.length > 0 && (
         <div className="flex justify-end gap-4 mt-6">
+          {!isDone && (
           <button
             onClick={handleFinishSession}
             className="px-6 py-2 rounded-md bg-green-600 text-white font-semibold hover:bg-green-700"
           >
             Finish Session
           </button>
+        )}
+        {isDone && (
+          <p className="text-gray-600 italic mt-2 text-sm">
+            You’ve already completed your part of this session.
+          </p>
+        )}
           <button
             onClick={() => navigate(-1)}
             className="px-6 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"

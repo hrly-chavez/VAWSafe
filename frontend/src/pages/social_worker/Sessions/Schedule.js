@@ -4,7 +4,8 @@ import api from "../../../api/axios";
 import { CheckCircleIcon, PlayCircleIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
-import SessionTypeQuestionPreview from "./SessionTypeQuestionPreview";
+import WorkerCardSection from "./WorkerCardSection";
+
 
 export default function Schedule({ victim, incident, back, next }) {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
@@ -103,27 +104,6 @@ export default function Schedule({ victim, incident, back, next }) {
       return range;
     }
   };
-  // Do not touch this function
-  const handleStartSession = async () => {
-    try {
-      const payload = {
-        incident_id: incident?.incident_id,
-        started_now: true,
-        sess_type: [],
-      };
-
-      const res = await api.post("/api/desk_officer/sessions/", payload);
-      const session = res.data;
-
-      navigate("/desk_officer/session/start", {
-        state: { session, victim, incident },
-      });
-    } catch (err) {
-      console.error("Start session error:", err);
-      alert("Failed to start session");
-    }
-  };
-
   // Helper to render day abbreviations in order
   const daysOrder = [
     "Monday",
@@ -192,7 +172,7 @@ export default function Schedule({ victim, incident, back, next }) {
         {/* === Placeholder Filters === */}
         <div className="border-t border-gray-200 pt-4 mt-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-2">
-            Assign Social Worker
+            Assign  Official
           </h3>
           <div className="flex flex-wrap gap-3 mb-3">
             <input
@@ -205,94 +185,27 @@ export default function Schedule({ victim, incident, back, next }) {
               }}
               className="border px-3 py-2 rounded-md w-64 text-sm"
             />
+             <input
+                type="text"
+                placeholder="Search by role (coming soon)"
+                disabled
+                className="border px-3 py-2 rounded-md w-64 text-sm bg-gray-100 cursor-not-allowed"
+              />
           </div>
 
           {/* Cards Section */}
-          {loadingSW ? (
-            <p className="text-sm text-gray-500">Loading social workers...</p>
-          ) : officials.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              No social workers found for this search.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-              {officials.map((sw) => (
-                <div
-                  key={sw.of_id}
-                  className={`border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition ${
-                    selectedOfficials.includes(sw.of_id) ? "ring-2 ring-blue-500" : ""
-                  }`} 
-                >
-                  <div className="mb-2">
-                    <h4 className="font-semibold text-blue-800">
-                      {sw.full_name}
-                    </h4>
-                    <p className="text-xs text-gray-500">
-                      Contact: {sw.contact || "N/A"}
-                    </p>
-                  </div>
-
-                  {/* Weekly Availability */}
-                  <div className="border-t pt-2 mt-2 text-xs text-center grid grid-cols-7 gap-1">
-                    {daysOrder.map((day) => {
-                      const time = sw.availability?.[day];
-                      return (
-                        <div
-                          key={day}
-                          className={`p-1 rounded ${
-                            time
-                              ? "bg-blue-50 text-blue-700 font-medium"
-                              : "bg-gray-50 text-gray-400"
-                          }`}
-                        >
-                          <div className="text-[10px] font-semibold">
-                            {day.slice(0, 3)}
-                          </div>
-                          <div>{time ? formatTo12Hour(time) : "—"}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <div className="flex justify-end mt-3">
-                    <button
-                      onClick={() =>
-                        setSelectedOfficials((prev) =>
-                          prev.includes(sw.of_id)
-                            ? prev.filter((id) => id !== sw.of_id) // deselect
-                            : prev.length < 3
-                            ? [...prev, sw.of_id] // select new
-                            : prev // ignore if already 3
-                        )
-                      }
-                      disabled={
-                        !selectedOfficials.includes(sw.of_id) && selectedOfficials.length >= 3
-                      }
-                      className={`px-3 py-1 rounded-md text-sm font-semibold transition ${
-                        selectedOfficials.includes(sw.of_id)
-                          ? "bg-blue-600 text-white"
-                          : "bg-blue-100 text-blue-700 hover:bg-blue-200"
-                      }`}
-                    >
-                      {selectedOfficials.includes(sw.of_id)
-                        ? "Selected"
-                        : selectedOfficials.length >= 3
-                        ? "Max 3 Selected"
-                        : "Assign This Worker"}
-                    </button>
-
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <WorkerCardSection
+          officials={officials}
+          loadingSW={loadingSW}
+          selectedOfficials={selectedOfficials}
+          setSelectedOfficials={setSelectedOfficials}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          fetchSocialWorkers={fetchSocialWorkers}
+        />
         </div>
 
-        {/* Mapped Questions */}
-        <SessionTypeQuestionPreview
-          sessionNum={(incident?.sessions?.length || 0) + 1}
-          selectedTypes={selectedTypes}
-        />
+        
       </div>
 
       {/* Actions */}
@@ -312,15 +225,6 @@ export default function Schedule({ victim, incident, back, next }) {
           <CheckCircleIcon className="h-5 w-5" />
           Submit to Schedule Session
         </button>
-
-        {/* (Keep commented Start Session button intact) */}
-        {/* <button
-          onClick={handleStartSession}
-          className="flex items-center gap-2 px-6 py-2 rounded-md bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow hover:from-blue-600 hover:to-blue-700 transition-all"
-        >
-          <PlayCircleIcon className="h-5 w-5" />
-          Start Session Now
-        </button> */}
       </div>
     </div>
   );

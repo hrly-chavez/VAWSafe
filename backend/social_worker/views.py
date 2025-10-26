@@ -427,7 +427,6 @@ class scheduled_session_lists(generics.ListAPIView):
 
         return filtered_sessions
 
-
 class scheduled_session_detail(generics.RetrieveUpdateAPIView):  
     """
     GET: Retrieve a single session detail.
@@ -481,42 +480,62 @@ def social_worker_mapped_questions(request):
 @permission_classes([IsAuthenticated])
 def start_session(request, sess_id):
     """
-    POST: Marks a session as Ongoing and hydrates mapped questions into SessionQuestion records.
-    Used when a social worker starts a pending session.
+    POST: Marks a session as Ongoing for this specific official and hydrates mapped questions.
+    Uses SessionProgress to track per-official start times.
     """
     user = request.user
+    official = user.official
+
+    # --- Get session assigned to this official ---
     try:
-        session = Session.objects.get(pk=sess_id, assigned_official=user.official)
+        session = Session.objects.get(pk=sess_id, assigned_official=official)
     except Session.DoesNotExist:
         return Response({"error": "Session not found or not assigned to you"}, status=404)
 
-    # Mark session as ongoing
-    session.sess_status = "Ongoing"
-    session.sess_date_today = timezone.now()
-    session.save()
+    # --- Ensure session is Ongoing ---
+    if session.sess_status == "Pending":
+        session.sess_status = "Ongoing"
+        session.sess_date_today = timezone.now()
+        session.save()
 
-    # Hydrate mapped questions
+    # --- Ensure progress record exists and mark start ---
+    progress, _ = SessionProgress.objects.get_or_create(session=session, official=official)
+    if not progress.started_at:
+        progress.started_at = timezone.now()
+        progress.is_done = False
+        progress.save()
+
+    # --- Hydrate mapped questions ---
     type_ids = list(session.sess_type.values_list("id", flat=True))
-    mappings = SessionTypeQuestion.objects.filter(
+
+    # We cannot query EncryptedCharField directly, so we fetch all then filter manually
+    all_mappings = SessionTypeQuestion.objects.filter(
         session_number=session.sess_num,
         session_type__id__in=type_ids
     ).select_related("question")
 
-    created = []
-    for m in mappings:
-        sq, _ = SessionQuestion.objects.get_or_create(
+    # Filter only those questions that match the official's role
+    filtered_mappings = [
+        m for m in all_mappings
+        if getattr(m.question, "ques_category", None) == official.of_role
+    ]
+
+    print("Official role:", official.of_role)
+    print("Filtered question roles:", [m.question.ques_category for m in filtered_mappings])
+    print("Session number:", session.sess_num)
+    print("Session types:", type_ids)
+
+    # Create SessionQuestion entries for relevant mapped questions
+    for m in filtered_mappings:
+        SessionQuestion.objects.get_or_create(
             session=session,
             question=m.question,
             defaults={"sq_is_required": False}
         )
-        created.append(sq)
 
-    #  serialize session detail (with victim + incident + etc.)
-    session_data = SocialWorkerSessionDetailSerializer(session).data
-    # attach hydrated questions separately
-    session_data["questions"] = SocialWorkerSessionQuestionSerializer(created, many=True).data
-
-    return Response(session_data, status=200)
+    # --- Serialize and respond ---
+    serializer = SocialWorkerSessionDetailSerializer(session, context={"request": request})
+    return Response(serializer.data, status=200)
 
 @api_view(["POST"]) 
 @permission_classes([IsAuthenticated])
@@ -557,50 +576,113 @@ def add_custom_question(request, sess_id):
 @permission_classes([IsAuthenticated])
 def finish_session(request, sess_id):
     """
-    POST: Saves all answers, updates services and description, and marks session as Done.
-    Triggered when the social worker finishes a session.
+    POST: Marks current official's session progress as Done.
+    - Saves provided answers and records who answered them (answered_by, answered_at)
+    - Enforces that an official can only answer questions matching their role (if mapped)
+    - Marks SessionProgress for this official as done, and marks the overall session Done only
+      when all assigned officials finished.
     """
     user = request.user
+    if not hasattr(user, "official"):
+        return Response({"error": "User is not an official"}, status=403)
+
     try:
         session = Session.objects.get(pk=sess_id, assigned_official=user.official)
     except Session.DoesNotExist:
         return Response({"error": "Session not found or not assigned to you"}, status=404)
 
-    # Save answers
     answers = request.data.get("answers", [])
-    for ans in answers:
-        try:
-            sq = SessionQuestion.objects.get(pk=ans["sq_id"], session=session)
-            sq.sq_value = ans.get("value")
-            sq.sq_note = ans.get("note")
-            sq.save()
-        except SessionQuestion.DoesNotExist:
-            continue
+    skipped = []  # collect any skipped answers due to role mismatch or missing sq
+    saved = 0
 
-    # Save description
-    description = request.data.get("sess_description")
-    if description is not None:
-        session.sess_description = description
+    # Save answers inside a transaction to keep data consistent
+    with transaction.atomic():
+        for ans in answers:
+            sq_id = ans.get("sq_id")
+            if not sq_id:
+                continue
+            try:
+                sq = SessionQuestion.objects.select_related("question").get(pk=sq_id, session=session)
+            except SessionQuestion.DoesNotExist:
+                skipped.append({"sq_id": sq_id, "reason": "not_found"})
+                continue
 
-    # Save selected services
-    service_ids = request.data.get("services", [])
-    if isinstance(service_ids, list):
-        # clear old ones
-        session.services_given.all().delete()
-        # create new
-        for sid in service_ids:
-            ServiceGiven.objects.create(
-                session=session,
-                serv_id_id=sid,
-                of_id=user.official
-            )
+            # Server-side role enforcement:
+            # If the question is a mapped question and its category (role) doesn't match the official's role, skip saving.
+            q_role = None
+            if sq.question:
+                q_role = sq.question.ques_category
 
-    # Mark as Done
-    session.sess_status = "Done"
-    session.save()
+            if q_role and user.official.of_role and q_role != user.official.of_role:
+                # skip saving - not allowed for this official
+                skipped.append({"sq_id": sq_id, "reason": "role_mismatch", "question_role": q_role})
+                continue
 
-    return Response({"message": "Session finished successfully!"}, status=200)
+            # Save the provided answer
+            new_value = ans.get("value")
+            new_note = ans.get("note")
 
+            # Only update fields if they changed (optional optimization)
+            changed = False
+            if new_value is not None and new_value != sq.sq_value:
+                sq.sq_value = new_value
+                changed = True
+            if new_note is not None and new_note != sq.sq_note:
+                sq.sq_note = new_note
+                changed = True
+
+            # Always set who answered (even if they edited their previous answer)
+            sq.answered_by = user.official
+            sq.answered_at = timezone.now()
+
+            # Save
+            if changed or True:
+                sq.save(update_fields=["sq_value", "sq_note", "answered_by", "answered_at"])
+                saved += 1
+
+        # Save description (if updated)
+        description = request.data.get("sess_description")
+        if description is not None:
+            session.sess_description = description
+
+        # Save selected services
+        service_ids = request.data.get("services", [])
+        if isinstance(service_ids, list):
+            session.services_given.all().delete()
+            for sid in service_ids:
+                ServiceGiven.objects.create(
+                    session=session,
+                    serv_id_id=sid,
+                    of_id=user.official
+                )
+
+        # Update this official’s progress
+        progress, _ = SessionProgress.objects.get_or_create(
+            session=session,
+            official=user.official,
+        )
+        progress.is_done = True
+        progress.finished_at = timezone.now()
+        progress.save()
+
+        # Update session status only after saving progress
+        if session.all_officials_done():
+            session.sess_status = "Done"
+        else:
+            session.sess_status = "Ongoing"
+        session.save()
+
+    all_finished = session.all_officials_done()
+
+    # Return details including warnings about skipped answers
+    return Response({
+        "message": "Your session progress has been marked as done.",
+        "saved_answers": saved,
+        "skipped_answers": skipped,
+        "session_completed": all_finished,
+        "all_finished": all_finished,
+        "session": SocialWorkerSessionDetailSerializer(session, context={"request": request}).data
+    }, status=200)
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -653,26 +735,31 @@ def schedule_next_session(request):
     
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def list_social_workers(request):
+def list_workers(request):
     """
     GET: Returns list of social workers for assignment (searchable by name).
     Used in NextSessionModal dropdown.
     """
     q = request.query_params.get("q", "").strip()
-    workers = Official.objects.filter(of_role="Social Worker")
-
+    workers = Official.objects.exclude(of_role="DSWD")
+    
+    # Python filter because fields are encrypted
     if q:
-     workers = workers.filter(
-        Q(of_fname__icontains=q) |
-        Q(of_lname__icontains=q) |
-        Q(of_m_initial__icontains=q)
-    )
-
+        workers = [w for w in workers if q.lower() in w.full_name.lower()]
+    
+    # Limit to first 20
     workers = workers[:20]
+    
     data = [
-        {"of_id": w.of_id, "full_name": w.full_name}
+        {
+            "of_id": w.of_id,
+            "full_name": w.full_name,
+            "role": w.of_role,
+            "contact": w.of_contact,
+        }
         for w in workers
     ]
+    
     return Response(data, status=200)
 
 @api_view(["GET"])
