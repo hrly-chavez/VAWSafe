@@ -2,7 +2,7 @@ import Navbar from "../../Navbar";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import SearchVictim from "./SearchVictim";
+import SearchVictim from "../../social_worker/Victims/SearchVictimFacial";
 import api from "../../../api/axios";
 
 export default function DSWDVAWCVictims() {
@@ -21,6 +21,11 @@ export default function DSWDVAWCVictims() {
   const [provinces, setProvinces] = useState([]);
   const [municipalities, setMunicipalities] = useState([]);
   const [barangays, setBarangays] = useState([]);
+
+  //age filtering
+  const [ageMin, setAgeMin] = useState(""); // Minimum age
+  const [ageMax, setAgeMax] = useState(""); // Maximum age
+
 
   const navigate = useNavigate();
 
@@ -55,10 +60,13 @@ export default function DSWDVAWCVictims() {
         setLoading(true);
 
         const params = {};
-        // if (gender !== "All") params.vic_sex = gender;
         if (province !== "All") params.province = province;
         if (municipality !== "All") params.municipality = municipality;
         if (barangay !== "All") params.barangay = barangay;
+
+        // Add age filters to the params
+        if (ageMin) params.age_min = ageMin;
+        if (ageMax) params.age_max = ageMax;
 
         const res = await api.get("/api/dswd/victims/", { params });
         setVictims(Array.isArray(res.data) ? res.data : []);
@@ -71,7 +79,9 @@ export default function DSWDVAWCVictims() {
     };
 
     fetchVictims();
-  }, [province, municipality, barangay]); // re-fetch when filters change
+  }, [province, municipality, barangay, ageMin, ageMax]); // Re-fetch when filters change
+
+ // re-fetch when filters change
     //[gender, province, municipality, barangay]); // re-fetch when filters change
 
   return (
@@ -102,6 +112,38 @@ export default function DSWDVAWCVictims() {
                 <option>Female</option>
               </select>
             </div> */}
+
+            <div className="flex flex-wrap items-end gap-4">
+              {/* Age Filters */}
+              <div className="flex flex-col">
+                <label htmlFor="age_min" className="mb-1 text-sm font-medium text-neutral-800">
+                  Min Age
+                </label>
+                <input
+                  type="number"
+                  id="age_min"
+                  value={ageMin}
+                  onChange={(e) => setAgeMin(e.target.value)}
+                  className="h-10 w-48 rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900 outline-none ring-0 focus:border-neutral-400 focus:outline-none"
+                  placeholder="Enter min age"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label htmlFor="age_max" className="mb-1 text-sm font-medium text-neutral-800">
+                  Max Age
+                </label>
+                <input
+                  type="number"
+                  id="age_max"
+                  value={ageMax}
+                  onChange={(e) => setAgeMax(e.target.value)}
+                  className="h-10 w-48 rounded-lg border border-neutral-300 bg-white px-3 text-sm text-neutral-900 outline-none ring-0 focus:border-neutral-400 focus:outline-none"
+                  placeholder="Enter max age"
+                />
+              </div>
+            </div>
+
+
             <div className="flex flex-col">
               <label
                 htmlFor="type"

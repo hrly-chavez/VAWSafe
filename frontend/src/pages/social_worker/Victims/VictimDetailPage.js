@@ -31,12 +31,23 @@ export default function VictimDetailPage() {
         const data = Array.isArray(res.data) ? res.data[0] : res.data;
         setVictim(data || null);
       } catch (err) {
-        setError(err?.response?.status ? `Error ${err.response.status}` : "Request failed");
+        // Handle 403 Forbidden error
+        if (err?.response?.status === 403) {
+          setError("You are not authorized to view this victim's data.");
+        } 
+        // Handle 404 Not Found error
+        else if (err?.response?.status === 404) {
+          setError("Victim not found.");
+        } 
+        else {
+          setError(err?.response?.status ? `Error ${err.response.status}` : "Request failed");
+        }
       } finally {
         setLoading(false);
       }
     };
 
+    // Fetch incidents
     const fetchIncidents = async () => {
       try {
         const res = await api.get(`/api/social_worker/case/${vic_id}/`);
@@ -53,6 +64,16 @@ export default function VictimDetailPage() {
       fetchIncidents();
     }
   }, [vic_id]);
+
+  // Display error if there's one
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white flex justify-center items-center">
+        <p className="text-xl text-red-600">{error}</p>
+      </div>
+    );
+  }
+
 
   const get = (obj, keys, fallback = "N/A") => {
     for (const k of keys) {

@@ -25,6 +25,7 @@ from shared_model.views import serve_encrypted_file
 
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -231,24 +232,42 @@ def cleanup_decrypted_file_later(file_path, victim_id, delay=10):
 class victim_detail(generics.RetrieveAPIView):
     serializer_class = VictimDetailSerializer
     lookup_field = "vic_id"
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker']
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return Victim.objects.filter(
-                incidents__sessions__assigned_official=user.official
-            ).distinct()
+        if hasattr(user, "official"):
+            if user.official.of_role == "DSWD":
+                return Victim.objects.all()
+            if user.official.of_role in ["Social Worker", "Nurse", "Psychometrician"]:
+                return Victim.objects.filter(
+                    incidents__sessions__assigned_official=user.official
+                ).distinct()
         return Victim.objects.none()
 
+    def get_object(self):
+        vic_id = self.kwargs.get(self.lookup_field)
+
+        # Attempt to get the victim object
+        try:
+            victim = Victim.objects.get(vic_id=vic_id)
+        except Victim.DoesNotExist:
+            # If the victim does not exist, raise a 404 Not Found
+            raise NotFound("Victim not found.")
+
+        # If user is a Social Worker, Nurse, or Psychometrician, ensure they are assigned to the victim
+        user = self.request.user
+        if hasattr(user, "official") and user.official.of_role in ["Social Worker", "Nurse", "Psychometrician"]:
+            if not victim.incidents.filter(sessions__assigned_official=user.official).exists():
+                # If the user is not assigned to the victim, raise a 403 Forbidden
+                raise PermissionDenied("You are not assigned to view this victim's data.")
+
+        return victim
+
     def retrieve(self, request, *args, **kwargs):
-        # Get the victim object
         victim = self.get_object()
 
         decrypted_photo_path = None
-
-        # Check if the vic_photo is encrypted
         if victim.vic_photo.name.endswith('.enc'):
             try:
                 # Decrypt the photo
@@ -256,29 +275,23 @@ class victim_detail(generics.RetrieveAPIView):
                 fernet = Fernet(settings.FERNET_KEY)
                 with open(victim.vic_photo.path, "rb") as enc_file:
                     encrypted_data = enc_file.read()
-
                 decrypted_data = fernet.decrypt(encrypted_data)
 
-                # Save the decrypted data to the MEDIA_ROOT directory temporarily
                 decrypted_photo_path = os.path.join(settings.MEDIA_ROOT, f"decrypted_{victim.vic_id}.jpg")
                 with open(decrypted_photo_path, 'wb') as decrypted_file:
                     decrypted_file.write(decrypted_data)
 
-                # Update the victim's photo to the temporary decrypted file path
                 victim.vic_photo.name = os.path.relpath(decrypted_photo_path, settings.MEDIA_ROOT)
 
             except Exception as e:
                 logger.error(f"Failed to decrypt photo for victim {victim.vic_id}: {e}")
                 return Response({"error": f"Failed to decrypt photo: {str(e)}"}, status=400)
 
-        # Use the serializer to return the victim data
+        # Return the victim data
         serializer = self.get_serializer(victim)
-
-        # Start a background thread to delete the decrypted file after 10 seconds
         if decrypted_photo_path:
             threading.Thread(target=cleanup_decrypted_file_later, args=(decrypted_photo_path, victim.vic_id, 10)).start()
 
-        # Return the victim data immediately
         return Response(serializer.data)
 
 # retrieve all information related to case (Social Worker)
@@ -294,7 +307,7 @@ class VictimIncidentsView(generics.ListAPIView):
 class search_victim_facial(APIView):
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker']
+    allowed_roles = ['DSWD', 'Social Worker']
 
     def decrypt_temp_file(self, encrypted_path):
         """Decrypt .enc image into a temporary .jpg file."""
@@ -316,8 +329,12 @@ class search_victim_facial(APIView):
             return None
 
     def post(self, request):
-        uploaded_file = request.FILES.get("frame")
+        # Check if the user has the correct role
+        user_role = request.user.official.of_role
+        if user_role not in self.allowed_roles:
+            return Response({"error": "You are not authorized to use this API."}, status=403)
 
+        uploaded_file = request.FILES.get("frame")
         if not uploaded_file:
             return Response({"error": "No image uploaded."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -337,7 +354,17 @@ class search_victim_facial(APIView):
         decrypted_temp_files = []  # List to keep track of decrypted temp files
 
         try:
-            for sample in VictimFaceSample.objects.select_related("victim"):
+            # Check the role and filter VictimFaceSample accordingly
+            if user_role == "DSWD":
+                # DSWD can view all victims
+                victim_samples = VictimFaceSample.objects.select_related("victim")
+            elif user_role == "Social Worker":
+                # Social Worker can only view assigned victims via the session model
+                victim_samples = VictimFaceSample.objects.filter(
+                    victim__incidents__sessions__assigned_official=request.user.official
+                ).select_related("victim")
+
+            for sample in victim_samples:
                 try:
                     # Check if the photo is encrypted (.enc)
                     photo_path = sample.photo.path
@@ -400,6 +427,7 @@ class search_victim_facial(APIView):
             for f in decrypted_temp_files:
                 if os.path.exists(f):
                     os.remove(f)
+
 
 #========================================SESSIONS====================================================
 class scheduled_session_lists(generics.ListAPIView):

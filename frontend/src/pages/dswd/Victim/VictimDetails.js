@@ -288,7 +288,7 @@ export default function VictimDetails() {
   useEffect(() => {
     const fetchVictim = async () => {
       try {
-        const res = await api.get(`/api/dswd/victims/${vic_id}/`);
+        const res = await api.get(`/api/social_worker/victims/${vic_id}/`);
         const data = Array.isArray(res.data) ? res.data[0] : res.data;
         setVictim(data || null);
       } catch (err) {

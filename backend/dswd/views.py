@@ -43,16 +43,16 @@ class ViewVictim(generics.ListAPIView):
     allowed_roles = ['DSWD']
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-
-        # vic_sex = self.request.query_params.get("vic_sex")
+        # Get query parameters
         province = self.request.query_params.get("province")
         municipality = self.request.query_params.get("municipality")
         barangay = self.request.query_params.get("barangay")
+        age_min = self.request.query_params.get("age_min")  # Min age filter
+        age_max = self.request.query_params.get("age_max")  # Max age filter
 
-        # if vic_sex and vic_sex != "All":
-        #     queryset = queryset.filter(vic_sex=vic_sex)
-
+        # Filter by location
+        queryset = Victim.objects.all()
+        
         if province and province != "All":
             queryset = queryset.filter(province_id=province)
 
@@ -62,8 +62,29 @@ class ViewVictim(generics.ListAPIView):
         if barangay and barangay != "All":
             queryset = queryset.filter(barangay_id=barangay)
 
-        return queryset
+        # Filter by age range (if provided) using decrypted birth date
+        filtered_victims = []
+        if age_min or age_max:
+            today = date.today()
+            for victim in queryset:
+                # Decrypt birth date
+                decrypted_birth_date = victim.vic_birth_date
 
+                if decrypted_birth_date:
+                    age = today.year - decrypted_birth_date.year - ((today.month, today.day) < (decrypted_birth_date.month, decrypted_birth_date.day))
+
+                    # Apply age filter
+                    if age_min and age < int(age_min):
+                        continue
+                    if age_max and age > int(age_max):
+                        continue
+                    
+                    # Add the victim to the filtered list if it passes the age check
+                    filtered_victims.append(victim)
+            queryset = filtered_victims
+
+        return queryset
+    
 class ProvinceList(generics.ListAPIView):
     queryset = Province.objects.all()
     serializer_class = ProvinceSerializer
