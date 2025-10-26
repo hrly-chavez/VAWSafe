@@ -24,6 +24,103 @@ export default function Sidebar() {
   const getSidebarItems = () => {
     const role = (user?.role || "").toLowerCase();
 
+    if (role === "dswd") {
+      return [
+        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/dswd" },
+        {
+          icon: "/images/heart.png",
+          label: "VAWC Victims",
+          path: "/dswd/victims",
+        },
+        // { icon: "/images/customer.png", label: "Social Workers", path: "/dswd/social-workers" },
+        // { icon: "/images/founder.png", label: "VAW Desk Officer", path: "/dswd/vawdesk-officer" },
+        {
+          icon: "/images/peace.png",
+          label: "Services",
+          path: "/dswd/services",
+        },
+        {
+          icon: "/images/peace.png",
+          label: "Questions Management",
+          path: "/dswd/questions",
+        },
+        {
+          icon: "/images/account-settings.png",
+          label: "Account Management",
+          children: [
+            { label: "User Management", path: "/dswd/account-management" },
+            {
+              label: "Pending Account",
+              path: "/dswd/account-management/pending",
+            },
+          ],
+        },
+        {
+          icon: "/images/dashboardnew.png",
+          label: "Reports",
+          children: [
+            { label: "Daily Reports", path: "/dswd/account-management" },
+            {
+              label: "Monthly Reports",
+              path: "/dswd/account-management/pending",
+            },
+          ],
+        },
+        {
+          icon: "/images/logout.png",
+          label: "Log Out",
+          path: "/login",
+          isLogout: true,
+        },
+      ];
+    }
+
+    if (role === "psychometrician") {
+      return [
+        {
+          icon: "/images/dashboardnew.png",
+          label: "Dashboard",
+          path: "/social_worker",
+        },
+        {
+          icon: "/images/add.png",
+          label: "Register Victim",
+          path: "/social_worker/register-victim",
+        },
+        {
+          icon: "/images/heart.png",
+          label: "VAWC Victims",
+          path: "/social_worker/victims",
+        },
+        {
+          icon: "/images/case.png",
+          label: "Case Records",
+          path: "/social_worker/case-records",
+        },
+        {
+          icon: "/images/meeting.png",
+          label: "Scheduled Sessions",
+          path: "/social_worker/sessions",
+        },
+        {
+          icon: "/images/calendar.png",
+          label: "My Schedule",
+          path: "/social_worker/schedule",
+        },
+        {
+          icon: "/images/peace.png",
+          label: "Services",
+          path: "/social_worker/services",
+        },
+        {
+          icon: "/images/logout.png",
+          label: "Log Out",
+          path: "/login",
+          isLogout: true,
+        },
+      ];
+    }
+
     if (role === "social worker") {
       return [
         {
@@ -70,47 +167,37 @@ export default function Sidebar() {
       ];
     }
 
-    if (role === "dswd") {
+    if (role === "nurse") {
       return [
-        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/dswd" },
+        {
+          icon: "/images/dashboardnew.png",
+          label: "Dashboard",
+          path: "/nurse",
+        },
         {
           icon: "/images/heart.png",
           label: "VAWC Victims",
-          path: "/dswd/victims",
+          path: "/nurse/victims",
         },
-        // { icon: "/images/customer.png", label: "Social Workers", path: "/dswd/social-workers" },
-        // { icon: "/images/founder.png", label: "VAW Desk Officer", path: "/dswd/vawdesk-officer" },
+        {
+          icon: "/images/case.png",
+          label: "Case Records",
+          path: "/nurse/case-records",
+        },
+        {
+          icon: "/images/meeting.png",
+          label: "Scheduled Sessions",
+          path: "/nurse/sessions",
+        },
+        {
+          icon: "/images/calendar.png",
+          label: "My Schedule",
+          path: "/nurse/schedule",
+        },
         {
           icon: "/images/peace.png",
           label: "Services",
-          path: "/dswd/services",
-        },
-        {
-          icon: "/images/peace.png",
-          label: "Questions Management",
-          path: "/dswd/questions",
-        },
-        {
-          icon: "/images/account-settings.png",
-          label: "Account Management",
-          children: [
-            { label: "User Management", path: "/dswd/account-management" },
-            {
-              label: "Pending Account",
-              path: "/dswd/account-management/pending",
-            },
-          ],
-        },
-        {
-          icon: "/images/dashboardnew.png",
-          label: "Reports",
-          children: [
-            { label: "Daily Reports", path: "/dswd/account-management" },
-            {
-              label: "Monthly Reports",
-              path: "/dswd/account-management/pending",
-            },
-          ],
+          path: "/nurse/services",
         },
         {
           icon: "/images/logout.png",
