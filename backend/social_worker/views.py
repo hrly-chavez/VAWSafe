@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.db.models import Q
 from django.db import transaction
+from django.http import Http404
 
 from deepface import DeepFace
 from .serializers import *
@@ -20,9 +21,10 @@ from PIL import Image
 from shared_model.models import *
 from shared_model.permissions import IsRole
 from cryptography.fernet import Fernet
+from shared_model.views import serve_encrypted_file
 
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -834,3 +836,24 @@ class OfficialScheduleOverviewViewSet(viewsets.ViewSet):
             "unavailabilities": list(unavailabilities),
         })
 
+#para ni sa file encryption kay diri naka store ang incident_evidence,ug ang victim_face_samples
+class ServeEvidenceFileView(APIView):
+    permission_classes = [AllowAny]
+
+
+    def get(self, request, evidence_id):
+        try:
+            evidence = Evidence.objects.get(id=evidence_id)
+        except Evidence.DoesNotExist:
+            raise Http404("Evidence not found")
+        return serve_encrypted_file(request, evidence, evidence.file)
+
+class ServeVictimFacePhotoView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, sample_id):
+        try:
+            sample = VictimFaceSample.objects.get(id=sample_id)
+        except VictimFaceSample.DoesNotExist:
+            raise Http404("Victim face sample not found")
+        return serve_encrypted_file(request, sample, sample.photo, content_type='image/jpeg')
