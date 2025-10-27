@@ -2,7 +2,7 @@ import Navbar from "../../Navbar";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import SearchVictim from "./SearchVictim";
+import SearchVictim from "../../social_worker/Victims/SearchVictimFacial";
 import api from "../../../api/axios";
 import {
   MagnifyingGlassIcon,

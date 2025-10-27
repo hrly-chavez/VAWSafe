@@ -245,20 +245,44 @@ class SocialWorkerSessionQuestionSerializer(serializers.ModelSerializer):
     question_category = serializers.CharField(source="question.ques_category", read_only=True)
     question_answer_type = serializers.CharField(source="question.ques_answer_type", read_only=True)
 
+    # new fields to expose who answered this question (if any)
+    answered_by = serializers.IntegerField(source="answered_by.pk", read_only=True)
+    answered_by_name = serializers.CharField(source="answered_by.full_name", read_only=True)
+    answered_at = serializers.DateTimeField(read_only=True)
+
+    # helpful computed flags
+    is_answered = serializers.SerializerMethodField()
+    assigned_role = serializers.SerializerMethodField()  # maps question.ques_category
+
     class Meta:
         model = SessionQuestion
         fields = [
             "sq_id",
             "question",
-            "question_text",    
+            "question_text",
             "question_category",
             "question_answer_type",
-            "sq_custom_text",        #for ad-hoc questions
+            "sq_custom_text",
             "sq_custom_answer_type",
             "sq_is_required",
             "sq_value",
             "sq_note",
+            "answered_by",
+            "answered_by_name",
+            "answered_at",
+            "is_answered",
+            "assigned_role",
         ]
+
+    def get_is_answered(self, obj):
+        return obj.sq_value is not None and obj.sq_value != ""
+
+    def get_assigned_role(self, obj):
+        # If this is a mapped question, read ques_category; custom questions (question is None) return None
+        try:
+            return obj.question.ques_category if obj.question else None
+        except Exception:
+            return None
 #=====SERVICES======
 class ServicesSerializer(serializers.ModelSerializer):
     """Lists all available services or organizations under each category."""
@@ -290,15 +314,35 @@ class ServiceGivenSerializer(serializers.ModelSerializer):
             "service_feedback",
         ]
 #===========
+class SessionProgressSerializer(serializers.ModelSerializer):
+    official = serializers.IntegerField(source="official.pk", read_only=True)
+    official_name = serializers.CharField(source="official.full_name", read_only=True)
+    official_role = serializers.CharField(source="official.of_role", read_only=True)  
+    date_ended = serializers.DateTimeField(source="finished_at", read_only=True)
+
+    class Meta:
+        model = SessionProgress
+        fields = [
+            "official",
+            "official_name",
+            "official_role",   
+            "started_at",
+            "finished_at",
+            "date_ended",
+            "is_done",
+            "notes",
+        ]
+
 class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer): 
     """
     Full session detail serializer.
     - Used for viewing or updating session info.
     - Includes victim, incident, case, questions, and services given.
+    - Adds 'my_progress' for the current logged-in official.
     """
     victim = VictimSerializer(source="incident_id.vic_id", read_only=True)
     incident = IncidentWithPerpetratorSerializer(source="incident_id", read_only=True)
-    official_names = serializers.SerializerMethodField()  # ← FIXED
+    official_names = serializers.SerializerMethodField()
     sess_type = serializers.PrimaryKeyRelatedField(
         many=True, queryset=SessionType.objects.all(), write_only=True
     )
@@ -307,6 +351,8 @@ class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):
         source="session_questions", many=True, read_only=True
     )
     services_given = ServiceGivenSerializer(many=True, read_only=True)
+    progress = SessionProgressSerializer(many=True, read_only=True)
+    my_progress = serializers.SerializerMethodField() 
 
     class Meta:
         model = Session
@@ -317,20 +363,29 @@ class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):
             "sess_next_sched",
             "sess_date_today",
             "sess_location",
-            "sess_type",           # for PATCH/PUT (IDs only)
-            "sess_type_display",   # for GET (id + name)
+            "sess_type",
+            "sess_type_display",
             "sess_description",
             "victim",
             "incident",
-            "case_report",
-            "official_names",      # ← FIXED
+            "official_names",
             "questions",
             "services_given",
+            "progress",
+            "my_progress",  # ← include new field
         ]
 
     def get_official_names(self, obj):
         officials = obj.assigned_official.all()
         return [official.full_name for official in officials] if officials else []
+
+    def get_my_progress(self, obj):
+        """Return current official's progress info if available."""
+        request = self.context.get("request")
+        if not request or not hasattr(request.user, "official"):
+            return None
+        progress = obj.progress.filter(official=request.user.official).first()
+        return SessionProgressSerializer(progress).data if progress else None
 
 class CloseCaseSerializer(serializers.ModelSerializer):
     """Used to mark a VAWC incident case as closed."""

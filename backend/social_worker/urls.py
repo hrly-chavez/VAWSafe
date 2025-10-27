@@ -18,7 +18,7 @@ urlpatterns = [
     path("sessions/<int:sess_id>/start/", start_session, name="social-worker-start-session"),
     path("sessions/<int:sess_id>/add-custom-question/", add_custom_question, name="add-custom-question"),
     path("sessions/<int:sess_id>/finish/", finish_session, name="social-worker-finish-session"),
-    path("officials/social-workers/", list_social_workers, name="list-social-workers"),
+    path("officials/social-workers/", list_workers, name="list-social-workers"),
     path("sessions/", schedule_next_session, name="social-worker-sessions"),
     path("cases/<int:incident_id>/close/", close_case, name="close-case"),
     #Service
@@ -40,4 +40,8 @@ urlpatterns = [
 
     # --- Schedule Overview ---
     path("schedule-overview/week/", OfficialScheduleOverviewViewSet.as_view({"get": "week"}),name="schedule-overview-week"),
+
+    #file encryption
+    path('evidence/<int:evidence_id>/download/', ServeEvidenceFileView.as_view(), name='serve_evidence_file'),
+    path('victim-face/<int:sample_id>/view/', ServeVictimFacePhotoView.as_view(), name='serve_victim_face_photo'),
 ]

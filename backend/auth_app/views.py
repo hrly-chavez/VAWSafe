@@ -84,6 +84,25 @@ def check_dswd_exists(request):
 #     parser_classes = [MultiPartParser, FormParser]
 #     permission_classes = [AllowAny]
 
+#     def decrypt_temp_file(self, encrypted_path):
+#         """Decrypt .enc image into a temporary .jpg file."""
+#         fernet = Fernet(settings.FERNET_KEY)
+#         try:
+#             with open(encrypted_path, "rb") as enc_file:
+#                 encrypted_data = enc_file.read()
+#             decrypted_data = fernet.decrypt(encrypted_data)
+
+#             # Save the decrypted data to a temporary file with delete=True
+#             temp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+#             temp.write(decrypted_data)
+#             temp.flush()
+#             temp.close()
+
+#             return temp.name
+#         except Exception as e:
+#             print(f"Error decrypting file {encrypted_path}: {e}")
+#             return None
+
 #     def post(self, request):
 #         uploaded_files = request.FILES.getlist("of_photos")
 
@@ -102,18 +121,28 @@ def check_dswd_exists(request):
 #             except Exception as e:
 #                 return Response({"error": f"Failed to save uploaded image: {str(e)}"}, status=400)
 
-#         # Step 1: Compare the uploaded face images with all OfficialFaceSamples
 #         best_match = None
 #         best_sample = None
 #         lowest_distance = float("inf")
+#         decrypted_temp_files = []  # List to keep track of decrypted temp files
 
 #         try:
 #             for sample in OfficialFaceSample.objects.select_related("official"):
 #                 for chosen_frame in chosen_frames:
 #                     try:
+#                         # Check if the photo is encrypted (.enc)
+#                         photo_path = sample.photo.path
+#                         if photo_path.lower().endswith(".enc"):
+#                             decrypted_photo_path = self.decrypt_temp_file(photo_path)
+#                             if decrypted_photo_path:
+#                                 photo_path = decrypted_photo_path
+#                                 decrypted_temp_files.append(decrypted_photo_path)  # Track decrypted files
+#                             else:
+#                                 continue  # Skip this sample if decryption fails
+
 #                         result = DeepFace.verify(
 #                             img1_path=chosen_frame,
-#                             img2_path=sample.photo.path,
+#                             img2_path=photo_path,
 #                             model_name="ArcFace",
 #                             enforce_detection=True
 #                         )
@@ -121,7 +150,6 @@ def check_dswd_exists(request):
 #                         official = sample.official
 #                         print(f"[DEBUG] Compared with {official.of_fname} {official.of_lname}, distance: {result['distance']:.4f}, verified: {result['verified']}")
 
-#                         # If faces match (verified) and the distance is the lowest, we have a match
 #                         if result["verified"] and result["distance"] < lowest_distance:
 #                             lowest_distance = result["distance"]
 #                             best_match = official
@@ -139,7 +167,6 @@ def check_dswd_exists(request):
 #                     "official_data": serializer.data
 #                 }, status=status.HTTP_200_OK)
 
-#             # No match found
 #             return Response({
 #                 "match": False,
 #                 "message": "The official is not registered."
@@ -158,6 +185,12 @@ def check_dswd_exists(request):
 #             for chosen_frame in chosen_frames:
 #                 if os.path.exists(chosen_frame):
 #                     os.remove(chosen_frame)
+
+#             # Clean up decrypted temp files after comparison
+#             for f in decrypted_temp_files:
+#                 if os.path.exists(f):
+#                     os.remove(f)
+
 
 class create_official(APIView):
     parser_classes = [MultiPartParser, FormParser]
@@ -897,7 +930,7 @@ def logout(request):
 #para ni sa file encryption kay diri naka store ang face_samples
 class ServeOfficialFacePhotoView(APIView):
     # permission_classes = [IsAuthenticated, IsRole]
-    # allowed_roles = ['DSWD', 'VAWDesk', 'Social Worker']
+    # allowed_roles = ['DSWD']
     permission_classes = [AllowAny]
 
     def get(self, request, sample_id):
@@ -905,4 +938,4 @@ class ServeOfficialFacePhotoView(APIView):
             sample = OfficialFaceSample.objects.get(id=sample_id)
         except OfficialFaceSample.DoesNotExist:
             raise Http404("Official face sample not found")
-        return serve_encrypted_file(sample, sample.photo, content_type='image/jpeg')
+        return serve_encrypted_file(request, sample, sample.photo, content_type='image/jpeg')

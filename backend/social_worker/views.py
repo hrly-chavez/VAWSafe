@@ -1,4 +1,4 @@
-import os, tempfile, traceback, json
+import os, tempfile, traceback, json, logging, threading
 
 from rest_framework import generics
 from rest_framework.views import APIView
@@ -10,17 +10,22 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.db.models import Q
 from django.db import transaction
+from django.http import Http404
 
 from deepface import DeepFace
 from .serializers import *
+import time
 from datetime import date, timedelta
 from PIL import Image
 
 from shared_model.models import *
 from shared_model.permissions import IsRole
+from cryptography.fernet import Fernet
+from shared_model.views import serve_encrypted_file
 
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -208,19 +213,86 @@ class victim_list(generics.ListAPIView):
             ).distinct()
         return Victim.objects.none()
 
+logger = logging.getLogger(__name__)
+
+def cleanup_decrypted_file_later(file_path, victim_id, delay=10):
+    """Helper function to delete the decrypted photo after a delay (in seconds)."""
+    # Sleep for the delay period
+    time.sleep(delay)  # This will correctly wait 10 seconds before deleting the file
+
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            logger.info(f"Successfully deleted decrypted photo for victim {victim_id}")
+        else:
+            logger.warning(f"Decrypted photo for victim {victim_id} not found for cleanup.")
+    except Exception as e:
+        logger.error(f"Failed to delete decrypted photo for victim {victim_id}: {e}")
+
 class victim_detail(generics.RetrieveAPIView):
     serializer_class = VictimDetailSerializer
     lookup_field = "vic_id"
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker']
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return Victim.objects.filter(
-                incidents__sessions__assigned_official=user.official
-            ).distinct()
+        if hasattr(user, "official"):
+            if user.official.of_role == "DSWD":
+                return Victim.objects.all()
+            if user.official.of_role in ["Social Worker", "Nurse", "Psychometrician"]:
+                return Victim.objects.filter(
+                    incidents__sessions__assigned_official=user.official
+                ).distinct()
         return Victim.objects.none()
+
+    def get_object(self):
+        vic_id = self.kwargs.get(self.lookup_field)
+
+        # Attempt to get the victim object
+        try:
+            victim = Victim.objects.get(vic_id=vic_id)
+        except Victim.DoesNotExist:
+            # If the victim does not exist, raise a 404 Not Found
+            raise NotFound("Victim not found.")
+
+        # If user is a Social Worker, Nurse, or Psychometrician, ensure they are assigned to the victim
+        user = self.request.user
+        if hasattr(user, "official") and user.official.of_role in ["Social Worker", "Nurse", "Psychometrician"]:
+            if not victim.incidents.filter(sessions__assigned_official=user.official).exists():
+                # If the user is not assigned to the victim, raise a 403 Forbidden
+                raise PermissionDenied("You are not assigned to view this victim's data.")
+
+        return victim
+
+    def retrieve(self, request, *args, **kwargs):
+        victim = self.get_object()
+
+        decrypted_photo_path = None
+        if victim.vic_photo.name.endswith('.enc'):
+            try:
+                # Decrypt the photo
+                logger.info(f"Decrypting photo for victim {victim.vic_id}")
+                fernet = Fernet(settings.FERNET_KEY)
+                with open(victim.vic_photo.path, "rb") as enc_file:
+                    encrypted_data = enc_file.read()
+                decrypted_data = fernet.decrypt(encrypted_data)
+
+                decrypted_photo_path = os.path.join(settings.MEDIA_ROOT, f"decrypted_{victim.vic_id}.jpg")
+                with open(decrypted_photo_path, 'wb') as decrypted_file:
+                    decrypted_file.write(decrypted_data)
+
+                victim.vic_photo.name = os.path.relpath(decrypted_photo_path, settings.MEDIA_ROOT)
+
+            except Exception as e:
+                logger.error(f"Failed to decrypt photo for victim {victim.vic_id}: {e}")
+                return Response({"error": f"Failed to decrypt photo: {str(e)}"}, status=400)
+
+        # Return the victim data
+        serializer = self.get_serializer(victim)
+        if decrypted_photo_path:
+            threading.Thread(target=cleanup_decrypted_file_later, args=(decrypted_photo_path, victim.vic_id, 10)).start()
+
+        return Response(serializer.data)
 
 # retrieve all information related to case (Social Worker)
 class VictimIncidentsView(generics.ListAPIView):
@@ -233,16 +305,40 @@ class VictimIncidentsView(generics.ListAPIView):
         return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by('incident_num')
    
 class search_victim_facial(APIView):
-
     parser_classes = [MultiPartParser, FormParser]
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD', 'Social Worker']
+
+    def decrypt_temp_file(self, encrypted_path):
+        """Decrypt .enc image into a temporary .jpg file."""
+        fernet = Fernet(settings.FERNET_KEY)
+        try:
+            with open(encrypted_path, "rb") as enc_file:
+                encrypted_data = enc_file.read()
+            decrypted_data = fernet.decrypt(encrypted_data)
+
+            # Save the decrypted data to a temporary file with delete=True
+            temp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+            temp.write(decrypted_data)
+            temp.flush()
+            temp.close()
+
+            return temp.name
+        except Exception as e:
+            print(f"Error decrypting file {encrypted_path}: {e}")
+            return None
 
     def post(self, request):
-        uploaded_file = request.FILES.get("frame")
+        # Check if the user has the correct role
+        user_role = request.user.official.of_role
+        if user_role not in self.allowed_roles:
+            return Response({"error": "You are not authorized to use this API."}, status=403)
 
+        uploaded_file = request.FILES.get("frame")
         if not uploaded_file:
             return Response({"error": "No image uploaded."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Save temp image
+        # Save the temporary image
         try:
             temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
             temp_image.write(uploaded_file.read())
@@ -252,17 +348,38 @@ class search_victim_facial(APIView):
         except Exception as e:
             return Response({"error": f"Failed to save uploaded image: {str(e)}"}, status=400)
 
-        # Step 1: Compare with all VictimFaceSamples
         best_match = None
         best_sample = None
         lowest_distance = float("inf")
+        decrypted_temp_files = []  # List to keep track of decrypted temp files
 
         try:
-            for sample in VictimFaceSample.objects.select_related("victim"):
+            # Check the role and filter VictimFaceSample accordingly
+            if user_role == "DSWD":
+                # DSWD can view all victims
+                victim_samples = VictimFaceSample.objects.select_related("victim")
+            elif user_role == "Social Worker":
+                # Social Worker can only view assigned victims via the session model
+                victim_samples = VictimFaceSample.objects.filter(
+                    victim__incidents__sessions__assigned_official=request.user.official
+                ).select_related("victim")
+
+            for sample in victim_samples:
                 try:
+                    # Check if the photo is encrypted (.enc)
+                    photo_path = sample.photo.path
+                    if photo_path.lower().endswith(".enc"):
+                        decrypted_photo_path = self.decrypt_temp_file(photo_path)
+                        if decrypted_photo_path:
+                            photo_path = decrypted_photo_path
+                            decrypted_temp_files.append(decrypted_photo_path)  # Track decrypted files
+                        else:
+                            continue  # Skip this sample if decryption fails
+
+                    # Perform face verification
                     result = DeepFace.verify(
                         img1_path=chosen_frame,
-                        img2_path=sample.photo.path,
+                        img2_path=photo_path,
                         model_name="ArcFace",
                         enforce_detection=True
                     )
@@ -302,34 +419,41 @@ class search_victim_facial(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         finally:
+            # Clean up the temporary image files
             if chosen_frame and os.path.exists(chosen_frame):
                 os.remove(chosen_frame)
 
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker']
+            # Clean up decrypted temp files after comparison
+            for f in decrypted_temp_files:
+                if os.path.exists(f):
+                    os.remove(f)
+
 
 #========================================SESSIONS====================================================
-
 class scheduled_session_lists(generics.ListAPIView):
-    """
-    GET: List all sessions (Pending & Ongoing) assigned to the logged-in social worker.
-    Used for the main Sessions page.
-    """
     serializer_class = SocialWorkerSessionSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return (
-                Session.objects.filter(
-                    assigned_official__in=[user.official],
-                    sess_status__in=["Pending", "Ongoing"]
-                )
-                .distinct()
-                .order_by("sess_status", "sess_next_sched")
-            )
-        return Session.objects.none()
+        if not hasattr(user, "official") or user.official.of_role != "Social Worker":
+            return Session.objects.none()
+
+        # Step 1: Get all sessions assigned to this official
+        assigned_sessions = Session.objects.filter(
+            assigned_official__in=[user.official]
+        ).distinct()
+
+        # Step 2: Filter manually (since sess_status is encrypted)
+        filtered_sessions = [
+            s for s in assigned_sessions
+            if s.sess_status in ("Pending", "Ongoing")
+        ]
+
+        # Step 3: Sort by status then schedule
+        filtered_sessions.sort(key=lambda s: (s.sess_status, s.sess_next_sched or now()))
+
+        return filtered_sessions
 
 class scheduled_session_detail(generics.RetrieveUpdateAPIView):  
     """
@@ -384,42 +508,62 @@ def social_worker_mapped_questions(request):
 @permission_classes([IsAuthenticated])
 def start_session(request, sess_id):
     """
-    POST: Marks a session as Ongoing and hydrates mapped questions into SessionQuestion records.
-    Used when a social worker starts a pending session.
+    POST: Marks a session as Ongoing for this specific official and hydrates mapped questions.
+    Uses SessionProgress to track per-official start times.
     """
     user = request.user
+    official = user.official
+
+    # --- Get session assigned to this official ---
     try:
-        session = Session.objects.get(pk=sess_id, assigned_official=user.official)
+        session = Session.objects.get(pk=sess_id, assigned_official=official)
     except Session.DoesNotExist:
         return Response({"error": "Session not found or not assigned to you"}, status=404)
 
-    # Mark session as ongoing
-    session.sess_status = "Ongoing"
-    session.sess_date_today = timezone.now()
-    session.save()
+    # --- Ensure session is Ongoing ---
+    if session.sess_status == "Pending":
+        session.sess_status = "Ongoing"
+        session.sess_date_today = timezone.now()
+        session.save()
 
-    # Hydrate mapped questions
+    # --- Ensure progress record exists and mark start ---
+    progress, _ = SessionProgress.objects.get_or_create(session=session, official=official)
+    if not progress.started_at:
+        progress.started_at = timezone.now()
+        progress.is_done = False
+        progress.save()
+
+    # --- Hydrate mapped questions ---
     type_ids = list(session.sess_type.values_list("id", flat=True))
-    mappings = SessionTypeQuestion.objects.filter(
+
+    # We cannot query EncryptedCharField directly, so we fetch all then filter manually
+    all_mappings = SessionTypeQuestion.objects.filter(
         session_number=session.sess_num,
         session_type__id__in=type_ids
     ).select_related("question")
 
-    created = []
-    for m in mappings:
-        sq, _ = SessionQuestion.objects.get_or_create(
+    # Filter only those questions that match the official's role
+    filtered_mappings = [
+        m for m in all_mappings
+        if getattr(m.question, "ques_category", None) == official.of_role
+    ]
+
+    print("Official role:", official.of_role)
+    print("Filtered question roles:", [m.question.ques_category for m in filtered_mappings])
+    print("Session number:", session.sess_num)
+    print("Session types:", type_ids)
+
+    # Create SessionQuestion entries for relevant mapped questions
+    for m in filtered_mappings:
+        SessionQuestion.objects.get_or_create(
             session=session,
             question=m.question,
             defaults={"sq_is_required": False}
         )
-        created.append(sq)
 
-    #  serialize session detail (with victim + incident + etc.)
-    session_data = SocialWorkerSessionDetailSerializer(session).data
-    # attach hydrated questions separately
-    session_data["questions"] = SocialWorkerSessionQuestionSerializer(created, many=True).data
-
-    return Response(session_data, status=200)
+    # --- Serialize and respond ---
+    serializer = SocialWorkerSessionDetailSerializer(session, context={"request": request})
+    return Response(serializer.data, status=200)
 
 @api_view(["POST"]) 
 @permission_classes([IsAuthenticated])
@@ -460,50 +604,113 @@ def add_custom_question(request, sess_id):
 @permission_classes([IsAuthenticated])
 def finish_session(request, sess_id):
     """
-    POST: Saves all answers, updates services and description, and marks session as Done.
-    Triggered when the social worker finishes a session.
+    POST: Marks current official's session progress as Done.
+    - Saves provided answers and records who answered them (answered_by, answered_at)
+    - Enforces that an official can only answer questions matching their role (if mapped)
+    - Marks SessionProgress for this official as done, and marks the overall session Done only
+      when all assigned officials finished.
     """
     user = request.user
+    if not hasattr(user, "official"):
+        return Response({"error": "User is not an official"}, status=403)
+
     try:
         session = Session.objects.get(pk=sess_id, assigned_official=user.official)
     except Session.DoesNotExist:
         return Response({"error": "Session not found or not assigned to you"}, status=404)
 
-    # Save answers
     answers = request.data.get("answers", [])
-    for ans in answers:
-        try:
-            sq = SessionQuestion.objects.get(pk=ans["sq_id"], session=session)
-            sq.sq_value = ans.get("value")
-            sq.sq_note = ans.get("note")
-            sq.save()
-        except SessionQuestion.DoesNotExist:
-            continue
+    skipped = []  # collect any skipped answers due to role mismatch or missing sq
+    saved = 0
 
-    # Save description
-    description = request.data.get("sess_description")
-    if description is not None:
-        session.sess_description = description
+    # Save answers inside a transaction to keep data consistent
+    with transaction.atomic():
+        for ans in answers:
+            sq_id = ans.get("sq_id")
+            if not sq_id:
+                continue
+            try:
+                sq = SessionQuestion.objects.select_related("question").get(pk=sq_id, session=session)
+            except SessionQuestion.DoesNotExist:
+                skipped.append({"sq_id": sq_id, "reason": "not_found"})
+                continue
 
-    # Save selected services
-    service_ids = request.data.get("services", [])
-    if isinstance(service_ids, list):
-        # clear old ones
-        session.services_given.all().delete()
-        # create new
-        for sid in service_ids:
-            ServiceGiven.objects.create(
-                session=session,
-                serv_id_id=sid,
-                of_id=user.official
-            )
+            # Server-side role enforcement:
+            # If the question is a mapped question and its category (role) doesn't match the official's role, skip saving.
+            q_role = None
+            if sq.question:
+                q_role = sq.question.ques_category
 
-    # Mark as Done
-    session.sess_status = "Done"
-    session.save()
+            if q_role and user.official.of_role and q_role != user.official.of_role:
+                # skip saving - not allowed for this official
+                skipped.append({"sq_id": sq_id, "reason": "role_mismatch", "question_role": q_role})
+                continue
 
-    return Response({"message": "Session finished successfully!"}, status=200)
+            # Save the provided answer
+            new_value = ans.get("value")
+            new_note = ans.get("note")
 
+            # Only update fields if they changed (optional optimization)
+            changed = False
+            if new_value is not None and new_value != sq.sq_value:
+                sq.sq_value = new_value
+                changed = True
+            if new_note is not None and new_note != sq.sq_note:
+                sq.sq_note = new_note
+                changed = True
+
+            # Always set who answered (even if they edited their previous answer)
+            sq.answered_by = user.official
+            sq.answered_at = timezone.now()
+
+            # Save
+            if changed or True:
+                sq.save(update_fields=["sq_value", "sq_note", "answered_by", "answered_at"])
+                saved += 1
+
+        # Save description (if updated)
+        description = request.data.get("sess_description")
+        if description is not None:
+            session.sess_description = description
+
+        # Save selected services
+        service_ids = request.data.get("services", [])
+        if isinstance(service_ids, list):
+            session.services_given.all().delete()
+            for sid in service_ids:
+                ServiceGiven.objects.create(
+                    session=session,
+                    serv_id_id=sid,
+                    of_id=user.official
+                )
+
+        # Update this official’s progress
+        progress, _ = SessionProgress.objects.get_or_create(
+            session=session,
+            official=user.official,
+        )
+        progress.is_done = True
+        progress.finished_at = timezone.now()
+        progress.save()
+
+        # Update session status only after saving progress
+        if session.all_officials_done():
+            session.sess_status = "Done"
+        else:
+            session.sess_status = "Ongoing"
+        session.save()
+
+    all_finished = session.all_officials_done()
+
+    # Return details including warnings about skipped answers
+    return Response({
+        "message": "Your session progress has been marked as done.",
+        "saved_answers": saved,
+        "skipped_answers": skipped,
+        "session_completed": all_finished,
+        "all_finished": all_finished,
+        "session": SocialWorkerSessionDetailSerializer(session, context={"request": request}).data
+    }, status=200)
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -556,26 +763,31 @@ def schedule_next_session(request):
     
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def list_social_workers(request):
+def list_workers(request):
     """
     GET: Returns list of social workers for assignment (searchable by name).
     Used in NextSessionModal dropdown.
     """
     q = request.query_params.get("q", "").strip()
-    workers = Official.objects.filter(of_role="Social Worker")
-
+    workers = Official.objects.exclude(of_role="DSWD")
+    
+    # Python filter because fields are encrypted
     if q:
-     workers = workers.filter(
-        Q(of_fname__icontains=q) |
-        Q(of_lname__icontains=q) |
-        Q(of_m_initial__icontains=q)
-    )
-
+        workers = [w for w in workers if q.lower() in w.full_name.lower()]
+    
+    # Limit to first 20
     workers = workers[:20]
+    
     data = [
-        {"of_id": w.of_id, "full_name": w.full_name}
+        {
+            "of_id": w.of_id,
+            "full_name": w.full_name,
+            "role": w.of_role,
+            "contact": w.of_contact,
+        }
         for w in workers
     ]
+    
     return Response(data, status=200)
 
 @api_view(["GET"])
@@ -739,3 +951,24 @@ class OfficialScheduleOverviewViewSet(viewsets.ViewSet):
             "unavailabilities": list(unavailabilities),
         })
 
+#para ni sa file encryption kay diri naka store ang incident_evidence,ug ang victim_face_samples
+class ServeEvidenceFileView(APIView):
+    permission_classes = [AllowAny]
+
+
+    def get(self, request, evidence_id):
+        try:
+            evidence = Evidence.objects.get(id=evidence_id)
+        except Evidence.DoesNotExist:
+            raise Http404("Evidence not found")
+        return serve_encrypted_file(request, evidence, evidence.file)
+
+class ServeVictimFacePhotoView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, sample_id):
+        try:
+            sample = VictimFaceSample.objects.get(id=sample_id)
+        except VictimFaceSample.DoesNotExist:
+            raise Http404("Victim face sample not found")
+        return serve_encrypted_file(request, sample, sample.photo, content_type='image/jpeg')

@@ -1,0 +1,163 @@
+/* Remove default padding in sw-content ONLY for Services page */
+.sw-layout > .sw-content:has(.sw-services-page) {
+  padding: 8px 12px !important; /* reduce space from sidebar & navbar */
+}
+
+/* 1) Page wrapper */
+.sw-services-page {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 2) Card container */
+.sw-services-card {
+  width: 100%;
+  max-width: none; /* full width; change if you want a max cap */
+  background: #ffffff;
+  border-radius: 12px;
+  padding: clamp(16px, 1.8vw, 24px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+}
+
+/* Headings */
+.sw-services-card .servicetext {
+  font-size: clamp(22px, 2.2vw, 28px);
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: #1f2937;
+}
+.sw-services-card .list-text {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 16px 0;
+}
+
+/* Controls row (Search | Service | Case Type) */
+.sw-services-card .row-one {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) repeat(2, minmax(180px, 260px));
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 16px;
+}
+
+/* Search bar */
+.sw-services-card .search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.sw-services-card .searchbar {
+  width: 100%;
+  height: 40px;
+  padding: 0 40px 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  outline: none;
+  font-size: 14px;
+}
+.sw-services-card .search img {
+  position: absolute;
+  right: 10px;
+  height: 18px;
+  width: 18px;
+  pointer-events: none;
+}
+
+/* Filters */
+.sw-services-card .row-one-filter {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 16px;
+}
+.sw-services-card .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sw-services-card .filter-group label.service,
+.sw-services-card .filter-group label.type {
+  font-size: 13px;
+  color: #374151;
+}
+.sw-services-card .filter-group select {
+  height: 40px;
+  min-width: 180px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  outline: none;
+}
+
+/* Table container */
+.sw-services-card .table-container {
+  margin-top: 8px;
+  background: #ffffff;
+  border: 1px solid #f3f4f6;
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: min(62vh, 720px);
+  overflow: auto; /* both axes */
+}
+
+/* Table styles */
+.sw-services-card .table-victims {
+  width: 100%;
+  min-width: 760px; /* avoids crushed columns; enables x-scroll on small screens */
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.sw-services-card .table-victims thead th {
+  position: sticky;
+  top: 0;
+  background: #f9fafb;
+  color: #374151;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 1;
+}
+.sw-services-card .table-victims tbody td {
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #111827;
+  border-bottom: 1px solid #f3f4f6;
+}
+.sw-services-card .table-victims tbody tr:hover {
+  background: #f9fafb;
+}
+.sw-services-card .table-victims a {
+  color: #2563eb;
+  text-decoration: none;
+}
+.sw-services-card .table-victims a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive behavior */
+@media (max-width: 1024px) {
+  .sw-services-card .row-one {
+    grid-template-columns: 1fr;
+  }
+  .sw-services-card .row-one-filter {
+    grid-auto-flow: row;
+    grid-template-columns: 1fr 1fr;
+  }
+  .sw-services-card .filter-group select {
+    min-width: 0;
+  }
+}
+@media (max-width: 600px) {
+  .sw-services-card .row-one-filter {
+    grid-template-columns: 1fr;
+  }
+  .sw-services-card .table-victims {
+    min-width: 600px;
+  }
+}

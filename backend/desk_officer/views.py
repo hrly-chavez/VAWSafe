@@ -627,7 +627,7 @@ class ServeEvidenceFileView(APIView):
             evidence = Evidence.objects.get(id=evidence_id)
         except Evidence.DoesNotExist:
             raise Http404("Evidence not found")
-        return serve_encrypted_file(evidence, evidence.file)
+        return serve_encrypted_file(request, evidence, evidence.file)
 
 class ServeVictimFacePhotoView(APIView):
     permission_classes = [IsAuthenticated, IsRole]
@@ -638,4 +638,4 @@ class ServeVictimFacePhotoView(APIView):
             sample = VictimFaceSample.objects.get(id=sample_id)
         except VictimFaceSample.DoesNotExist:
             raise Http404("Victim face sample not found")
-        return serve_encrypted_file(sample, sample.photo, content_type='image/jpeg')
+        return serve_encrypted_file(request, sample, sample.photo, content_type='image/jpeg')

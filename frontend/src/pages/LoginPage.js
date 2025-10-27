@@ -12,13 +12,12 @@ import {
   ExclamationCircleIcon,
   CheckCircleIcon,
   CameraIcon,
-  EyeIcon
-} from '@heroicons/react/24/solid';
+  EyeIcon,
+} from "@heroicons/react/24/solid";
 import { AuthContext } from "../context/AuthContext";
 import api from "../api/axios";
 
 const LoginPage = () => {
-
   const webcamRef = useRef(null);
   const navigate = useNavigate();
 
@@ -27,7 +26,6 @@ const LoginPage = () => {
 
   // show forgot pass modal
   const [showForgotPassModal, setShowForgotPassModal] = useState(false);
-
 
   //modal para matic open register user nga modal if way dswd account
   const [autoDSWDRegister, setAutoDSWDRegister] = useState(false);
@@ -47,7 +45,10 @@ const LoginPage = () => {
 
     // Add CSRF only for unsafe methods
     if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
-      opts.headers = { ...(opts.headers || {}), "X-CSRFToken": getCookie("csrftoken") };
+      opts.headers = {
+        ...(opts.headers || {}),
+        "X-CSRFToken": getCookie("csrftoken"),
+      };
     }
 
     return fetch(url, opts);
@@ -60,8 +61,8 @@ const LoginPage = () => {
   const [showCounter, setShowCounter] = useState(false);
   const [blinkCaptured, setBlinkCaptured] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   // Keep a ref to track cancellation
   const loginCancelledRef = useRef(false);
 
@@ -72,7 +73,10 @@ const LoginPage = () => {
   });
 
   //Nag Add kog error state for backend validation
-  const [backendErrors, setBackendErrors] = useState({ username: "", password: "" });
+  const [backendErrors, setBackendErrors] = useState({
+    username: "",
+    password: "",
+  });
 
   // state for the Welcome Card
   const [showWelcomeCard, setShowWelcomeCard] = useState(false);
@@ -203,17 +207,22 @@ const LoginPage = () => {
     });
 
     try {
-      const blinkRes = await apiFetch("http://localhost:8000/api/auth/blink-check/", {
-        method: "POST",
-        body: blinkForm,
-        // credentials: "include", // send cookies if your blink-check is CSRF-protected
-        // headers: { "X-CSRFToken": getCookie("csrftoken") }, // safe to include
-      });
+      const blinkRes = await apiFetch(
+        "http://localhost:8000/api/auth/blink-check/",
+        {
+          method: "POST",
+          body: blinkForm,
+          // credentials: "include", // send cookies if your blink-check is CSRF-protected
+          // headers: { "X-CSRFToken": getCookie("csrftoken") }, // safe to include
+        }
+      );
       if (loginCancelledRef.current) return;
       const blinkData = await blinkRes.json();
 
       if (!blinkRes.ok || !blinkData.blink) {
-        setMessage(blinkData.message || " No blink detected, please try again.");
+        setMessage(
+          blinkData.message || " No blink detected, please try again."
+        );
         setLoading(false);
         return;
       }
@@ -233,12 +242,15 @@ const LoginPage = () => {
         loginForm.append(`frame${j + 1}`, chosenBlob, `frame${j + 1}.jpg`);
       });
 
-      const loginRes = await apiFetch("http://localhost:8000/api/auth/face-login/", {
-        method: "POST",
-        body: loginForm,
-        // credentials: "include",                            // cookies set by server
-        // headers: { "X-CSRFToken": getCookie("csrftoken") } // CSRF for POST
-      });
+      const loginRes = await apiFetch(
+        "http://localhost:8000/api/auth/face-login/",
+        {
+          method: "POST",
+          body: loginForm,
+          // credentials: "include",                            // cookies set by server
+          // headers: { "X-CSRFToken": getCookie("csrftoken") } // CSRF for POST
+        }
+      );
       if (loginCancelledRef.current) return;
 
       const loginData = await loginRes.json();
@@ -281,7 +293,6 @@ const LoginPage = () => {
       setLoading(false);
     }
   };
-
 
   //old face login
   // const handleFaceLogin = async () => {
@@ -401,7 +412,6 @@ const LoginPage = () => {
   //         });
   //         setShowWelcomeCard(true);
 
-
   //         const user = loginData;
   //         setTimeout(() => {
   //           // ✅ Redirect based on role
@@ -426,7 +436,6 @@ const LoginPage = () => {
 
   //   };
 
-
   const handleManualLogin = async () => {
     const newErrors = { username: "", password: "" };
     let hasError = false;
@@ -446,12 +455,15 @@ const LoginPage = () => {
     setMessage("Logging in...");
 
     try {
-      const response = await apiFetch("http://localhost:8000/api/auth/manual-login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // credentials: "include", // ⬅️ send/receive cookies
-        body: JSON.stringify({ username, password }),
-      });
+      const response = await apiFetch(
+        "http://localhost:8000/api/auth/manual-login/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          // credentials: "include", // ⬅️ send/receive cookies
+          body: JSON.stringify({ username, password }),
+        }
+      );
 
       const data = await response.json();
 
@@ -486,7 +498,6 @@ const LoginPage = () => {
       setMessage("Server error. Try again later.");
     }
   };
-
 
   //old manual login
   // Utility Functions for ManualLogin
@@ -651,23 +662,18 @@ const LoginPage = () => {
 
           {/* RIGHT LOGIN CARD */}
           <div
-            className={`bg-white/70 backdrop-blur-md flex flex-col justify-center items-center px-10 py-12 transition-transform duration-700 ${animateOut ? "translate-x-full" : animateIn ? "translate-x-0" : "translate-x-full"
-              }`}
+            className={`bg-white/10 backdrop-blur-md flex flex-col justify-center items-center px-10 py-12 transform transition-transform duration-700 ${
+              animateOut
+                ? "translate-x-full"
+                : animateIn
+                ? "translate-x-0"
+                : "translate-x-full"
+            }`}
           >
             {!showCamera ? (
               <>
-                <h2 className="text-4xl font-extrabold text-[#2d0a3a] mb-2 drop-shadow-sm">
-                  Log in
-                </h2>
-                <p className="mb-6 text-sm text-gray-700 font-medium">
-                  Don’t Have an Account?{" "}
-                  <span
-                    onClick={() => setShowRegisterModal(true)}
-                    className="text-[#ff4b2b] font-semibold hover:underline cursor-pointer"
-                  >
-                    Sign up
-                  </span>
-                </p>
+                {/* Header */}
+                <h2 className="text-4xl font-bold text-white mb-2">Log in</h2>
 
                 <form
                   onSubmit={(e) => {
@@ -775,14 +781,17 @@ const LoginPage = () => {
 
                 {message && (
                   <p
-                    className={`mt-4 text-sm font-medium ${loading
-                      ? "text-gray-200 animate-pulse"
-                      : blinkCaptured || (typeof message === "string" && message.includes("✅"))
-                        ? "text-green-500"
+                    className={`mt-4 text-sm font-medium ${
+                      loading
+                        ? "text-white animate-pulse"
+                        : blinkCaptured ||
+                          (typeof message === "string" &&
+                            message.includes("✅"))
+                        ? "text-green-400"
                         : message === "No blink detected. Please blink clearly."
-                          ? "text-red-400"
-                          : "text-gray-200"
-                      }`}
+                        ? "text-red-400"
+                        : "text-white"
+                    }`}
                   >
                     {message}
                   </p>
@@ -791,7 +800,8 @@ const LoginPage = () => {
                 <div className="mt-6 flex flex-col sm:flex-row sm:gap-6 gap-4 items-center">
                   {!loading &&
                     (message === "No blink detected. Please blink clearly." ||
-                      (typeof message === "string" && message.includes(""))) && (
+                      (typeof message === "string" &&
+                        message.includes(""))) && (
                       <button
                         onClick={handleFaceLogin}
                         className="w-44 py-2 bg-red-500 text-white font-semibold rounded-full shadow hover:bg-red-600 transition"
@@ -812,6 +822,31 @@ const LoginPage = () => {
                     Go Back
                   </button>
                 </div>
+
+                {/* Welcome Card */}
+                {showWelcomeCard && welcomeData && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <div className="bg-green-100 border border-green-400 rounded-lg p-6 shadow-xl text-green-900 w-full max-w-md text-center animate-fade-in">
+                      <CheckCircleIcon className="h-6 w-6 text-green-500 mx-auto mb-2" />
+                      <h3 className="text-lg font-semibold">
+                        Welcome,{" "}
+                        {welcomeData.name ||
+                          `${welcomeData.fname} ${welcomeData.lname}`}
+                      </h3>
+                      <p className="text-sm mt-1">
+                        You're now signed in as{" "}
+                        <strong>{welcomeData.role}</strong>. Let's get started.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleContinue}
+                        className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
+                      >
+                        Continue
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
             )}
@@ -827,16 +862,14 @@ const LoginPage = () => {
             setAutoDSWDRegister(false);
           }}
           defaultRole={autoDSWDRegister ? "DSWD" : "Social Worker"}
+          // defaultRole="DSWD" // always set "DSWD" as default role
         />
       )}
 
       {/* Forgot Password Modal */}
       {showForgotPassModal && (
-        <ForgotPass
-          onClose={() => setShowForgotPassModal(false)}
-        />
+        <ForgotPass onClose={() => setShowForgotPassModal(false)} />
       )}
-
     </div>
 
   );

@@ -11,7 +11,7 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import SidebarLayout from "./layout/SidebarLayout";
 import Unauthorized from "./pages/Unauthorized";
-// import pages (same as you have)
+
 import LoginPage from "./pages/LoginPage";
 import RegisterUser from "./pages/RegisterUser";
 import ManualLoginPage from "./pages/ManualLoginPage";
@@ -55,7 +55,7 @@ const DOCaseRecords = lazy(() =>
 // const DOPendingAccount = lazy(() =>import("./pages/desk_officer/AccountManage/PendingAccount"));
 // const ViewOfficials = lazy(() => import("./pages/desk_officer/AccountManage/ViewOfficials"));
 
-// Social Worker Pages (lazy loaded)
+// Social Worker Pages
 const DashboardPage = lazy(() =>
   import("./pages/social_worker/Dashboard/Dashboard")
 );
@@ -123,6 +123,55 @@ const DSWDQuestions = lazy(() => import("./pages/dswd/Questions/Questions"));
 const NurseDashboard = lazy(() =>
   import("./pages/nurse/Dashboard/NurseDashboard")
 );
+const NurseCaseRecords = lazy(() =>
+  import("./pages/nurse/CaseRecords/CaseRecords")
+);
+const NurseSessions = lazy(() => import("./pages/nurse/Sessions/Sessions"));
+const NurseServices = lazy(() => import("./pages/nurse/Services/Services"));
+const NurseVictims = lazy(() => import("./pages/nurse/Victims/Victims"));
+const NurseVictimDetailPage = lazy(() =>
+  import("./pages/nurse/Victims/VictimDetailPage")
+);
+const NurseSearchVictimFacial = lazy(() =>
+  import("./pages/nurse/Victims/SearchVictimFacial")
+);
+const NurseViewSessions = lazy(() =>
+  import("./pages/nurse/Sessions/ViewSessions")
+);
+const NurseSocialWorkerStartSession = lazy(() =>
+  import("./pages/nurse/Sessions/StartSession")
+);
+const NurseSchedule = lazy(() => import("./pages/nurse/Schedule/Schedule"));
+
+// Psychometrician
+const PsychDashboard = lazy(() =>
+  import("./pages/psychometrician/Dashboard/Dashboard")
+);
+const PsychCaseRecords = lazy(() =>
+  import("./pages/psychometrician/CaseRecords/CaseRecords")
+);
+const PsychSessions = lazy(() =>
+  import("./pages/psychometrician/Sessions/Sessions")
+);
+const PsychServices = lazy(() =>
+  import("./pages/psychometrician/Services/Services")
+);
+const PsychVictims = lazy(() =>
+  import("./pages/psychometrician/Victims/Victims")
+);
+const PsychVictimDetailPage = lazy(() =>
+  import("./pages/psychometrician/Victims/VictimDetailPage")
+);
+const PsychSearchVictimFacial = lazy(() =>
+  import("./pages/psychometrician/Victims/SearchVictimFacial")
+);
+const PsychViewSessions = lazy(() =>
+  import("./pages/psychometrician/Sessions/ViewSessions")
+);
+const PsychSocialWorkerStartSession = lazy(() =>
+  import("./pages/psychometrician/Sessions/StartSession")
+);
+const PsychSchedule = lazy(() => import("./pages/nurse/Schedule/Schedule"));
 
 export default function App() {
   return (
@@ -314,6 +363,80 @@ export default function App() {
               <Route
                 path={ROUTES.NURSE_DASHBOARD}
                 element={<NurseDashboard />}
+              />
+              <Route
+                path={ROUTES.NURSE_CASE_RECORDS}
+                element={<NurseCaseRecords />}
+              />
+              <Route path={ROUTES.NURSE_SESSIONS} element={<NurseSessions />} />
+              <Route path={ROUTES.NURSE_SERVICES} element={<NurseServices />} />
+              <Route path={ROUTES.NURSE_VICTIMS} element={<NurseVictims />} />
+              <Route
+                path={ROUTES.NURSE_VICTIM_DETAIL}
+                element={<NurseVictimDetailPage />}
+              />
+              <Route
+                path={ROUTES.NURSE_SEARCH_FACIAL}
+                element={<NurseSearchVictimFacial />}
+              />
+              <Route
+                path={ROUTES.NURSE_VIEW_SESSION}
+                element={<NurseViewSessions />}
+              />
+              <Route
+                path={ROUTES.NURSE_START_SESSION}
+                element={<NurseSocialWorkerStartSession />}
+              />
+              <Route path={ROUTES.NURSE_SCHEDULE} element={<NurseSchedule />} />
+            </Route>
+
+            {/* Psychometrician group */}
+            <Route
+              element={
+                <ProtectedRoute roles={["Psychometrician"]}>
+                  <SidebarLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_DASHBOARD}
+                element={<PsychDashboard />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_CASE_RECORDS}
+                element={<PsychCaseRecords />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_SESSIONS}
+                element={<PsychSessions />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_SERVICES}
+                element={<PsychServices />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_VICTIMS}
+                element={<PsychVictims />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_VICTIM_DETAIL}
+                element={<PsychVictimDetailPage />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_SEARCH_FACIAL}
+                element={<PsychSearchVictimFacial />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_VIEW_SESSION}
+                element={<PsychViewSessions />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_START_SESSION}
+                element={<PsychSocialWorkerStartSession />}
+              />
+              <Route
+                path={ROUTES.PSYCHOMETRICIAN_SCHEDULE}
+                element={<PsychSchedule />}
               />
             </Route>
 

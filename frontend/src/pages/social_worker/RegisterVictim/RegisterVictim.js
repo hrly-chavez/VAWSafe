@@ -23,15 +23,6 @@ import { PERP_KEYS } from "./helpers/form-keys";
 
 const REQUIRED_VICTIM_KEYS = ["vic_first_name", "vic_last_name", "vic_sex"];
 
-const CASE_REPORT_KEYS = [
-  "handling_org",
-  "office_address",
-  "report_type",
-  "informant_name",
-  "informant_relationship",
-  "informant_contact",
-];
-
 const hasAny = (state, keys) =>
   keys.some(
     (key) =>
@@ -133,15 +124,6 @@ export default function RegisterVictim() {
       }
 
       // Victim payload
-      const informantPayload = {};
-      INFORMANT_FIELDS.forEach((k) => {
-        const v = formDataState[k];
-        if (v !== undefined && v !== null && v !== "") {
-          informantPayload[k] = v;
-        }
-      });
-
-      // Victim payload
       const victimPayload = {};
       VICTIM_FIELDS.forEach((k) => {
         const v = formDataState[k];
@@ -153,12 +135,6 @@ export default function RegisterVictim() {
       if (formDataState.vic_current_address) {
         victimPayload.vic_current_address = formDataState.vic_current_address;
       }
-
-      const caseReportPayload = hasAny(formDataState, CASE_REPORT_KEYS)
-        ? Object.fromEntries(
-          CASE_REPORT_KEYS.map((k) => [k, formDataState[k] ?? ""])
-        )
-        : null;
 
       const incidentPayload = hasAny(formDataState, INCIDENT_KEYS)
         ? Object.fromEntries(
@@ -193,8 +169,6 @@ export default function RegisterVictim() {
       const fd = new FormData();
       fd.append("informant", JSON.stringify(informantPayload));
       fd.append("victim", JSON.stringify(victimPayload));
-      if (caseReportPayload)
-        fd.append("case_report", JSON.stringify(caseReportPayload));
       if (incidentPayload)
         fd.append("incident", JSON.stringify(incidentPayload));
       if (perpetratorPayload)
