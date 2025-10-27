@@ -89,20 +89,20 @@ const LoginPage = () => {
   // Welcome slides
   const slides = [
     {
-      title: "Welcome to VAWSafe!",
-      desc: " Empowering victims of violence with secure case monitoring and confidential support services.",
+      title: "Welcome to VAWSAFE!",
+      desc: "A secure system designed for DSWD Center for Women and Children — helping social workers, nurses, and psychometricians manage cases and provide coordinated support to victims of abuse.",
     },
     {
-      title: "What is VAWSafe?",
-      desc: "VAWSAFE is a secure VAWC case monitoring system that streamlines case management, protects victim confidentiality, and ensures verified delivery of DSWD support and services.",
+      title: "What is VAWSAFE?",
+      desc: "VAWSAFE is a digital case management platform that enables authorized DSWD professionals to register victims, record interventions, monitor progress, and ensure confidential handling of sensitive information.",
     },
     {
       title: "How it works?",
-      desc: "VVAWSAFE allows officers to register and track cases, monitor victim progress, and use facial verification to ensure secure and accurate case handling.",
+      desc: "Through VAWSAFE, social workers, nurses, and psychometricians can document sessions, track victim recovery, and collaborate effectively — all within a secure and privacy-focused environment.",
     },
     {
       title: "For Authorized Professionals Only",
-      desc: "This website is strictly for DSWD VAW Desk Officers and Social Worker professionals. Unauthorized access is prohibited.",
+      desc: "This system is exclusively for use by DSWD social workers, nurses, and psychometricians of the Center for Women and Children. Unauthorized access or data disclosure is strictly prohibited.",
     },
   ];
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -593,80 +593,82 @@ const LoginPage = () => {
   }, [location.state]);
 
   return (
-    <div
-      className="min-h-screen relative"
-      style={{
-        backgroundImage: 'url("/images/background.jpg")',
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      <div className="flex items-center justify-center py-8 sm:py-12 px-4 relative z-10">
-        <button
-          onClick={() => {
-            setAnimateOut(true);
-            setTimeout(() => {
-              navigate("/");
-            }, 700); // match transition duration
-          }}
-          className="absolute top-6 right-6 text-white text-2xl font-bold hover:text-red-400 transition-colors z-20"
-        >
-          ✕
-        </button>
+    <div className="min-h-screen flex items-center justify-center relative bg-gradient-to-r from-[#fff8f4] via-[#fff4ef] to-[#ffd5b8] overflow-hidden">
+      {/* Orange Curved Background on the Right */}
+      <div className="absolute right-0 top-0 h-full w-[55%] bg-gradient-to-br from-[#FFBD59] to-[#fcae4e] rounded-l-[120px] shadow-2xl"></div>
 
-        <div className="relative w-full max-w-6xl h-auto sm:h-[600px] grid grid-cols-1 sm:grid-cols-2 shadow-2xl rounded-2xl overflow-hidden bg-white/5 backdrop-blur-lg">
-          {/* {/* Left Welcome Section */}
+      <div className="flex items-center justify-center py-8 sm:py-12 px-4 relative z-10">
+        {/* MAIN LOGIN CONTAINER */}
+        <div className="relative w-full max-w-6xl h-auto sm:h-[600px] grid grid-cols-1 sm:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden">
+
+          {/* CLOSE BUTTON inside container */}
+          <button
+            onClick={() => {
+              setAnimateOut(true);
+              setTimeout(() => {
+                navigate("/");
+              }, 700);
+            }}
+            className="absolute top-4 right-4 text-gray-600 text-2xl font-bold hover:text-red-500 transition-colors z-20"
+          >
+            ✕
+          </button>
+
+          {/* LEFT SECTION */}
           <div
-            className={`bg-[#2d0a3a]/30 text-white flex flex-col justify-center items-start px-6 sm:px-12 py-8 transform transition-transform duration-700 ${animateOut ? "-translate-x-full" : animateIn ? "translate-x-0" : "-translate-x-full"
+            className={`bg-white text-[#1a1a1a] flex flex-col justify-center items-start px-8 sm:px-12 py-8 transition-transform duration-700 ${animateOut ? "-translate-x-full" : animateIn ? "translate-x-0" : "-translate-x-full"
               }`}
           >
-            <div key={currentSlide} className="transition-opacity duration-700 opacity-100">
-              <div key={currentSlide} className="fade-in-slide w-full max-w-4xl text-left">
-                <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold mb-6 animate-slide-fade">
-                  {slides[currentSlide].title}
-                </h1>
-                <p className="text-base sm:text-lg opacity-80 mb-6 animate-fade-in">
-                  {slides[currentSlide].desc}
-                </p>
-                <button
-                  onClick={() => {
-                    setCurrentSlide((prev) => (prev + 1) % slides.length);
+            <div key={currentSlide} className="w-full max-w-3xl text-left space-y-8">
+              <h2 className="text-5xl font-extrabold leading-tight text-[#292D96] drop-shadow-sm">
+                {slides[currentSlide].title.split(" ").map((word, i) =>
+                  word.toLowerCase().includes("vawsafe") ? (
+                    <span key={i} className="text-orange-500 underline uppercase">{word} </span>
+                  ) : (
+                    <span key={i}>{word} </span>
+                  )
+                )}
+              </h2>
 
-                    // Optional: reset auto-slide timer if you're using one
-                    clearInterval(slideTimerRef.current);
-                    slideTimerRef.current = setInterval(() => {
-                      setCurrentSlide((prev) => (prev + 1) % slides.length);
-                    }, 5000);
-                  }}
-                  className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-500 to-pink-500 rounded-lg shadow-lg font-semibold hover:scale-105 transition-transform"
-                >
-                  Next
-                </button>
-              </div>
+              <p className="text-gray-700 text-lg leading-relaxed font-medium">
+                {slides[currentSlide].desc}
+              </p>
+
+              <button
+                onClick={() => {
+                  setCurrentSlide((prev) => (prev + 1) % slides.length);
+                  clearInterval(slideTimerRef.current);
+                  slideTimerRef.current = setInterval(() => {
+                    setCurrentSlide((prev) => (prev + 1) % slides.length);
+                  }, 5000);
+                }}
+                className="px-7 py-3 bg-[#292D96] text-white text-lg font-semibold rounded-lg shadow-md hover:bg-[#1f1f80] transition"
+              >
+                Next
+              </button>
             </div>
           </div>
 
-          {/* Right Login Section */}
+          {/* RIGHT LOGIN CARD */}
           <div
-            className={`bg-white/10 backdrop-blur-md flex flex-col justify-center items-center px-10 py-12 transform transition-transform duration-700 ${animateOut ? "translate-x-full" : animateIn ? "translate-x-0" : "translate-x-full"
+            className={`bg-white/70 backdrop-blur-md flex flex-col justify-center items-center px-10 py-12 transition-transform duration-700 ${animateOut ? "translate-x-full" : animateIn ? "translate-x-0" : "translate-x-full"
               }`}
           >
             {!showCamera ? (
               <>
-                {/* Header */}
-                <h2 className="text-4xl font-bold text-white mb-2">Log in</h2>
-                <p className="mb-6 text-white text-sm font-medium">
+                <h2 className="text-4xl font-extrabold text-[#2d0a3a] mb-2 drop-shadow-sm">
+                  Log in
+                </h2>
+                <p className="mb-6 text-sm text-gray-700 font-medium">
                   Don’t Have an Account?{" "}
                   <span
                     onClick={() => setShowRegisterModal(true)}
-                    className="sign-up-link text-orange-400 font-medium hover:underline cursor-pointer"
+                    className="text-[#ff4b2b] font-semibold hover:underline cursor-pointer"
                   >
                     Sign up
                   </span>
                 </p>
 
-                {/* Login Form */}
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
@@ -676,8 +678,8 @@ const LoginPage = () => {
                 >
                   {/* Username */}
                   <div className="relative w-full">
-                    <div className="w-full flex items-center px-4 py-2 rounded-lg bg-white/20 border border-white/30 text-white">
-                      <UserIcon className="w-5 h-5 text-white/70 mr-2" />
+                    <div className="w-full flex items-center px-4 py-3 rounded-full bg-gray-50 border border-gray-200 text-gray-700 shadow-inner">
+                      <UserIcon className="w-5 h-5 text-gray-500 mr-2" />
                       <input
                         type="text"
                         placeholder="Username"
@@ -686,7 +688,7 @@ const LoginPage = () => {
                           setUsername(e.target.value);
                           setBackendErrors({ ...backendErrors, username: "" });
                         }}
-                        className="bg-transparent w-full outline-none placeholder-white/70"
+                        className="bg-transparent w-full outline-none placeholder-gray-400"
                       />
                       {(loginErrors.username || backendErrors.username) && (
                         <ExclamationCircleIcon className="absolute right-3 top-2.5 h-5 w-5 text-red-500 animate-shake" />
@@ -699,10 +701,11 @@ const LoginPage = () => {
                     )}
                   </div>
 
+
                   {/* Password */}
                   <div className="relative w-full">
-                    <div className="w-full flex items-center px-4 py-2 rounded-lg bg-white/20 border border-white/30 text-white">
-                      <LockClosedIcon className="w-5 h-5 text-white/70 mr-2" />
+                    <div className="w-full flex items-center px-4 py-3 rounded-full bg-gray-50 border border-gray-200 text-gray-700 shadow-inner">
+                      <LockClosedIcon className="w-5 h-5 text-gray-500 mr-2" />
                       <input
                         type="password"
                         placeholder="Password"
@@ -711,7 +714,7 @@ const LoginPage = () => {
                           setPassword(e.target.value);
                           setBackendErrors({ ...backendErrors, password: "" });
                         }}
-                        className="bg-transparent w-full outline-none placeholder-white/70"
+                        className="bg-transparent w-full outline-none placeholder-gray-400"
                       />
                       {(loginErrors.password || backendErrors.password) && (
                         <ExclamationCircleIcon className="absolute right-3 top-2.5 h-5 w-5 text-red-500 animate-shake" />
@@ -724,21 +727,20 @@ const LoginPage = () => {
                     )}
                   </div>
 
-                  {/* Forgot Password Link */}
-                  <p className="mt-2 text-sm text-white/80 text-right w-full">
+                  {/* Forgot Password */}
+                  <p className="mt-2 text-sm text-gray-600 text-right w-full">
                     <span
                       onClick={() => setShowForgotPassModal(true)}
-                      className="text-orange-400 font-medium hover:underline cursor-pointer"
+                      className="text-[#ff4b2b] font-semibold hover:underline cursor-pointer"
                     >
                       Forgot Password?
                     </span>
                   </p>
 
-
                   {/* Login Buttons */}
                   <button
                     type="submit"
-                    className="w-full py-2 mt-2 text-base bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold rounded-md shadow-md hover:scale-105 transition-transform"
+                    className="w-full py-3 mt-2 text-base bg-gradient-to-r from-[#ff8a00] to-[#ff4b2b] text-white font-semibold rounded-full shadow-md hover:scale-105 transition-transform"
                   >
                     Log in with Username
                   </button>
@@ -746,16 +748,16 @@ const LoginPage = () => {
                     type="button"
                     onClick={handleFaceLogin}
                     disabled={loading}
-                    className="w-full py-2 mt-2 text-base bg-gradient-to-r from-orange-500 to-pink-500 text-white font-semibold rounded-md shadow-md hover:scale-105 transition-transform"
+                    className="w-full py-3 mt-2 text-base bg-gradient-to-r from-[#ff8a00] to-[#ff4b2b] text-white font-semibold rounded-full shadow-md hover:scale-105 transition-transform"
                   >
                     {loading ? "Checking liveness..." : "Log in with Face"}
                   </button>
                 </form>
               </>
             ) : (
-              <div className="flex flex-col items-center">
-                {/* Webcam */}
-                <div className="relative h-[300px] w-[300px] rounded-2xl overflow-hidden shadow-lg">
+              // CAMERA SECTION 
+              <div className="flex flex-col items-center text-center">
+                <div className="relative h-[300px] w-[300px] rounded-2xl overflow-hidden shadow-xl border-4 border-orange-400">
                   <Webcam
                     ref={webcamRef}
                     screenshotFormat="image/jpeg"
@@ -770,30 +772,29 @@ const LoginPage = () => {
                   )}
                 </div>
 
-                {/* Status Message */}
+
                 {message && (
                   <p
                     className={`mt-4 text-sm font-medium ${loading
-                      ? "text-white animate-pulse"
+                      ? "text-gray-200 animate-pulse"
                       : blinkCaptured || (typeof message === "string" && message.includes("✅"))
-                        ? "text-green-400"
+                        ? "text-green-500"
                         : message === "No blink detected. Please blink clearly."
                           ? "text-red-400"
-                          : "text-white"
+                          : "text-gray-200"
                       }`}
                   >
                     {message}
                   </p>
                 )}
 
-                {/* Retry + Back */}
                 <div className="mt-6 flex flex-col sm:flex-row sm:gap-6 gap-4 items-center">
                   {!loading &&
                     (message === "No blink detected. Please blink clearly." ||
                       (typeof message === "string" && message.includes(""))) && (
                       <button
                         onClick={handleFaceLogin}
-                        className="w-44 py-2 bg-red-500 text-white font-semibold rounded-lg shadow hover:bg-red-600 transition"
+                        className="w-44 py-2 bg-red-500 text-white font-semibold rounded-full shadow hover:bg-red-600 transition"
                       >
                         Retry
                       </button>
@@ -806,34 +807,13 @@ const LoginPage = () => {
                       setCountdown(3);
                       setLoading(false);
                     }}
-                    className="w-44 py-2 bg-gray-500 text-white font-semibold rounded-lg shadow hover:bg-gray-600 transition"
+                    className="w-44 py-2 bg-gray-500 text-white font-semibold rounded-full shadow hover:bg-gray-600 transition"
                   >
                     Go Back
                   </button>
                 </div>
-
-                {/* Welcome Card */}
-                {showWelcomeCard && welcomeData && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-                    <div className="bg-green-100 border border-green-400 rounded-lg p-6 shadow-xl text-green-900 w-full max-w-md text-center animate-fade-in">
-                      <CheckCircleIcon className="h-6 w-6 text-green-500 mx-auto mb-2" />
-                      <h3 className="text-lg font-semibold">
-                        Welcome, {welcomeData.name || `${welcomeData.fname} ${welcomeData.lname}`}
-                      </h3>
-                      <p className="text-sm mt-1">
-                        You're now signed in as <strong>{welcomeData.role}</strong>. Let's get started.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={handleContinue}
-                        className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
-                      >
-                        Continue
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
+
             )}
           </div>
         </div>
@@ -844,7 +824,7 @@ const LoginPage = () => {
         <RegisterUser
           onClose={() => {
             setShowRegisterModal(false);
-            setAutoDSWDRegister(false); // reset after closing modal
+            setAutoDSWDRegister(false);
           }}
           defaultRole={autoDSWDRegister ? "DSWD" : "Social Worker"}
         />
@@ -858,6 +838,7 @@ const LoginPage = () => {
       )}
 
     </div>
+
   );
 };
 

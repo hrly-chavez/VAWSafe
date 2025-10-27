@@ -44,5 +44,8 @@ urlpatterns = [
     path("services/", ServicesListCreateView.as_view(), name="services-list-create"),
     path("service-categories/", ServiceCategoryListView.as_view(), name="service-categories"),
 
+    #reports
+    path("dswddashboard/summary/", DSWDDashboardAPIView.as_view(), name="dswd-dashboard-summary"),
+
     path('', include(router.urls)),
 ] + router.urls

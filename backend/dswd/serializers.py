@@ -4,11 +4,12 @@ from datetime import date
 
 class VictimListSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
+    violence_type = serializers.SerializerMethodField()
 
     class Meta:
         model = Victim
         fields = ["vic_id", "vic_first_name", "vic_middle_name", "vic_last_name", 
-                  "vic_extension", "vic_sex", "vic_birth_place", "age"]
+                  "vic_extension", "vic_sex", "vic_birth_place",  "vic_contact_number", "age", "violence_type",]
 
     def get_age(self, obj):
         if obj.vic_birth_date:
@@ -19,6 +20,10 @@ class VictimListSerializer(serializers.ModelSerializer):
                 - ((today.month, today.day) < (obj.vic_birth_date.month, obj.vic_birth_date.day))
             )
         return None
+    
+    def get_violence_type(self, obj):
+        latest_incident = obj.incidents.order_by("-created_at").first()
+        return latest_incident.violence_type if latest_incident else None
     
 class VictimFaceSampleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -162,7 +167,7 @@ class SessionSerializer(serializers.ModelSerializer):
         return obj.sess_location or "—"
     
     def get_official_name(self, obj):
-        return obj.assigned_official.full_name if obj.assigned_official else None
+        return [official.full_name for official in obj.assigned_official.all()]
 
 class IncidentInformationSerializer(serializers.ModelSerializer): #fetch case and session in victim info
     sessions = SessionSerializer(many=True, read_only=True)  #  add sessions
@@ -546,3 +551,26 @@ class ServicesSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+# Serializers for Dashboard views
+class FemaleVictimSummarySerializer(serializers.Serializer):
+    total_female_victims = serializers.IntegerField()
+    minors = serializers.IntegerField()
+    adults = serializers.IntegerField()
+
+class IncidentSummarySerializer(serializers.Serializer):
+    total_cases = serializers.IntegerField()
+    active_cases = serializers.IntegerField()
+    violence_types = serializers.DictField(child=serializers.IntegerField())
+    status_types = serializers.DictField(child=serializers.IntegerField())
+    top_violence_type = serializers.CharField()
+
+class MonthlyReportRowSerializer(serializers.Serializer):
+    month = serializers.CharField()
+    totalVictims = serializers.IntegerField()
+    sexual = serializers.IntegerField()
+    physical = serializers.IntegerField()
+    psychological = serializers.IntegerField()
+    economic = serializers.IntegerField()
+    referredDSWD = serializers.IntegerField()
+    referredHospital = serializers.IntegerField()

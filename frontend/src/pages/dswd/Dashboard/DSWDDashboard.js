@@ -1,218 +1,321 @@
-import { useState } from "react";
-// import Navbar from "../navBar";
-// import Sidebar from "../sideBar";
-import { Bar, Pie } from "react-chartjs-2";
+import React, { useEffect, useState } from "react";
+import { Line, Bar, Pie, Doughnut } from "react-chartjs-2";
+import {
+  FolderIcon,
+  CheckCircleIcon,
+  ChartBarIcon,
+  UserIcon,
+} from "@heroicons/react/24/outline";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
+  PointElement,
+  LineElement,
   BarElement,
   ArcElement,
   Tooltip,
   Legend,
 } from "chart.js";
-
-import {
-  EnvelopeIcon,
-  PhoneIcon,
-  MapPinIcon,
-  UserIcon,
-  ArrowDownTrayIcon,
-} from "@heroicons/react/24/solid";
+import api from "../../../api/axios";
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
+  PointElement,
+  LineElement,
   BarElement,
   ArcElement,
   Tooltip,
   Legend
 );
 
-const genderData = {
-  labels: ["Male", "Female"],
-  datasets: [
-    {
-      label: "Victims",
-      data: [5, 15],
-      backgroundColor: ["#3B82F6", "#F472B6"],
-    },
-  ],
-};
+export default function DSWDDashboard() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [victimStats, setVictimStats] = useState({});
+  const [incidentStats, setIncidentStats] = useState({});
+  const [reportRows, setReportRows] = useState([]);
+  const [monthlyVictimData, setMonthlyVictimData] = useState([]);
+  const [violenceTypeData, setViolenceTypeData] = useState({
+    labels: [],
+    datasets: [],
+  });
 
-const caseTypeData = {
-  labels: [
-    "Physical Abuse",
-    "Sexual Abuse",
-    "Psychological Abuse",
-    "Economic Abuse",
-    "Emotional Abuse",
-  ],
-  datasets: [
-    {
-      data: [8, 4, 5, 2, 1],
-      backgroundColor: ["#EF4444", "#F59E0B", "#10B981", "#6366F1", "#8B5CF6"],
-    },
-  ],
-};
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const res = await api.get("/api/dswd/dswddashboard/summary");
+        const data = res.data;
 
-export default function DSWSDashboard () {
-    const [stats] = useState({
-        victims: 2,
-        cases: 2,
-        sessions: 1,
-        socialWorkers: 4,
-    });
-    return (
-        <div className="md:col-span-4 px-10 py-8 space-y-10">
-            {/* Stat Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-                { label: "Victims", value: stats.victims },
-                { label: "Cases", value: stats.cases },
-                { label: "Sessions", value: stats.sessions },
-                { label: "Social Workers", value: stats.socialWorkers },
-            ].map((stat) => (
-                <div
-                key={stat.label}
-                className="p-6 rounded-xl bg-blue-100 border border-blue-200 shadow-sm hover:bg-blue-200 transition"
-                >
-                <h3 className="text-3xl font-bold text-blue-800">{stat.value}</h3>
-                <p className="text-sm mt-2 font-semibold text-blue-700">
-                    {stat.label}
-                </p>
-                </div>
-            ))}
-            </div>
-    
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl shadow-md border border-gray-200">
-                <h2 className="text-lg font-semibold px-6 pt-6">
-                Victim Gender Distribution
-                </h2>
-                <div className="h-[300px] px-6 pb-6">
-                <Bar
-                    data={genderData}
-                    options={{ responsive: true, maintainAspectRatio: false }}
-                />
-                </div>
-            </div>
-    
-            <div className="bg-white rounded-xl shadow-md border border-gray-200">
-                <h2 className="text-lg font-semibold px-6 pt-6">
-                VAWC Case Type Breakdown
-                </h2>
-                <div className="h-[300px] px-6 pb-6">
-                <Pie
-                    data={caseTypeData}
-                    options={{ responsive: true, maintainAspectRatio: false }}
-                />
-                </div>
-            </div>
-            </div>
-    
-            {/* Contact + Download Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-8 rounded-xl shadow-lg border border-gray-200 font-sans">
-            {/* Left: Contact Info */}
-            <div className="space-y-6 text-gray-700">
-                <h2 className="text-2xl font-bold text-blue-800 tracking-wide">
-                Need Assistance?
-                </h2>
-                <p className="text-base text-gray-600 leading-relaxed tracking-wide">
-                Reach out to our support team for help with reporting, monitoring,
-                or accessing services.
-                </p>
-    
-                <div className="space-y-6">
-                <div>
-                    <h3 className="flex items-center gap-3 text-blue-700 font-semibold text-lg tracking-wide">
-                    <span className="inline-flex items-center justify-center h-8 w-8 bg-blue-100 rounded-full">
-                        <UserIcon className="h-5 w-5 text-blue-600" />
-                    </span>
-                    DSWD Desk Officer
-                    </h3>
-                    <p className="ml-11 text-base">Ms. Angelica D. Ramos</p>
-                    <p className="ml-11 text-sm flex items-center gap-2">
-                    <EnvelopeIcon className="h-4 w-4 text-gray-500" />
-                    angelicad.ramos.dswd1@gmail.com
-                    </p>
-                    <p className="ml-11 text-sm flex items-center gap-2">
-                    <EnvelopeIcon className="h-4 w-4 text-gray-500" />
-                    angelicad.ramos.dswd1@gov.ph
-                    </p>
-                </div>
-    
-                <div>
-                    <h3 className="flex items-center gap-3 text-blue-700 font-semibold text-lg tracking-wide">
-                    <span className="inline-flex items-center justify-center h-8 w-8 bg-blue-100 rounded-full">
-                        <UserIcon className="h-5 w-5 text-blue-600" />
-                    </span>
-                    Barangay Official
-                    </h3>
-                    <p className="ml-11 text-base">
-                    Mr. Carlos S. Reyes – Barangay Captain
-                    </p>
-                    <p className="ml-11 text-sm flex items-center gap-2">
-                    <EnvelopeIcon className="h-4 w-4 text-gray-500" />
-                    carlos.reyes@barangay.gov.ph
-                    </p>
-                    <p className="ml-11 text-sm flex items-center gap-2">
-                    <EnvelopeIcon className="h-4 w-4 text-gray-500" />
-                    carlos.reyes@barangay1.gov.ph
-                    </p>
-                </div>
-                </div>
-    
-                <p className="text-sm text-gray-500 mt-4 tracking-wide">
-                If you are not sure — VAWSafe is here to help ensure your safety and
-                dignity.
-                </p>
-            </div>
-    
-            {/* Right: Download Card */}
-            <div className="flex justify-center items-start">
-                <div className="w-full max-w-md bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-xl shadow-md">
-                <div className="space-y-4">
-                    <h2 className="text-xl font-semibold tracking-wide">
-                    Download the VAWSafe App
-                    </h2>
-                    <p className="text-base text-white/90 leading-relaxed tracking-wide">
-                    Get access to secure case reporting, victim profiling, and
-                    real-time support services.
-                    </p>
-                </div>
-    
-                <div className="mt-6 space-y-4">
-                    {/* Google Play Button */}
-                    <a
-                    href="https://play.google.com/store/apps/details?id=com.vawsafe"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 bg-white text-blue-700 font-semibold text-base px-4 py-2 rounded-md hover:bg-gray-100 transition tracking-wide"
-                    >
-                    <img
-                        src="/images/google-play.png"
-                        alt="Google Play"
-                        className="h-6 w-auto"
-                    />
-                    Get it on Google Play
-                    </a>
-    
-                    {/* Direct APK Download Button */}
-                    <a
-                    href="/downloads/vawsafe.apk"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-3 bg-white text-blue-700 font-semibold text-base px-4 py-2 rounded-md hover:bg-gray-100 transition tracking-wide"
-                    >
-                    <ArrowDownTrayIcon className="h-5 w-5 text-blue-600" />
-                    Direct APK Download
-                    </a>
-                </div>
-                </div>
-            </div>
-            </div>
+        setVictimStats(data.victim_summary);
+        setIncidentStats(data.incident_summary);
+        setReportRows(data.monthly_report_rows);
+        setMonthlyVictimData(
+          data.monthly_report_rows.map((row) => row.totalVictims)
+        );
+
+        setViolenceTypeData({
+          labels: Object.keys(data.incident_summary.violence_types),
+          datasets: [
+            {
+              label: "Cases",
+              data: Object.values(data.incident_summary.violence_types),
+              backgroundColor: [
+                "rgba(245, 158, 11, 0.7)", // yellow 
+                "rgba(16, 185, 129, 0.7)", // green 
+                "rgba(59, 130, 246, 0.7)", // blue 
+                "rgba(139, 92, 246, 0.7)", // purple 
+              ],
+              borderColor: [
+                "#F59E0B",
+                "#10B981",
+                "#3B82F6",
+                "#8B5CF6",
+              ],
+              borderWidth: 2,
+              borderRadius: 6,
+            },
+          ],
+        });
+      } catch (err) {
+        setError("Failed to load dashboard data");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // ✅ Line chart (Monthly Victim Reports)
+  const lineData = {
+    labels: [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ],
+    datasets: [
+      {
+        label: "Total Victims",
+        data: monthlyVictimData,
+        borderColor: "#6366F1",
+        backgroundColor: (context) => {
+          const chart = context.chart;
+          const { ctx, chartArea } = chart;
+          if (!chartArea) return "#6366F1";
+          const gradient = ctx.createLinearGradient(0, 0, 0, chartArea.bottom);
+          gradient.addColorStop(0, "rgba(99,102,241,0.4)");
+          gradient.addColorStop(1, "rgba(99,102,241,0.05)");
+          return gradient;
+        },
+        pointBackgroundColor: "#4338CA",
+        pointRadius: 5,
+        borderWidth: 3,
+        fill: true,
+        tension: 0.4,
+      },
+    ],
+  };
+
+  const barOptions = {
+    indexAxis: "y",
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: true },
+    },
+    scales: {
+      x: {
+        grid: { color: "rgba(209, 213, 219, 0.4)" },
+        ticks: { color: "#374151" },
+      },
+      y: {
+        grid: { color: "rgba(209, 213, 219, 0.4)" },
+        ticks: { color: "#374151" },
+      },
+    },
+  };
+
+  // ✅ Pie chart (Case Status)
+  const pieData = {
+    labels: ["Active", "Resolved"],
+    datasets: [
+      {
+        data: [
+          incidentStats.active_cases || 0,
+          incidentStats.status_types?.Done || 0,
+        ],
+        backgroundColor: [
+          "rgba(59, 130, 246, 0.85)",
+          "rgba(156, 163, 175, 0.85)",
+        ],
+        borderColor: ["#2563EB", "#6B7280"],
+        hoverOffset: 10,
+        borderWidth: 3,
+      },
+    ],
+  };
+
+  const pieOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: "bottom" },
+    },
+    cutout: "55%", // donut style
+  };
+
+  // ✅ Doughnut chart (Age Groups)
+  const ageGroupData = {
+    labels: ["Minors", "Adults"],
+    datasets: [
+      {
+        data: [victimStats.minors || 0, victimStats.adults || 0],
+        backgroundColor: ["rgba(16,185,129,0.85)", "rgba(139,92,246,0.85)"],
+        borderColor: ["#059669", "#7C3AED"],
+        hoverOffset: 10,
+        borderWidth: 3,
+      },
+    ],
+  };
+
+  const kpiCards = [
+    {
+      label: "Active Cases",
+      value: incidentStats.active_cases || 0,
+      bg: "from-yellow-400 to-orange-500",
+      icon: <FolderIcon className="w-6 h-6 text-white" />,
+    },
+    {
+      label: "Resolved This Month",
+      value: incidentStats.status_types?.Done || 0,
+      bg: "from-blue-400 to-blue-600",
+      icon: <CheckCircleIcon className="w-6 h-6 text-white" />,
+    },
+    {
+      label: "Top Violence Type",
+      value: incidentStats.top_violence_type || "N/A",
+      bg: "from-green-400 to-emerald-500",
+      icon: <ChartBarIcon className="w-6 h-6 text-white" />,
+    },
+    {
+      label: "Female Victims (Minors)",
+      value: victimStats.minors || 0,
+      bg: "from-purple-400 to-pink-500",
+      icon: <UserIcon className="w-6 h-6 text-white" />,
+    },
+  ];
+
+  if (loading)
+    return <div className="p-10 text-center text-gray-500">Loading dashboard...</div>;
+  if (error)
+    return <div className="p-10 text-center text-red-600">{error}</div>;
+
+  return (
+    <div className="px-6 py-8 space-y-10 bg-gray-50 font-sans">
+      {/* KPI CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {kpiCards.map((kpi, idx) => (
+          <div
+            key={idx}
+            className={`p-6 rounded-2xl shadow-md text-white bg-gradient-to-r ${kpi.bg} transform hover:scale-105 transition`}
+          >
+            <h3 className="text-3xl font-bold flex items-center gap-3">
+              {kpi.icon} {kpi.value}
+            </h3>
+            <p className="text-sm mt-2 font-semibold opacity-90">{kpi.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* MIDDLE CHARTS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Violence Type */}
+        <div className="bg-white rounded-2xl shadow-md p-6">
+          <h2 className="text-lg font-semibold mb-4 text-[#292D96]">
+            Violence Type Breakdown
+          </h2>
+          <div className="h-[340px] flex justify-center items-center">
+            <Bar data={violenceTypeData} options={barOptions} />
+          </div>
         </div>
-    );
+
+        {/* Case Status */}
+        <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col justify-center items-center">
+          <h2 className="text-lg font-semibold mb-4 text-[#292D96]">Case Status</h2>
+          <div className="w-[320px] h-[320px] flex justify-center items-center">
+            <Pie data={pieData} options={pieOptions} />
+          </div>
+        </div>
+      </div>
+
+      {/* BOTTOM CHARTS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Monthly Victims */}
+        <div className="bg-white rounded-2xl shadow-md p-6">
+          <h2 className="text-lg font-semibold mb-4 text-[#292D96]">
+            Monthly Victim Reports
+          </h2>
+          <div className="h-[340px]">
+            <Line
+              data={lineData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { display: false },
+                },
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Age Group */}
+        <div className="bg-white rounded-2xl shadow-md p-6 flex flex-col justify-center items-center">
+          <h2 className="text-lg font-semibold mb-4 text-[#292D96]">
+            Minors vs Adults
+          </h2>
+          <div className="w-[320px] h-[320px] flex justify-center items-center">
+            <Doughnut data={ageGroupData} options={pieOptions} />
+          </div>
+        </div>
+      </div>
+
+      {/* MONTHLY REPORT TABLE */}
+      <div className="bg-white rounded-2xl shadow-md p-6">
+        <h2 className="text-lg font-bold text-[#292D96] mb-4">
+          Monthly Reports – Haven for Women
+        </h2>
+        <div className="overflow-x-auto rounded-xl">
+          <table className="min-w-full text-sm text-left border border-gray-300 rounded-lg overflow-hidden">
+            <thead className="text-[#292D96] font-semibold">
+              <tr>
+                <th className="px-4 py-2 border bg-blue-100">Month</th>
+                <th className="px-4 py-2 border bg-blue-200">Total</th>
+                <th className="px-4 py-2 border bg-yellow-200 text-yellow-800">Sexual</th>
+                <th className="px-4 py-2 border bg-red-200 text-red-800">Physical</th>
+                <th className="px-4 py-2 border bg-green-200 text-green-800">Psychological</th>
+                <th className="px-4 py-2 border bg-indigo-200 text-indigo-800">Economic</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reportRows.map((row, idx) => (
+                <tr
+                  key={idx}
+                  className={`${idx % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-indigo-50`}
+                >
+                  <td className="px-4 py-2 border font-medium">{row.month}</td>
+                  <td className="px-4 py-2 border bg-blue-50 font-semibold text-blue-800">{row.totalVictims}</td>
+                  <td className="px-4 py-2 border bg-yellow-50 text-yellow-700 font-semibold">{row.sexual}</td>
+                  <td className="px-4 py-2 border bg-red-50 text-red-700 font-semibold">{row.physical}</td>
+                  <td className="px-4 py-2 border bg-green-50 text-green-700 font-semibold">{row.psychological}</td>
+                  <td className="px-4 py-2 border bg-indigo-50 text-indigo-700 font-semibold">{row.economic}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
 }

@@ -1,86 +1,111 @@
 import { useState } from "react";
-// import Navbar from "../navBar";
-// import Sidebar from "../sideBar";
-import { Bar, Pie } from "react-chartjs-2";
+import { Line, Bar } from "react-chartjs-2";
+
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
+  PointElement,
+  LineElement,
   BarElement,
-  ArcElement,
   Tooltip,
   Legend,
 } from "chart.js";
 
-import {
-  EnvelopeIcon,
-  PhoneIcon,
-  MapPinIcon,
-  UserIcon,
-  ArrowDownTrayIcon,
-} from "@heroicons/react/24/solid";
-
 ChartJS.register(
   CategoryScale,
   LinearScale,
+  PointElement,
+  LineElement,
   BarElement,
-  ArcElement,
   Tooltip,
   Legend
 );
 
-const genderData = {
-  labels: ["Male", "Female"],
+
+// Sample dynamic data
+const monthlyVictimData = {
+  2023: [3, 5, 2, 4, 6, 7, 5, 3, 4, 6, 2, 1],
+  2024: [4, 6, 3, 5, 8, 9, 6, 4, 5, 7, 3, 2],
+};
+
+const violenceTypeData = {
+  labels: ["Sexual", "Physical", "Psychological", "Economic"],
   datasets: [
     {
-      label: "Victims",
-      data: [5, 15],
-      backgroundColor: ["#3B82F6", "#F472B6"],
+      label: "Cases",
+      data: [12, 18, 9, 5],
+      backgroundColor: ["#F59E0B", "#EF4444", "#10B981", "#6366F1"],
     },
   ],
 };
 
-const caseTypeData = {
-  labels: [
-    "Physical Abuse",
-    "Sexual Abuse",
-    "Psychological Abuse",
-    "Economic Abuse",
-    "Emotional Abuse",
-  ],
-  datasets: [
-    {
-      data: [8, 4, 5, 2, 1],
-      backgroundColor: ["#EF4444", "#F59E0B", "#10B981", "#6366F1", "#8B5CF6"],
-    },
-  ],
-};
+const reportRows = [
+  {
+    month: "January",
+    totalVictims: 6,
+    sexual: 2,
+    physical: 3,
+    psychological: 1,
+    economic: 0,
+  },
+  {
+    month: "February",
+    totalVictims: 5,
+    sexual: 1,
+    physical: 2,
+    psychological: 1,
+    economic: 1,
+  },
+];
 
 export default function Dashboard() {
-  const [stats] = useState({
-    victims: 2,
-    cases: 2,
-    sessions: 1,
-    socialWorkers: 4,
-  });
+  const [selectedYear, setSelectedYear] = useState("2024");
+
+  const lineData = {
+    labels: [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ],
+    datasets: [
+      {
+        label: "Total Victims",
+        data: monthlyVictimData[selectedYear],
+        borderColor: "#3B82F6",
+        backgroundColor: "#93C5FD",
+        pointBackgroundColor: "#1D4ED8",
+        fill: true,
+        tension: 0.3,
+      },
+    ],
+  };
+
+  const barOptions = {
+    indexAxis: "y",
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: { enabled: true },
+    },
+  };
 
   return (
-    <div className="md:col-span-4 px-10 py-8 space-y-10">
-      {/* Stat Cards */}
+    <div className="px-6 py-8 space-y-10 bg-gray-50 font-sans">
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: "Victims", value: stats.victims },
-          { label: "Cases", value: stats.cases },
-          { label: "Sessions", value: stats.sessions },
-          { label: "Social Workers", value: stats.socialWorkers },
-        ].map((stat) => (
+          { label: "Active Cases", value: 28 },
+          { label: "Resolved This Month", value: 6 },
+          { label: "Top Violence Type", value: "Physical (45%)" },
+          { label: "Pending Sessions", value: 3 },
+        ].map((kpi, idx) => (
           <div
-            key={stat.label}
-            className="p-6 rounded-xl bg-blue-100 border border-blue-200 shadow-sm hover:bg-blue-200 transition"
+            key={idx}
+            className="p-5 rounded-xl bg-white shadow hover:shadow-md transition"
           >
-            <h3 className="text-3xl font-bold text-blue-800">{stat.value}</h3>
+            <h3 className="text-2xl font-bold text-blue-800">{kpi.value}</h3>
             <p className="text-sm mt-2 font-semibold text-blue-700">
-              {stat.label}
+              {kpi.label}
             </p>
           </div>
         ))}
@@ -88,129 +113,51 @@ export default function Dashboard() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-md border border-gray-200">
-          <h2 className="text-lg font-semibold px-6 pt-6">
-            Victim Gender Distribution
+        {/* Line Chart */}
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <h2 className="text-lg font-semibold mb-4 text-[#292D96]">
+            Monthly Victim Reports ({selectedYear})
           </h2>
-          <div className="h-[300px] px-6 pb-6">
-            <Bar
-              data={genderData}
+          <div className="h-[300px]">
+            <Line
+              data={lineData}
               options={{ responsive: true, maintainAspectRatio: false }}
             />
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-md border border-gray-200">
-          <h2 className="text-lg font-semibold px-6 pt-6">
-            VAWC Case Type Breakdown
+        {/* Horizontal Bar Chart */}
+        <div className="bg-white rounded-xl shadow-md p-6">
+          <h2 className="text-lg font-semibold mb-4 text-[#292D96]">
+            Violence Type Breakdown
           </h2>
-          <div className="h-[300px] px-6 pb-6">
-            <Pie
-              data={caseTypeData}
-              options={{ responsive: true, maintainAspectRatio: false }}
-            />
+          <div className="h-[300px]">
+            <Bar data={violenceTypeData} options={barOptions} />
           </div>
         </div>
       </div>
-
-      {/* Contact + Download Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-8 rounded-xl shadow-lg border border-gray-200 font-sans">
-        {/* Left: Contact Info */}
-        <div className="space-y-6 text-gray-700">
-          <h2 className="text-2xl font-bold text-blue-800 tracking-wide">
-            Need Assistance?
+      {/* Monthly Report Table */}
+      <div className="bg-white rounded-xl shadow-md p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+          <h2 className="text-lg font-bold text-[#292D96]">
+            Monthly Reports – Haven for Women
           </h2>
-          <p className="text-base text-gray-600 leading-relaxed tracking-wide">
-            Reach out to our support team for help with reporting, monitoring,
-            or accessing services.
-          </p>
-
-          <div className="space-y-6">
-            <div>
-              <h3 className="flex items-center gap-3 text-blue-700 font-semibold text-lg tracking-wide">
-                <span className="inline-flex items-center justify-center h-8 w-8 bg-blue-100 rounded-full">
-                  <UserIcon className="h-5 w-5 text-blue-600" />
-                </span>
-                DSWD Desk Officer
-              </h3>
-              <p className="ml-11 text-base">Ms. Angelica D. Ramos</p>
-              <p className="ml-11 text-sm flex items-center gap-2">
-                <EnvelopeIcon className="h-4 w-4 text-gray-500" />
-                angelicad.ramos.dswd1@gmail.com
-              </p>
-              <p className="ml-11 text-sm flex items-center gap-2">
-                <EnvelopeIcon className="h-4 w-4 text-gray-500" />
-                angelicad.ramos.dswd1@gov.ph
-              </p>
-            </div>
-
-            <div>
-              <h3 className="flex items-center gap-3 text-blue-700 font-semibold text-lg tracking-wide">
-                <span className="inline-flex items-center justify-center h-8 w-8 bg-blue-100 rounded-full">
-                  <UserIcon className="h-5 w-5 text-blue-600" />
-                </span>
-                Barangay Official
-              </h3>
-              <p className="ml-11 text-base">
-                Mr. Carlos S. Reyes – Barangay Captain
-              </p>
-              <p className="ml-11 text-sm flex items-center gap-2">
-                <EnvelopeIcon className="h-4 w-4 text-gray-500" />
-                carlos.reyes@barangay.gov.ph
-              </p>
-              <p className="ml-11 text-sm flex items-center gap-2">
-                <EnvelopeIcon className="h-4 w-4 text-gray-500" />
-                carlos.reyes@barangay1.gov.ph
-              </p>
-            </div>
-          </div>
-
-          <p className="text-sm text-gray-500 mt-4 tracking-wide">
-            If you are not sure — VAWSafe is here to help ensure your safety and
-            dignity.
-          </p>
-        </div>
-
-        {/* Right: Download Card */}
-        <div className="flex justify-center items-start">
-          <div className="w-full max-w-md bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-xl shadow-md">
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold tracking-wide">
-                Download the VAWSafe App
-              </h2>
-              <p className="text-base text-white/90 leading-relaxed tracking-wide">
-                Get access to secure case reporting, victim profiling, and
-                real-time support services.
-              </p>
-            </div>
-
-            <div className="mt-6 space-y-4">
-              {/* Google Play Button */}
-              <a
-                href="https://play.google.com/store/apps/details?id=com.vawsafe"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 bg-white text-blue-700 font-semibold text-base px-4 py-2 rounded-md hover:bg-gray-100 transition tracking-wide"
-              >
-                <img
-                  src="/images/google-play.png"
-                  alt="Google Play"
-                  className="h-6 w-auto"
-                />
-                Get it on Google Play
-              </a>
-
-              {/* Direct APK Download Button */}
-              <a
-                href="/downloads/vawsafe.apk"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 bg-white text-blue-700 font-semibold text-base px-4 py-2 rounded-md hover:bg-gray-100 transition tracking-wide"
-              >
-                <ArrowDownTrayIcon className="h-5 w-5 text-blue-600" />
-                Direct APK Download
-              </a>
-            </div>
+          <div className="mt-2 sm:mt-0">
+            <label htmlFor="year" className="mr-2 text-sm font-medium text-gray-700">
+              Year:
+            </label>
+            <select
+              id="year"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white shadow-sm focus:outline-none focus:ring-1 focus:ring-[#292D96]"
+            >
+              {Object.keys(monthlyVictimData).map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

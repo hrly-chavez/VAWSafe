@@ -7,12 +7,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from deepface import DeepFace
 from .serializers import *
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Count
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from shared_model.permissions import IsRole
 from django.contrib.auth.models import User
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from django.utils.crypto import get_random_string
 from django.core.mail import send_mail
 from PIL import Image
@@ -20,6 +20,8 @@ from django.utils import timezone
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db.models.fields.files import FieldFile
 from datetime import date, datetime
+from calendar import month_name
+from collections import Counter
 import json
 from dswd.utils.logging import log_change
 
@@ -937,5 +939,93 @@ class ServicesListCreateView(generics.ListCreateAPIView):
             queryset = queryset.filter(category_id=category)  # ✅ use category_id
         return queryset
 
+#=============================Dashboard======================================
+class DSWDDashboardAPIView(APIView):
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']
 
+    def get(self, request):
+        today = date.today()
 
+        #Victim Summary
+        victims = [v for v in Victim.objects.all() if v.vic_sex == "Female"]
+        total_female_victims = len(victims)
+        minors = 0
+        adults = 0
+
+        for victim in victims:
+            if victim.vic_birth_date:
+                age = (
+                    today.year
+                    - victim.vic_birth_date.year
+                    - ((today.month, today.day) < (victim.vic_birth_date.month, victim.vic_birth_date.day))
+                )
+                if age < 18:
+                    minors += 1
+                else:
+                    adults += 1
+
+        victim_summary = {
+            "total_female_victims": total_female_victims,
+            "minors": minors,
+            "adults": adults,
+        }
+
+        #Incident Summary
+        incidents = IncidentInformation.objects.all()
+        total_cases = incidents.count()
+        active_cases = len([
+            i for i in incidents
+            if i.incident_status in ["Pending", "Ongoing"]
+        ])
+
+        violence_types = Counter(
+            i.violence_type for i in incidents if i.violence_type
+        )
+        violence_types_dict = dict(violence_types)
+
+        total_violence = sum(violence_types.values())
+        if total_violence > 0:
+            top_key, top_count = violence_types.most_common(1)[0]
+            top_type = f"{top_key} ({round((top_count / total_violence) * 100)}%)"
+        else:
+            top_type = "N/A"
+
+        status_counts = (
+            incidents.values("incident_status")
+            .annotate(count=Count("incident_status"))
+        )
+        status_types = {s["incident_status"]: s["count"] for s in status_counts}
+
+        incident_summary = {
+            "total_cases": total_cases,
+            "active_cases": active_cases,
+            "violence_types": violence_types_dict,
+            "status_types": status_types,
+            "top_violence_type": top_type,
+        }
+
+        #Monthly Report Rows
+        report_rows = []
+        for i in range(1, 13):
+            month_incidents = [
+                inc for inc in incidents
+                if inc.incident_date and inc.incident_date.month == i
+            ]   
+            report_rows.append({
+                "month": month_name[i],
+                "totalVictims": len(month_incidents),
+                "sexual": sum(1 for inc in month_incidents if inc.violence_type == "Sexual"),
+                "physical": sum(1 for inc in month_incidents if inc.violence_type == "Physical"),
+                "psychological": sum(1 for inc in month_incidents if inc.violence_type == "Psychological"),
+                "economic": sum(1 for inc in month_incidents if inc.violence_type == "Economic"),
+                "referredDSWD": 0,
+                "referredHospital": 0,
+            })
+
+        #Serialize and return
+        return Response({
+            "victim_summary": FemaleVictimSummarySerializer(victim_summary).data,
+            "incident_summary": IncidentSummarySerializer(incident_summary).data,
+            "monthly_report_rows": MonthlyReportRowSerializer(report_rows, many=True).data,
+        })
