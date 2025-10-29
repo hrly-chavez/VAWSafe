@@ -5,6 +5,8 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from datetime import datetime, time
 from rest_framework.exceptions import ValidationError
+from dswd.utils.logging import log_change
+
 # --- Lightweight list serializer ---
 class VictimListSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
@@ -537,7 +539,6 @@ class OfficialUnavailabilitySerializer(serializers.ModelSerializer):
     
 
 #=========================QUESTIONS================================
-
 #  CATEGORY SERIALIZER 
 class QuestionCategorySerializer(serializers.ModelSerializer):
     """For displaying role-specific question categories."""
@@ -546,36 +547,40 @@ class QuestionCategorySerializer(serializers.ModelSerializer):
         model = QuestionCategory
         fields = ["id", "name", "description", "role", "is_active"]
 
-
 #  QUESTION SERIALIZER
 class QuestionSerializer(serializers.ModelSerializer):
-    """Handles question creation and editing for social workers."""
     created_by_name = serializers.CharField(source="created_by.full_name", read_only=True)
     category_name = serializers.CharField(source="ques_category.name", read_only=True)
+    mappings = serializers.SerializerMethodField()
 
     class Meta:
         model = Question
         fields = "__all__"
         read_only_fields = ["ques_id", "created_at", "created_by_name", "role"]
 
+    def get_mappings(self, obj):
+        """Return all session mappings for this question."""
+        return [
+            {
+                "session_number": m.session_number,
+                "session_type": m.session_type.name,
+                "session_type_id": m.session_type.id,
+            }
+            for m in obj.type_questions.all()
+        ]
+
     def create(self, validated_data):
-        """Automatically set created_by and role based on the current user."""
         request = self.context.get("request")
         official = getattr(request.user, "official", None)
-
-        # Auto-assign the creator and their role
         validated_data["created_by"] = official
         validated_data["role"] = official.of_role if official else "Unknown"
-
         return super().create(validated_data)
-
 
 # SESSION TYPE (for assignment modal)
 class SessionTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = SessionType
         fields = ["id", "name"]
-
 
 # SESSION TYPE QUESTION (assignment link) 
 class SessionTypeQuestionSerializer(serializers.ModelSerializer):
@@ -592,3 +597,87 @@ class SessionTypeQuestionSerializer(serializers.ModelSerializer):
             "question",
             "question_text",
         ]
+
+class BulkQuestionCreateSerializer(serializers.Serializer):
+    """
+    Bulk creation of multiple questions under one chosen category.
+    Automatically assigns created questions to specified session types and numbers.
+    """
+    category_id = serializers.IntegerField(required=True)
+    questions = serializers.ListField(
+        child=serializers.DictField(), allow_empty=False
+    )
+    session_numbers = serializers.ListField(
+        child=serializers.IntegerField(min_value=1), allow_empty=False
+    )
+    session_types = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=False
+    )
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        official = getattr(request.user, "official", None)
+        category_id = validated_data["category_id"]
+        questions_data = validated_data["questions"]
+        session_numbers = validated_data["session_numbers"]
+        session_types = validated_data["session_types"]
+
+        created_questions = []
+
+        for q in questions_data:
+            question = Question.objects.create(
+                ques_category_id=category_id,
+                ques_question_text=q.get("ques_question_text"),
+                ques_answer_type=q.get("ques_answer_type"),
+                ques_is_active=True,
+                created_by=official,
+                role=official.of_role if official else "Unknown",
+            )
+            created_questions.append(question)
+
+        # --- Automatically assign all new questions to the chosen sessions ---
+        for question in created_questions:
+            for sess_num in session_numbers:
+                for st_id in session_types:
+                    SessionTypeQuestion.objects.create(
+                        session_number=sess_num,
+                        session_type_id=st_id,
+                        question=question,
+                    )
+
+        # Log the entire bulk creation action
+        for q in created_questions:
+            log_change(
+                user=request.user,
+                model_name="Question",
+                record_id=q.ques_id,
+                action="CREATE",
+                description=f"Bulk-created question '{q.ques_question_text}' and assigned to sessions.",
+            )
+
+        return created_questions
+
+class BulkAssignSerializer(serializers.Serializer):
+    """
+    For edit and changelogs
+    Used for bulk assigning questions to multiple session types and numbers.
+    Accepts lists of question IDs, session numbers, and session type IDs.
+    """
+    questions = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=False
+    )
+    session_numbers = serializers.ListField(
+        child=serializers.IntegerField(min_value=1), allow_empty=False
+    )
+    session_types = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=False
+    )
+
+#Logs
+class ChangeLogSerializer(serializers.ModelSerializer):
+    """Displays detailed logs of changes made by officials."""
+    user_name = serializers.CharField(source="user.full_name", read_only=True)
+
+    class Meta:
+        model = ChangeLog
+        fields = "__all__"

@@ -3,12 +3,18 @@ import { useState, useEffect } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import api from "../../../api/axios";
 import AddQuestion from "./AddQuestion";
+import EditQuestion from "./EditQuestion";
+import ChangeLogModal from "./ChangeLogModal";
 
 export default function Questions() {
   const [questions, setQuestions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState(null);
+  const [selectedLogId, setSelectedLogId] = useState(null);
 
   const fetchQuestions = async () => {
     try {
@@ -34,6 +40,32 @@ export default function Questions() {
     );
   });
 
+  const handleEditClick = (questionId) => {
+    setEditingQuestion(questionId);
+    setShowEditModal(true);
+  };
+
+  const handleViewLogsClick = (questionId) => {
+    setSelectedLogId(questionId);
+    setShowLogModal(true);
+  };
+  const handleToggleActive = async (id, isActive) => {
+    const actionText = isActive ? "deactivate" : "activate";
+    const confirmed = window.confirm(
+      `Are you sure you want to ${actionText} this question?`
+    );
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`/api/psychometrician/questions/${id}/`);
+      alert(`Question ${isActive ? "deactivated" : "activated"} successfully.`);
+      fetchQuestions(); // Refresh table
+    } catch (err) {
+      console.error("Failed to toggle question state:", err.response?.data || err);
+      alert("Error updating question state.");
+    }
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <div className="text-center mb-8">
@@ -41,7 +73,7 @@ export default function Questions() {
           Q&amp;A Library
         </h1>
         <p className="text-sm text-gray-600 mt-1">
-          VAWSAFE | Psychometrician | Role-specific question library
+          VAWSAFE | Social Worker | Role-specific question library
         </p>
       </div>
 
@@ -51,7 +83,7 @@ export default function Questions() {
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-500 mr-2" />
           <input
             type="text"
-            placeholder="Search questions by text or category..."
+            placeholder="Filter by Category(Coming Soon)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full border border-gray-300 rounded-md px-4 py-2 text-sm"
@@ -76,12 +108,13 @@ export default function Questions() {
               <th className="border p-3 text-left">Question</th>
               <th className="border p-3 text-left">Answer Type</th>
               <th className="border p-3 text-left">Active</th>
+              <th className="border p-3 text-center w-40">Actions</th>
             </tr>
           </thead>
           <tbody className="text-sm">
             {loading ? (
               <tr>
-                <td colSpan="4" className="text-center p-4 text-gray-500">
+                <td colSpan="5" className="text-center p-4 text-gray-500">
                   Loading...
                 </td>
               </tr>
@@ -101,12 +134,39 @@ export default function Questions() {
                   <td className="border p-3">
                     {q.ques_is_active ? "Yes" : "No"}
                   </td>
+                  {/* Action Button */}
+                  <td className="border p-3 text-center">
+                  <button
+                    onClick={() => handleEditClick(q.ques_id)}
+                    className="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500 mr-2">
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={() => handleToggleActive(q.ques_id, q.ques_is_active)}
+                    className={`px-2 py-1 rounded text-white ${
+                      q.ques_is_active
+                        ? "bg-red-500 hover:bg-red-600"
+                        : "bg-green-500 hover:bg-green-600"
+                    } mr-2`}
+                  >
+                    {q.ques_is_active ? "Deactivate" : "Activate"}
+                  </button>
+
+                  <button
+                    onClick={() => handleViewLogsClick(q.ques_id)}
+                    className="px-2 py-1 bg-gray-600 text-white rounded hover:bg-gray-700"
+                  >
+                    Logs
+                  </button>
+                </td>
+
                 </tr>
               ))
             ) : (
               <tr>
                 <td
-                  colSpan="4"
+                  colSpan="5"
                   className="text-center text-gray-500 p-4 italic"
                 >
                   No questions found
@@ -124,6 +184,24 @@ export default function Questions() {
             setShowAddModal(false);
             fetchQuestions();
           }}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <EditQuestion
+          show={showEditModal}
+          questionId={editingQuestion}
+          onClose={() => setShowEditModal(false)}
+          onUpdated={() => fetchQuestions()}
+        />
+      )}
+
+      {/* Log Modal (to be built next) */}
+      {showLogModal && (
+        <ChangeLogModal
+          questionId={selectedLogId}
+          onClose={() => setShowLogModal(false)}
         />
       )}
     </div>

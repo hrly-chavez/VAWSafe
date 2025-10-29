@@ -30,20 +30,19 @@ urlpatterns = [
     path("cases/", SocialWorkerCaseList.as_view(), name="list-of-cases"),
 
 
-    #Questions
-    #(for dropdown)
+     #Questions
     path("question-categories/", views.QuestionCategoryListView.as_view(), name="sw-question-categories"),
-    #(list, create, update, toggle)
     path("questions/", views.QuestionListCreateView.as_view(), name="sw-question-list-create"),
     path("questions/<int:pk>/", views.QuestionDetailView.as_view(), name="sw-question-detail"),
-    # Choices endpoint (for frontend)
+    path("questions/bulk-create/", views.BulkQuestionCreateAndAssignView.as_view(), name="sw-question-bulk-create"),
     path("questions/choices/", views.QuestionChoicesView.as_view(), name="sw-question-choices"),
-    # Session type + question mapping
     path("session-types/", views.SessionTypeListView.as_view(), name="sw-session-type-list"),
     path("session-type-questions/", views.SessionTypeQuestionListCreateView.as_view(), name="sw-session-type-question"),
+    path("questions/bulk-assign/", views.BulkAssignView.as_view(), name="sw-question-bulk-assign"),
+    path("change-logs/", views.ChangeLogListView.as_view(), name="sw-change-logs"),
+    
 
 
-    path("cases/", SocialWorkerCaseList.as_view(), name="list-of-cases"),
     
 
     # --- Availability CRUD ---

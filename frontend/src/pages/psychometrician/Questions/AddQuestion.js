@@ -6,20 +6,24 @@ import api from "../../../api/axios";
 
 export default function AddQuestion({ onClose }) {
   const [step, setStep] = useState(1);
-  const [questions, setQuestions] = useState([
-    { ques_category: "", ques_question_text: "", ques_answer_type: "", ques_is_active: true },
-  ]);
 
+  // Step 1: category
   const [categories, setCategories] = useState([]);
-  const [answerTypes, setAnswerTypes] = useState([]);
-  const [createdQuestions, setCreatedQuestions] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
+  // Step 2: questions
+  const [questions, setQuestions] = useState([
+    { ques_question_text: "", ques_answer_type: "", ques_is_active: true },
+  ]);
+  const [answerTypes, setAnswerTypes] = useState([]);
+
+  // Step 3: session assignment
   const [sessionNumbers, setSessionNumbers] = useState([]);
   const [selectedNumbers, setSelectedNumbers] = useState([]);
   const [sessionTypes, setSessionTypes] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
 
-  // Load categories & answer types
+  // Load category + answer type
   useEffect(() => {
     api.get("/api/psychometrician/questions/choices/").then((res) => {
       setCategories(res.data.categories);
@@ -27,9 +31,9 @@ export default function AddQuestion({ onClose }) {
     });
   }, []);
 
-  // Load session types
+  // Load session types when step 3
   useEffect(() => {
-    if (step === 2) {
+    if (step === 3) {
       const nums = Array.from({ length: 10 }, (_, i) => ({
         value: i + 1,
         label: `Session ${i + 1}`,
@@ -42,18 +46,16 @@ export default function AddQuestion({ onClose }) {
     }
   }, [step]);
 
-  // Handle input change
-  const handleQuestionChange = (index, e) => {
+  // Handle question change
+  const handleQuestionChange = (index, field, value) => {
     const newQuestions = [...questions];
-    newQuestions[index][e.target.name] = e.target.value;
+    newQuestions[index][field] = value;
     setQuestions(newQuestions);
   };
 
+  // Add/Remove question field
   const addQuestionField = () => {
-    setQuestions([
-      ...questions,
-      { ques_category: "", ques_question_text: "", ques_answer_type: "", ques_is_active: true },
-    ]);
+    setQuestions([...questions, { ques_question_text: "", ques_answer_type: "", ques_is_active: true }]);
   };
 
   const removeQuestionField = (index) => {
@@ -62,32 +64,48 @@ export default function AddQuestion({ onClose }) {
     setQuestions(newQuestions);
   };
 
-  // Submit questions
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await api.post("/api/psychometrician/questions/", questions[0]); // single add for now
-      setCreatedQuestions([res.data]);
-      setStep(2);
-    } catch (err) {
-      console.error("Error creating question:", err.response?.data || err);
-      alert("Error creating question");
+  // Step 1 → Step 2 (choose category)
+  const handleCategoryContinue = () => {
+    if (!selectedCategory) {
+      alert("Please select a category first.");
+      return;
     }
+    setStep(2);
   };
 
-  // Assign sessions
-  const handleAssign = async () => {
+  // Step 2 → Step 3 (after adding questions)
+  const handleQuestionsContinue = () => {
+    if (questions.some((q) => !q.ques_question_text || !q.ques_answer_type)) {
+      alert("Please fill in all question fields.");
+      return;
+    }
+    setStep(3);
+  };
+
+  // Step 3 (bulk create + assign)
+  const handleBulkSubmit = async () => {
+    if (!selectedNumbers.length || !selectedTypes.length) {
+      alert("Please select session numbers and session types.");
+      return;
+    }
+
     try {
-      await api.post("/api/psychometrician/session-type-questions/", {
-        session_number: selectedNumbers[0]?.value,
-        session_type: selectedTypes[0]?.value,
-        question: createdQuestions[0]?.ques_id,
-      });
-      alert("Question assigned successfully!");
+      const payload = {
+        category_id: selectedCategory.value,
+        questions: questions.map((q) => ({
+          ques_question_text: q.ques_question_text,
+          ques_answer_type: q.ques_answer_type,
+        })),
+        session_numbers: selectedNumbers.map((n) => n.value),
+        session_types: selectedTypes.map((t) => t.value),
+      };
+
+      await api.post("/api/psychometrician/questions/bulk-create/", payload);
+      alert("Questions created and assigned successfully!");
       onClose();
     } catch (err) {
-      console.error("Error assigning question:", err.response?.data || err);
-      alert("Error assigning question");
+      console.error("Bulk creation failed:", err.response?.data || err);
+      alert("Error creating and assigning questions.");
     }
   };
 
@@ -95,135 +113,194 @@ export default function AddQuestion({ onClose }) {
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative">
         <AnimatePresence mode="wait">
+          {/* STEP 1 - Select Category */}
           {step === 1 && (
             <motion.div
               key="step1"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.3 }}
             >
               <h2 className="text-xl font-bold text-blue-700 mb-4">
-                Add Question
+                Choose Category
               </h2>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm text-gray-600">Category</label>
-                  <select
-                    name="ques_category"
-                    value={questions[0].ques_category}
-                    onChange={(e) => handleQuestionChange(0, e)}
-                    className="w-full border rounded p-2"
-                    required
-                  >
-                    <option value="">Select category...</option>
-                    {categories.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
 
-                <div>
-                  <label className="block text-sm text-gray-600">Question Text</label>
-                  <textarea
-                    name="ques_question_text"
-                    value={questions[0].ques_question_text}
-                    onChange={(e) => handleQuestionChange(0, e)}
-                    className="w-full border rounded p-2"
-                    rows="2"
-                    placeholder="Enter question text..."
-                    required
-                  />
-                </div>
+              <div className="space-y-4">
+                <label className="block text-sm text-gray-600">Category</label>
+                <Select
+                  options={categories.map((c) => ({
+                    value: c.id,
+                    label: c.name,
+                  }))}
+                  value={selectedCategory}
+                  onChange={setSelectedCategory}
+                  placeholder="Select category..."
+                />
 
-                <div>
-                  <label className="block text-sm text-gray-600">Answer Type</label>
-                  <select
-                    name="ques_answer_type"
-                    value={questions[0].ques_answer_type}
-                    onChange={(e) => handleQuestionChange(0, e)}
-                    className="w-full border rounded p-2"
-                    required
-                  >
-                    <option value="">Select type...</option>
-                    {answerTypes.map((a) => (
-                      <option key={a} value={a}>
-                        {a}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex justify-end gap-3 mt-4">
+                <div className="flex justify-end gap-3 mt-6">
                   <button
-                    type="button"
                     onClick={onClose}
                     className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
                   >
                     Cancel
                   </button>
                   <button
-                    type="submit"
+                    onClick={handleCategoryContinue}
                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                   >
-                    Save & Continue
+                    Continue
                   </button>
                 </div>
-              </form>
+              </div>
             </motion.div>
           )}
 
+          {/* STEP 2 - Add Multiple Questions */}
           {step === 2 && (
             <motion.div
               key="step2"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.3 }}
+            >
+              <h2 className="text-xl font-bold text-blue-700 mb-2">
+                Add Questions
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Category: <strong>{selectedCategory?.label}</strong>
+              </p>
+
+              <form className="space-y-4 max-h-[65vh] overflow-y-auto pr-2">
+                {questions.map((q, idx) => (
+                  <div
+                    key={idx}
+                    className="border p-3 rounded bg-gray-50 relative"
+                  >
+                    {questions.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeQuestionField(idx)}
+                        className="absolute top-1 right-2 text-red-500 text-sm"
+                      >
+                        ✕
+                      </button>
+                    )}
+
+                    <label className="block text-sm text-gray-600 mb-1">
+                      Question Text
+                    </label>
+                    <textarea
+                      value={q.ques_question_text}
+                      onChange={(e) =>
+                        handleQuestionChange(idx, "ques_question_text", e.target.value)
+                      }
+                      className="w-full border rounded p-2 mb-2"
+                      rows="2"
+                      required
+                    />
+
+                    <label className="block text-sm text-gray-600 mb-1">
+                      Answer Type
+                    </label>
+                    <select
+                      value={q.ques_answer_type}
+                      onChange={(e) =>
+                        handleQuestionChange(idx, "ques_answer_type", e.target.value)
+                      }
+                      className="w-full border rounded p-2"
+                      required
+                    >
+                      <option value="">Select type...</option>
+                      {answerTypes.map((a) => (
+                        <option key={a} value={a}>
+                          {a}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
+              </form>
+
+              <div className="mt-4 flex justify-between items-center">
+                <button
+                  onClick={addQuestionField}
+                  className="text-sm text-blue-600 hover:underline"
+                >
+                  + Add Another Question
+                </button>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setStep(1)}
+                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={handleQuestionsContinue}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* STEP 3 - Assign Sessions */}
+          {step === 3 && (
+            <motion.div
+              key="step3"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3 }}
             >
               <h2 className="text-xl font-bold text-green-700 mb-4">
-                Assign Question
+                Assign to Sessions
               </h2>
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm text-gray-600">
-                    Session Number
+                    Session Numbers
                   </label>
                   <Select
+                    isMulti
                     options={sessionNumbers}
                     value={selectedNumbers}
-                    onChange={(val) => setSelectedNumbers([val])}
-                    placeholder="Select session number..."
+                    onChange={setSelectedNumbers}
+                    placeholder="Select session numbers..."
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm text-gray-600">
-                    Session Type
+                    Session Types
                   </label>
                   <Select
+                    isMulti
                     options={sessionTypes}
                     value={selectedTypes}
-                    onChange={(val) => setSelectedTypes([val])}
-                    placeholder="Select session type..."
+                    onChange={setSelectedTypes}
+                    placeholder="Select session types..."
                   />
                 </div>
 
                 <div className="flex justify-end gap-3 mt-4">
                   <button
-                    type="button"
-                    onClick={onClose}
+                    onClick={() => setStep(2)}
                     className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
                   >
-                    Cancel
+                    Back
                   </button>
                   <button
-                    onClick={handleAssign}
+                    onClick={handleBulkSubmit}
                     className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
                   >
-                    Assign
+                    Save All
                   </button>
                 </div>
               </div>

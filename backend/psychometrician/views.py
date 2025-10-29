@@ -764,7 +764,6 @@ class QuestionCategoryListView(generics.ListAPIView):
             return QuestionCategory.objects.none()
         return QuestionCategory.objects.filter(role=official.of_role, is_active=True)
 
-
 #  QUESTION LIST / CREATE 
 class QuestionListCreateView(generics.ListCreateAPIView):
     """Social worker can list or create their own questions."""
@@ -788,42 +787,115 @@ class QuestionListCreateView(generics.ListCreateAPIView):
             description=f"Created new question: {instance.ques_question_text}",
         )
 
-
 # QUESTION DETAIL (UPDATE / TOGGLE ACTIVE)
+
 class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def perform_update(self, serializer):
-        instance = serializer.save()
-        log_change(
-            user=self.request.user,
-            model_name="Question",
-            record_id=instance.ques_id,
-            action="UPDATE",
-            description=f"Updated question: {instance.ques_question_text}",
-        )
-
     def delete(self, request, *args, **kwargs):
+        """Toggle question activation (soft deactivate/activate)."""
         question = self.get_object()
+
+        # Toggle active state
         question.ques_is_active = not question.ques_is_active
         question.save(update_fields=["ques_is_active"])
 
+        # Build readable message
+        action_text = "activated" if question.ques_is_active else "deactivated"
+        description = f"Question {action_text}: '{question.ques_question_text}'"
+
+        # Log this change
         log_change(
             user=request.user,
             model_name="Question",
             record_id=question.ques_id,
-            action="DELETE",
-            description=f"Question {'activated' if question.ques_is_active else 'deactivated'}.",
+            action="DELETE",  # Keep consistent with DSWD’s system
+            description=description,
+            old_data={"ques_is_active": not question.ques_is_active},
+            new_data={"ques_is_active": question.ques_is_active},
         )
 
         return Response(
-            {"message": f"Question {'activated' if question.ques_is_active else 'deactivated'} successfully."},
-            status=200
+            {"message": f"Question {action_text} successfully."},
+            status=status.HTTP_200_OK,
+        )
+    
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        # Prepare old data
+        old_data = {
+            "ques_category": instance.ques_category_id,
+            "ques_question_text": instance.ques_question_text,
+            "ques_answer_type": instance.ques_answer_type,
+        }
+
+        # Apply new values
+        updated_fields = {**old_data, **serializer.validated_data}
+
+        # Normalize category to int if possible (avoid "1" vs 1 mismatch)
+        if "ques_category" in updated_fields and updated_fields["ques_category"] is not None:
+            updated_fields["ques_category"] = (
+                int(updated_fields["ques_category"])
+                if isinstance(updated_fields["ques_category"], str)
+                else updated_fields["ques_category"].id
+                if hasattr(updated_fields["ques_category"], "id")
+                else updated_fields["ques_category"]
+            )
+
+        # Detect real changes
+        changes_detected = any(
+            old_data[field] != updated_fields[field] for field in old_data
         )
 
+        if not changes_detected:
+            return Response(
+                {"detail": "No changes detected — update skipped."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
+        # Save and log only if changed
+        updated_instance = serializer.save()
+
+        field_labels = {
+            "ques_category": "Category",
+            "ques_question_text": "Question Text",
+            "ques_answer_type": "Answer Type",
+        }
+
+        changes = []
+        for field in old_data:
+            if old_data[field] != updated_fields[field]:
+                old_val = old_data[field]
+                new_val = updated_fields[field]
+
+                if field == "ques_category":
+                    old_val = (
+                        QuestionCategory.objects.filter(id=old_val).first().name
+                        if old_val else "(None)"
+                    )
+                    new_val = (
+                        QuestionCategory.objects.filter(id=new_val).first().name
+                        if new_val else "(None)"
+                    )
+                changes.append(f"• {field_labels[field]} changed from '{old_val}' → '{new_val}'")
+
+        description = "\n".join(changes) or "Updated question fields."
+
+        log_change(
+            user=request.user,
+            model_name="Question",
+            record_id=updated_instance.ques_id,
+            action="UPDATE",
+            description=description,
+        )
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
 # CHOICES (for AddQuestion modal)
 class QuestionChoicesView(APIView):
     """Return categories and answer types for the logged-in official’s role."""
@@ -839,7 +911,6 @@ class QuestionChoicesView(APIView):
             "answer_types": answer_types,
         })
 
-
 #  SESSION TYPE LIST 
 class SessionTypeListView(generics.ListAPIView):
     """Return all session types for dropdowns."""
@@ -847,13 +918,151 @@ class SessionTypeListView(generics.ListAPIView):
     serializer_class = SessionTypeSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-
 #  SESSION TYPE QUESTION MAPPING 
 class SessionTypeQuestionListCreateView(generics.ListCreateAPIView):
     """Assign questions to session types and numbers."""
     queryset = SessionTypeQuestion.objects.all()
     serializer_class = SessionTypeQuestionSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+class BulkQuestionCreateAndAssignView(generics.CreateAPIView):
+    """
+    POST: Create multiple questions under a single category and immediately assign them to sessions.
+    """
+    serializer_class = BulkQuestionCreateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        created_questions = serializer.save()
+
+        return Response(
+            QuestionSerializer(created_questions, many=True).data,
+            status=201
+        )
+
+class BulkAssignView(APIView):
+    """
+    POST: Bulk assign multiple questions to multiple session types and session numbers.
+    Automatically replaces old mappings with new ones.
+    Logs the reassignment for auditing.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = BulkAssignSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        questions = serializer.validated_data["questions"]
+        session_numbers = serializer.validated_data["session_numbers"]
+        session_types = serializer.validated_data["session_types"]
+
+        created_mappings = []
+
+        for q_id in questions:
+            # Get existing mappings
+            old_mappings = SessionTypeQuestion.objects.filter(question_id=q_id)
+            old_numbers = sorted(set(old_mappings.values_list("session_number", flat=True)))
+            old_type_ids = sorted(set(old_mappings.values_list("session_type_id", flat=True)))
+            old_type_names = list(
+                SessionType.objects.filter(id__in=old_type_ids).values_list("name", flat=True)
+            )
+
+            had_old_assignments = old_mappings.exists()
+
+            # Delete old mappings
+            old_mappings.delete()
+
+            # Create new mappings
+            for num in session_numbers:
+                for st_id in session_types:
+                    mapping = SessionTypeQuestion.objects.create(
+                        session_number=num,
+                        session_type_id=st_id,
+                        question_id=q_id,
+                    )
+                    created_mappings.append(mapping)
+
+            # Skip logging if first time assignment
+            if not had_old_assignments:
+                continue
+
+            # Fetch new readable data
+            new_type_names = list(
+                SessionType.objects.filter(id__in=session_types).values_list("name", flat=True)
+            )
+
+            added_numbers = [n for n in session_numbers if n not in old_numbers]
+            removed_numbers = [n for n in old_numbers if n not in session_numbers]
+            added_types = [t for t in new_type_names if t not in old_type_names]
+            removed_types = [t for t in old_type_names if t not in new_type_names]
+
+            # Build readable log
+            desc_lines = []
+            if added_numbers:
+                desc_lines.append(f"• Added Session Numbers: {', '.join(map(str, added_numbers))}")
+            if removed_numbers:
+                desc_lines.append(f"• Removed Session Numbers: {', '.join(map(str, removed_numbers))}")
+            if added_types:
+                desc_lines.append(f"• Added Session Types: {', '.join(added_types)}")
+            if removed_types:
+                desc_lines.append(f"• Removed Session Types: {', '.join(removed_types)}")
+
+            if not desc_lines:
+                desc_lines.append("No changes to session assignments.")
+            description = "\n".join(desc_lines)
+
+            # Log the reassignment
+            log_change(
+                user=request.user,
+                model_name="SessionTypeQuestion",
+                record_id=q_id,
+                action="ASSIGN",
+                description=description,
+                old_data={
+                    "session_numbers": old_numbers,
+                    "session_types": old_type_names,
+                },
+                new_data={
+                    "session_numbers": session_numbers,
+                    "session_types": new_type_names,
+                },
+            )
+
+        return Response(
+            SessionTypeQuestionSerializer(created_mappings, many=True).data,
+            status=201
+        )
+
+class ChangeLogListView(generics.ListAPIView):
+    """
+    Returns all change logs related to the logged-in role.
+    - DSWD sees all.
+    - Officials (e.g., Social Workers) see only logs they created or logs affecting their role.
+    """
+    serializer_class = ChangeLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        official = getattr(user, "official", None)
+        if not official:
+            return ChangeLog.objects.none()
+
+        # DSWD can see everything
+        if official.of_role == "DSWD":
+            return ChangeLog.objects.all()
+
+        # Role-based filtering:
+        #  - Only show logs related to this official's role (Question, SessionTypeQuestion)
+        #  - OR logs created by this specific official
+        return ChangeLog.objects.filter(
+            models.Q(user=official)
+            | models.Q(model_name__in=["Question", "SessionTypeQuestion"])
+            & models.Q(user__of_role=official.of_role)
+        ).select_related("user")
+
 
 #==========================================================================
 
