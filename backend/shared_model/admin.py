@@ -184,7 +184,6 @@ class OfficialFaceSampleAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Victim)
-# admin.site.register(VictimFaceSample)
 admin.site.register(IncidentInformation)
 
 admin.site.register(OfficialAvailability)
@@ -192,7 +191,7 @@ admin.site.register(OfficialUnavailability)
 
 admin.site.register(Session)
 admin.site.register(SessionType)
-admin.site.register(Question)
+# admin.site.register(Question)
 
 admin.site.register(Services)
 admin.site.register(ServiceCategory)
@@ -225,8 +224,22 @@ class LoginTrackerAdmin(admin.ModelAdmin):
     list_filter = ('role', 'status', 'login_time')
     search_fields = ('user__username', 'user__official__of_fname', 'user__official__of_lname', 'ip_address')
 
-# admin.site.register(Province)
-# admin.site.register(Municipality)
-# admin.site.register(Barangay)
-# admin.site.register(Sitio)
-# admin.site.register(Street)
+@admin.register(QuestionCategory)
+class QuestionCategoryAdmin(admin.ModelAdmin):
+    list_display = ("name", "role", "is_active")
+    list_filter = ("role", "is_active")
+    search_fields = ("name", "description")
+    ordering = ("role", "name")
+    list_editable = ("is_active",)
+    fieldsets = (
+        (None, {
+            "fields": ("name", "description", "role", "is_active")
+        }),
+    )
+
+@admin.register(Question)
+class QuestionAdmin(admin.ModelAdmin):
+    list_display = ("ques_question_text", "role", "ques_category", "ques_is_active", "created_by")
+    list_filter = ("role", "ques_category", "ques_is_active")
+    search_fields = ("ques_question_text",)
+    readonly_fields = ("created_at", "created_by")

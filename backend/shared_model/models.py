@@ -83,6 +83,7 @@ class Official(models.Model):
         ('Social Worker', 'Social Worker'),
         ('Nurse', 'Nurse'),
         ('Psychometrician', 'Psychometrician'),
+        ('Home Life', 'Home Life'),
 
     ]   
 
@@ -602,11 +603,11 @@ class Session(models.Model):
     
     sess_id = models.AutoField(primary_key=True)
     sess_num = models.IntegerField(null=True, blank=True)
-    sess_status = EncryptedCharField(max_length=512,choices=SESSION_STAT, default='Pending') 
-    sess_next_sched = EncryptedDateTimeField(null=True, blank=True) # if scheduled session
-    sess_date_today = EncryptedDateTimeField(null=True, blank=True)   #if start now
-    sess_location = EncryptedCharField(max_length=512, null=True, blank=True)
-    sess_description = EncryptedTextField(null=True, blank=True)
+    sess_status = models.CharField(max_length=512,choices=SESSION_STAT, default='Pending') 
+    sess_next_sched = models.DateTimeField(null=True, blank=True) # if scheduled session
+    sess_date_today = models.DateTimeField(null=True, blank=True)   #if start now
+    sess_location = models.CharField(max_length=512, null=True, blank=True)
+    sess_description = models.TextField(null=True, blank=True)
     
     
     # foreign key
@@ -640,30 +641,42 @@ class SessionProgress(models.Model):
         return f"{self.official} - {self.session} ({'Done' if self.is_done else 'Pending'})"
 
 #=====Question=====
-class Question(models.Model): #HOLDER FOR ALL QUESTIONS
+class QuestionCategory(models.Model):
+    """Defines category labels for questions, separated by official role."""
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    role = models.CharField(max_length=50, choices=Official.ROLE_CHOICES)  # reuse roles from Official
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name_plural = "Question Categories"
+        ordering = ["role", "name"]
+        unique_together = ("name", "role")
+
+    def __str__(self):
+        return f"{self.name} ({self.role})"
+
+    
+class Question(models.Model):
+    """Holds all questions created by officials, grouped by category and role."""
     ANSWER_TYPES = [
         ('Yes/No', 'Yes/No'),
         ('Text', 'Text'),
     ]
-    QUESTION_CATEGORIES = [
-        ('Social Worker', 'Social Worker'),
-        ('Nurse', 'Nurse'),
-        ('Psychometrician', 'Psychometrician'),
-    ]
+
     ques_id = models.AutoField(primary_key=True)
-    ques_category = EncryptedCharField(choices=QUESTION_CATEGORIES, max_length=512, null=True, blank=True)
-    ques_question_text = EncryptedTextField(null=True, blank=True)
-    ques_answer_type = EncryptedCharField(max_length=512, choices=ANSWER_TYPES, null=True, blank=True)
+    role = models.CharField(max_length=50,choices=Official.ROLE_CHOICES,null=True,blank=True,help_text="Auto-set from creator’s role.")
+    ques_category = models.ForeignKey(QuestionCategory,on_delete=models.SET_NULL,null=True,blank=True,related_name="questions")
+    ques_question_text = models.TextField(null=True, blank=True)
+    ques_answer_type = models.CharField(max_length=512, choices=ANSWER_TYPES, null=True, blank=True)
     ques_is_active = models.BooleanField(default=False)
-    created_at  = EncryptedDateTimeField(default=now)
-    #FK
-    created_by = models.ForeignKey(Official, on_delete=models.SET_NULL,null=True,blank=True,related_name="created_questions")
-    
+    created_at = models.DateTimeField(default=now)
+    created_by = models.ForeignKey("Official",on_delete=models.SET_NULL,null=True,blank=True,related_name="created_questions")
 
     def __str__(self):
-        category = self.ques_category or "Uncategorized"
+        category_name = self.ques_category.name if self.ques_category else "Uncategorized"
         text = (self.ques_question_text or "")[:50]
-        return f"[{category}] {text}"
+        return f"[{category_name}] {text}"
 
 class SessionTypeQuestion(models.Model):
     session_number = models.IntegerField()  # 1, 2, 3, 4, 5.
@@ -681,8 +694,8 @@ class SessionQuestion(models.Model):
     
 
      # For ad-hoc custom questions
-    sq_custom_text = EncryptedTextField(null=True, blank=True)
-    sq_custom_answer_type = EncryptedCharField(max_length=512, choices=Question.ANSWER_TYPES, null=True, blank=True)
+    sq_custom_text = models.TextField(null=True, blank=True)
+    sq_custom_answer_type = models.CharField(max_length=512, choices=Question.ANSWER_TYPES, null=True, blank=True)
 
     # Direct answer fields
     sq_value = models.TextField(null=True, blank=True)
@@ -702,6 +715,7 @@ class SessionQuestion(models.Model):
         if self.question:
             return f"Session {self.session.sess_id} - Q {self.question.ques_id} -> {self.sq_value or 'No answer'}"
         return f"Session {self.session.sess_id} - Custom Q -> {self.sq_value or 'No answer'}"
+
 #logging
 class ChangeLog(models.Model):
     """
