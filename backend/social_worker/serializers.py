@@ -5,6 +5,26 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from datetime import datetime, time
 from rest_framework.exceptions import ValidationError
+
+class AddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Address
+        fields = ["id", "province", "municipality", "barangay", "sitio", "street"]
+
+    def to_representation(self, instance):
+        parts = []
+        if instance.street:
+            parts.append(str(instance.street))
+        if instance.sitio:
+            parts.append(str(instance.sitio))
+        if instance.barangay:
+            parts.append(str(instance.barangay))
+        if instance.municipality:
+            parts.append(str(instance.municipality))
+        if instance.province:
+            parts.append(str(instance.province))
+        return ", ".join(parts) or "—"
+
 # --- Lightweight list serializer ---
 class VictimListSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
@@ -33,6 +53,7 @@ class VictimFaceSampleSerializer(serializers.ModelSerializer):
 
 class VictimSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
+    address = AddressSerializer()
 
     class Meta:
         model = Victim
@@ -40,6 +61,12 @@ class VictimSerializer(serializers.ModelSerializer):
 
     def get_full_name(self, obj):
         return obj.full_name
+    
+    def create(self, validated_data):
+        address_data = validated_data.pop("address")
+        address = Address.objects.create(**address_data)
+        victim = Victim.objects.create(address=address, **validated_data)
+        return victim
         
 class PerpetratorSerializer(serializers.ModelSerializer):
     class Meta:

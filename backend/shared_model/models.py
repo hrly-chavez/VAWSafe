@@ -359,11 +359,7 @@ class Victim(models.Model):
     vic_PWD_type = EncryptedCharField(max_length=512, choices=PWD_CHOICES, default='None')
     vic_contact_number = EncryptedCharField(max_length=512, blank=True, null=True)
     
-    province = models.ForeignKey("province", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
-    municipality = models.ForeignKey("Municipality", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
-    barangay = models.ForeignKey("Barangay", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
-    sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="victims", blank=True, null=True)
-    street = models.ForeignKey("Street", on_delete=models.SET_NULL, related_name="victims", null=True, blank=True)
+    address = models.ForeignKey(Address, on_delete=models.SET_NULL, related_name="victim_address", null=True, blank=True)
 
     vic_account = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True

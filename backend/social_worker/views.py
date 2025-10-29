@@ -40,6 +40,8 @@ def register_victim(request):
     - Stores victim face samples + embeddings (best-effort)
     - Optionally creates IncidentInformation, Perpetrator
     """
+    parser_classes = [MultiPartParser, FormParser]
+    permission_classes = [AllowAny]
 
     def parse_json_field(key):
         raw = request.data.get(key)
