@@ -165,6 +165,12 @@ export default function RegisterVictim() {
         ? Object.fromEntries(PERP_KEYS.map((k) => [k, formDataState[k] ?? ""]))
         : null;
 
+      const informantPayload = hasAny(formDataState, INFORMANT_FIELDS)
+        ? Object.fromEntries(
+          INFORMANT_FIELDS.map((k) => [k, formDataState[k] ?? ""])
+        )
+        : null;
+
       // Build form-data
       const fd = new FormData();
       fd.append("informant", JSON.stringify(informantPayload));
@@ -360,10 +366,10 @@ export default function RegisterVictim() {
             {statusMessage && (
               <div
                 className={`mt-4 p-3 rounded text-sm ${statusMessage.startsWith("✅")
-                    ? "bg-green-100 text-green-800"
-                    : statusMessage.startsWith("⏳")
-                      ? "bg-yellow-100 text-yellow-800"
-                      : "bg-red-100 text-red-800"
+                  ? "bg-green-100 text-green-800"
+                  : statusMessage.startsWith("⏳")
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-red-100 text-red-800"
                   }`}
               >
                 {statusMessage}
@@ -384,8 +390,8 @@ export default function RegisterVictim() {
                   onClick={handleSubmit}
                   disabled={loading}
                   className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold shadow transition-all ${loading
-                      ? "bg-gray-400 cursor-not-allowed text-white"
-                      : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
+                    ? "bg-gray-400 cursor-not-allowed text-white"
+                    : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
                     }`}
                 >
                   <CheckCircleIcon className="h-5 w-5 text-white" />

@@ -73,3 +73,11 @@ export const PERP_KEYS = [
   // "per_security_branch",
   // "per_non_state_actor_detail",
 ];
+
+export const INFORMANT_FIELDS = [
+  "informant_name",
+  "informant_contact",
+  "informant_relationship",
+  "informant_address",
+  "informant_affiliation",
+];

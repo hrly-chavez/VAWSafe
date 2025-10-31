@@ -167,8 +167,8 @@ const LoginPage = () => {
     setShowCounter(true);
     setLoading(true);
     setMessage(
-      <div className="flex items-center gap-2 text-white-600 text-lg">
-        <CameraIcon className="w-5 h-5" />
+      <div className="flex items-center gap-2 text-blue-700 text-lg">
+        <CameraIcon className="w-5 h-5 text-blue-700" />
         <span>Please look at the camera to log in.</span>
       </div>
     );
@@ -184,8 +184,8 @@ const LoginPage = () => {
 
     setCountdown(null);
     setMessage(
-      <div className="flex items-center gap-2 text-white-600 text-lg">
-        <EyeIcon className="w-5 h-5" />
+      <div className="flex items-center gap-2 text-blue-700 text-lg">
+        <EyeIcon className="w-5 h-5 text-blue-700" />
         <span>Capturing frames... Please blink now!</span>
       </div>
     );
@@ -662,18 +662,17 @@ const LoginPage = () => {
 
           {/* RIGHT LOGIN CARD */}
           <div
-            className={`bg-white/10 backdrop-blur-md flex flex-col justify-center items-center px-10 py-12 transform transition-transform duration-700 ${
-              animateOut
-                ? "translate-x-full"
-                : animateIn
+            className={`bg-white/10 backdrop-blur-md flex flex-col justify-center items-center px-10 py-12 transform transition-transform duration-700 ${animateOut
+              ? "translate-x-full"
+              : animateIn
                 ? "translate-x-0"
                 : "translate-x-full"
-            }`}
+              }`}
           >
             {!showCamera ? (
               <>
                 {/* Header */}
-                <h2 className="text-4xl font-bold text-white mb-2">Log in</h2>
+                <h2 className="text-4xl font-bold text-[#292D96] mb-2">Log in</h2>
 
                 <form
                   onSubmit={(e) => {
@@ -781,17 +780,16 @@ const LoginPage = () => {
 
                 {message && (
                   <p
-                    className={`mt-4 text-sm font-medium ${
-                      loading
-                        ? "text-white animate-pulse"
-                        : blinkCaptured ||
-                          (typeof message === "string" &&
-                            message.includes("✅"))
+                    className={`mt-4 text-sm font-medium ${loading
+                      ? "text-white animate-pulse"
+                      : blinkCaptured ||
+                        (typeof message === "string" &&
+                          message.includes("✅"))
                         ? "text-green-400"
                         : message === "No blink detected. Please blink clearly."
-                        ? "text-red-400"
-                        : "text-white"
-                    }`}
+                          ? "text-red-400"
+                          : "text-white"
+                      }`}
                   >
                     {message}
                   </p>
@@ -862,7 +860,7 @@ const LoginPage = () => {
             setAutoDSWDRegister(false);
           }}
           defaultRole={autoDSWDRegister ? "DSWD" : "Social Worker"}
-          // defaultRole="DSWD" // always set "DSWD" as default role
+        // defaultRole="DSWD" // always set "DSWD" as default role
         />
       )}
 
