@@ -25,13 +25,25 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
     setShowGuardian(minor); // show guardian section if minor
   }, [formDataState.vic_birth_date]);
 
-  const handleChange = (field, value) => {
-    setFormDataState((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+  const handleChange = (key, value) => {
+    if (key.includes(".")) {
+      const [outerKey, innerKey] = key.split(".");
+      setFormDataState((prev) => ({
+        ...prev,
+        [outerKey]: {
+          ...prev[outerKey],
+          [innerKey]: value,
+        },
+      }));
+    } else {
+      setFormDataState((prev) => ({
+        ...prev,
+        [key]: value,
+      }));
+    }
   };
 
+  // setup
   const [provinces, setProvinces] = useState([]);
   const [municipalities, setMunicipalities] = useState([]);
   const [barangays, setBarangays] = useState([]);
@@ -62,10 +74,10 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
 
   // Fetch municipalities based on selected province
   useEffect(() => {
-    if (selectedProvince) {
+    if (formDataState.address.province) {
       axios
         .get(
-          `http://localhost:8000/api/desk_officer/provinces/${selectedProvince}/municipalities/`
+          `http://localhost:8000/api/desk_officer/provinces/${formDataState.address.province}/municipalities/`
         )
         .then((res) => setMunicipalities(res.data))
         .catch((err) => console.error("Failed to load municipalities:", err));
@@ -73,21 +85,21 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
       setMunicipalities([]);
       setBarangays([]);
     }
-  }, [selectedProvince]);
+  }, [formDataState.address.province]);
 
   // Fetch barangays based on selected municipality
   useEffect(() => {
-    if (selectedMunicipality) {
+    if (formDataState.address.municipality) {
       axios
         .get(
-          `http://localhost:8000/api/desk_officer/municipalities/${selectedMunicipality}/barangays/`
+          `http://localhost:8000/api/desk_officer/municipalities/${formDataState.address.municipality}/barangays/`
         )
         .then((res) => setBarangays(res.data))
         .catch((err) => console.error("Failed to load barangays:", err));
     } else {
       setBarangays([]);
     }
-  }, [selectedMunicipality]);
+  }, [formDataState.address.municipality]);
 
   useEffect(() => {
     const provinceName = provinces.find(
@@ -223,130 +235,58 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
           <label className="text-sm font-medium text-gray-700 mb-2">
             Province
           </label>
-          <input
-            type="text"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Type to search province"
-            value={provinceQuery}
-            onChange={(e) => {
-              setProvinceQuery(e.target.value);
-              setShowProvinceDropdown(true);
-              setSelectedProvince(""); // clear selection
-            }}
-            onFocus={() => setShowProvinceDropdown(true)}
-            onBlur={() => setTimeout(() => setShowProvinceDropdown(false), 150)} // delay for click
-          />
-
-          {showProvinceDropdown && provinceQuery && (
-            <ul className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg z-10">
-              {provinces
-                .filter((p) =>
-                  p.name.toLowerCase().includes(provinceQuery.toLowerCase())
-                )
-                .map((p) => (
-                  <li
-                    key={p.id}
-                    className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
-                    onClick={() => {
-                      setSelectedProvince(p.id.toString());
-                      setProvinceQuery(p.name);
-                      setShowProvinceDropdown(false);
-                      handleChange("selectedProvince", p.id.toString());
-                    }}
-                  >
-                    {p.name}
-                  </li>
-                ))}
-            </ul>
-          )}
+          <select
+            value={formDataState.address.province}
+            onChange={(e) => handleChange("address.province", e.target.value)}
+            className={inputStyle}
+          >
+            <option value="">Select Province</option>
+            {provinces.map((province) => (
+              <option key={province.id} value={province.id}>
+                {province.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="flex flex-col mb-6 relative">
           <label className="text-sm font-medium text-gray-700 mb-2">
             Municipality
           </label>
-          <input
-            type="text"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Type to search municipality"
-            value={municipalityQuery}
-            onChange={(e) => {
-              setMunicipalityQuery(e.target.value);
-              setShowMunicipalityDropdown(true);
-              setSelectedMunicipality("");
-            }}
-            onFocus={() => setShowMunicipalityDropdown(true)}
-            onBlur={() =>
-              setTimeout(() => setShowMunicipalityDropdown(false), 150)
+          <select
+            value={formDataState.address.municipality}
+            onChange={(e) =>
+              handleChange("address.municipality", e.target.value)
             }
-            disabled={!selectedProvince}
-          />
-
-          {showMunicipalityDropdown && municipalityQuery && (
-            <ul className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg z-10">
-              {municipalities
-                .filter((m) =>
-                  m.name.toLowerCase().includes(municipalityQuery.toLowerCase())
-                )
-                .map((m) => (
-                  <li
-                    key={m.id}
-                    className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
-                    onClick={() => {
-                      setSelectedMunicipality(m.id.toString());
-                      setMunicipalityQuery(m.name);
-                      setShowMunicipalityDropdown(false);
-                      handleChange("selectedMunicipality", m.id.toString());
-                    }}
-                  >
-                    {m.name}
-                  </li>
-                ))}
-            </ul>
-          )}
+            className={inputStyle}
+            disabled={!formDataState.address.province}
+          >
+            <option value="">Select Municipality</option>
+            {municipalities.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="flex flex-col mb-6 relative">
           <label className="text-sm font-medium text-gray-700 mb-2">
             Barangay
           </label>
-          <input
-            type="text"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Type to search barangay"
-            value={barangayQuery}
-            onChange={(e) => {
-              setBarangayQuery(e.target.value);
-              setShowBarangayDropdown(true);
-              setSelectedBarangay("");
-            }}
-            onFocus={() => setShowBarangayDropdown(true)}
-            onBlur={() => setTimeout(() => setShowBarangayDropdown(false), 150)}
-            disabled={!selectedMunicipality}
-          />
-
-          {showBarangayDropdown && barangayQuery && (
-            <ul className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md mt-1 max-h-60 overflow-y-auto shadow-lg z-10">
-              {barangays
-                .filter((b) =>
-                  b.name.toLowerCase().includes(barangayQuery.toLowerCase())
-                )
-                .map((b) => (
-                  <li
-                    key={b.id}
-                    className="px-3 py-2 hover:bg-blue-100 cursor-pointer"
-                    onClick={() => {
-                      setSelectedBarangay(b.id.toString());
-                      setBarangayQuery(b.name);
-                      setShowBarangayDropdown(false);
-                      handleChange("selectedBarangay", b.id.toString());
-                    }}
-                  >
-                    {b.name}
-                  </li>
-                ))}
-            </ul>
-          )}
+          <select
+            value={formDataState.address.barangay}
+            onChange={(e) => handleChange("address.barangay", e.target.value)}
+            className={inputStyle}
+            disabled={!formDataState.address.municipality}
+          >
+            <option value="">Select Barangay</option>
+            {barangays.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

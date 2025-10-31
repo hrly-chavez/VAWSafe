@@ -16,7 +16,6 @@ import SchedulePage from "../Sessions/Schedule";
 import Evidences from "./Evidences";
 
 // imported constants
-import { INFORMANT_FIELDS } from "./helpers/form-keys";
 import { VICTIM_FIELDS } from "./helpers/form-keys";
 import { INCIDENT_KEYS } from "./helpers/form-keys";
 import { PERP_KEYS } from "./helpers/form-keys";
@@ -44,7 +43,6 @@ export default function RegisterVictim() {
     }, {});
 
   const [formDataState, setFormDataState] = useState({
-    ...makeInitialState(INFORMANT_FIELDS),
     ...makeInitialState(VICTIM_FIELDS),
     ...makeInitialState(INCIDENT_KEYS),
     ...makeInitialState(PERP_KEYS),
@@ -52,6 +50,11 @@ export default function RegisterVictim() {
     evidences: [],
 
     vic_sex: "Female",
+    address: { // Initialize address with default empty values
+      province: "",
+      municipality: "",
+      barangay: "",
+    },
   });
 
   const victimPhotos = formDataState.victimPhotos || [];
@@ -132,6 +135,9 @@ export default function RegisterVictim() {
         }
       });
 
+      // Add the address to the victim payload
+      victimPayload.address = formDataState.address; // Ensure address is included
+
       if (formDataState.vic_current_address) {
         victimPayload.vic_current_address = formDataState.vic_current_address;
       }
@@ -173,7 +179,6 @@ export default function RegisterVictim() {
 
       // Build form-data
       const fd = new FormData();
-      fd.append("informant", JSON.stringify(informantPayload));
       fd.append("victim", JSON.stringify(victimPayload));
       if (incidentPayload)
         fd.append("incident", JSON.stringify(incidentPayload));
