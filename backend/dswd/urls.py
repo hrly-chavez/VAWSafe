@@ -18,11 +18,11 @@ urlpatterns = [
     path("municipalities/", MunicipalityList.as_view(), name="municipality"),
     path("barangays/", BarangayList.as_view(), name="barangay"),
     #social worker
-    path("social_worker/", ViewSocialWorker.as_view(), name="view_social_worker"),
-    path("social_worker/<int:of_id>/", ViewSocialWorkerDetail.as_view(), name="view_social_worker_detail"),
-    #vawdesk officer
-    path("vawdesk_officer/", ViewVAWDeskOfficer.as_view(), name="view_vawdesk_officer"),
-    path("vawdesk_officer/<int:of_id>/", ViewVAWDeskOfficerDetail.as_view(), name="view_vawdesk_officer_detail"),
+    # path("social_worker/", ViewSocialWorker.as_view(), name="view_social_worker"),
+    # path("social_worker/<int:of_id>/", ViewSocialWorkerDetail.as_view(), name="view_social_worker_detail"),
+    # #vawdesk officer
+    # path("vawdesk_officer/", ViewVAWDeskOfficer.as_view(), name="view_vawdesk_officer"),
+    # path("vawdesk_officer/<int:of_id>/", ViewVAWDeskOfficerDetail.as_view(), name="view_vawdesk_officer_detail"),
       
   #Questions library==================
     path("questions/", QuestionListCreate.as_view(), name="question-list-create"),
@@ -43,6 +43,11 @@ urlpatterns = [
     #services
     path("services/", ServicesListCreateView.as_view(), name="services-list-create"),
     path("service-categories/", ServiceCategoryListView.as_view(), name="service-categories"),
+
+    #change password
+    path("change-pass/", ChangePasswordFaceView.as_view(), name="change-pass"),
+    path("verify-email/", VerifyEmailView.as_view(), name="verify-email"),
+    path("reset-pass/", ResetPasswordView.as_view(), name="reset-pass"),
 
     path('', include(router.urls)),
 ] + router.urls

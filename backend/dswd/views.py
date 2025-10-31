@@ -23,6 +23,15 @@ from datetime import date, datetime
 import json
 from dswd.utils.logging import log_change
 
+#forgot password
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from cryptography.fernet import Fernet
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_str, force_bytes
+from django.contrib.auth.tokens import default_token_generator
+
 
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
@@ -35,7 +44,8 @@ from django.views.decorators.cache import never_cache
 #     permission_classes = [IsAuthenticated, IsRole]
 #     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
 #     # permission_classes = [AllowAny] #gamita lang ni sya if ganahan mo makakita sa value kay tungod ni sa settingskatung JWTAuthentication 
-    
+
+#===========================================VAWC Victim==========================================
 class ViewVictim(generics.ListAPIView):
     queryset = Victim.objects.all()
     serializer_class = VictimListSerializer
@@ -233,99 +243,99 @@ class search_victim_facial(APIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
     
-class ViewSocialWorker(generics.ListAPIView):
-    serializer_class = SocialWorkerListSerializer
+# class ViewSocialWorker(generics.ListAPIView):
+#     serializer_class = SocialWorkerListSerializer
 
-    def get_queryset(self):
-        qs = (Official.objects
-              .filter(of_role="Social Worker")
-              .order_by("of_lname", "of_fname"))
-        q = self.request.query_params.get("q")
-        if q:
-            return qs.filter(
-                (models.Q(of_fname__icontains=q) |
-                 models.Q(of_lname__icontains=q) |
-                 models.Q(of_specialization__icontains=q) |
-                 models.Q(of_contact__icontains=q))
-            )
-        return qs
+#     def get_queryset(self):
+#         qs = (Official.objects
+#               .filter(of_role="Social Worker")
+#               .order_by("of_lname", "of_fname"))
+#         q = self.request.query_params.get("q")
+#         if q:
+#             return qs.filter(
+#                 (models.Q(of_fname__icontains=q) |
+#                  models.Q(of_lname__icontains=q) |
+#                  models.Q(of_specialization__icontains=q) |
+#                  models.Q(of_contact__icontains=q))
+#             )
+#         return qs
 
-    def list(self, request, *args, **kwargs):
-        # ensure absolute image URLs
-        self.serializer_class.context = {"request": request}
-        return super().list(request, *args, **kwargs)
+#     def list(self, request, *args, **kwargs):
+#         # ensure absolute image URLs
+#         self.serializer_class.context = {"request": request}
+#         return super().list(request, *args, **kwargs)
     
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
+#     permission_classes = [IsAuthenticated, IsRole]
+#     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
     
-class ViewSocialWorkerDetail(generics.RetrieveAPIView):
-    serializer_class = SocialWorkerDetailSerializer
-    lookup_field = "of_id"
+# class ViewSocialWorkerDetail(generics.RetrieveAPIView):
+#     serializer_class = SocialWorkerDetailSerializer
+#     lookup_field = "of_id"
 
-    def get_queryset(self):
-        return (
-            Official.objects
-            .filter(of_role="Social Worker")
-            .prefetch_related(
-                "face_samples",
-                Prefetch("handled_incidents", queryset=IncidentInformation.objects.select_related("vic_id").order_by("-incident_date")),
-                Prefetch("sessions_handled", queryset=Session.objects.select_related("incident_id").order_by("-sess_date_today")),
-            )
-        )
+#     def get_queryset(self):
+#         return (
+#             Official.objects
+#             .filter(of_role="Social Worker")
+#             .prefetch_related(
+#                 "face_samples",
+#                 Prefetch("handled_incidents", queryset=IncidentInformation.objects.select_related("vic_id").order_by("-incident_date")),
+#                 Prefetch("sessions_handled", queryset=Session.objects.select_related("incident_id").order_by("-sess_date_today")),
+#             )
+#         )
 
-    def get_serializer_context(self):
-        ctx = super().get_serializer_context()
-        ctx.update({"request": self.request})  # absolute media URLs
-        return ctx
+#     def get_serializer_context(self):
+#         ctx = super().get_serializer_context()
+#         ctx.update({"request": self.request})  # absolute media URLs
+#         return ctx
     
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
+#     permission_classes = [IsAuthenticated, IsRole]
+#     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
      
-class ViewVAWDeskOfficer(generics.ListAPIView):
-    serializer_class = VAWDeskOfficerListSerializer
+# class ViewVAWDeskOfficer(generics.ListAPIView):
+#     serializer_class = VAWDeskOfficerListSerializer
 
-    def get_queryset(self):
-        qs = (Official.objects
-              .filter(of_role="VAWDesk")
-              .order_by("of_lname", "of_fname"))
-        q = self.request.query_params.get("q")
-        if q:
-            return qs.filter(
-                (models.Q(of_fname__icontains=q) |
-                 models.Q(of_lname__icontains=q) |
-                 models.Q(of_specialization__icontains=q) |
-                 models.Q(of_contact__icontains=q))
-            )
-        return qs
+#     def get_queryset(self):
+#         qs = (Official.objects
+#               .filter(of_role="VAWDesk")
+#               .order_by("of_lname", "of_fname"))
+#         q = self.request.query_params.get("q")
+#         if q:
+#             return qs.filter(
+#                 (models.Q(of_fname__icontains=q) |
+#                  models.Q(of_lname__icontains=q) |
+#                  models.Q(of_specialization__icontains=q) |
+#                  models.Q(of_contact__icontains=q))
+#             )
+#         return qs
 
-    def list(self, request, *args, **kwargs):
-        # ensure absolute image URLs
-        self.serializer_class.context = {"request": request}
-        return super().list(request, *args, **kwargs)
+#     def list(self, request, *args, **kwargs):
+#         # ensure absolute image URLs
+#         self.serializer_class.context = {"request": request}
+#         return super().list(request, *args, **kwargs)
     
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
+#     permission_classes = [IsAuthenticated, IsRole]
+#     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
     
-class ViewVAWDeskOfficerDetail(generics.RetrieveAPIView):
-    serializer_class = VAWDeskOfficerListSerializer
-    lookup_field = "of_id"
+# class ViewVAWDeskOfficerDetail(generics.RetrieveAPIView):
+#     serializer_class = VAWDeskOfficerListSerializer
+#     lookup_field = "of_id"
 
-    def get_queryset(self):
-        return (
-            Official.objects
-            .filter(of_role="VAWDesk")
-            .prefetch_related(
-                "face_samples"
-            )
-        )
+#     def get_queryset(self):
+#         return (
+#             Official.objects
+#             .filter(of_role="VAWDesk")
+#             .prefetch_related(
+#                 "face_samples"
+#             )
+#         )
 
-    def get_serializer_context(self):
-        ctx = super().get_serializer_context()
-        ctx.update({"request": self.request})  # absolute media URLs
-        return ctx
+#     def get_serializer_context(self):
+#         ctx = super().get_serializer_context()
+#         ctx.update({"request": self.request})  # absolute media URLs
+#         return ctx
     
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
+#     permission_classes = [IsAuthenticated, IsRole]
+#     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
     
 #====================================QUESTIONS========================================
 
@@ -596,7 +606,7 @@ class ChangeLogListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = ChangeLogSerializer
 
-#==================================================================================
+#============================================Account Management======================================
 
 IMMUTABLE_FIELDS = {"of_fname", "of_lname", "of_dob"}  # protect unless special flow
 
@@ -941,6 +951,8 @@ class PendingOfficials(viewsets.ModelViewSet):
             traceback.print_exc()
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+#===========================================Services=====================================
 class ServiceCategoryListView(generics.ListAPIView):
     queryset = ServiceCategory.objects.all()
     serializer_class = ServiceCategorySerializer
@@ -959,4 +971,238 @@ class ServicesListCreateView(generics.ListCreateAPIView):
         return queryset
 
 
+#==========================================Forgot Password==============================
+class ChangePasswordFaceView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']
+    SIMILARITY_THRESHOLD = 0.65  # same as face_login
 
+    def decrypt_temp_file(self, encrypted_path):
+        """Decrypt .enc image into a temporary .jpg file."""
+        fernet = Fernet(settings.FERNET_KEY)
+        with open(encrypted_path, "rb") as enc_file:
+            encrypted_data = enc_file.read()
+        decrypted_data = fernet.decrypt(encrypted_data)
+
+        temp = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+        temp.write(decrypted_data)
+        temp.flush()
+        temp.close()
+        return temp.name
+
+    def post(self, request):
+        uploaded_file = request.FILES.get("frame")
+        if not uploaded_file:
+            return Response({"success": False, "message": "No image uploaded."}, status=400)
+
+        # Save webcam frame temporarily
+        try:
+            temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+            image = Image.open(uploaded_file).convert("RGB")
+            image.save(temp_image, format="JPEG")
+            temp_image.flush()
+            temp_image.close()
+            chosen_frame = temp_image.name
+        except Exception as e:
+            return Response({"success": False, "message": f"Failed to save image: {str(e)}"}, status=400)
+
+        best_match = None
+        best_sample = None
+        best_score = -1.0
+        decrypted_temp_files = []
+
+        try:
+            # Generate embedding for uploaded frame
+            embeddings = DeepFace.represent(
+                img_path=chosen_frame,
+                model_name="ArcFace",
+                enforce_detection=True
+            )
+
+            # Handle DeepFace return formats
+            frame_embedding = None
+            if isinstance(embeddings, list):
+                if len(embeddings) > 0 and isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
+                    frame_embedding = embeddings[0]["embedding"]
+                elif all(isinstance(x, (int, float)) for x in embeddings):
+                    frame_embedding = embeddings
+            elif isinstance(embeddings, dict) and "embedding" in embeddings:
+                frame_embedding = embeddings["embedding"]
+
+            if frame_embedding is None:
+                return Response({"success": False, "message": "Could not extract face embedding."}, status=400)
+
+            frame_embedding = np.array(frame_embedding).reshape(1, -1)
+
+            # Compare with stored embeddings
+            for sample in OfficialFaceSample.objects.select_related("official"):
+                official = sample.official
+                embedding = sample.embedding
+
+                try:
+                    if embedding:
+                        # Compare embeddings directly
+                        sample_embedding = np.array(embedding).reshape(1, -1)
+                        score = cosine_similarity(frame_embedding, sample_embedding)[0][0]
+                        accuracy = score * 100
+                        is_match = score >= self.SIMILARITY_THRESHOLD
+                        print(
+                            f"[FORGOT-PASS] Comparing with {official.full_name} | "
+                            f"Score: {score:.4f} | Accuracy: {accuracy:.2f}% | "
+                            f"Threshold: {self.SIMILARITY_THRESHOLD} | Result: {is_match}"
+                        )
+                        if score > best_score:
+                            best_score = score
+                            best_match = official
+                            best_sample = sample
+                    else:
+                        # Fallback to encrypted image comparison
+                        photo_path = sample.photo.path
+                        if photo_path.lower().endswith(".enc"):
+                            photo_path = self.decrypt_temp_file(photo_path)
+                            decrypted_temp_files.append(photo_path)
+
+                        result = DeepFace.verify(
+                            img1_path=chosen_frame,
+                            img2_path=photo_path,
+                            model_name="ArcFace",
+                            enforce_detection=True
+                        )
+                        if result.get("verified"):
+                            score = 1.0 / (1.0 + result["distance"])
+                            if score > best_score:
+                                best_score = score
+                                best_match = official
+                                best_sample = sample
+
+                except Exception as ve:
+                    print(f"[WARN] Skipping {official.full_name}: {str(ve)}")
+                    continue
+
+            # Evaluate result
+            if best_match and best_score >= self.SIMILARITY_THRESHOLD:
+                accuracy = best_score * 100
+                print(
+                    f"[FORGOT-PASS] MATCH FOUND | Name: {best_match.full_name} | "
+                    f"Similarity: {best_score:.4f} | Accuracy: {accuracy:.2f}% | "
+                    f"Threshold: {self.SIMILARITY_THRESHOLD} | Result: TRUE"
+                )
+                return Response({
+                    "success": True,
+                    "official": {
+                        "id": best_match.of_id,
+                        "username": best_match.user.username,
+                        "full_name": best_match.full_name,
+                    },
+                    "similarity_score": float(best_score),
+                    "threshold": self.SIMILARITY_THRESHOLD,
+                }, status=200)
+
+            accuracy = best_score * 100 if best_score > 0 else 0
+            print(
+                f"[FORGOT-PASS] NO MATCH | Best Score: {best_score:.4f} | "
+                f"Accuracy: {accuracy:.2f}% | Threshold: {self.SIMILARITY_THRESHOLD}"
+            )
+            return Response({"success": False, "message": "No matching account found."}, status=404)
+
+        except Exception as e:
+            traceback.print_exc()
+            return Response({"success": False, "message": str(e)}, status=400)
+
+        finally:
+            # Clean up all temp files
+            if os.path.exists(chosen_frame):
+                os.remove(chosen_frame)
+            for f in decrypted_temp_files:
+                if os.path.exists(f):
+                    os.remove(f)
+
+    
+User = get_user_model()
+token_generator = PasswordResetTokenGenerator()
+
+# ✅ Step 2: Email Verification (works with or without face recog)
+class VerifyEmailView(APIView):
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']
+
+    def post(self, request):
+        official_id = request.data.get("official_id")  # optional
+        email = request.data.get("email") or request.data.get("of_email")
+
+        if not email:
+            return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # CASE A: Face recog success → verify against official record
+        if official_id:
+            try:
+                official = Official.objects.get(of_id=official_id)
+            except Official.DoesNotExist:
+                return Response({"error": "Official not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+            if official.of_email != email:
+                return Response({"error": "Email does not match our records"}, status=status.HTTP_400_BAD_REQUEST)
+
+            user = official.user
+            if not user:
+                return Response({"error": "No linked user account"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # CASE B: No face recog → fallback to email-only
+        else:
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                return Response({"error": "User with this email does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Generate token + uid
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+
+        reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
+
+        # Always send email
+        send_mail(
+            subject="Password Reset Request",
+            message=f"A password reset was requested for your account.\n\n"
+                    f"Click the link to reset your password: {reset_link}\n\n"
+                    f"If this wasn’t you, please contact support immediately.",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+        )
+
+        # Return to frontend (so React modal can also use uid+token directly if needed)
+        return Response({
+            "success": True,
+            "message": "Password reset instructions sent",
+            "uid": uid,
+            "reset_token": token,
+        }, status=status.HTTP_200_OK)
+
+
+# ✅ Step 3: Reset Password
+class ResetPasswordView(APIView):
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['DSWD']
+
+    def post(self, request):
+        uidb64 = request.data.get("uid")
+        token = request.data.get("token")
+        new_password = request.data.get("new_password")
+
+        if not (uidb64 and token and new_password):
+            return Response({"error": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (User.DoesNotExist, ValueError, TypeError):
+            return Response({"error": "Invalid link"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response({"success": True, "message": "Password reset successful"}, status=status.HTTP_200_OK)

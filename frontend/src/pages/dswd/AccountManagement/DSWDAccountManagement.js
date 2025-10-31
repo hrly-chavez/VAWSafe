@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import RegisterUser from "../../RegisterUser";
+import ChangePass from "../AccountManagement/ChangePass/ChangePass";
 
 import {
   PencilSquareIcon,
@@ -18,6 +19,9 @@ export default function AccountManagement() {
 
   // NEW: filter state: 'active' | 'archived' | 'all'
   const [filter, setFilter] = useState("active");
+
+  //change pass
+  const [showChangePassModal, setShowChangePassModal] = useState(false);
 
   // mao ni ang modal para sa register user
   const [showRegisterModal, setShowRegisterModal] = useState(false); 
@@ -83,6 +87,16 @@ export default function AccountManagement() {
             <option value="active">Active</option>
             <option value="archived">Archived</option>
           </select>
+
+          {/* Change Pass Password Link */}
+          <p className="mt-2 text-sm text-white/80 text-right w-full">
+            <span
+              onClick={() => setShowChangePassModal(true)}
+              className="text-orange-400 font-medium hover:underline cursor-pointer"
+            >
+              Change Password
+            </span>
+          </p>
 
           <button
             onClick={() => setShowRegisterModal(true)}
@@ -222,6 +236,11 @@ export default function AccountManagement() {
           //if ang default role kay i uncomment bati kaayo ug result so tang tangon ni para ang katung morun kay ang 3 condition sa register user
           // defaultRole= {["Social Worker", "Nurse", "Psychometrician"]}
         />
+      )}
+
+      {/* Change Password Modal */}
+      {showChangePassModal && (
+        <ChangePass onClose={() => setShowChangePassModal(false)} />
       )}
     </div>
   );

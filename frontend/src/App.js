@@ -15,7 +15,7 @@ import Unauthorized from "./pages/Unauthorized";
 import LoginPage from "./pages/LoginPage";
 import RegisterUser from "./pages/RegisterUser";
 import ManualLoginPage from "./pages/ManualLoginPage";
-import ResetPasswordPage from "./pages/ResetPassword";
+import ResetPasswordPage from "./pages/dswd/AccountManagement/ChangePass/ResetPassword";
 
 //Landing Page
 const LandingLayout = lazy(() => import("./pages/landing/LandingLayout"));
@@ -189,10 +189,10 @@ export default function App() {
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
             <Route path={ROUTES.MANUAL_LOGIN} element={<ManualLoginPage />} />
             <Route path={ROUTES.REGISTER} element={<RegisterUser />} />
-            <Route
+            {/* <Route
               path={ROUTES.RESET_PASSWORD}
               element={<ResetPasswordPage />}
-            />
+            /> */}
             <Route path="/unauthorized" element={<Unauthorized />} />
             {/* DESK OFFICER group (Sidebar + protected) */}
             <Route
@@ -253,6 +253,10 @@ export default function App() {
                 </ProtectedRoute>
               }
             >
+              <Route
+                path={ROUTES.RESET_PASSWORD}
+                element={<ResetPasswordPage />}
+              />
               <Route path={ROUTES.DSWD} element={<DSWDDashboard />} />
               <Route
                 path={ROUTES.DSWD_VAWC_VICTIMS}
