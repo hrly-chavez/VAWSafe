@@ -43,6 +43,7 @@ urlpatterns = [
     #services
     path("services/", ServicesListCreateView.as_view(), name="services-list-create"),
     path("service-categories/", ServiceCategoryListView.as_view(), name="service-categories"),
+    path("services/<int:pk>/", ServicesDetailView.as_view(), name="dswd-service-detail"),
 
     #change password
     path("change-pass/", ChangePasswordFaceView.as_view(), name="change-pass"),

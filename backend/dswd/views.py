@@ -957,6 +957,7 @@ class ServiceCategoryListView(generics.ListAPIView):
     queryset = ServiceCategory.objects.all()
     serializer_class = ServiceCategorySerializer
         
+#create service
 class ServicesListCreateView(generics.ListCreateAPIView):
     serializer_class = ServicesSerializer
     permission_classes = [IsAuthenticated, IsRole]
@@ -965,10 +966,25 @@ class ServicesListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         queryset = Services.objects.all()
         category = self.request.query_params.get("category", None)
+        is_active = self.request.query_params.get("is_active")
 
         if category and category != "All":
             queryset = queryset.filter(category_id=category)  # ✅ use category_id
+        if is_active in ["true", "false"]:
+            queryset = queryset.filter(is_active=(is_active == "true"))
         return queryset
+
+#edit/deactivate
+class ServicesDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Services.objects.all()
+    serializer_class = ServicesSerializer
+    # permission_classes = [permissions.IsAuthenticated, IsRole]
+    # allowed_roles = ['DSWD']
+    permission_classes = [AllowAny]
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
 
 
 #==========================================Forgot Password==============================
