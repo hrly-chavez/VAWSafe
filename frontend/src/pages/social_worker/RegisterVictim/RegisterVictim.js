@@ -48,6 +48,11 @@ export default function RegisterVictim() {
     evidences: [],
 
     vic_sex: "Female",
+    address: { // Initialize address with default empty values
+      province: "",
+      municipality: "",
+      barangay: "",
+    },
   });
 
   const victimPhotos = formDataState.victimPhotos || [];
@@ -127,6 +132,9 @@ export default function RegisterVictim() {
           victimPayload[k] = v;
         }
       });
+
+      // Add the address to the victim payload
+      victimPayload.address = formDataState.address; // Ensure address is included
 
       if (formDataState.vic_current_address) {
         victimPayload.vic_current_address = formDataState.vic_current_address;

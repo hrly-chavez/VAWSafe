@@ -504,16 +504,16 @@ class IncidentInformation(models.Model): #Case in the frontend
             self.sitio = self.street.sitio
             self.barangay = self.street.sitio.barangay
             self.municipality = self.street.sitio.barangay.municipality
-            self.city = self.street.sitio.barangay.municipality.city
+            self.city = self.street.sitio.barangay.municipality.province
         elif self.sitio:
             self.barangay = self.sitio.barangay
             self.municipality = self.sitio.barangay.municipality
-            self.city = self.sitio.barangay.municipality.city
+            self.city = self.sitio.barangay.municipality.province
         elif self.barangay:
             self.municipality = self.barangay.municipality
-            self.city = self.barangay.municipality.city
+            self.city = self.barangay.municipality.province
         elif self.municipality:
-            self.city = self.municipality.city
+            self.city = self.municipality.province
 
         #  Auto-generate victim-specific case number
         if not self.incident_num and self.vic_id:
