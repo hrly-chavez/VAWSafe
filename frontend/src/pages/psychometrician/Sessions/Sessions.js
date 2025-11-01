@@ -1,4 +1,4 @@
-// src/pages/social_worker/Sessions/Session.js
+// src/pages/psychometrician/Sessions/Session.js
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./Sessions.css";
@@ -10,7 +10,7 @@ export default function Sessions() {
 
   useEffect(() => {
     api
-      .get("/api/social_worker/sessions/pending&Ongoing/")
+      .get("/api/psychometrician/sessions/pending&Ongoing/")
       .then((res) => setSessions(res.data))
       .catch((err) => console.error("Failed to fetch sessions", err));
   }, []);
@@ -72,7 +72,7 @@ export default function Sessions() {
                         <td>{s.sess_num || "—"}</td>
                         <td>{formatDate(s.sess_next_sched)}</td>
                         <td>{s.location || "—"}</td>
-                        {/* 🔹 Status badge */}
+                        {/*  Status badge */}
                         <td>
                           <span
                             className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
@@ -94,7 +94,7 @@ export default function Sessions() {
                         </td>
                         <td className="flex gap-2">
                           <Link
-                            to={`/social_worker/sessions/${s.sess_id}`}
+                            to={`/psychometrician/sessions/${s.sess_id}`}
                             className="text-blue-700 bg-blue-100 px-3 py-1 rounded hover:bg-blue-200"
                           >
                             View

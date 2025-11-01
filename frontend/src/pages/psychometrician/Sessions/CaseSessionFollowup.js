@@ -1,4 +1,4 @@
-//src/pages/social_worker/Sessions/CaseSessionFollowup.js
+//src/pages/psychometrician/Sessions/CaseSessionFollowup.js
 import React, { useState } from "react";
 import NextSessionModal from "./NextSessionModal";
 import api from "../../../api/axios";
@@ -10,7 +10,7 @@ export default function CaseSessionFollowup({ show, onClose, session }) {
 
   const handleCloseCase = async () => {
     try {
-      await api.post(`/api/social_worker/cases/${session.incident.incident_id}/close/`);
+      await api.post(`/api/psychometrician/cases/${session.incident.incident_id}/close/`);
       alert("Case closed successfully!");
       onClose(true); // close and navigate away if needed
     } catch (err) {

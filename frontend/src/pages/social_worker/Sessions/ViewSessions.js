@@ -182,7 +182,7 @@ export default function ViewSessions() {
             <p className="font-medium">{session.sess_location || "—"}</p>
           </div>
           <div>
-            <p className="text-gray-500">Assigned Social Worker(s)</p>
+            <p className="text-gray-500">Assigned Official(s)</p>
             <p className="font-medium">
               {session.official_names && session.official_names.length > 0
                 ? session.official_names.join(", ") : "—"}

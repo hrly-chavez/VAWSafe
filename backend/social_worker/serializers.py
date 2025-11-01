@@ -5,6 +5,8 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from datetime import datetime, time
 from rest_framework.exceptions import ValidationError
+from dswd.utils.logging import log_change
+
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
@@ -98,7 +100,7 @@ class VictimDetailSerializer(serializers.ModelSerializer):
             )
         return None
 #=====================================SESSIONS=============================================
-class SocialWorkerSessionCRUDSerializer(serializers.ModelSerializer):
+class SessionCRUDSerializer(serializers.ModelSerializer):
     """
     Handles creation and editing of session records.
     - Auto-increments session number per incident.
@@ -191,7 +193,7 @@ class SessionTypeSerializer(serializers.ModelSerializer):
         model = SessionType
         fields = ["id", "name"]
 
-class SocialWorkerSessionSerializer(serializers.ModelSerializer):
+class SessionSerializer(serializers.ModelSerializer):
     """
     Lightweight serializer for session list display.
     - Used in Social Worker session list endpoint.
@@ -235,19 +237,20 @@ class SocialWorkerSessionSerializer(serializers.ModelSerializer):
 class IncidentInformationSerializer(serializers.ModelSerializer): 
     """Displays incident info along with its linked sessions and perpetrator details."""
 
-    sessions = SocialWorkerSessionSerializer(many=True, read_only=True)
+    sessions = SessionSerializer(many=True, read_only=True)
     perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)  
     class Meta:
         model = IncidentInformation
         fields = "__all__"
 
-class SocialWorkerSessionTypeQuestionSerializer(serializers.ModelSerializer): 
+class SessionTypeQuestionSerializer(serializers.ModelSerializer): 
     """
     Serializer for mapped (template) questions per session type and number.
     - Used when previewing or hydrating session questions.
     """
     question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
-    question_category = serializers.CharField(source="question.ques_category", read_only=True)
+    question_category_name = serializers.SerializerMethodField()
+    question_role = serializers.SerializerMethodField()
     question_answer_type = serializers.CharField(source="question.ques_answer_type", read_only=True)
 
     class Meta:
@@ -258,28 +261,36 @@ class SocialWorkerSessionTypeQuestionSerializer(serializers.ModelSerializer):
             "session_type",
             "question",
             "question_text",
-            "question_category",
+            "question_category_name",
+            "question_role",
             "question_answer_type",
         ]
 
-class SocialWorkerSessionQuestionSerializer(serializers.ModelSerializer):
-    """
-    Serializer for actual session questions (hydrated).
-    - Can include both mapped and custom questions.
-    - Used when starting or answering a session.
-    """
+    def get_question_category_name(self, obj):
+        try:
+            return obj.question.ques_category.name if obj.question and obj.question.ques_category else "(Uncategorized)"
+        except Exception:
+            return "(Uncategorized)"
+
+    def get_question_role(self, obj):
+        try:
+            return obj.question.role if obj.question and obj.question.role else "Unassigned"
+        except Exception:
+            return "Unassigned"
+
+class SessionQuestionSerializer(serializers.ModelSerializer):
     question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
-    question_category = serializers.CharField(source="question.ques_category", read_only=True)
+    question_category_name = serializers.SerializerMethodField()
     question_answer_type = serializers.CharField(source="question.ques_answer_type", read_only=True)
 
-    # new fields to expose who answered this question (if any)
+    #fields to expose who answered this question (if any)
     answered_by = serializers.IntegerField(source="answered_by.pk", read_only=True)
     answered_by_name = serializers.CharField(source="answered_by.full_name", read_only=True)
     answered_at = serializers.DateTimeField(read_only=True)
 
     # helpful computed flags
     is_answered = serializers.SerializerMethodField()
-    assigned_role = serializers.SerializerMethodField()  # maps question.ques_category
+    assigned_role = serializers.SerializerMethodField()  # returns role string (e.g., "Social Worker")
 
     class Meta:
         model = SessionQuestion
@@ -287,7 +298,7 @@ class SocialWorkerSessionQuestionSerializer(serializers.ModelSerializer):
             "sq_id",
             "question",
             "question_text",
-            "question_category",
+            "question_category_name",
             "question_answer_type",
             "sq_custom_text",
             "sq_custom_answer_type",
@@ -304,10 +315,22 @@ class SocialWorkerSessionQuestionSerializer(serializers.ModelSerializer):
     def get_is_answered(self, obj):
         return obj.sq_value is not None and obj.sq_value != ""
 
-    def get_assigned_role(self, obj):
-        # If this is a mapped question, read ques_category; custom questions (question is None) return None
+    def get_question_category_name(self, obj):
         try:
-            return obj.question.ques_category if obj.question else None
+            return obj.question.ques_category.name if obj.question and obj.question.ques_category else None
+        except Exception:
+            return None
+
+    def get_assigned_role(self, obj):
+        """
+        Return the role string that this question belongs to.
+        Prefer question.role if set, else fallback to question.ques_category.role.
+        """
+        try:
+            if not obj.question:
+                return None
+            # question.role is set when creating question; fallback to category.role
+            return obj.question.role or getattr(obj.question.ques_category, "role", None)
         except Exception:
             return None
 #=====SERVICES======
@@ -360,7 +383,7 @@ class SessionProgressSerializer(serializers.ModelSerializer):
             "notes",
         ]
 
-class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer): 
+class SessionDetailSerializer(serializers.ModelSerializer): 
     """
     Full session detail serializer.
     - Used for viewing or updating session info.
@@ -374,7 +397,7 @@ class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):
         many=True, queryset=SessionType.objects.all(), write_only=True
     )
     sess_type_display = SessionTypeSerializer(source="sess_type", many=True, read_only=True)
-    questions = SocialWorkerSessionQuestionSerializer(
+    questions = SessionQuestionSerializer(
         source="session_questions", many=True, read_only=True
     )
     services_given = ServiceGivenSerializer(many=True, read_only=True)
@@ -563,3 +586,147 @@ class OfficialUnavailabilitySerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
     
 
+#=========================QUESTIONS================================
+
+#  CATEGORY SERIALIZER 
+class QuestionCategorySerializer(serializers.ModelSerializer):
+    """For displaying role-specific question categories."""
+
+    class Meta:
+        model = QuestionCategory
+        fields = ["id", "name", "description", "role", "is_active"]
+
+#  QUESTION SERIALIZER
+class QuestionSerializer(serializers.ModelSerializer):
+    created_by_name = serializers.CharField(source="created_by.full_name", read_only=True)
+    category_name = serializers.CharField(source="ques_category.name", read_only=True)
+    mappings = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Question
+        fields = "__all__"
+        read_only_fields = ["ques_id", "created_at", "created_by_name", "role"]
+
+    def get_mappings(self, obj):
+        """Return all session mappings for this question."""
+        return [
+            {
+                "session_number": m.session_number,
+                "session_type": m.session_type.name,
+                "session_type_id": m.session_type.id,
+            }
+            for m in obj.type_questions.all()
+        ]
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        official = getattr(request.user, "official", None)
+        validated_data["created_by"] = official
+        validated_data["role"] = official.of_role if official else "Unknown"
+        return super().create(validated_data)
+
+# SESSION TYPE (for assignment modal)
+class SessionTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SessionType
+        fields = ["id", "name"]
+
+# SESSION TYPE QUESTION (assignment link) 
+# class SessionTypeQuestionSerializer(serializers.ModelSerializer):
+#     question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
+#     session_type_name = serializers.CharField(source="session_type.name", read_only=True)
+
+#     class Meta:
+#         model = SessionTypeQuestion
+#         fields = [
+#             "id",
+#             "session_number",
+#             "session_type",
+#             "session_type_name",
+#             "question",
+#             "question_text",
+#         ]
+
+class BulkQuestionCreateSerializer(serializers.Serializer):
+    """
+    Bulk creation of multiple questions under one chosen category.
+    Automatically assigns created questions to specified session types and numbers.
+    """
+    category_id = serializers.IntegerField(required=True)
+    questions = serializers.ListField(
+        child=serializers.DictField(), allow_empty=False
+    )
+    session_numbers = serializers.ListField(
+        child=serializers.IntegerField(min_value=1), allow_empty=False
+    )
+    session_types = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=False
+    )
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        official = getattr(request.user, "official", None)
+        category_id = validated_data["category_id"]
+        questions_data = validated_data["questions"]
+        session_numbers = validated_data["session_numbers"]
+        session_types = validated_data["session_types"]
+
+        created_questions = []
+
+        for q in questions_data:
+            question = Question.objects.create(
+                ques_category_id=category_id,
+                ques_question_text=q.get("ques_question_text"),
+                ques_answer_type=q.get("ques_answer_type"),
+                ques_is_active=True,
+                created_by=official,
+                role=official.of_role if official else "Unknown",
+            )
+            created_questions.append(question)
+
+        # --- Automatically assign all new questions to the chosen sessions ---
+        for question in created_questions:
+            for sess_num in session_numbers:
+                for st_id in session_types:
+                    SessionTypeQuestion.objects.create(
+                        session_number=sess_num,
+                        session_type_id=st_id,
+                        question=question,
+                    )
+
+        # Log the entire bulk creation action
+        for q in created_questions:
+            log_change(
+                user=request.user,
+                model_name="Question",
+                record_id=q.ques_id,
+                action="CREATE",
+                description=f"Bulk-created question '{q.ques_question_text}' and assigned to sessions.",
+            )
+
+        return created_questions
+
+class BulkAssignSerializer(serializers.Serializer):
+    """
+    For edit and changelogs
+    Used for bulk assigning questions to multiple session types and numbers.
+    Accepts lists of question IDs, session numbers, and session type IDs.
+    """
+    questions = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=False
+    )
+    session_numbers = serializers.ListField(
+        child=serializers.IntegerField(min_value=1), allow_empty=False
+    )
+    session_types = serializers.ListField(
+        child=serializers.IntegerField(), allow_empty=False
+    )
+
+#Logs
+class ChangeLogSerializer(serializers.ModelSerializer):
+    """Displays detailed logs of changes made by officials."""
+    user_name = serializers.CharField(source="user.full_name", read_only=True)
+
+    class Meta:
+        model = ChangeLog
+        fields = "__all__"

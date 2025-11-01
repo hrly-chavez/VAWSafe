@@ -114,7 +114,7 @@
 //     </div>
 //   );
 // }
-
+ // src/pages/dswd/Questions/Questions.js
 import { useState, useEffect } from "react";
 import { PencilSquareIcon, TrashIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import api from "../../../api/axios";

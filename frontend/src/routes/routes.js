@@ -20,8 +20,6 @@ export const ROUTES = {
   DESK_OFFICER_SOCIAL_WORKERS: "/desk_officer/social-workers",
   DESK_OFFICER_SERVICES: "/desk_officer/services",
   DESK_OFFICER_CASE_RECORDS: "/desk_officer/case-records",
-  // DESK_OFFICER_ACCOUNT_MANAGEMENT: "/desk_officer/account-management",
-  // DESK_OFFICER_PENDING_ACCOUNT: "/desk_officer/pending-account",
   DESK_OFFICER_VIEW_OFFICIAL: "/desk_officer/officials/:of_id",
 
   //DSWD
@@ -43,19 +41,18 @@ export const ROUTES = {
   SOCIAL_WORKER: "/social_worker",
   SOCIAL_WORKER_DASHBOARD: "/social_worker",
   SOCIAL_WORKER_REGISTER_VICTIM: "/social_worker/register-victim",
-
   SOCIAL_WORKER_SCHEDULE: "/social_worker/schedule",
-
   SOCIAL_WORKER_CASE_RECORDS: "/social_worker/case-records",
   SOCIAL_WORKER_SESSIONS: "/social_worker/sessions",
   SOCIAL_WORKER_VIEW_SESSION: "/social_worker/sessions/:sess_id",
   SOCIAL_WORKER_START_SESSION: "/social_worker/sessions/:sess_id/start",
-
   SOCIAL_WORKER_SERVICES: "/social_worker/services",
-
+  SOCIAL_WORKER_QUESTIONS: "/social_worker/questions",
   SOCIAL_WORKER_VICTIMS: "/social_worker/victims",
   SOCIAL_WORKER_VICTIM_DETAIL: "/social_worker/victims/:vic_id",
   SOCIAL_WORKER_SEARCH_FACIAL: "/social_worker/victims/search-facial",
+  SOCIAL_WORKER_CREATE_MORE_SESSION: "/social_worker/more-sessions/create/:incident_id",
+  SOCIAL_WORKER_START_MORE_SESSION: "/social_worker/more-sessions/:sess_id/start",
 
   //nurse
   NURSE_DASHBOARD: "nurse/",
@@ -68,6 +65,7 @@ export const ROUTES = {
   NURSE_VICTIMS: "/nurse/victims",
   NURSE_VICTIM_DETAIL: "/nurse/victims/:vic_id",
   NURSE_SEARCH_FACIAL: "/nurse/victims/search-facial",
+  NURSE_QUESTIONS: "/nurse/questions",
 
   // psychometrician
   PSYCHOMETRICIAN_DASHBOARD: "psychometrician/",
@@ -80,6 +78,9 @@ export const ROUTES = {
   PSYCHOMETRICIAN_VICTIMS: "/psychometrician/victims",
   PSYCHOMETRICIAN_VICTIM_DETAIL: "/psychometrician/victims/:vic_id",
   PSYCHOMETRICIAN_SEARCH_FACIAL: "/psychometrician/victims/search-facial",
+  PSYCHOMETRICIAN_QUESTIONS: "/psychometrician/questions",
+  PSYCHOMETRICIAN_CREATE_MORE_SESSION: "/psychometrician/more-sessions/create/:incident_id",
+  PSYCHOMETRICIAN_START_MORE_SESSION: "/psychometrician/more-sessions/:sess_id/start",
 
   // landing page
   LANDING: "/landing",
