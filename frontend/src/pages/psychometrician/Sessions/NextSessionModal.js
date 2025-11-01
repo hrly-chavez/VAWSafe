@@ -1,4 +1,4 @@
-// frontend/src/pages/social_worker/Sessions/NextSessionModal.js
+// frontend/src/pages/psychometrician/Sessions/NextSessionModal.js
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
@@ -14,17 +14,17 @@ export default function NextSessionModal({ show, onClose, session }) {
   useEffect(() => {
     if (show) {
       api
-        .get("/api/social_worker/session-types/")
+        .get("/api/psychometrician/session-types/")
         .then((res) => setAllTypes(res.data))
         .catch((err) => console.error("Failed to fetch session types", err));
     }
   }, [show]);
 
-  // 🔹 Async loader for officials
+  //  Async loader for officials
   const loadOfficials = async (inputValue) => {
     try {
       const res = await api.get(
-        `/api/social_worker/officials/social-workers/?q=${inputValue || ""}`
+        `/api/psychometrician/officials/social-workers/?q=${inputValue || ""}`
       );
       return res.data.map((w) => ({
         value: w.of_id,
@@ -47,7 +47,7 @@ export default function NextSessionModal({ show, onClose, session }) {
     };
 
     console.log("Submitting payload:", payload);
-    await api.post(`/api/social_worker/sessions/`, payload);
+    await api.post(`/api/psychometrician/sessions/`, payload);
     alert("Next session scheduled successfully!");
     onClose(true);
   } catch (err) {
@@ -136,12 +136,12 @@ export default function NextSessionModal({ show, onClose, session }) {
                 // limit to max 3 officials
                 if (val.length <= 3) setSelectedOfficials(val);
               }}
-              placeholder="Search and select up to 3 social workers..."
+              placeholder="Search and select up to 3 Officials..."
               getOptionLabel={(option) => option.label}
               getOptionValue={(option) => option.value}
             />
             <p className="text-xs text-gray-500 mt-1">
-              You can assign up to 3 social workers.
+              You can assign up to 3 Officials.
             </p>
 
           </div>

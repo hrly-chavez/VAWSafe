@@ -1,34 +1,31 @@
 import os, tempfile, traceback, json, logging, threading
 
-from rest_framework import generics
+from rest_framework import generics, permissions
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
-
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.db.models import Q
 from django.db import transaction
 from django.http import Http404
-
 from deepface import DeepFace
 from .serializers import *
 import time
 from datetime import date, timedelta
 from PIL import Image
-
 from shared_model.models import *
 from shared_model.permissions import IsRole
 from cryptography.fernet import Fernet
 from shared_model.views import serve_encrypted_file
-
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from dswd.utils.logging import log_change
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
@@ -201,7 +198,6 @@ def register_victim(request):
         return Response({"success": False, "error": str(e)},
                         status=status.HTTP_400_BAD_REQUEST)
  
-
 class victim_list(generics.ListAPIView):
     serializer_class = VictimListSerializer
     permission_classes = [IsAuthenticated, IsRole]
@@ -209,11 +205,14 @@ class victim_list(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return Victim.objects.filter(
-                incidents__sessions__assigned_official=user.official
-            ).distinct()
-        return Victim.objects.none()
+        official = getattr(user, "official", None)
+        role = getattr(official, "of_role", None)
+        if not role:
+            return Victim.objects.none()
+
+        return Victim.objects.filter(
+            incidents__sessions__assigned_official=official
+        ).distinct()
 
 logger = logging.getLogger(__name__)
 
@@ -433,12 +432,14 @@ class search_victim_facial(APIView):
 
 #========================================SESSIONS====================================================
 class scheduled_session_lists(generics.ListAPIView):
-    serializer_class = SocialWorkerSessionSerializer
+    serializer_class = SessionSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        if not hasattr(user, "official") or user.official.of_role != "Social Worker":
+        official = getattr(user, "official", None)
+        role = getattr(official, "of_role", None)
+        if not role:
             return Session.objects.none()
 
         # Step 1: Get all sessions assigned to this official
@@ -463,18 +464,19 @@ class scheduled_session_detail(generics.RetrieveUpdateAPIView):
     PATCH: Update session info (e.g., type, description, location).
     this also handles the display for service in the frontend
     """
-    serializer_class = SocialWorkerSessionDetailSerializer
+    serializer_class = SessionDetailSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            # Allow access to all sessions under incidents where this social worker
-            # is assigned to at least one session
-            return Session.objects.filter(
-                incident_id__sessions__assigned_official=user.official
-            ).distinct()
-        return Session.objects.none()
+        official = getattr(user, "official", None)
+        role = getattr(official, "of_role", None)
+        if not role:
+            return Session.objects.none()
+
+        return Session.objects.filter(
+            incident_id__sessions__assigned_official=official
+        ).distinct()
 
 class SessionTypeListView(generics.ListAPIView):
     """GET: List all available session types for dropdowns."""
@@ -485,7 +487,7 @@ class SessionTypeListView(generics.ListAPIView):
 #Session Start 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def social_worker_mapped_questions(request):
+def mapped_questions(request):
     """
     GET: Returns mapped questions for a specific session number and session type(s).
     Example: /api/social_worker/mapped-questions/?session_num=1&session_types=1,2
@@ -501,9 +503,9 @@ def social_worker_mapped_questions(request):
     mappings = SessionTypeQuestion.objects.filter(
         session_number=session_num,
         session_type__id__in=type_ids
-    ).select_related("question", "session_type")
+    ).select_related("question", "question__ques_category", "session_type")
 
-    serializer = SocialWorkerSessionTypeQuestionSerializer(mappings, many=True)
+    serializer = SessionTypeQuestionSerializer(mappings, many=True)
     return Response(serializer.data)
 
 @api_view(["POST"])
@@ -512,7 +514,7 @@ def start_session(request, sess_id):
     """
     POST: Marks a session as Ongoing for this specific official and hydrates mapped questions.
     Uses SessionProgress to track per-official start times.
-    """
+    """             
     user = request.user
     official = user.official
 
@@ -538,25 +540,16 @@ def start_session(request, sess_id):
     # --- Hydrate mapped questions ---
     type_ids = list(session.sess_type.values_list("id", flat=True))
 
-    # We cannot query EncryptedCharField directly, so we fetch all then filter manually
+  
+    # Fetch all mapped template questions for this session number & types
     all_mappings = SessionTypeQuestion.objects.filter(
         session_number=session.sess_num,
         session_type__id__in=type_ids
-    ).select_related("question")
+    ).select_related("question", "question__ques_category")
 
-    # Filter only those questions that match the official's role
-    filtered_mappings = [
-        m for m in all_mappings
-        if getattr(m.question, "ques_category", None) == official.of_role
-    ]
-
-    print("Official role:", official.of_role)
-    print("Filtered question roles:", [m.question.ques_category for m in filtered_mappings])
-    print("Session number:", session.sess_num)
-    print("Session types:", type_ids)
-
-    # Create SessionQuestion entries for relevant mapped questions
-    for m in filtered_mappings:
+    # Create SessionQuestion entries for ALL mapped questions (so all assigned officials can view them).
+    # We rely on SessionQuestion.unique_together and get_or_create to avoid duplicates.
+    for m in all_mappings:
         SessionQuestion.objects.get_or_create(
             session=session,
             question=m.question,
@@ -564,7 +557,7 @@ def start_session(request, sess_id):
         )
 
     # --- Serialize and respond ---
-    serializer = SocialWorkerSessionDetailSerializer(session, context={"request": request})
+    serializer = SessionDetailSerializer(session, context={"request": request})
     return Response(serializer.data, status=200)
 
 @api_view(["POST"]) 
@@ -600,7 +593,7 @@ def add_custom_question(request, sess_id):
         )
         created.append(sq)
 
-    return Response(SocialWorkerSessionQuestionSerializer(created, many=True).data, status=201)
+    return Response(SessionQuestionSerializer(created, many=True).data, status=201)
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -638,10 +631,10 @@ def finish_session(request, sess_id):
                 continue
 
             # Server-side role enforcement:
-            # If the question is a mapped question and its category (role) doesn't match the official's role, skip saving.
             q_role = None
             if sq.question:
-                q_role = sq.question.ques_category
+                # prefer question.role (string), fallback to question.ques_category.role
+                q_role = sq.question.role or getattr(sq.question.ques_category, "role", None)
 
             if q_role and user.official.of_role and q_role != user.official.of_role:
                 # skip saving - not allowed for this official
@@ -711,7 +704,7 @@ def finish_session(request, sess_id):
         "skipped_answers": skipped,
         "session_completed": all_finished,
         "all_finished": all_finished,
-        "session": SocialWorkerSessionDetailSerializer(session, context={"request": request}).data
+        "session": SessionDetailSerializer(session, context={"request": request}).data
     }, status=200)
 
 @api_view(["POST"])
@@ -738,29 +731,47 @@ def close_case(request, incident_id):
 @permission_classes([IsAuthenticated])
 def schedule_next_session(request):
     """
-    GET: Lists current sessions (Pending/Ongoing).
+    GET: Lists current sessions (Pending/Ongoing) for the logged-in official.
     POST: Creates a new session (schedules the next one).
+    Now role-agnostic: works for any official (Social Worker, Nurse, Psychometrician, Home Life).
     """
     user = request.user
+    official = getattr(user, "official", None)
+    role = getattr(official, "of_role", None)
 
+    if not official or not role:
+        return Response({"error": "Only registered officials can access this endpoint."},
+                        status=status.HTTP_403_FORBIDDEN)
+
+    # =========================
+    # GET REQUEST
+    # =========================
     if request.method == "GET":
-        # same queryset logic
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            sessions = Session.objects.filter(
-                assigned_official=user.official,
-                sess_status__in=["Pending", "Ongoing"]
-            ).order_by("-sess_next_sched")
-        else:
-            sessions = Session.objects.none()
+        # Fetch all sessions where the current official is assigned
+        sessions = Session.objects.filter(
+            assigned_official=official,
+            sess_status__in=["Pending", "Ongoing"]
+        ).order_by("-sess_next_sched")
 
-        serializer = SocialWorkerSessionCRUDSerializer(sessions, many=True)
-        return Response(serializer.data)
+        serializer = SessionCRUDSerializer(sessions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
+    # =========================
+    # POST REQUEST
+    # =========================
     elif request.method == "POST":
-        serializer = SocialWorkerSessionCRUDSerializer(data=request.data)
+        serializer = SessionCRUDSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            # Save directly; the serializer handles sess_num auto-increment, etc.
+            session = serializer.save()
+
+            # Optional: Create SessionProgress entries automatically for assigned officials
+            assigned_officials = session.assigned_official.all()
+            for assigned in assigned_officials:
+                SessionProgress.objects.get_or_create(session=session, official=assigned)
+
+            return Response(SessionCRUDSerializer(session).data, status=status.HTTP_201_CREATED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(["GET"])
@@ -846,12 +857,16 @@ class SocialWorkerCaseList(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return IncidentInformation.objects.filter(
-                sessions__assigned_official=user.official,
-                incident_status__in=["Pending", "Ongoing"]
-            ).distinct()
-        return IncidentInformation.objects.none()
+        official = getattr(user, "official", None)
+        role = getattr(official, "of_role", None)
+        if not role:
+            return IncidentInformation.objects.none()
+
+        return IncidentInformation.objects.filter(
+            sessions__assigned_official=official,
+            incident_status__in=["Pending", "Ongoing"]
+        ).distinct()
+
 
 # ==================================== SOCIAL WORKER SCHEDULE  ================================
 class OfficialAvailabilityViewSet(viewsets.ModelViewSet):
@@ -868,10 +883,10 @@ class OfficialAvailabilityViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            # include all, even inactive, so get_object() works for deactivation
-            return OfficialAvailability.objects.filter(official=user.official)
-        return OfficialAvailability.objects.none()
+        official = getattr(user, "official", None)
+        if not official:
+            return OfficialAvailability.objects.none()
+        return OfficialAvailability.objects.filter(official=official)
 
 
     def destroy(self, request, *args, **kwargs):
@@ -904,13 +919,14 @@ class OfficialUnavailabilityViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return OfficialUnavailability.objects.filter(official=user.official)
-        return OfficialUnavailability.objects.none()
+        official = getattr(user, "official", None)
+        if not official:
+            return OfficialUnavailability.objects.none()
+        return OfficialUnavailability.objects.filter(official=official)
 
 class OfficialScheduleOverviewViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker"]
+    allowed_roles = ["Social Worker", "Nurse", "Psychometrician", "Home Life"]
 
     @action(detail=False, methods=["get"])
     def week(self, request):
@@ -952,6 +968,323 @@ class OfficialScheduleOverviewViewSet(viewsets.ViewSet):
             "availabilities": list(availabilities),
             "unavailabilities": list(unavailabilities),
         })
+
+#=====================================QUESTIONS============================================
+
+# CATEGORY LIST 
+class QuestionCategoryListView(generics.ListAPIView):
+    """Return only active categories for the current official’s role."""
+    serializer_class = QuestionCategorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        official = getattr(self.request.user, "official", None)
+        if not official:
+            return QuestionCategory.objects.none()
+        return QuestionCategory.objects.filter(role=official.of_role, is_active=True)
+
+#  QUESTION LIST / CREATE 
+class QuestionListCreateView(generics.ListCreateAPIView):
+    """Social worker can list or create their own questions."""
+    serializer_class = QuestionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        official = getattr(self.request.user, "official", None)
+        if not official:
+            return Question.objects.none()
+        # Only show questions made by same role
+        return Question.objects.filter(role=official.of_role).order_by("-created_at")
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+        log_change(
+            user=self.request.user,
+            model_name="Question",
+            record_id=instance.ques_id,
+            action="CREATE",
+            description=f"Created new question: {instance.ques_question_text}",
+        )
+
+# QUESTION DETAIL (UPDATE / TOGGLE ACTIVE)
+class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Question.objects.all()
+    serializer_class = QuestionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        """Toggle question activation (soft deactivate/activate)."""
+        question = self.get_object()
+
+        # Toggle active state
+        question.ques_is_active = not question.ques_is_active
+        question.save(update_fields=["ques_is_active"])
+
+        # Build readable message
+        action_text = "activated" if question.ques_is_active else "deactivated"
+        description = f"Question {action_text}: '{question.ques_question_text}'"
+
+        # Log this change
+        log_change(
+            user=request.user,
+            model_name="Question",
+            record_id=question.ques_id,
+            action="DELETE",  # Keep consistent with DSWD’s system
+            description=description,
+            old_data={"ques_is_active": not question.ques_is_active},
+            new_data={"ques_is_active": question.ques_is_active},
+        )
+
+        return Response(
+            {"message": f"Question {action_text} successfully."},
+            status=status.HTTP_200_OK,
+        )
+    
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        # Prepare old data
+        old_data = {
+            "ques_category": instance.ques_category_id,
+            "ques_question_text": instance.ques_question_text,
+            "ques_answer_type": instance.ques_answer_type,
+        }
+
+        # Apply new values
+        updated_fields = {**old_data, **serializer.validated_data}
+
+        # Normalize category to int if possible (avoid "1" vs 1 mismatch)
+        if "ques_category" in updated_fields and updated_fields["ques_category"] is not None:
+            updated_fields["ques_category"] = (
+                int(updated_fields["ques_category"])
+                if isinstance(updated_fields["ques_category"], str)
+                else updated_fields["ques_category"].id
+                if hasattr(updated_fields["ques_category"], "id")
+                else updated_fields["ques_category"]
+            )
+
+        # Detect real changes
+        changes_detected = any(
+            old_data[field] != updated_fields[field] for field in old_data
+        )
+
+        if not changes_detected:
+            return Response(
+                {"detail": "No changes detected — update skipped."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Save and log only if changed
+        updated_instance = serializer.save()
+
+        field_labels = {
+            "ques_category": "Category",
+            "ques_question_text": "Question Text",
+            "ques_answer_type": "Answer Type",
+        }
+
+        changes = []
+        for field in old_data:
+            if old_data[field] != updated_fields[field]:
+                old_val = old_data[field]
+                new_val = updated_fields[field]
+
+                if field == "ques_category":
+                    old_val = (
+                        QuestionCategory.objects.filter(id=old_val).first().name
+                        if old_val else "(None)"
+                    )
+                    new_val = (
+                        QuestionCategory.objects.filter(id=new_val).first().name
+                        if new_val else "(None)"
+                    )
+                changes.append(f"• {field_labels[field]} changed from '{old_val}' → '{new_val}'")
+
+        description = "\n".join(changes) or "Updated question fields."
+
+        log_change(
+            user=request.user,
+            model_name="Question",
+            record_id=updated_instance.ques_id,
+            action="UPDATE",
+            description=description,
+        )
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+# CHOICES (for AddQuestion modal)
+class QuestionChoicesView(APIView):
+    """Return categories and answer types for the logged-in official’s role."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        official = getattr(request.user, "official", None)
+        role = getattr(official, "of_role", None)
+        categories = QuestionCategory.objects.filter(role=role, is_active=True)
+        answer_types = [a[0] for a in Question.ANSWER_TYPES]
+        return Response({
+            "categories": QuestionCategorySerializer(categories, many=True).data,
+            "answer_types": answer_types,
+        })
+
+#  SESSION TYPE LIST 
+class SessionTypeListView(generics.ListAPIView):
+    """Return all session types for dropdowns."""
+    queryset = SessionType.objects.all()
+    serializer_class = SessionTypeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+#  SESSION TYPE QUESTION MAPPING 
+class SessionTypeQuestionListCreateView(generics.ListCreateAPIView):
+    """Assign questions to session types and numbers."""
+    queryset = SessionTypeQuestion.objects.all()
+    serializer_class = SessionTypeQuestionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class BulkQuestionCreateAndAssignView(generics.CreateAPIView):
+    """
+    POST: Create multiple questions under a single category and immediately assign them to sessions.
+    """
+    serializer_class = BulkQuestionCreateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        created_questions = serializer.save()
+
+        return Response(
+            QuestionSerializer(created_questions, many=True).data,
+            status=201
+        )
+
+class BulkAssignView(APIView):
+    """
+    POST: Bulk assign multiple questions to multiple session types and session numbers.
+    Automatically replaces old mappings with new ones.
+    Logs the reassignment for auditing.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = BulkAssignSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        questions = serializer.validated_data["questions"]
+        session_numbers = serializer.validated_data["session_numbers"]
+        session_types = serializer.validated_data["session_types"]
+
+        created_mappings = []
+
+        for q_id in questions:
+            # Get existing mappings
+            old_mappings = SessionTypeQuestion.objects.filter(question_id=q_id)
+            old_numbers = sorted(set(old_mappings.values_list("session_number", flat=True)))
+            old_type_ids = sorted(set(old_mappings.values_list("session_type_id", flat=True)))
+            old_type_names = list(
+                SessionType.objects.filter(id__in=old_type_ids).values_list("name", flat=True)
+            )
+
+            had_old_assignments = old_mappings.exists()
+
+            # Delete old mappings
+            old_mappings.delete()
+
+            # Create new mappings
+            for num in session_numbers:
+                for st_id in session_types:
+                    mapping = SessionTypeQuestion.objects.create(
+                        session_number=num,
+                        session_type_id=st_id,
+                        question_id=q_id,
+                    )
+                    created_mappings.append(mapping)
+
+            # Skip logging if first time assignment
+            if not had_old_assignments:
+                continue
+
+            # Fetch new readable data
+            new_type_names = list(
+                SessionType.objects.filter(id__in=session_types).values_list("name", flat=True)
+            )
+
+            added_numbers = [n for n in session_numbers if n not in old_numbers]
+            removed_numbers = [n for n in old_numbers if n not in session_numbers]
+            added_types = [t for t in new_type_names if t not in old_type_names]
+            removed_types = [t for t in old_type_names if t not in new_type_names]
+
+            # Build readable log
+            desc_lines = []
+            if added_numbers:
+                desc_lines.append(f"• Added Session Numbers: {', '.join(map(str, added_numbers))}")
+            if removed_numbers:
+                desc_lines.append(f"• Removed Session Numbers: {', '.join(map(str, removed_numbers))}")
+            if added_types:
+                desc_lines.append(f"• Added Session Types: {', '.join(added_types)}")
+            if removed_types:
+                desc_lines.append(f"• Removed Session Types: {', '.join(removed_types)}")
+
+            if not desc_lines:
+                desc_lines.append("No changes to session assignments.")
+            description = "\n".join(desc_lines)
+
+            # Log the reassignment
+            log_change(
+                user=request.user,
+                model_name="SessionTypeQuestion",
+                record_id=q_id,
+                action="ASSIGN",
+                description=description,
+                old_data={
+                    "session_numbers": old_numbers,
+                    "session_types": old_type_names,
+                },
+                new_data={
+                    "session_numbers": session_numbers,
+                    "session_types": new_type_names,
+                },
+            )
+
+        return Response(
+            SessionTypeQuestionSerializer(created_mappings, many=True).data,
+            status=201
+        )
+
+class ChangeLogListView(generics.ListAPIView):
+    """
+    Returns all change logs related to the logged-in role.
+    - DSWD sees all.
+    - Officials (e.g., Social Workers) see only logs they created or logs affecting their role.
+    """
+    serializer_class = ChangeLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        official = getattr(user, "official", None)
+        if not official:
+            return ChangeLog.objects.none()
+
+        # DSWD can see everything
+        if official.of_role == "DSWD":
+            return ChangeLog.objects.all()
+
+        # Role-based filtering:
+        #  - Only show logs related to this official's role (Question, SessionTypeQuestion)
+        #  - OR logs created by this specific official
+        return ChangeLog.objects.filter(
+            models.Q(user=official)
+            | models.Q(model_name__in=["Question", "SessionTypeQuestion"])
+            & models.Q(user__of_role=official.of_role)
+        ).select_related("user")
+
+
+#==========================================================================
+
+
 
 #para ni sa file encryption kay diri naka store ang incident_evidence,ug ang victim_face_samples
 class ServeEvidenceFileView(APIView):

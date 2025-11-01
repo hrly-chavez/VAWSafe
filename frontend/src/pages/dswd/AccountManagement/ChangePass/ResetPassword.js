@@ -1,7 +1,7 @@
 // src/pages/ResetPasswordPage.js
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../../api/axios";
 
 export default function ResetPasswordPage() {
   const { uid, token } = useParams();
@@ -12,7 +12,7 @@ export default function ResetPasswordPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:8000/api/auth/reset-pass/", {
+      await api.post("/api/dswd/reset-pass/", {
         uid,
         token,
         new_password: newPassword,
@@ -23,6 +23,7 @@ export default function ResetPasswordPage() {
       setMessage("Invalid or expired link.");
     }
   };
+
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">

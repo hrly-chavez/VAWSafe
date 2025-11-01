@@ -1,4 +1,4 @@
-// src/pages/social_worker/Sessions/ViewSessions.js
+// src/pages/psychometrician/Sessions/ViewSessions.js
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Select from "react-select";
@@ -13,26 +13,38 @@ export default function ViewSessions() {
   const [editingType, setEditingType] = useState(false);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isDone, setIsDone] = useState(false);
+  const [role, setRole] = useState("");
 
   //  Fetch session
   useEffect(() => {
-    api
-      .get(`/api/social_worker/sessions/${sess_id}/`)
-      .then((res) => {
-        setSession(res.data);
-        setSelectedTypes(res.data.sess_type_display || []);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch session", err);
-        setLoading(false);
-      });
-  }, [sess_id]);
+  api
+    .get(`/api/psychometrician/sessions/${sess_id}/`)
+    .then((res) => {
+      const data = res.data;
+      setSession(data);
+      setSelectedTypes(data.sess_type_display || []);
 
+      // Extract current official's progress info
+      if (data.my_progress) {
+        setIsDone(data.my_progress.is_done || false);
+        setRole(data.my_progress.official_role || data.my_progress.role || "");
+      }
+
+      setLoading(false);
+
+    })
+    .catch((err) => {
+      console.error("Failed to fetch session", err);
+      setLoading(false);
+    });
+}, [sess_id]);
+
+  
   //  Fetch all session types for editing
   useEffect(() => {
     api
-      .get("/api/social_worker/session-types/")
+      .get("/api/psychometrician/session-types/")
       .then((res) => setAllTypes(res.data))
       .catch((err) => console.error("Failed to fetch session types", err));
   }, []);
@@ -41,7 +53,7 @@ export default function ViewSessions() {
   const handleSaveType = async () => {
     try {
       const ids = selectedTypes.map((t) => t.id);
-      const res = await api.patch(`/api/social_worker/sessions/${sess_id}/`, {
+      const res = await api.patch(`/api/psychometrician/sessions/${sess_id}/`, {
         sess_type: ids,
       });
       setSession(res.data);
@@ -77,7 +89,19 @@ export default function ViewSessions() {
     <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-8">
       <h2 className="text-2xl font-bold text-blue-800 border-b pb-2">
         Session Details
-      </h2>
+      </h2> 
+            {role && (
+        <p className="text-sm text-gray-600 mb-2">
+          Viewing session as: <span className="font-semibold text-blue-700">{role}</span>
+        </p>
+      )}
+
+      {isDone && (
+        <p className="text-gray-500 italic text-sm mb-2">
+          You’ve already completed your part of this session. You can review it, but no further edits are allowed.
+        </p>
+      )}
+
 
       {/* Session Info */}
       <section className="bg-gray-50 p-4 rounded-lg border">
@@ -158,7 +182,7 @@ export default function ViewSessions() {
             <p className="font-medium">{session.sess_location || "—"}</p>
           </div>
           <div>
-            <p className="text-gray-500">Assigned Social Worker(s)</p>
+            <p className="text-gray-500">Assigned Official(s)</p>
             <p className="font-medium">
               {session.official_names && session.official_names.length > 0
                 ? session.official_names.join(", ") : "—"}
@@ -171,7 +195,7 @@ export default function ViewSessions() {
       {victim && (
         <div>
           <Link
-            to={`/social_worker/victims/${victim.vic_id}`}
+            to={`/psychometrician/victims/${victim.vic_id}`}
             className="inline-block px-5 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition"
           >
             View Victim Profile
@@ -185,27 +209,55 @@ export default function ViewSessions() {
         selectedTypes={sess_type_display?.map((t) => t.id) || []} //  fixed
       />
 
-      {/* Actions */}
-        <div className="flex justify-end gap-3">
-          {session.sess_status === "Pending" && (
+      {/* If finished, show read-only indicator */}
+        {session.my_progress && session.my_progress.date_ended && (
+          <p className="text-gray-600 italic text-sm text-right mt-2">
+            You’ve already completed your part of this session.
+          </p>
+        )}
+
+        {/* Actions */}
+        <div className="flex justify-end gap-3 mt-6 border-t pt-4">
+          {/* Hide Start/Continue if official already finished */}
+            {!isDone && session.sess_status === "Pending" && (
+              <button
+                onClick={() => navigate(`/psychometrician/sessions/${sess_id}/start`)}
+                className="px-5 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition"
+              >
+                Start Session
+              </button>
+            )}
+
+            {!isDone && session.sess_status === "Ongoing" && (
+              <button
+                onClick={() => navigate(`/psychometrician/sessions/${sess_id}/start`)}
+                className="px-5 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition"
+              >
+                Continue Session
+              </button>
+            )}
+
+            {isDone && (
+              <button
+                disabled
+                className="px-5 py-2 bg-gray-300 text-gray-600 rounded-md font-medium cursor-not-allowed"
+              >
+                Session Completed (Your part)
+              </button>
+            )}
+
+          {session.sess_status === "Completed" && (
             <button
-              onClick={() => navigate(`/social_worker/sessions/${sess_id}/start`)}
-              className="px-5 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700"
+              disabled
+              className="px-5 py-2 bg-gray-300 text-gray-600 rounded-md font-medium cursor-not-allowed"
             >
-              Start Session
+              Session Completed
             </button>
           )}
-          {session.sess_status === "Ongoing" && (
-            <button
-              onClick={() => navigate(`/social_worker/sessions/${sess_id}/start`)}
-              className="px-5 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700"
-            >
-              Continue Session
-            </button>
-          )}
+
           <button
             onClick={() => navigate(-1)}
-            className="px-5 py-2 bg-gray-200 text-gray-800 rounded-md font-medium hover:bg-gray-300"
+            className="px-5 py-2 bg-gray-200 text-gray-800 rounded-md font-medium hover:bg-gray-300 transition"
           >
             Back
           </button>

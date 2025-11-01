@@ -84,6 +84,9 @@ INSTALLED_APPS = [
     'social_worker',
     'victim',
     'dswd',
+    'nurse',
+    'psychometrician',
+    
     #gibutangan nako ug apps.SharedModelConfig para sa face embeddings para sa /admin
     'shared_model.apps.SharedModelConfig',
     'auth_app',

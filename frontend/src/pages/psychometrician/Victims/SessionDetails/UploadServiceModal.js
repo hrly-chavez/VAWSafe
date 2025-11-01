@@ -1,4 +1,4 @@
-// src/pages/social_worker/Victims/UploadServiceModal.js
+// src/pages/psychometrician/Victims/UploadServiceModal.js
 import React, { useState } from "react";
 import api from "../../../../api/axios";
 
@@ -20,7 +20,7 @@ export default function UploadServiceModal({ service, onClose, onSuccess }) {
 
     try {
       setLoading(true);
-      await api.patch(`/api/social_worker/services/${service.id}/upload/`, formData, {
+      await api.patch(`/api/psychometrician/services/${service.id}/upload/`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       alert("Service proof and feedback updated successfully!");

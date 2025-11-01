@@ -398,24 +398,63 @@ class ChangeLogSerializer(serializers.ModelSerializer):
 
 #====================================================================================
 
+# class AddressSerializer(serializers.ModelSerializer):
+#     province_name = serializers.CharField(source="province.name", read_only=True)
+#     municipality_name = serializers.CharField(source="municipality.name", read_only=True)
+#     barangay_name = serializers.CharField(source="barangay.name", read_only=True)
+
+#     class Meta:
+#         model = Address
+#         fields = ["id", "province", "province_name", "municipality", "municipality_name", "barangay", "barangay_name", "sitio", "street"]
+
+#     def to_representation(self, instance):
+#         parts = []
+#         if instance.street:
+#             parts.append(str(instance.street))
+#         if instance.sitio:
+#             parts.append(str(instance.sitio))
+#         if instance.barangay:
+#             parts.append(str(instance.barangay))
+#         if instance.municipality:
+#             parts.append(str(instance.municipality))
+#         if instance.province:
+#             parts.append(str(instance.province))
+#         return ", ".join(parts) or "—"
+
 class AddressSerializer(serializers.ModelSerializer):
+    province_name = serializers.SerializerMethodField()
+    municipality_name = serializers.SerializerMethodField()
+    barangay_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Address
-        fields = ["id", "province", "municipality", "barangay", "sitio", "street"]
+        fields = [
+            "id",
+            "province",
+            "province_name",
+            "municipality",
+            "municipality_name",
+            "barangay",
+            "barangay_name",
+            "sitio",
+            "street",
+        ]
 
-    def to_representation(self, instance):
-        parts = []
-        if instance.street:
-            parts.append(str(instance.street))
-        if instance.sitio:
-            parts.append(str(instance.sitio))
-        if instance.barangay:
-            parts.append(str(instance.barangay))
-        if instance.municipality:
-            parts.append(str(instance.municipality))
-        if instance.province:
-            parts.append(str(instance.province))
-        return ", ".join(parts) or "—"
+    def get_province_name(self, obj):
+        if not obj.province:
+            return None
+        return getattr(obj.province, "name", getattr(obj.province, "prov_name", str(obj.province)))
+
+    def get_municipality_name(self, obj):
+        if not obj.municipality:
+            return None
+        return getattr(obj.municipality, "name", getattr(obj.municipality, "mun_name", str(obj.municipality)))
+
+    def get_barangay_name(self, obj):
+        if not obj.barangay:
+            return None
+        return getattr(obj.barangay, "name", getattr(obj.barangay, "brgy_name", str(obj.barangay)))
+
 
 
 # class OfficialSerializer(serializers.ModelSerializer):
@@ -481,8 +520,9 @@ class ServiceCategorySerializer(serializers.ModelSerializer):
 
 class ServicesSerializer(serializers.ModelSerializer):
     # assigned_place = AddressSerializer(required=False, allow_null=True)
+    category_name = serializers.SerializerMethodField()
     service_address = AddressSerializer(required=False, allow_null=True)
-    is_active = serializers.BooleanField(read_only=True)  # ✅ can't be set via API
+    is_active = serializers.BooleanField(required=False)  
 
     class Meta:
         model = Services
@@ -491,15 +531,19 @@ class ServicesSerializer(serializers.ModelSerializer):
             "name",
             "contact_person",
             "contact_number",
-            "category",
-            # "assigned_place",
+            "category",        # still included for POST/PUT
+            "category_name",   #  new readable field para sa display name
             "service_address",
-            "is_active",  # ✅ included but read-only
+            "is_active", 
         ]
+    
+    def get_category_name(self, obj):
+        return obj.category.name if obj.category else None
 
     def create(self, validated_data):
         # Extract nested address data
         # assigned_place_data = validated_data.pop("assigned_place", None)
+        print("VALIDATED:", validated_data)
         service_address_data = validated_data.pop("service_address", None)
 
         # assigned_place = Address.objects.create(**assigned_place_data) if assigned_place_data else None
@@ -526,17 +570,7 @@ class ServicesSerializer(serializers.ModelSerializer):
         )
 
     def update(self, instance, validated_data):
-        # assigned_place_data = validated_data.pop("assigned_place", None)
         service_address_data = validated_data.pop("service_address", None)
-
-        # Update nested addresses
-        # if assigned_place_data:
-        #     if instance.assigned_place:
-        #         for attr, value in assigned_place_data.items():
-        #             setattr(instance.assigned_place, attr, value)
-        #         instance.assigned_place.save()
-        #     else:
-        #         instance.assigned_place = Address.objects.create(**assigned_place_data)
 
         if service_address_data:
             if instance.service_address:
@@ -545,6 +579,12 @@ class ServicesSerializer(serializers.ModelSerializer):
                 instance.service_address.save()
             else:
                 instance.service_address = Address.objects.create(**service_address_data)
+
+        # ✅ Allow DSWD to update is_active
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if not (user and hasattr(user, "official") and user.official.of_role == "DSWD"):
+            validated_data.pop("is_active", None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)

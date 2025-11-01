@@ -14,6 +14,9 @@ export default function DSWDServices() {
   const [municipalities, setMunicipalities] = useState([]);
   const [barangays, setBarangays] = useState([]);
 
+  const [statusFilter, setStatusFilter] = useState("true"); //set default to active kato ning i display
+
+  const [viewService, setViewService] = useState(null);
 
   useEffect(() => {
     api.get("/api/dswd/service-categories/").then(res => setCategories(res.data));
@@ -82,11 +85,12 @@ export default function DSWDServices() {
 
 
   // fetch services with optional category filter
-  const fetchServices = (selectedCategory = "All") => {
+  const fetchServices = (selectedCategory = "All", activeStatus = statusFilter) => {
     setLoading(true);
-    let url = "/api/dswd/services/";
+    let url = `/api/dswd/services/?is_active=${activeStatus}`;
+    
     if (selectedCategory && selectedCategory !== "All") {
-      url += `?category=${encodeURIComponent(selectedCategory)}`;
+      url += `&category=${encodeURIComponent(selectedCategory)}`;
     }
 
     api.get(url)
@@ -102,8 +106,8 @@ export default function DSWDServices() {
   };
 
   useEffect(() => {
-    fetchServices(category);
-  }, [category]);
+    fetchServices(category, statusFilter);
+  }, [category, statusFilter]);
 
   const handleChange = (e, field, nested = null) => {
     const { name, value } = e.target;
@@ -125,17 +129,47 @@ export default function DSWDServices() {
     }
   };
 
+  //view service
+  const handleView = (service) => {
+    setViewService(service);
+  };
 
-  const handleSubmit = (e) => {
+  const closeViewModal = () => {
+    setViewService(null);
+  };
+
+  //edit and deactivate
+  const handleEdit = (service) => {
+    setFormData(service);
+    setShowModal(true);
+  };
+
+  const handleDeactivate = async (id) => {
+    try {
+      const service = services.find((s) => s.serv_id === id);
+      await api.patch(`/api/dswd/services/${id}/`, { is_active: !service.is_active });
+      fetchServices(category);
+    } catch (err) {
+      console.error("Failed to toggle active status:", err);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    api.post("/api/dswd/services/", formData)
-      .then(() => {
-        setShowModal(false);
-        fetchServices(category);
-      })
-      .catch((err) => {
-        console.error("Failed to add service:", err);
-      });
+
+    try {
+      if (formData.serv_id) {
+        // Edit existing service
+        await api.put(`/api/dswd/services/${formData.serv_id}/`, formData);
+      } else {
+        // Add new service
+        await api.post("/api/dswd/services/", formData);
+      }
+      setShowModal(false);
+      fetchServices(category);
+    } catch (err) {
+      console.error("Failed to save service:", err);
+    }
   };
 
   return (
@@ -152,7 +186,7 @@ export default function DSWDServices() {
             onChange={(e) => setCategory(e.target.value)}
             className="h-10 w-48 rounded-lg border px-3 text-sm"
           >
-            <option value="All">All</option>
+            <option value="All">Category(All)</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.name}
@@ -160,6 +194,15 @@ export default function DSWDServices() {
             ))}
           </select>
 
+          {/* Status filter */}
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-10 w-48 rounded-lg border px-3 text-sm"
+          >
+            <option value="true">Active</option>
+            <option value="false">Deactivated</option>
+          </select>
 
           <button
             onClick={() => setShowModal(true)}
@@ -179,34 +222,124 @@ export default function DSWDServices() {
                 <th className="px-4 py-3">No.</th>
                 <th className="px-4 py-3">Category</th>
                 <th className="px-4 py-3">Service Name</th>
-                {/* <th className="px-4 py-3">Assigned</th> */}
-                <th className="px-4 py-3">Address</th>
-                <th className="px-4 py-3">Contact Person</th>
-                <th className="px-4 py-3">Contact Number</th>
+                <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
+
             <tbody>
               {loading ? (
-                <tr><td colSpan="7" className="text-center">Loading...</td></tr>
+                <tr>
+                  <td colSpan="4" className="text-center py-4">
+                    Loading...
+                  </td>
+                </tr>
               ) : services.length > 0 ? (
                 services.map((s, i) => (
-                  <tr key={s.id} className="hover:bg-neutral-50">
+                  <tr key={s.serv_id || i} className="hover:bg-neutral-50">
                     <td className="px-4 py-3">{i + 1}</td>
-                    <td className="px-4 py-3">{s.category}</td>
+                    <td className="px-4 py-3">{s.category_name}</td>
                     <td className="px-4 py-3">{s.name}</td>
-                    {/* <td className="px-4 py-3">{s.assigned_place}</td> */}
-                    <td className="px-4 py-3">{s.service_address}</td>
-                    <td className="px-4 py-3">{s.contact_person}</td>
-                    <td className="px-4 py-3">{s.contact_number}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleView(s)}
+                          className="text-blue-600 hover:underline"
+                        >
+                          View
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="7" className="text-center">No services</td></tr>
+                <tr>
+                  <td colSpan="4" className="text-center py-4">
+                    No services found
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* View Modal */}
+      {viewService && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-[600px] max-h-[85vh] overflow-y-auto">
+            <h3 className="text-lg font-bold mb-4 text-[#292D96]">Service Details</h3>
+
+            <div className="space-y-2 text-sm">
+              <p><strong>ID:</strong> {viewService.serv_id}</p>
+              <p><strong>Category:</strong> {viewService.category_name}</p>
+              <p><strong>Service Name:</strong> {viewService.name}</p>
+              <p><strong>Contact Person:</strong> {viewService.contact_person}</p>
+              <p><strong>Contact Number:</strong> {viewService.contact_number}</p>
+
+              {viewService.service_address ? (
+                <>
+                  <p><strong>Province:</strong> {viewService.service_address.province_name || "—"}</p>
+                  <p><strong>Municipality:</strong> {viewService.service_address.municipality_name || "—"}</p>
+                  <p><strong>Barangay:</strong> {viewService.service_address.barangay_name || "—"}</p>
+                  <p><strong>Sitio:</strong> {viewService.service_address.sitio || "—"}</p>
+                  <p><strong>Street:</strong> {viewService.service_address.street || "—"}</p>
+                </>
+              ) : (
+                <p><strong>Address:</strong> —</p>
+              )}
+
+              <p>
+                <strong>Status:</strong>{" "}
+                <span
+                  className={`font-semibold ${
+                    viewService.is_active ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {viewService.is_active ? "Active" : "Deactivated"}
+                </span>
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              {/* Edit button */}
+              <button
+                onClick={() => {
+                  setFormData(viewService);
+                  setShowModal(true);
+                  setViewService(null);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Edit
+              </button>
+
+              {/* Deactivate / Activate */}
+              <button
+                onClick={() => {
+                  handleDeactivate(viewService.serv_id);
+                  setViewService(null);
+                }}
+                className={`px-4 py-2 rounded text-white ${
+                  viewService.is_active
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-green-600 hover:bg-green-700"
+                }`}
+              >
+                {viewService.is_active ? "Deactivate" : "Activate"}
+              </button>
+
+              {/* Close button */}
+              <button
+                onClick={closeViewModal}
+                className="px-4 py-2 border rounded hover:bg-gray-100"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* Modal */}
       {showModal && (

@@ -13,7 +13,7 @@ export default function Victims() {
   useEffect(() => {
     const loadVictims = async () => {
       try {
-        const res = await api.get("/api/social_worker/victims/");
+        const res = await api.get("/api/psychometrician/victims/");
         setVictims(res.data);
         console.log("Fetched victims:", res.data); // optional debug
       } catch (err) {
@@ -27,7 +27,7 @@ export default function Victims() {
   const handleDelete = async (vic_id) => {
     if (window.confirm("Are you sure you want to delete this victim?")) {
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/social_worker/victims/${vic_id}/`);
+        await axios.delete(`http://127.0.0.1:8000/api/psychometrician/victims/${vic_id}/`);
         setVictims(victims.filter((v) => v.vic_id !== vic_id));
       } catch (err) {
         console.error("Error deleting victim", err);
@@ -74,7 +74,7 @@ export default function Victims() {
                         <td>{v.vic_birth_place || "N/A"}</td>
                         <td>
                           <div className="action-buttons">
-                            <Link to={`/social_worker/victims/${v.vic_id}`} className="btn-view">View</Link>
+                            <Link to={`/psychometrician/victims/${v.vic_id}`} className="btn-view">View</Link>
                           </div>
                         </td>
                       </tr>
@@ -95,7 +95,7 @@ export default function Victims() {
               onClose={() => setShowFacialModal(false)}
               onFound={(victimId) => {
                 setShowFacialModal(false);
-                navigate(`/social_worker/victims/${victimId}`);
+                navigate(`/psychometrician/victims/${victimId}`);
               }}
             />
           )}

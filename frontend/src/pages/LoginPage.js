@@ -5,7 +5,6 @@ import Webcam from "react-webcam";
 import { useNavigate } from "react-router-dom";
 import "./LoginPage.css";
 import RegisterUser from "./RegisterUser";
-import ForgotPass from "./ForgotPass";
 import {
   UserIcon,
   LockClosedIcon,
@@ -23,9 +22,6 @@ const LoginPage = () => {
 
   //Register Modal Show
   const [showRegisterModal, setShowRegisterModal] = useState(false);
-
-  // show forgot pass modal
-  const [showForgotPassModal, setShowForgotPassModal] = useState(false);
 
   //modal para matic open register user nga modal if way dswd account
   const [autoDSWDRegister, setAutoDSWDRegister] = useState(false);
@@ -732,16 +728,6 @@ const LoginPage = () => {
                     )}
                   </div>
 
-                  {/* Forgot Password */}
-                  <p className="mt-2 text-sm text-gray-600 text-right w-full">
-                    <span
-                      onClick={() => setShowForgotPassModal(true)}
-                      className="text-[#ff4b2b] font-semibold hover:underline cursor-pointer"
-                    >
-                      Forgot Password?
-                    </span>
-                  </p>
-
                   {/* Login Buttons */}
                   <button
                     type="submit"
@@ -862,11 +848,6 @@ const LoginPage = () => {
           defaultRole={autoDSWDRegister ? "DSWD" : "Social Worker"}
         // defaultRole="DSWD" // always set "DSWD" as default role
         />
-      )}
-
-      {/* Forgot Password Modal */}
-      {showForgotPassModal && (
-        <ForgotPass onClose={() => setShowForgotPassModal(false)} />
       )}
     </div>
 

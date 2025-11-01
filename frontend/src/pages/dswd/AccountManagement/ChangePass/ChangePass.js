@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import Webcam from "react-webcam";
-import api from "../api/axios";
+import api from "../../../../api/axios";
 
 export default function ForgotPasswordModal({ onClose }) {
   const webcamRef = useRef(null);
@@ -10,6 +10,8 @@ export default function ForgotPasswordModal({ onClose }) {
 
   const [officialData, setOfficialData] = useState(null);
   const [resetToken, setResetToken] = useState(null);
+
+  
 
   const [email, setEmail] = useState("");
 
@@ -38,7 +40,8 @@ export default function ForgotPasswordModal({ onClose }) {
       const formData = new FormData();
       formData.append("frame", blob, "capture.jpg");
 
-      const res = await api.post("/api/auth/forgot-pass/", formData);
+      //change pass
+      const res = await api.post("/api/dswd/change-pass/", formData);
       const data = res.data;
 
       if (data.success) {
@@ -66,10 +69,12 @@ export default function ForgotPasswordModal({ onClose }) {
     setMessage(null);
 
     try {
-      const res = await api.post("/api/auth/verify-email/", {
+      const res = await api.post("/api/dswd/verify-email/", {
         official_id: officialData.id,
         email: email,
       });
+
+
 
       if (res.data.success) {
         setResetToken(res.data.reset_token);
