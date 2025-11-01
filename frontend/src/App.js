@@ -106,10 +106,10 @@ export default function App() {
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
             <Route path={ROUTES.MANUAL_LOGIN} element={<ManualLoginPage />} />
             <Route path={ROUTES.REGISTER} element={<RegisterUser />} />
-            <Route
+            {/* <Route
               path={ROUTES.RESET_PASSWORD}
               element={<ResetPasswordPage />}
-            />
+            /> */}
             <Route path="/unauthorized" element={<Unauthorized />} />
             {/* DESK OFFICER group (Sidebar + protected) */}
             <Route element={
@@ -138,6 +138,10 @@ export default function App() {
                 </ProtectedRoute>
               }
             >
+              <Route
+                path={ROUTES.RESET_PASSWORD}
+                element={<ResetPasswordPage />}
+              />
               <Route path={ROUTES.DSWD} element={<DSWDDashboard />} />
               <Route path={ROUTES.DSWD_VAWC_VICTIMS} element={<DSWDVAWCVictims />}/>
               <Route path={ROUTES.DSWD_VICTIM_DETAIL} element={<DSWDVictimDetail />} />
