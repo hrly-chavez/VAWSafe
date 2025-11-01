@@ -171,11 +171,11 @@ export default function RegisterVictim() {
         ? Object.fromEntries(PERP_KEYS.map((k) => [k, formDataState[k] ?? ""]))
         : null;
 
-      const informantPayload = hasAny(formDataState, INFORMANT_FIELDS)
-        ? Object.fromEntries(
-          INFORMANT_FIELDS.map((k) => [k, formDataState[k] ?? ""])
-        )
-        : null;
+      // const informantPayload = hasAny(formDataState, INFORMANT_FIELDS)
+      //   ? Object.fromEntries(
+      //     INFORMANT_FIELDS.map((k) => [k, formDataState[k] ?? ""])
+      //   )
+      //   : null;
 
       // Build form-data
       const fd = new FormData();
@@ -184,6 +184,7 @@ export default function RegisterVictim() {
         fd.append("incident", JSON.stringify(incidentPayload));
       if (perpetratorPayload)
         fd.append("perpetrator", JSON.stringify(perpetratorPayload));
+      
 
       victimPhotos.forEach((file) => fd.append("photos", file));
       evidenceFiles.forEach((f) => fd.append("evidences", f.file));

@@ -31,15 +31,11 @@ export default function Home() {
           <a href="#contact" className="hover:text-white transition duration-200">
             Contacts
           </a>
-          <Link to="/login" className="hover:text-white transition duration-200">
-            Log in
-          </Link>
           <Link
             to="/login"
-            state={{ openRegister: true }}
             className="px-5 py-2 rounded-full border border-[#292D96] text-[#292D96] hover:bg-[#292D96] hover:text-white transition font-semibold"
           >
-            Sign up
+            Log in
           </Link>
         </nav>
       </header>
