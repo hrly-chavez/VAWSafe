@@ -463,7 +463,7 @@ class IncidentInformation(models.Model): #Case in the frontend
     
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     incident_id = models.AutoField(primary_key=True)
-    incident_num = EncryptedIntegerField(null=True,blank=True) #case number
+    incident_num = EncryptedIntegerField(null=True,blank=True) #case number 1,2,3...
     incident_status= EncryptedCharField(max_length=512, choices=INCIDENT_CHOICES,default='Pending') #case status
     violence_type = EncryptedCharField(max_length=512, choices=VIOLENCE_TYPE, null=True, blank=True)
     violence_subtype = EncryptedCharField(max_length=512, null=True, blank=True)
@@ -655,8 +655,7 @@ class QuestionCategory(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.role})"
-
-    
+  
 class Question(models.Model):
     """Holds all questions created by officials, grouped by category and role."""
     ANSWER_TYPES = [

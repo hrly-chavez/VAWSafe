@@ -10,11 +10,11 @@ urlpatterns = [
     path("victims/search_face/", search_victim_facial.as_view(), name="victim-face-search"),
     path("case/<int:vic_id>/", VictimIncidentsView.as_view(), name="socialworker-view-incidents"),
 
-    # Sessions
+    #Session1
     path("sessions/pending&Ongoing/", scheduled_session_lists.as_view(), name="my-sessions"),
     path("sessions/<int:pk>/", scheduled_session_detail.as_view(), name="session-detail"),
     path("session-types/", SessionTypeListView.as_view(), name="session-types-list"),
-    path("mapped-questions/", social_worker_mapped_questions, name="social-worker-mapped-questions"),
+    path("mapped-questions/", mapped_questions, name="social-worker-mapped-questions"),
     path("sessions/<int:sess_id>/start/", start_session, name="social-worker-start-session"),
     path("sessions/<int:sess_id>/add-custom-question/", add_custom_question, name="add-custom-question"),
     path("sessions/<int:sess_id>/finish/", finish_session, name="social-worker-finish-session"),
@@ -22,12 +22,15 @@ urlpatterns = [
     path("sessions/", schedule_next_session, name="social-worker-sessions"),
     path("cases/<int:incident_id>/close/", close_case, name="close-case"),
 
+    #Session2
+    path("incident/<int:incident_id>/summary/", incident_summary, name="incident-summary"),
+    path("more-sessions/", schedule_next_session, name="create-more-session"),
     
     #Service
     path("services/category/<int:category_id>/", services_by_category, name="services-by-category"),
     path("service-categories/", list_service_categories, name="service-categories"),
     path("services/<int:service_id>/upload/", upload_service_proof, name="upload-service-proof"),
-    path("cases/", SocialWorkerCaseList.as_view(), name="list-of-cases"),
+    path("cases/", CaseListView.as_view(), name="list-of-cases"),   
 
 
      #Questions

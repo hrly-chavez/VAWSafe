@@ -51,6 +51,8 @@ export const ROUTES = {
   SOCIAL_WORKER_VICTIMS: "/social_worker/victims",
   SOCIAL_WORKER_VICTIM_DETAIL: "/social_worker/victims/:vic_id",
   SOCIAL_WORKER_SEARCH_FACIAL: "/social_worker/victims/search-facial",
+  SOCIAL_WORKER_CREATE_MORE_SESSION: "/social_worker/more-sessions/create/:incident_id",
+  SOCIAL_WORKER_START_MORE_SESSION: "/social_worker/more-sessions/:sess_id/start",
 
   //nurse
   NURSE_DASHBOARD: "nurse/",
@@ -77,6 +79,8 @@ export const ROUTES = {
   PSYCHOMETRICIAN_VICTIM_DETAIL: "/psychometrician/victims/:vic_id",
   PSYCHOMETRICIAN_SEARCH_FACIAL: "/psychometrician/victims/search-facial",
   PSYCHOMETRICIAN_QUESTIONS: "/psychometrician/questions",
+  PSYCHOMETRICIAN_CREATE_MORE_SESSION: "/psychometrician/more-sessions/create/:incident_id",
+  PSYCHOMETRICIAN_START_MORE_SESSION: "/psychometrician/more-sessions/:sess_id/start",
 
   // landing page
   LANDING: "/landing",

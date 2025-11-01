@@ -43,6 +43,8 @@ const ViewSessions = lazy(() =>import("./pages/social_worker/Sessions/ViewSessio
 const SocialWorkerStartSession = lazy(() =>import("./pages/social_worker/Sessions/StartSession"));
 const Schedule = lazy(() => import("./pages/social_worker/Schedule/Schedule"));
 const Questions = lazy(() => import("./pages/social_worker/Questions/Questions"));
+const SocialWorkerCreateMoreSession = lazy(() => import("./pages/social_worker/Sessions/MoreSessions/CreateSession"));
+const SocialWorkerStartMoreSession = lazy(() => import("./pages/social_worker/Sessions/MoreSessions/StartMoreSession"));
 
 //DSWD
 const DSWDDashboard = lazy(() =>import("./pages/dswd/Dashboard/DSWDDashboard"));
@@ -85,6 +87,8 @@ const PsychViewSessions = lazy(() =>import("./pages/psychometrician/Sessions/Vie
 const PsychSession = lazy(() =>import("./pages/psychometrician/Sessions/StartSession"));
 const PsychSchedule = lazy(() => import("./pages/nurse/Schedule/Schedule"));
 const PsychQuestions = lazy(() => import("./pages/psychometrician/Questions/Questions"));
+const PsychCreateSession = lazy(() => import("./pages/psychometrician/Sessions/MoreSessions/CreateSession"));
+const PsychStartMoreSession = lazy(() => import("./pages/psychometrician/Sessions/MoreSessions/StartMoreSession"));
 
 export default function App() {
   return (
@@ -163,6 +167,8 @@ export default function App() {
               <Route path={ROUTES.SOCIAL_WORKER_START_SESSION} element={<SocialWorkerStartSession />}/>
               <Route path={ROUTES.SOCIAL_WORKER_SCHEDULE}element={<Schedule />}/>
               <Route path={ROUTES.SOCIAL_WORKER_QUESTIONS} element={<Questions />} />
+              <Route path={ROUTES.SOCIAL_WORKER_CREATE_MORE_SESSION} element={<SocialWorkerCreateMoreSession />} />
+              <Route path={ROUTES.SOCIAL_WORKER_START_MORE_SESSION} element={<SocialWorkerStartMoreSession />} />
             </Route>
 
             {/* Nurse group */}
@@ -201,7 +207,8 @@ export default function App() {
               <Route path={ROUTES.PSYCHOMETRICIAN_START_SESSION} element={<PsychSession />}/>
               <Route path={ROUTES.PSYCHOMETRICIAN_SCHEDULE} element={<PsychSchedule />}/>
               <Route path={ROUTES.PSYCHOMETRICIAN_QUESTIONS} element={<PsychQuestions />} />
-              
+              <Route path={ROUTES.PSYCHOMETRICIAN_CREATE_MORE_SESSION}element={<PsychCreateSession />}/>
+              <Route path={ROUTES.PSYCHOMETRICIAN_START_MORE_SESSION} element={<PsychStartMoreSession/>}/>
             </Route>
 
             <Route path="*" element={<Navigate to={ROUTES.LOGIN} replace />} />

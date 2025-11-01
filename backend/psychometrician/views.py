@@ -26,20 +26,6 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from dswd.utils.logging import log_change
 
- 
-class victim_list(generics.ListAPIView):
-    serializer_class = VictimListSerializer
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker']
-
-    def get_queryset(self):
-        user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return Victim.objects.filter(
-                incidents__sessions__assigned_official=user.official
-            ).distinct()
-        return Victim.objects.none()
-
 logger = logging.getLogger(__name__)
 
 def cleanup_decrypted_file_later(file_path, victim_id, delay=10):
@@ -56,73 +42,92 @@ def cleanup_decrypted_file_later(file_path, victim_id, delay=10):
     except Exception as e:
         logger.error(f"Failed to delete decrypted photo for victim {victim_id}: {e}")
 
-class victim_detail(generics.RetrieveAPIView):
-    serializer_class = VictimDetailSerializer
-    lookup_field = "vic_id"
+
+class victim_list(generics.ListAPIView):
+    """
+    Lists all victims whose sessions are assigned to the logged-in official.
+    Works for any role (Social Worker, Nurse, Psychometrician, Home Life).
+    """
+    serializer_class = VictimListSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker']
+    allowed_roles = ['Social Worker', 'Nurse', 'Psychometrician', 'Home Life']
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return Victim.objects.filter(
-                incidents__sessions__assigned_official=user.official
-            ).distinct()
-        return Victim.objects.none()
+        official = getattr(user, "official", None)
+        if not official or not official.of_role:
+            return Victim.objects.none()
+        return Victim.objects.filter(
+            incidents__sessions__assigned_official=official
+        ).distinct()
+
+class victim_detail(generics.RetrieveAPIView):
+    """
+    Retrieves detailed victim information (including decrypted photo if needed)
+    for any official assigned to that victim’s sessions.
+    """
+    serializer_class = VictimDetailSerializer
+    lookup_field = "vic_id"
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['Social Worker', 'Nurse', 'Psychometrician', 'Home Life']
+
+    def get_queryset(self):
+        user = self.request.user
+        official = getattr(user, "official", None)
+        if not official or not official.of_role:
+            return Victim.objects.none()
+        return Victim.objects.filter(
+            incidents__sessions__assigned_official=official
+        ).distinct()
 
     def retrieve(self, request, *args, **kwargs):
-        # Get the victim object
         victim = self.get_object()
-
         decrypted_photo_path = None
 
-        # Check if the vic_photo is encrypted
         if victim.vic_photo.name.endswith('.enc'):
             try:
-                # Decrypt the photo
-                logger.info(f"Decrypting photo for victim {victim.vic_id}")
                 fernet = Fernet(settings.FERNET_KEY)
                 with open(victim.vic_photo.path, "rb") as enc_file:
                     encrypted_data = enc_file.read()
-
                 decrypted_data = fernet.decrypt(encrypted_data)
-
-                # Save the decrypted data to the MEDIA_ROOT directory temporarily
                 decrypted_photo_path = os.path.join(settings.MEDIA_ROOT, f"decrypted_{victim.vic_id}.jpg")
                 with open(decrypted_photo_path, 'wb') as decrypted_file:
                     decrypted_file.write(decrypted_data)
-
-                # Update the victim's photo to the temporary decrypted file path
                 victim.vic_photo.name = os.path.relpath(decrypted_photo_path, settings.MEDIA_ROOT)
-
             except Exception as e:
                 logger.error(f"Failed to decrypt photo for victim {victim.vic_id}: {e}")
                 return Response({"error": f"Failed to decrypt photo: {str(e)}"}, status=400)
 
-        # Use the serializer to return the victim data
         serializer = self.get_serializer(victim)
 
-        # Start a background thread to delete the decrypted file after 10 seconds
         if decrypted_photo_path:
-            threading.Thread(target=cleanup_decrypted_file_later, args=(decrypted_photo_path, victim.vic_id, 10)).start()
+            threading.Thread(
+                target=cleanup_decrypted_file_later,
+                args=(decrypted_photo_path, victim.vic_id, 10)
+            ).start()
 
-        # Return the victim data immediately
         return Response(serializer.data)
 
-# retrieve all information related to case (Social Worker)
+# retrieve all information related to case ( Worker)
 class VictimIncidentsView(generics.ListAPIView):
+    """
+    Lists all incidents linked to a victim, accessible to any assigned official.
+    """
     serializer_class = IncidentInformationSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker']
+    allowed_roles = ['Social Worker', 'Nurse', 'Psychometrician', 'Home Life']
 
     def get_queryset(self):
         vic_id = self.kwargs.get("vic_id")
         return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by('incident_num')
    
 class search_victim_facial(APIView):
+    """
+    Face-based victim search accessible to any logged-in official role.
+    """
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker']
+    allowed_roles = ['Social Worker', 'Nurse', 'Psychometrician', 'Home Life']
 
     def decrypt_temp_file(self, encrypted_path):
         """Decrypt .enc image into a temporary .jpg file."""
@@ -229,14 +234,16 @@ class search_victim_facial(APIView):
                 if os.path.exists(f):
                     os.remove(f)
 
-#========================================SESSIONS====================================================
+#========================================SESSION 1====================================================
 class scheduled_session_lists(generics.ListAPIView):
-    serializer_class = SocialWorkerSessionSerializer
+    serializer_class = SessionSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        if not hasattr(user, "official") or user.official.of_role != "Social Worker":
+        official = getattr(user, "official", None)
+        role = getattr(official, "of_role", None)
+        if not role:
             return Session.objects.none()
 
         # Step 1: Get all sessions assigned to this official
@@ -261,18 +268,19 @@ class scheduled_session_detail(generics.RetrieveUpdateAPIView):
     PATCH: Update session info (e.g., type, description, location).
     this also handles the display for service in the frontend
     """
-    serializer_class = SocialWorkerSessionDetailSerializer
+    serializer_class = SessionDetailSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            # Allow access to all sessions under incidents where this social worker
-            # is assigned to at least one session
-            return Session.objects.filter(
-                incident_id__sessions__assigned_official=user.official
-            ).distinct()
-        return Session.objects.none()
+        official = getattr(user, "official", None)
+        role = getattr(official, "of_role", None)
+        if not role:
+            return Session.objects.none()
+
+        return Session.objects.filter(
+            incident_id__sessions__assigned_official=official
+        ).distinct()
 
 class SessionTypeListView(generics.ListAPIView):
     """GET: List all available session types for dropdowns."""
@@ -281,27 +289,74 @@ class SessionTypeListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
 #Session Start 
+# @api_view(["GET"])
+# @permission_classes([IsAuthenticated])
+# def mapped_questions(request):
+#     """
+#     GET: Returns mapped questions for a specific session number and session type(s).
+#     Example: /api/social_worker/mapped-questions/?session_num=1&session_types=1,2
+#     """
+#     session_num = request.query_params.get("session_num")
+#     type_ids = request.query_params.get("session_types")
+
+#     if not session_num or not type_ids:
+#         return Response({"error": "session_num and session_types are required"}, status=400)
+
+#     type_ids = [int(t) for t in type_ids.split(",")]
+
+#     mappings = SessionTypeQuestion.objects.filter(
+#         session_number=session_num,
+#         session_type__id__in=type_ids
+#     ).select_related("question", "question__ques_category", "session_type")
+
+#     serializer = SessionTypeQuestionSerializer(mappings, many=True)
+#     return Response(serializer.data)
+
+from django.db.models import Q
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def social_worker_mapped_questions(request):
+def mapped_questions(request):
     """
     GET: Returns mapped questions for a specific session number and session type(s).
-    Example: /api/social_worker/mapped-questions/?session_num=1&session_types=1,2
+    Example: /api/psychometrician/mapped-questions/?session_num=2&session_types=3&role_filter=1
+
+    Optional query param:
+      - role_filter=1|true|yes  -> when present, filter mappings to only questions for the
+                                   current user's official role (question.role OR question.ques_category.role).
     """
     session_num = request.query_params.get("session_num")
     type_ids = request.query_params.get("session_types")
+    role_filter_flag = str(request.query_params.get("role_filter", "")).lower() in ("1", "true", "yes")
 
     if not session_num or not type_ids:
         return Response({"error": "session_num and session_types are required"}, status=400)
 
-    type_ids = [int(t) for t in type_ids.split(",")]
+    try:
+        type_ids = [int(t) for t in type_ids.split(",") if t.strip()]
+    except ValueError:
+        return Response({"error": "session_types must be a comma-separated list of integers"}, status=400)
 
-    mappings = SessionTypeQuestion.objects.filter(
+    base_qs = SessionTypeQuestion.objects.filter(
         session_number=session_num,
         session_type__id__in=type_ids
-    ).select_related("question", "session_type")
+    ).select_related("question", "question__ques_category", "session_type")
 
-    serializer = SocialWorkerSessionTypeQuestionSerializer(mappings, many=True)
+    # If frontend requests role-filtered results, restrict to current official's role
+    if role_filter_flag:
+        user = request.user
+        official = getattr(user, "official", None)
+        user_role = getattr(official, "of_role", None)
+        if not user_role:
+            return Response({"error": "User has no official role to filter by"}, status=400)
+
+        # Filter mappings where question.role == user_role OR question.ques_category.role == user_role
+        base_qs = base_qs.filter(
+            Q(question__role__iexact=user_role) |
+            Q(question__ques_category__role__iexact=user_role)
+        )
+
+    serializer = SessionTypeQuestionSerializer(base_qs, many=True)
     return Response(serializer.data)
 
 @api_view(["POST"])
@@ -310,7 +365,7 @@ def start_session(request, sess_id):
     """
     POST: Marks a session as Ongoing for this specific official and hydrates mapped questions.
     Uses SessionProgress to track per-official start times.
-    """
+    """             
     user = request.user
     official = user.official
 
@@ -335,34 +390,37 @@ def start_session(request, sess_id):
 
     # --- Hydrate mapped questions ---
     type_ids = list(session.sess_type.values_list("id", flat=True))
+    user_role = official.of_role
 
-    # We cannot query EncryptedCharField directly, so we fetch all then filter manually
-    all_mappings = SessionTypeQuestion.objects.filter(
-        session_number=session.sess_num,
-        session_type__id__in=type_ids
-    ).select_related("question")
+    # Fetch all mapped questions for this session and type(s)
+    # For Session 1 → include all roles
+    # For Session 2+ → filter only questions assigned to this official's role
+    if session.sess_num == 1:
+        all_mappings = SessionTypeQuestion.objects.filter(
+            session_number=session.sess_num,
+            session_type__id__in=type_ids
+        ).select_related("question", "question__ques_category")
+    else:
+        all_mappings = SessionTypeQuestion.objects.filter(
+            session_number=session.sess_num,
+            session_type__id__in=type_ids
+        ).filter(
+            Q(question__role__iexact=user_role) |
+            Q(question__ques_category__role__iexact=user_role)
+        ).select_related("question", "question__ques_category")
 
-    # Filter only those questions that match the official's role
-    filtered_mappings = [
-        m for m in all_mappings
-        if getattr(m.question, "ques_category", None) == official.of_role
-    ]
-
-    print("Official role:", official.of_role)
-    print("Filtered question roles:", [m.question.ques_category for m in filtered_mappings])
-    print("Session number:", session.sess_num)
-    print("Session types:", type_ids)
-
-    # Create SessionQuestion entries for relevant mapped questions
-    for m in filtered_mappings:
+    # Create SessionQuestion entries for the selected mappings
+    # (unique_together ensures no duplicates)
+    for m in all_mappings:
         SessionQuestion.objects.get_or_create(
             session=session,
             question=m.question,
             defaults={"sq_is_required": False}
         )
 
+
     # --- Serialize and respond ---
-    serializer = SocialWorkerSessionDetailSerializer(session, context={"request": request})
+    serializer = SessionDetailSerializer(session, context={"request": request})
     return Response(serializer.data, status=200)
 
 @api_view(["POST"]) 
@@ -398,7 +456,7 @@ def add_custom_question(request, sess_id):
         )
         created.append(sq)
 
-    return Response(SocialWorkerSessionQuestionSerializer(created, many=True).data, status=201)
+    return Response(SessionQuestionSerializer(created, many=True).data, status=201)
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -436,10 +494,10 @@ def finish_session(request, sess_id):
                 continue
 
             # Server-side role enforcement:
-            # If the question is a mapped question and its category (role) doesn't match the official's role, skip saving.
             q_role = None
             if sq.question:
-                q_role = sq.question.ques_category
+                # prefer question.role (string), fallback to question.ques_category.role
+                q_role = sq.question.role or getattr(sq.question.ques_category, "role", None)
 
             if q_role and user.official.of_role and q_role != user.official.of_role:
                 # skip saving - not allowed for this official
@@ -509,7 +567,7 @@ def finish_session(request, sess_id):
         "skipped_answers": skipped,
         "session_completed": all_finished,
         "all_finished": all_finished,
-        "session": SocialWorkerSessionDetailSerializer(session, context={"request": request}).data
+        "session": SessionDetailSerializer(session, context={"request": request}).data
     }, status=200)
 
 @api_view(["POST"])
@@ -532,35 +590,88 @@ def close_case(request, incident_id):
     return Response({"message": "Case closed successfully!"}, status=200)
 
 #schedule session
+# @api_view(["GET", "POST"])
+# @permission_classes([IsAuthenticated])
+# def schedule_next_session(request):
+#     """
+#     GET: Lists current sessions (Pending/Ongoing) for the logged-in official.
+#     POST: Creates a new session (schedules the next one).
+#     Now role-agnostic: works for any official (Social Worker, Nurse, Psychometrician, Home Life).
+#     """
+#     user = request.user
+#     official = getattr(user, "official", None)
+#     role = getattr(official, "of_role", None)
+
+#     if not official or not role:
+#         return Response({"error": "Only registered officials can access this endpoint."},
+#                         status=status.HTTP_403_FORBIDDEN)
+
+#     # =========================
+#     # GET REQUEST
+#     # =========================
+#     if request.method == "GET":
+#         # Fetch all sessions where the current official is assigned
+#         sessions = Session.objects.filter(
+#             assigned_official=official,
+#             sess_status__in=["Pending", "Ongoing"]
+#         ).order_by("-sess_next_sched")
+
+#         serializer = SessionCRUDSerializer(sessions, many=True)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+
+#     # =========================
+#     # POST REQUEST
+#     # =========================
+#     elif request.method == "POST":
+#         serializer = SessionCRUDSerializer(data=request.data)
+#         if serializer.is_valid():
+#             # Save directly; the serializer handles sess_num auto-increment, etc.
+#             session = serializer.save()
+
+#             # Optional: Create SessionProgress entries automatically for assigned officials
+#             assigned_officials = session.assigned_official.all()
+#             for assigned in assigned_officials:
+#                 SessionProgress.objects.get_or_create(session=session, official=assigned)
+
+#             return Response(SessionCRUDSerializer(session).data, status=status.HTTP_201_CREATED)
+
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def schedule_next_session(request):
     """
-    GET: Lists current sessions (Pending/Ongoing).
-    POST: Creates a new session (schedules the next one).
+    Also supports simplified creation for Session 2+ (no schedule/location).
     """
     user = request.user
+    official = getattr(user, "official", None)
+    role = getattr(official, "of_role", None)
+
+    if not official or not role:
+        return Response({"error": "Only registered officials can access this endpoint."},
+                        status=status.HTTP_403_FORBIDDEN)
 
     if request.method == "GET":
-        # same queryset logic
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            sessions = Session.objects.filter(
-                assigned_official=user.official,
-                sess_status__in=["Pending", "Ongoing"]
-            ).order_by("-sess_next_sched")
-        else:
-            sessions = Session.objects.none()
-
-        serializer = SocialWorkerSessionCRUDSerializer(sessions, many=True)
+        sessions = Session.objects.filter(
+            assigned_official=official,
+            sess_status__in=["Pending", "Ongoing"]
+        ).order_by("-sess_next_sched")
+        serializer = SessionCRUDSerializer(sessions, many=True)
         return Response(serializer.data)
 
     elif request.method == "POST":
-        serializer = SocialWorkerSessionCRUDSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+        # lightweight creation (no schedule/location)
+        data = request.data.copy()
+        data["assigned_official"] = [official.pk]  # auto assign current official
+        serializer = SessionCRUDSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        session = serializer.save()
+
+        # create SessionProgress for the same official
+        SessionProgress.objects.get_or_create(session=session, official=official)
+
+        return Response(SessionCRUDSerializer(session).data, status=status.HTTP_201_CREATED)
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_workers(request):
@@ -636,25 +747,62 @@ def upload_service_proof(request, service_id):
         return Response(serializer.data, status=200)
     return Response(serializer.errors, status=400)
 
+#========================================SESSION 2====================================================
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def incident_summary(request, incident_id):
+    """
+    Returns a summarized view of an incident including:
+    - Incident number
+    - Victim name
+    - Next session number (auto computed)
+    - For CreateSession
+    """
+    try:
+        incident = IncidentInformation.objects.select_related("vic_id").get(pk=incident_id)
+    except IncidentInformation.DoesNotExist:
+        return Response({"error": "Incident not found"}, status=404)
+
+    # Compute next session number
+    last_session = incident.sessions.order_by("-sess_num").first()
+    next_num = (last_session.sess_num + 1) if last_session else 1
+
+    return Response({
+        "incident_id": incident.incident_id,
+        "incident_num": incident.incident_num,
+        "victim_name": incident.vic_id.full_name if incident.vic_id else None,
+        "next_session_number": next_num
+    })
+
+
 #=======================================CASES==============================================================
 
-class SocialWorkerCaseList(generics.ListAPIView):
+class CaseListView(generics.ListAPIView):
+    """
+    Lists all active (Pending/Ongoing) cases assigned to the logged-in official.
+    Copy-paste ready for all role folders.
+    """
     serializer_class = IncidentSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Social Worker", "Nurse", "Psychometrician", "Home Life"]
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return IncidentInformation.objects.filter(
-                sessions__assigned_official=user.official,
-                incident_status__in=["Pending", "Ongoing"]
-            ).distinct()
-        return IncidentInformation.objects.none()
+        official = getattr(user, "official", None)
+        if not official or not official.of_role:
+            return IncidentInformation.objects.none()
 
-# ==================================== SOCIAL WORKER SCHEDULE  ================================
+        return IncidentInformation.objects.filter(
+            sessions__assigned_official=official,
+            incident_status__in=["Pending", "Ongoing"]
+        ).distinct()
+
+
+# ==================================== SCHEDULE  ================================
 class OfficialAvailabilityViewSet(viewsets.ModelViewSet):
     """
-    Manage recurring preferred working hours for logged-in Social Worker.
+    Manage recurring preferred working hours for logged-in Worker.
     - GET: List all availability for current user
     - POST: Add new availability
     - PUT/PATCH: Edit availability
@@ -662,14 +810,14 @@ class OfficialAvailabilityViewSet(viewsets.ModelViewSet):
     """
     serializer_class = OfficialAvailabilitySerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker"]
+    allowed_roles = ["Social Worker", "Nurse", "Psychometrician", "Home Life"]
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            # include all, even inactive, so get_object() works for deactivation
-            return OfficialAvailability.objects.filter(official=user.official)
-        return OfficialAvailability.objects.none()
+        official = getattr(user, "official", None)
+        if not official:
+            return OfficialAvailability.objects.none()
+        return OfficialAvailability.objects.filter(official=official)
 
 
     def destroy(self, request, *args, **kwargs):
@@ -698,17 +846,18 @@ class OfficialUnavailabilityViewSet(viewsets.ModelViewSet):
     """
     serializer_class = OfficialUnavailabilitySerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker"]
+    allowed_roles = ["Social Worker", "Nurse", "Psychometrician", "Home Life"]
 
     def get_queryset(self):
         user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return OfficialUnavailability.objects.filter(official=user.official)
-        return OfficialUnavailability.objects.none()
+        official = getattr(user, "official", None)
+        if not official:
+            return OfficialUnavailability.objects.none()
+        return OfficialUnavailability.objects.filter(official=official)
 
 class OfficialScheduleOverviewViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker"]
+    allowed_roles = ["Social Worker", "Nurse", "Psychometrician", "Home Life"]
 
     @action(detail=False, methods=["get"])
     def week(self, request):
@@ -750,6 +899,7 @@ class OfficialScheduleOverviewViewSet(viewsets.ViewSet):
             "availabilities": list(availabilities),
             "unavailabilities": list(unavailabilities),
         })
+
 #=====================================QUESTIONS============================================
 
 # CATEGORY LIST 
@@ -766,7 +916,7 @@ class QuestionCategoryListView(generics.ListAPIView):
 
 #  QUESTION LIST / CREATE 
 class QuestionListCreateView(generics.ListCreateAPIView):
-    """Social worker can list or create their own questions."""
+    """ worker can list or create their own questions."""
     serializer_class = QuestionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
