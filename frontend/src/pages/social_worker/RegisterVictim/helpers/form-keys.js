@@ -9,12 +9,16 @@ export const VICTIM_FIELDS = [
   "vic_birth_place",
 
   "vic_civil_status",
+  "vic_religion",
   "vic_educational_attainment",
+  "vic_last_school_attended",
+  "vic_last_school_address",
   "vic_occupation",
   "vic_income",
-  "vic_religion",
+  "vic_skills",
   "vic_current_address",
   "vic_contact_number",
+  "vic_provincial_address",
 ];
 
 export const INCIDENT_KEYS = [
@@ -36,34 +40,27 @@ export const PERP_KEYS = [
   "per_first_name",
   "per_middle_name",
   "per_last_name",
+  "per_extension",
+  "per_alias",
   "per_sex",
   "per_birth_date",
   "per_birth_place",
-
-  "per_guardian_first_name",
-  "per_guardian_middle_name",
-  "per_guardian_last_name",
-  "per_guardian_contact",
-  "per_guardian_child_category",
-
-  "per_nationality",
-  "per_nationality_other",
-  "per_occupation",
   "per_religion",
-  "per_religion_other",
-  "per_relationship_type",
-  "per_relationship_subtype",
-
-  // "per_actor_type",
-  // "per_state_actor_detail",
-  // "per_security_branch",
-  // "per_non_state_actor_detail",
+  "per_victim_relationship",
+  "per_educational_attainment",
+  "per_contact_number",
+  "per_occupation",
 ];
 
-export const INFORMANT_FIELDS = [
-  "informant_name",
-  "informant_contact",
-  "informant_relationship",
-  "informant_address",
-  "informant_affiliation",
+export const CONTACT_PERSON_FIELDS = [
+  "cont_fname",
+  "cont_mname",
+  "cont_lname",
+  "cont_ext",
+  "cont_sex",
+  "cont_birth_date",
+  "cont_birth_place",
+  "cont_civil_status",
+  "cont_victim_relationship",
+  "cont_contact_number",
 ];
