@@ -262,19 +262,6 @@ class Victim(models.Model):
         ('DIVORCED', 'Divorced'),
     ]
 
-    SOGIE_CHOICES = [
-        ('Yes', 'Yes'),
-        ('No', 'No'),
-        ('Does not want to identify', 'Does not want to identify'),
-    ]
-
-    CHILD_CLASS = [
-        ("Orphan", "Orphan"),
-        ("Unaccompanied", "Unaccompanied"),
-        ("Separated", "Separated"),
-        ("Vulnerable", "Vulnerable"),
-    ]
-
     EDUCATIONAL_ATTAINMENT_CHOICES = [
         ('No Formal Education', 'No Formal Education'),
         ('Elementary Level/Graduate', 'Elementary Level/Graduate'),
@@ -283,39 +270,6 @@ class Victim(models.Model):
         ('Technical/Vocational', 'Technical/Vocational'),
         ('College Level/Graduate', 'College Level/Graduate'),
         ('Post graduate', 'Post graduate'),
-    ]
-
-    NATIONALITY_CHOICES = [
-        ('Filipino', 'Filipino'),
-        ('Others', 'Others'),
-    ]
-
-    EMPLOYMENT_STATUS_CHOICES = [
-        ('Employed', 'Employed'),
-        ('Self-employed', 'Self-employed'),
-        ('Unemployed', 'Unemployed'),
-        ('Informal Sector', 'Informal Sector'),
-        ('Not Applicable', 'Not Applicable'),
-    ]
-
-    MIGRATORY_STATUS_CHOICES = [
-        ('Current OFW', 'Current OFW'),
-        ('Former/Returning OFW', 'Former/Returning OFW'),
-        ('Seeking employment abroad', 'Seeking employment abroad'),
-        ('Not Applicable', 'Not Applicable'),
-    ]
-
-    PWD_CHOICES = [
-        ('None', 'None'),
-        ('Deaf or Hard of Hearing', 'Deaf or Hard of Hearing'),
-        ('Intellectual Disability', 'Intellectual Disability'),
-        ('Learning Disability', 'Learning Disability'),
-        ('Mental Disability', 'Menatl Disability'),
-        ('Orthopedic Disability', 'Orthopedic Disability'),
-        ('Physical Disability', 'Physical Disability'),
-        ('Psychological Disability', 'Psychological Disability'),
-        ('Speech and Language Disability', 'Speech and Language Disability'),
-        ('Visual Disability', 'Visual Disability'),
     ]
     
     RELIGION_CHOICES = [
@@ -333,32 +287,22 @@ class Victim(models.Model):
     vic_middle_name = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_last_name = EncryptedCharField(max_length=512)
     vic_extension = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_alias = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_sex = EncryptedCharField(max_length=512, default='Female')
-    vic_is_SOGIE = EncryptedCharField(max_length=512, choices=SOGIE_CHOICES, default='No')
-    vic_specific_sogie = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_birth_date = EncryptedDateField( null=True, blank=True)
     vic_birth_place = EncryptedCharField(max_length=512, null=True, blank=True)
 
-    # if victime is minor, indicate guardian information and child class
-    vic_guardian_fname = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_guardian_mname = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_guardian_lname = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_guardian_contact = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_child_class = EncryptedCharField(max_length=512, choices=CHILD_CLASS, default="Orphan")
-
     vic_civil_status = EncryptedCharField(max_length=512, choices=CIVIL_STATUS_CHOICES, default='SINGLE')
-    vic_educational_attainment = EncryptedCharField(max_length=512, choices=EDUCATIONAL_ATTAINMENT_CHOICES, default='No Formal Education')
-    vic_nationality = EncryptedCharField(max_length=512, choices=NATIONALITY_CHOICES, default='Filipino')
-    vic_ethnicity = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_main_occupation = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_monthly_income = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    vic_employment_status = EncryptedCharField(max_length=512, choices=EMPLOYMENT_STATUS_CHOICES, default='Not Applicable')
-    vic_migratory_status = EncryptedCharField(max_length=512, choices=MIGRATORY_STATUS_CHOICES, default='Not Applicable')
     vic_religion = EncryptedCharField(max_length=512, choices=RELIGION_CHOICES, default='Roman Catholic')
+    vic_educational_attainment = EncryptedCharField(max_length=512, choices=EDUCATIONAL_ATTAINMENT_CHOICES, default='No Formal Education')
+    vic_last_school_attended = EncryptedCharField(max_length=512, null=True, blank=True)
+    vic_last_school_address = EncryptedCharField(max_length=512, null=True, blank=True)
+    vic_occupation = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_income = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    vic_skills = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_current_address = EncryptedCharField(max_length=512, default="Homeless")
-    vic_is_displaced = models.BooleanField(default=False)
-    vic_PWD_type = EncryptedCharField(max_length=512, choices=PWD_CHOICES, default='None')
     vic_contact_number = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_provincial_address = EncryptedCharField(max_length=512, blank=True, null=True)
     
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, related_name="victim_address", null=True, blank=True)
 
