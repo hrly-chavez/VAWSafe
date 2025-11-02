@@ -182,7 +182,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Nickname/Alias
         </label>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
           <input
             className="input"
             type="text"
@@ -214,8 +214,8 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         </div>
       </div>
 
-      {/* Civil status, education */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      {/* Civil status */}
+      <div>
         <div className="flex flex-col">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Civil Status
@@ -237,8 +237,8 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         </div>
       </div>
 
-      {/* Nationality + Ethnicity + Religion */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      {/* Religion */}
+      <div>
         <div className="flex flex-col">
           <label className="text-sm font-medium text-gray-700 mb-2">
             Religion
@@ -261,8 +261,8 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         </div>
       </div>
 
-      {/* Employment Status + Educational Status */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      {/* Educational Status */}
+      <div>
         <div className="flex flex-col">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Educational Attainment
@@ -296,7 +296,57 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         </div>
       </div>
 
-      {/* Address */}
+      {/* last school name and address */}
+      <div className="flex flex-col mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          School Last Attended and Address
+        </label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
+            className="input"
+            type="text"
+            placeholder="School Name"
+            onChange={(e) =>
+              handleChange("vic_last_school_attended", e.target.value)
+            }
+          />
+          <input
+            className="input"
+            type="text"
+            placeholder="School Address"
+            onChange={(e) =>
+              handleChange("vic_last_school_address", e.target.value)
+            }
+          />
+        </div>
+      </div>
+
+      <hr></hr>
+      {/* occupation, income, skills */}
+      <div className="flex flex-col mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <input
+            className="input"
+            type="text"
+            placeholder="Occupation"
+            onChange={(e) => handleChange("vic_occupation", e.target.value)}
+          />
+          <input
+            className="input"
+            type="text"
+            placeholder="Income"
+            onChange={(e) => handleChange("vic_income", e.target.value)}
+          />
+          <input
+            className="input"
+            type="text"
+            placeholder="Skills"
+            onChange={(e) => handleChange("vic_skills", e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* present Address */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="flex flex-col mb-6 relative">
           <label className="text-sm font-medium text-gray-700 mb-2">
@@ -371,19 +421,19 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         />
       </div>
 
-      <div className="md:col-span-2">
-        <div className="flex flex-col">
-          <label className="text-sm font-medium text-gray-700 mb-1">
-            Victim-Survivor Full Address
-          </label>
-          <input
-            type="text"
-            value={formDataState.vic_current_address || ""}
-            readOnly
-            placeholder="Auto-generated based on selected location"
-            className={`${inputStyle} bg-gray-100 text-gray-700`}
-          />
-        </div>
+      {/* provincial address */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Provincial Address
+        </label>
+        <input
+          className="input w-full"
+          type="text"
+          placeholder="Provincial Address"
+          onChange={(e) =>
+            handleChange("vic_provincial_address", e.target.value)
+          }
+        />
       </div>
     </div>
   );
