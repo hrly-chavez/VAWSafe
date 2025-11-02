@@ -7,18 +7,18 @@ import api from "../../../api/axios";
 
 // imported pages
 import VictimInfo from "./VictimInfo";
+import ContactPerson from "./ContactPerson";
 import IncidentInfo from "./IncidentInfo";
 import PerpetratorInfo from "./PerpetratorInfo";
 import CaptureVictimFacial from "./VictimFacial";
-
 import SchedulePage from "../Sessions/Schedule";
-
 import Evidences from "./Evidences";
 
 // imported constants
 import { VICTIM_FIELDS } from "./helpers/form-keys";
 import { INCIDENT_KEYS } from "./helpers/form-keys";
 import { PERP_KEYS } from "./helpers/form-keys";
+import { CONTACT_PERSON_FIELDS } from "./helpers/form-keys";
 
 const REQUIRED_VICTIM_KEYS = ["vic_first_name", "vic_last_name", "vic_sex"];
 
@@ -46,11 +46,13 @@ export default function RegisterVictim() {
     ...makeInitialState(VICTIM_FIELDS),
     ...makeInitialState(INCIDENT_KEYS),
     ...makeInitialState(PERP_KEYS),
+    ...makeInitialState(CONTACT_PERSON_FIELDS),
     victimPhotos: [], // extra fields you want
     evidences: [],
 
     vic_sex: "Female",
-    address: { // Initialize address with default empty values
+    address: {
+      // Initialize address with default empty values
       province: "",
       municipality: "",
       barangay: "",
@@ -62,6 +64,7 @@ export default function RegisterVictim() {
   const [openSections, setOpenSections] = useState({
     facialCapture: false,
     victimInfo: false,
+    contactPerson: false,
     incidentInfo: false,
     perpInfo: false,
     evidenceRecords: false,
@@ -142,15 +145,21 @@ export default function RegisterVictim() {
         victimPayload.vic_current_address = formDataState.vic_current_address;
       }
 
+      const contactPersonPayload = hasAny(formDataState, CONTACT_PERSON_FIELDS)
+        ? Object.fromEntries(
+            CONTACT_PERSON_FIELDS.map((k) => [k, formDataState[k] ?? ""])
+          )
+        : null;
+
       const incidentPayload = hasAny(formDataState, INCIDENT_KEYS)
         ? Object.fromEntries(
-          INCIDENT_KEYS.map((k) => [
-            k,
-            typeof formDataState[k] === "boolean"
-              ? !!formDataState[k]
-              : formDataState[k] ?? "",
-          ])
-        )
+            INCIDENT_KEYS.map((k) => [
+              k,
+              typeof formDataState[k] === "boolean"
+                ? !!formDataState[k]
+                : formDataState[k] ?? "",
+            ])
+          )
         : null;
 
       if (incidentPayload) {
@@ -184,7 +193,8 @@ export default function RegisterVictim() {
         fd.append("incident", JSON.stringify(incidentPayload));
       if (perpetratorPayload)
         fd.append("perpetrator", JSON.stringify(perpetratorPayload));
-      
+      if (contactPersonPayload)
+        fd.append("contact_person", JSON.stringify(contactPersonPayload));
 
       victimPhotos.forEach((file) => fd.append("photos", file));
       evidenceFiles.forEach((f) => fd.append("evidences", f.file));
@@ -244,7 +254,9 @@ export default function RegisterVictim() {
       <div className="bg-white rounded-lg p-6 max-w-md shadow-lg">
         <h2 className="text-xl font-bold mb-4">Terms of Service</h2>
         <p className="text-sm text-gray-700 mb-6">
-          Before registering a victim, you must confirm that informed consent has been obtained and that all data complies with institutional and legal standards.
+          Before registering a victim, you must confirm that informed consent
+          has been obtained and that all data complies with institutional and
+          legal standards.
         </p>
         <div className="flex justify-end gap-4">
           <button
@@ -305,11 +317,31 @@ export default function RegisterVictim() {
                 onClick={() => toggleSection("victimInfo")}
                 className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
               >
-                {openSections.victimInfo ? "▼" : "▶"} Victim-Survivor Information
+                {openSections.victimInfo ? "▼" : "▶"} Victim-Survivor
+                Information
               </button>
               {openSections.victimInfo && (
                 <div className="mt-4 border-l-4 border-blue-500 pl-4">
                   <VictimInfo
+                    formDataState={formDataState}
+                    setFormDataState={setFormDataState}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Contact Person */}
+            <div className="mb-4">
+              <button
+                onClick={() => toggleSection("contactPerson")}
+                className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
+              >
+                {openSections.contactPerson ? "▼" : "▶"} Contact Person
+                Information
+              </button>
+              {openSections.contactPerson && (
+                <div className="mt-4 border-l-4 border-blue-500 pl-4">
+                  <ContactPerson
                     formDataState={formDataState}
                     setFormDataState={setFormDataState}
                   />
@@ -341,7 +373,8 @@ export default function RegisterVictim() {
                 onClick={() => toggleSection("perpInfo")}
                 className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
               >
-                {openSections.perpInfo ? "▼" : "▶"} Alleged Perpetrator Information
+                {openSections.perpInfo ? "▼" : "▶"} Alleged Perpetrator
+                Information
               </button>
               {openSections.perpInfo && (
                 <div className="mt-4 border-l-4 border-blue-500 pl-4">
@@ -363,7 +396,10 @@ export default function RegisterVictim() {
               </button>
               {openSections.evidences && (
                 <div className="mt-4 border-l-4 border-blue-500 pl-4">
-                  <Evidences files={evidenceFiles} setFiles={setEvidenceFiles} />
+                  <Evidences
+                    files={evidenceFiles}
+                    setFiles={setEvidenceFiles}
+                  />
                 </div>
               )}
             </div>
@@ -371,12 +407,13 @@ export default function RegisterVictim() {
             {/* Status banner */}
             {statusMessage && (
               <div
-                className={`mt-4 p-3 rounded text-sm ${statusMessage.startsWith("✅")
-                  ? "bg-green-100 text-green-800"
-                  : statusMessage.startsWith("⏳")
+                className={`mt-4 p-3 rounded text-sm ${
+                  statusMessage.startsWith("✅")
+                    ? "bg-green-100 text-green-800"
+                    : statusMessage.startsWith("⏳")
                     ? "bg-yellow-100 text-yellow-800"
                     : "bg-red-100 text-red-800"
-                  }`}
+                }`}
               >
                 {statusMessage}
               </div>
@@ -395,10 +432,11 @@ export default function RegisterVictim() {
                 <button
                   onClick={handleSubmit}
                   disabled={loading}
-                  className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold shadow transition-all ${loading
-                    ? "bg-gray-400 cursor-not-allowed text-white"
-                    : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
-                    }`}
+                  className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold shadow transition-all ${
+                    loading
+                      ? "bg-gray-400 cursor-not-allowed text-white"
+                      : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
+                  }`}
                 >
                   <CheckCircleIcon className="h-5 w-5 text-white" />
                   {loading ? "Registering..." : "Register"}
@@ -420,5 +458,3 @@ export default function RegisterVictim() {
     </>
   );
 }
-
-
