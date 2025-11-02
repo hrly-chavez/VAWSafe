@@ -294,17 +294,20 @@ class victim_detail(generics.RetrieveAPIView):
             threading.Thread(target=cleanup_decrypted_file_later, args=(decrypted_photo_path, victim.vic_id, 10)).start()
 
         return Response(serializer.data)
-
-# retrieve all information related to case (Social Worker)
+# retrieve all information related to case ( Worker)
 class VictimIncidentsView(generics.ListAPIView):
     serializer_class = IncidentInformationSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker']
+    allowed_roles = ["Social Worker", "Nurse", "Psychometrician", "Home Life"]
 
     def get_queryset(self):
         vic_id = self.kwargs.get("vic_id")
-        return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by('incident_num')
-   
+        return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by("incident_num")
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True, context={"request": request})
+        return Response(serializer.data)  
 class search_victim_facial(APIView):
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [IsAuthenticated, IsRole]
@@ -490,22 +493,44 @@ class SessionTypeListView(generics.ListAPIView):
 def mapped_questions(request):
     """
     GET: Returns mapped questions for a specific session number and session type(s).
-    Example: /api/social_worker/mapped-questions/?session_num=1&session_types=1,2
+    Example: /api/psychometrician/mapped-questions/?session_num=2&session_types=3&role_filter=1
+
+    Optional query param:
+      - role_filter=1|true|yes  -> when present, filter mappings to only questions for the
+                                   current user's official role (question.role OR question.ques_category.role).
     """
     session_num = request.query_params.get("session_num")
     type_ids = request.query_params.get("session_types")
+    role_filter_flag = str(request.query_params.get("role_filter", "")).lower() in ("1", "true", "yes")
 
     if not session_num or not type_ids:
         return Response({"error": "session_num and session_types are required"}, status=400)
 
-    type_ids = [int(t) for t in type_ids.split(",")]
+    try:
+        type_ids = [int(t) for t in type_ids.split(",") if t.strip()]
+    except ValueError:
+        return Response({"error": "session_types must be a comma-separated list of integers"}, status=400)
 
-    mappings = SessionTypeQuestion.objects.filter(
+    base_qs = SessionTypeQuestion.objects.filter(
         session_number=session_num,
         session_type__id__in=type_ids
     ).select_related("question", "question__ques_category", "session_type")
 
-    serializer = SessionTypeQuestionSerializer(mappings, many=True)
+    # If frontend requests role-filtered results, restrict to current official's role
+    if role_filter_flag:
+        user = request.user
+        official = getattr(user, "official", None)
+        user_role = getattr(official, "of_role", None)
+        if not user_role:
+            return Response({"error": "User has no official role to filter by"}, status=400)
+
+        # Filter mappings where question.role == user_role OR question.ques_category.role == user_role
+        base_qs = base_qs.filter(
+            Q(question__role__iexact=user_role) |
+            Q(question__ques_category__role__iexact=user_role)
+        )
+
+    serializer = SessionTypeQuestionSerializer(base_qs, many=True)
     return Response(serializer.data)
 
 @api_view(["POST"])
@@ -514,21 +539,33 @@ def start_session(request, sess_id):
     """
     POST: Marks a session as Ongoing for this specific official and hydrates mapped questions.
     Uses SessionProgress to track per-official start times.
-    """             
+    Includes robust error handling for missing imports, null mappings, or invalid data.
+    """
+    from django.db.models import Q  
+    from django.utils import timezone
+
     user = request.user
-    official = user.official
+    official = getattr(user, "official", None)
+
+    if not official:
+        return Response({"error": "User is not linked to any official profile."}, status=400)
 
     # --- Get session assigned to this official ---
     try:
         session = Session.objects.get(pk=sess_id, assigned_official=official)
     except Session.DoesNotExist:
-        return Response({"error": "Session not found or not assigned to you"}, status=404)
+        return Response({"error": "Session not found or not assigned to you."}, status=404)
+    except Exception as e:
+        return Response({"error": f"Unexpected error while fetching session: {str(e)}"}, status=500)
 
     # --- Ensure session is Ongoing ---
-    if session.sess_status == "Pending":
-        session.sess_status = "Ongoing"
-        session.sess_date_today = timezone.now()
-        session.save()
+    try:
+        if session.sess_status == "Pending":
+            session.sess_status = "Ongoing"
+            session.sess_date_today = timezone.now()
+            session.save()
+    except Exception as e:
+        return Response({"error": f"Failed to update session status: {str(e)}"}, status=500)
 
     # --- Ensure progress record exists and mark start ---
     progress, _ = SessionProgress.objects.get_or_create(session=session, official=official)
@@ -537,28 +574,53 @@ def start_session(request, sess_id):
         progress.is_done = False
         progress.save()
 
-    # --- Hydrate mapped questions ---
-    type_ids = list(session.sess_type.values_list("id", flat=True))
+    # --- Hydrate mapped questions safely ---
+    try:
+        type_ids = list(session.sess_type.values_list("id", flat=True))
+        user_role = official.of_role
 
-  
-    # Fetch all mapped template questions for this session number & types
-    all_mappings = SessionTypeQuestion.objects.filter(
-        session_number=session.sess_num,
-        session_type__id__in=type_ids
-    ).select_related("question", "question__ques_category")
+        if session.sess_num == 1:
+            # Shared session: all role questions
+            all_mappings = SessionTypeQuestion.objects.filter(
+                session_number=session.sess_num,
+                session_type__id__in=type_ids
+            ).select_related("question", "question__ques_category")
+        else:
+            # Individual session: role-filtered questions only
+            all_mappings = SessionTypeQuestion.objects.filter(
+                session_number=session.sess_num,
+                session_type__id__in=type_ids
+            ).filter(
+                Q(question__role__iexact=user_role) |
+                Q(question__ques_category__role__iexact=user_role)
+            ).select_related("question", "question__ques_category")
 
-    # Create SessionQuestion entries for ALL mapped questions (so all assigned officials can view them).
-    # We rely on SessionQuestion.unique_together and get_or_create to avoid duplicates.
-    for m in all_mappings:
-        SessionQuestion.objects.get_or_create(
-            session=session,
-            question=m.question,
-            defaults={"sq_is_required": False}
+        # Create SessionQuestion entries safely (skip null questions)
+        for m in all_mappings:
+            if not m.question:
+                continue  # Skip invalid mapping rows with no linked question
+            SessionQuestion.objects.get_or_create(
+                session=session,
+                question=m.question,
+                defaults={"sq_is_required": False}
+            )
+
+    except Exception as e:
+        traceback.print_exc()
+        return Response(
+            {"error": f"Failed to hydrate mapped questions: {str(e)}"},
+            status=500
         )
 
     # --- Serialize and respond ---
-    serializer = SessionDetailSerializer(session, context={"request": request})
-    return Response(serializer.data, status=200)
+    try:
+        serializer = SessionDetailSerializer(session, context={"request": request})
+        return Response(serializer.data, status=200)
+    except Exception as e:
+        return Response(
+            {"error": f"Failed to serialize session data: {str(e)}"},
+            status=500
+        )
 
 @api_view(["POST"]) 
 @permission_classes([IsAuthenticated])
@@ -727,13 +789,58 @@ def close_case(request, incident_id):
     return Response({"message": "Case closed successfully!"}, status=200)
 
 #schedule session
+# @api_view(["GET", "POST"])
+# @permission_classes([IsAuthenticated])
+# def schedule_next_session(request):
+#     """
+#     GET: Lists current sessions (Pending/Ongoing) for the logged-in official.
+#     POST: Creates a new session (schedules the next one).
+#     Now role-agnostic: works for any official (Social Worker, Nurse, Psychometrician, Home Life).
+#     """
+#     user = request.user
+#     official = getattr(user, "official", None)
+#     role = getattr(official, "of_role", None)
+
+#     if not official or not role:
+#         return Response({"error": "Only registered officials can access this endpoint."},
+#                         status=status.HTTP_403_FORBIDDEN)
+
+#     # =========================
+#     # GET REQUEST
+#     # =========================
+#     if request.method == "GET":
+#         # Fetch all sessions where the current official is assigned
+#         sessions = Session.objects.filter(
+#             assigned_official=official,
+#             sess_status__in=["Pending", "Ongoing"]
+#         ).order_by("-sess_next_sched")
+
+#         serializer = SessionCRUDSerializer(sessions, many=True)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+
+#     # =========================
+#     # POST REQUEST
+#     # =========================
+#     elif request.method == "POST":
+#         serializer = SessionCRUDSerializer(data=request.data)
+#         if serializer.is_valid():
+#             # Save directly; the serializer handles sess_num auto-increment, etc.
+#             session = serializer.save()
+
+#             # Optional: Create SessionProgress entries automatically for assigned officials
+#             assigned_officials = session.assigned_official.all()
+#             for assigned in assigned_officials:
+#                 SessionProgress.objects.get_or_create(session=session, official=assigned)
+
+#             return Response(SessionCRUDSerializer(session).data, status=status.HTTP_201_CREATED)
+
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def schedule_next_session(request):
     """
-    GET: Lists current sessions (Pending/Ongoing) for the logged-in official.
-    POST: Creates a new session (schedules the next one).
-    Now role-agnostic: works for any official (Social Worker, Nurse, Psychometrician, Home Life).
+    Also supports simplified creation for Session 2+ (no schedule/location).
     """
     user = request.user
     official = getattr(user, "official", None)
@@ -743,37 +850,29 @@ def schedule_next_session(request):
         return Response({"error": "Only registered officials can access this endpoint."},
                         status=status.HTTP_403_FORBIDDEN)
 
-    # =========================
-    # GET REQUEST
-    # =========================
     if request.method == "GET":
-        # Fetch all sessions where the current official is assigned
         sessions = Session.objects.filter(
             assigned_official=official,
             sess_status__in=["Pending", "Ongoing"]
         ).order_by("-sess_next_sched")
-
         serializer = SessionCRUDSerializer(sessions, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data)
 
-    # =========================
-    # POST REQUEST
-    # =========================
     elif request.method == "POST":
-        serializer = SessionCRUDSerializer(data=request.data)
-        if serializer.is_valid():
-            # Save directly; the serializer handles sess_num auto-increment, etc.
-            session = serializer.save()
+        # lightweight creation (no schedule/location)
+        data = request.data.copy()
+        data["assigned_official"] = [official.pk]  # auto assign current official
 
-            # Optional: Create SessionProgress entries automatically for assigned officials
-            assigned_officials = session.assigned_official.all()
-            for assigned in assigned_officials:
-                SessionProgress.objects.get_or_create(session=session, official=assigned)
+        # Pass the request context to serializer
+        serializer = SessionCRUDSerializer(data=data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        session = serializer.save()
 
-            return Response(SessionCRUDSerializer(session).data, status=status.HTTP_201_CREATED)
+        # create SessionProgress for the same official
+        SessionProgress.objects.get_or_create(session=session, official=official)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+        return Response(SessionCRUDSerializer(session, context={"request": request}).data, status=status.HTTP_201_CREATED)
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_workers(request):
@@ -848,6 +947,54 @@ def upload_service_proof(request, service_id):
         serializer.save()
         return Response(serializer.data, status=200)
     return Response(serializer.errors, status=400)
+
+#========================================SESSION 2====================================================
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def incident_summary(request, incident_id):
+    """
+    Returns a summarized view of an incident including:
+    - Incident number
+    - Victim name
+    - Next session number (auto computed per role)
+    - Used by CreateSession (Session 2+)
+    """
+    try:
+        incident = IncidentInformation.objects.select_related("vic_id").get(pk=incident_id)
+    except IncidentInformation.DoesNotExist:
+        return Response({"error": "Incident not found"}, status=404)
+
+    # --- Determine current official & role ---
+    user = request.user
+    official = getattr(user, "official", None)
+    role = getattr(official, "of_role", None)
+
+    # --- Compute next session number ---
+    if not role:
+        # fallback to global numbering if no role (should not happen for officials)
+        last_session = incident.sessions.order_by("-sess_num").first()
+        next_num = (last_session.sess_num + 1) if last_session else 1
+    else:
+        # filter sessions by role to compute independent numbering
+        last_role_session = (
+            Session.objects.filter(
+                incident_id=incident,
+                assigned_official__of_role=role
+            )
+            .order_by("-sess_num")
+            .values_list("sess_num", flat=True)
+            .first()
+        )
+        next_num = (last_role_session or 0) + 1
+
+    # --- Build response ---
+    return Response({
+        "incident_id": incident.incident_id,
+        "incident_num": incident.incident_num,
+        "victim_name": incident.vic_id.full_name if incident.vic_id else None,
+        "next_session_number": next_num,
+    })
+
 
 #=======================================CASES==============================================================
 

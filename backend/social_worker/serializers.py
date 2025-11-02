@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from datetime import datetime, time
 from rest_framework.exceptions import ValidationError
 from dswd.utils.logging import log_change
-
+from django.db.models import Q
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
@@ -156,25 +156,63 @@ class SessionCRUDSerializer(serializers.ModelSerializer):
         officials = obj.assigned_official.all()
         return [official.full_name for official in officials] if officials else []
 
-    # --- Auto-increment session number when creating ---
+    # --- Auto-increment session number when creating (role-based logic) ---
     def create(self, validated_data):
         session_types = validated_data.pop("sess_type", [])
         officials = validated_data.pop("assigned_official", [])
         incident = validated_data.get("incident_id")
 
-        if incident:
-            last_num = (
-                Session.objects.filter(incident_id=incident)
-                .order_by("-sess_num")
-                .values_list("sess_num", flat=True)
-                .first()
-            )
-            validated_data["sess_num"] = (last_num or 0) + 1
+        # --- Identify current user and role ---
+        request = self.context.get("request")
+        official = getattr(request.user, "official", None)
+        role = getattr(official, "of_role", None)
 
+        if incident:
+            # --- Detect shared session (multiple officials) ---
+            is_shared_session = len(officials) > 1
+
+            if is_shared_session:
+                validated_data["sess_num"] = 1
+            else:
+                # --- Role-based numbering ---
+                if role:
+                    last_num = (
+                        Session.objects.filter(
+                            incident_id=incident,
+                            assigned_official__of_role=role
+                        )
+                        .order_by("-sess_num")
+                        .values_list("sess_num", flat=True)
+                        .first()
+                    )
+                    validated_data["sess_num"] = (last_num or 0) + 1
+                else:
+                    last_num = (
+                        Session.objects.filter(incident_id=incident)
+                        .order_by("-sess_num")
+                        .values_list("sess_num", flat=True)
+                        .first()
+                    )
+                    validated_data["sess_num"] = (last_num or 0) + 1
+
+        # --- Create the session ---
         session = super().create(validated_data)
         session.sess_type.set(session_types)
-        session.assigned_official.set(officials)
+
+        # --- Ensure session progress entries (ManyToMany through SessionProgress) ---
+        from shared_model.models import SessionProgress
+
+        # Link the current logged-in official
+        if official:
+            SessionProgress.objects.get_or_create(session=session, official=official)
+
+        # Link any additional officials passed
+        for off in officials:
+            SessionProgress.objects.get_or_create(session=session, official=off)
+
+        session.save()
         return session
+
 
     def update(self, instance, validated_data):
         session_types = validated_data.pop("sess_type", None)
@@ -193,14 +231,16 @@ class SessionTypeSerializer(serializers.ModelSerializer):
         model = SessionType
         fields = ["id", "name"]
 
+
 class SessionSerializer(serializers.ModelSerializer):
     """
     Lightweight serializer for session list display.
-    - Used in Social Worker session list endpoint.
+    - Used session list endpoint.
     """
     victim_name = serializers.SerializerMethodField()
     case_no = serializers.SerializerMethodField()
     official_names = serializers.SerializerMethodField()
+    official_roles = serializers.SerializerMethodField()  
     location = serializers.SerializerMethodField()
 
     class Meta:
@@ -210,10 +250,12 @@ class SessionSerializer(serializers.ModelSerializer):
             "sess_num",
             "sess_status",
             "sess_next_sched",
+            "sess_date_today",  
             "sess_type",
             "victim_name",
             "case_no",
             "official_names",
+            "official_roles",  
             "location",
         ]
 
@@ -228,20 +270,52 @@ class SessionSerializer(serializers.ModelSerializer):
         return None
 
     def get_official_names(self, obj):
-        officials = obj.assigned_official.all()
-        return [official.full_name for official in officials] if officials else []
+        progress_entries = getattr(obj, "_prefetched_progress", None)
+        if progress_entries is None:
+            progress_entries = obj.progress.select_related("official").all()
+        return [p.official.full_name for p in progress_entries if p.official]
+
+    def get_official_roles(self, obj):
+        progress_entries = getattr(obj, "_prefetched_progress", None)
+        if progress_entries is None:
+            progress_entries = obj.progress.select_related("official").all()
+        return [p.official.of_role for p in progress_entries if p.official]
 
     def get_location(self, obj):
         return obj.sess_location or None
 
-class IncidentInformationSerializer(serializers.ModelSerializer): 
-    """Displays incident info along with its linked sessions and perpetrator details."""
+class IncidentInformationSerializer(serializers.ModelSerializer):
+    """
+    Displays incident info along with all linked sessions for debugging.
+    Temporarily logs how many sessions are being serialized per incident.
+    """
+    sessions = serializers.SerializerMethodField()
+    perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)
 
-    sessions = SessionSerializer(many=True, read_only=True)
-    perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)  
     class Meta:
         model = IncidentInformation
         fields = "__all__"
+
+    def get_sessions(self, obj):
+        from shared_model.models import Session
+        import sys
+
+        # Force a fresh query directly by numeric FK ID (not encrypted FK object)
+        queryset = (
+            Session.objects.filter(incident_id_id=obj.incident_id)
+            .select_related("incident_id")
+            .prefetch_related("progress__official", "sess_type")
+            .order_by("sess_num", "sess_id")
+        )
+
+        count = queryset.count()
+        print(f"[DEBUG] Incident {obj.incident_id}: Found {count} sessions", file=sys.stderr)
+
+        # Prefetch for official names
+        for s in queryset:
+            s._prefetched_progress = list(s.progress.select_related("official").all())
+
+        return SessionSerializer(queryset, many=True, context={"request": self.context.get("request")}).data
 
 class SessionTypeQuestionSerializer(serializers.ModelSerializer): 
     """
