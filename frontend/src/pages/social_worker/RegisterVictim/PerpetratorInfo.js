@@ -2,27 +2,27 @@
 import { useEffect } from "react";
 import { NATIONALITIES } from "./helpers/Nationalities";
 
-const RELATIONSHIP_TO_VICTIM_TYPE = {
-  "Personal/Family": [
-    "Current spouse/partner",
-    "Former spouse/partner",
-    "Current fiance/dating relationship",
-    "Neighbors/peers/coworkers/classmates",
-    "Immediate family members",
-    "Stepfamily members",
-  ],
-  "Persons of Authority": [
-    "Employer/manager/supervisor",
-    "Agent of the employer",
-    "Teacher/Instructor/professor",
-    "Coach/trainer",
-    "Religious leaders/workers",
-    "Community leaders/workers",
-  ],
-  "State Actor": ["Government official", "Military", "Police", "Paramilitary"],
-  "Non-State Actor": ["Insurgent", "Rebel", "Violent extremist", "Militia"],
-  "Stranger/Unknown": [],
-};
+// const RELATIONSHIP_TO_VICTIM_TYPE = {
+//   "Personal/Family": [
+//     "Current spouse/partner",
+//     "Former spouse/partner",
+//     "Current fiance/dating relationship",
+//     "Neighbors/peers/coworkers/classmates",
+//     "Immediate family members",
+//     "Stepfamily members",
+//   ],
+//   "Persons of Authority": [
+//     "Employer/manager/supervisor",
+//     "Agent of the employer",
+//     "Teacher/Instructor/professor",
+//     "Coach/trainer",
+//     "Religious leaders/workers",
+//     "Community leaders/workers",
+//   ],
+//   "State Actor": ["Government official", "Military", "Police", "Paramilitary"],
+//   "Non-State Actor": ["Insurgent", "Rebel", "Violent extremist", "Militia"],
+//   "Stranger/Unknown": [],
+// };
 
 export default function PerpetratorInfo({
   formDataState,
@@ -66,45 +66,47 @@ export default function PerpetratorInfo({
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Full Name
         </label>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <input
             className="input"
             type="text"
             placeholder="First Name"
-            value={formDataState.per_first_name || ""}
             onChange={(e) => handleChange("per_first_name", e.target.value)}
           />
           <input
             className="input"
             type="text"
             placeholder="Middle Name"
-            value={formDataState.per_middle_name || ""}
             onChange={(e) => handleChange("per_middle_name", e.target.value)}
           />
           <input
             className="input"
             type="text"
             placeholder="Last Name"
-            value={formDataState.per_last_name || ""}
             onChange={(e) => handleChange("per_last_name", e.target.value)}
+          />
+          <input
+            className="input"
+            type="text"
+            placeholder="Extension (e.g. Jr., III)"
+            onChange={(e) => handleChange("per_extension", e.target.value)}
           />
         </div>
       </div>
 
-      {/* Sex */}
-      <div>
+      {/* Nickname/Alias */}
+      <div className="flex flex-col mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Sex
+          Nickname/Alias
         </label>
-        <select
-          className="input w-full"
-          value={formDataState.per_sex || ""}
-          onChange={(e) => handleChange("per_sex", e.target.value)}
-        >
-          <option value="">Select Sex</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-        </select>
+        <div>
+          <input
+            className="input"
+            type="text"
+            placeholder="Nickname/Alias"
+            onChange={(e) => handleChange("per_alias", e.target.value)}
+          />
+        </div>
       </div>
 
       {/* Birth Details */}
@@ -116,109 +118,30 @@ export default function PerpetratorInfo({
           <input
             className="input"
             type="date"
-            value={formDataState.per_birth_date || ""}
             onChange={(e) => handleChange("per_birth_date", e.target.value)}
           />
           <input
             className="input"
             type="text"
             placeholder="Birth Place"
-            value={formDataState.per_birth_place || ""}
             onChange={(e) => handleChange("per_birth_place", e.target.value)}
           />
         </div>
       </div>
 
-      {/* Guardian details if perpetrator is minor */}
-      {formDataState.is_per_minor && (
-        <>
-          <div className="mt-2 text-sm text-yellow-700 bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-md">
-            This perpetrator is identified as a minor. Please ensure child
-            protection protocols are followed.
-          </div>
-
-          <h3 className="text-lg font-semibold text-gray-800 mt-6 tracking-wide">
-            Guardian Information
-          </h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-            <input
-              className="input"
-              type="text"
-              placeholder="Guardian First Name"
-              value={formDataState.guardian_first_name || ""}
-              onChange={(e) =>
-                handleChange("guardian_first_name", e.target.value)
-              }
-            />
-            <input
-              className="input"
-              type="text"
-              placeholder="Guardian Middle Name"
-              value={formDataState.guardian_middle_name || ""}
-              onChange={(e) =>
-                handleChange("guardian_middle_name", e.target.value)
-              }
-            />
-            <input
-              className="input"
-              type="text"
-              placeholder="Guardian Last Name"
-              value={formDataState.guardian_last_name || ""}
-              onChange={(e) =>
-                handleChange("guardian_last_name", e.target.value)
-              }
-            />
-            <input
-              className="input"
-              type="text"
-              placeholder="Guardian Contact"
-              value={formDataState.guardian_contact || ""}
-              onChange={(e) => handleChange("guardian_contact", e.target.value)}
-            />
-            <input
-              className="input"
-              type="text"
-              placeholder="Guardian's Child Category (e.g. Biological Parent)"
-              value={formDataState.per_guardian_child_category || ""}
-              onChange={(e) =>
-                handleChange("per_guardian_child_category", e.target.value)
-              }
-            />
-          </div>
-        </>
-      )}
-
-      {/* Nationality */}
-      <div className="flex flex-col">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Nationality
-        </label>
-        <select
-          className="input"
-          onChange={(e) => handleChange("per_nationality", e.target.value)}
-        >
-          <option value="">Select Nationality</option>
-          {NATIONALITIES.map((nat) => (
-            <option key={nat} value={nat}>
-              {nat}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Occupation */}
+      {/* Sex */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Main Occupation
+          Sex
         </label>
-        <input
+        <select
           className="input w-full"
-          type="text"
-          placeholder="Main Occupation"
-          value={formDataState.per_occupation || ""}
-          onChange={(e) => handleChange("per_occupation", e.target.value)}
-        />
+          onChange={(e) => handleChange("per_sex", e.target.value)}
+        >
+          <option value="">Select Sex</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
       </div>
 
       {/* Religion */}
@@ -228,7 +151,6 @@ export default function PerpetratorInfo({
         </label>
         <select
           className="input w-full"
-          value={formDataState.per_religion || ""}
           onChange={(e) => handleChange("per_religion", e.target.value)}
         >
           <option value="">Select Religion</option>
@@ -241,8 +163,59 @@ export default function PerpetratorInfo({
         </select>
       </div>
 
+      {/* relationship to victim */}
+      <div className="flex flex-col mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Relationship to Victim
+        </label>
+        <div>
+          <input
+            className="input"
+            type="text"
+            placeholder="e.g. Siblings"
+            onChange={(e) =>
+              handleChange("per_victim_relationship", e.target.value)
+            }
+          />
+        </div>
+      </div>
+
+      {/* Educational Status */}
+      <div>
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Educational Attainment
+          </label>
+          <select
+            className="input w-full"
+            onChange={(e) =>
+              handleChange("per_educational_attainment", e.target.value)
+            }
+          >
+            <option value="" disabled>
+              Select Educational Level
+            </option>
+            <option value="No Formal Education">No Formal Education</option>
+            <option value="Elementary Level/Graduate">
+              Elementary Level/Graduate
+            </option>
+            <option value="Junior High School Level/Graduate">
+              Junior High School Level/Graduate
+            </option>
+            <option value="Senior High School Level/Graduate">
+              Senior High School Level/Graduate
+            </option>
+            <option value="Technical/Vocational">Technical/Vocational</option>
+            <option value="College Level/Graduate">
+              College Level/Graduate
+            </option>
+            <option value="Post graduate">Post graduate</option>
+          </select>
+        </div>
+      </div>
+
       {/* Contact */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+      <div>
         <div className="flex flex-col">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Contact Number
@@ -251,57 +224,22 @@ export default function PerpetratorInfo({
             className="input"
             type="text"
             placeholder="e.g. 09123456789"
-            value={formDataState.per_contact || ""}
-            onChange={(e) => handleChange("per_contact", e.target.value)}
+            onChange={(e) => handleChange("per_contact_number", e.target.value)}
           />
         </div>
       </div>
 
-      {/* relationship to victim type */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-        <div className="flex flex-col">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Relationship Category
-          </label>
-          <select
-            className="input"
-            onChange={(e) =>
-              handleChange("per_relationship_type", e.target.value)
-            }
-          >
-            <option>Select</option>
-            {Object.keys(RELATIONSHIP_TO_VICTIM_TYPE).map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {formDataState.per_relationship_type &&
-          RELATIONSHIP_TO_VICTIM_TYPE[formDataState.per_relationship_type]
-            ?.length > 0 && (
-            <div className="flex flex-col">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Relationship Detail
-              </label>
-              <select
-                className="input"
-                onChange={(e) =>
-                  handleChange("per_relationship_subtype", e.target.value)
-                }
-              >
-                <option>Select</option>
-                {RELATIONSHIP_TO_VICTIM_TYPE[
-                  formDataState.per_relationship_type
-                ].map((subtype) => (
-                  <option key={subtype} value={subtype}>
-                    {subtype}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+      {/* Occupation */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Main Occupation
+        </label>
+        <input
+          className="input w-full"
+          type="text"
+          placeholder="Main Occupation"
+          onChange={(e) => handleChange("per_occupation", e.target.value)}
+        />
       </div>
 
       {/* Actions (if needed) */}
