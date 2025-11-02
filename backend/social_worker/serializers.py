@@ -7,7 +7,6 @@ from datetime import datetime, time
 from rest_framework.exceptions import ValidationError
 from dswd.utils.logging import log_change
 
-
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
@@ -69,7 +68,12 @@ class VictimSerializer(serializers.ModelSerializer):
         address = Address.objects.create(**address_data)
         victim = Victim.objects.create(address=address, **validated_data)
         return victim
-        
+
+class ContactPersonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContactPerson
+        fields = "__all__"
+
 class PerpetratorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Perpetrator
