@@ -1,4 +1,11 @@
 export default function ContactPerson({ formDataState, setFormDataState }) {
+  const handleChange = (field, value) => {
+    setFormDataState((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   return (
     <div className="bg-white p-6 rounded-xl shadow-md space-y-6">
       {/* Name */}
@@ -11,25 +18,25 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
             className="input"
             type="text"
             placeholder="First Name"
-            // onChange={(e) => handleChange("per_first_name", e.target.value)}
+            onChange={(e) => handleChange("cont_fname", e.target.value)}
           />
           <input
             className="input"
             type="text"
             placeholder="Middle Name"
-            // onChange={(e) => handleChange("per_middle_name", e.target.value)}
+            onChange={(e) => handleChange("cont_mname", e.target.value)}
           />
           <input
             className="input"
             type="text"
             placeholder="Last Name"
-            // onChange={(e) => handleChange("per_last_name", e.target.value)}
+            onChange={(e) => handleChange("cont_lname", e.target.value)}
           />
           <input
             className="input"
             type="text"
             placeholder="Extension (e.g. Jr., III)"
-            // onChange={(e) => handleChange("per_extension", e.target.value)}
+            onChange={(e) => handleChange("cont_ext", e.target.value)}
           />
         </div>
       </div>
@@ -43,13 +50,13 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
           <input
             className="input"
             type="date"
-            // onChange={(e) => handleChange("per_birth_date", e.target.value)}
+            onChange={(e) => handleChange("cont_birth_date", e.target.value)}
           />
           <input
             className="input"
             type="text"
             placeholder="Birth Place"
-            // onChange={(e) => handleChange("per_birth_place", e.target.value)}
+            onChange={(e) => handleChange("cont_birth_place", e.target.value)}
           />
         </div>
       </div>
@@ -61,7 +68,7 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
         </label>
         <select
           className="input w-full"
-          //   onChange={(e) => handleChange("per_sex", e.target.value)}
+          onChange={(e) => handleChange("cont_sex", e.target.value)}
         >
           <option value="">Select Sex</option>
           <option value="Male">Male</option>
@@ -77,7 +84,7 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
           </label>
           <select
             className="input w-full"
-            // onChange={(e) => handleChange("vic_civil_status", e.target.value)}
+            onChange={(e) => handleChange("cont_civil_status", e.target.value)}
           >
             <option value="" disabled>
               Select Civil Status
@@ -101,9 +108,9 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
             className="input"
             type="text"
             placeholder="e.g. Siblings"
-            // onChange={(e) =>
-            //   handleChange("per_victim_relationship", e.target.value)
-            // }
+            onChange={(e) =>
+              handleChange("cont_victim_relationship", e.target.value)
+            }
           />
         </div>
       </div>
@@ -118,7 +125,9 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
             className="input"
             type="text"
             placeholder="e.g. 09123456789"
-            // onChange={(e) => handleChange("per_contact_number", e.target.value)}
+            onChange={(e) =>
+              handleChange("cont_contact_number", e.target.value)
+            }
           />
         </div>
       </div>
