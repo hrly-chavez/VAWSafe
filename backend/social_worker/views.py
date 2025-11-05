@@ -120,8 +120,6 @@ def register_victim(request):
                 return Response({"success": False, "error": "No photos could be saved."},
                                 status=status.HTTP_400_BAD_REQUEST)
 
-        
-
         # 4) Perpetrator (optional)
         perpetrator = None
         perpetrator_data = parse_json_field("perpetrator")
@@ -163,6 +161,19 @@ def register_victim(request):
                     file=file
                 )
 
+        # 5.6) Contact Person (optional, after incident exists)
+        contact_person = None
+        contact_data = parse_json_field("contact_person")
+        if contact_data and incident:
+            contact_data["incident"] = incident.pk  # correct FK reference
+            c_ser = ContactPersonSerializer(data=contact_data)
+            if not c_ser.is_valid():
+                print("[contact_person] errors:", c_ser.errors)
+                return Response({"success": False, "errors": c_ser.errors},
+                                status=status.HTTP_400_BAD_REQUEST)
+            contact_person = c_ser.save()
+
+
         # -------------------------------
         # 6) CREATE VICTIM ACCOUNT (new)
         # -------------------------------
@@ -187,6 +198,7 @@ def register_victim(request):
             "success": True,
             "victim": VictimSerializer(victim).data,
             "incident": IncidentInformationSerializer(incident).data if incident else None,
+            "contact_person": ContactPersonSerializer(contact_person).data if contact_person else None,
             "perpetrator": PerpetratorSerializer(perpetrator).data if perpetrator else None,
             "username": username,
             "password": generated_password,
