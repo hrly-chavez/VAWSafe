@@ -7,6 +7,7 @@ import api from "../../../api/axios";
 
 // imported pages
 import VictimInfo from "./VictimInfo";
+import FamilyComposition from "./FamilyComposition";
 import ContactPerson from "./ContactPerson";
 import IncidentInfo from "./IncidentInfo";
 import PerpetratorInfo from "./PerpetratorInfo";
@@ -64,6 +65,7 @@ export default function RegisterVictim() {
   const [openSections, setOpenSections] = useState({
     facialCapture: false,
     victimInfo: false,
+    familyComposition: false,
     contactPerson: false,
     incidentInfo: false,
     perpInfo: false,
@@ -330,6 +332,24 @@ export default function RegisterVictim() {
               )}
             </div>
 
+            {/* family composition */}
+            <div className="mb-4">
+              <button
+                onClick={() => toggleSection("familyComposition")}
+                className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
+              >
+                {openSections.familyComposition ? "▼" : "▶"} Family Composition
+              </button>
+              {openSections.familyComposition && (
+                <div className="mt-4 border-l-4 border-blue-500 pl-4 ">
+                  <FamilyComposition
+                    formDataState={formDataState}
+                    setFormDataState={setFormDataState}
+                  />
+                </div>
+              )}
+            </div>
+
             {/* Contact Person */}
             <div className="mb-4">
               <button
@@ -349,24 +369,6 @@ export default function RegisterVictim() {
               )}
             </div>
 
-            {/* Incident Info */}
-            <div className="mb-4">
-              <button
-                onClick={() => toggleSection("incidentInfo")}
-                className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
-              >
-                {openSections.incidentInfo ? "▼" : "▶"} Incident Report
-              </button>
-              {openSections.incidentInfo && (
-                <div className="mt-4 border-l-4 border-blue-500 pl-4">
-                  <IncidentInfo
-                    formDataState={formDataState}
-                    setFormDataState={setFormDataState}
-                  />
-                </div>
-              )}
-            </div>
-
             {/* Perp Info */}
             <div className="mb-4">
               <button
@@ -379,6 +381,24 @@ export default function RegisterVictim() {
               {openSections.perpInfo && (
                 <div className="mt-4 border-l-4 border-blue-500 pl-4">
                   <PerpetratorInfo
+                    formDataState={formDataState}
+                    setFormDataState={setFormDataState}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Incident Info */}
+            <div className="mb-4">
+              <button
+                onClick={() => toggleSection("incidentInfo")}
+                className="w-full text-left bg-blue-100 px-4 py-2 rounded hover:bg-blue-200 font-semibold text-blue-800"
+              >
+                {openSections.incidentInfo ? "▼" : "▶"} Incident Report
+              </button>
+              {openSections.incidentInfo && (
+                <div className="mt-4 border-l-4 border-blue-500 pl-4">
+                  <IncidentInfo
                     formDataState={formDataState}
                     setFormDataState={setFormDataState}
                   />
