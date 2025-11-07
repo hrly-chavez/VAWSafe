@@ -18,10 +18,16 @@ const RegisterUser = ({ onClose, defaultRole }) => {
   // Personal Info (core fields)
   const [of_fname, setFname] = useState("");
   const [of_lname, setLname] = useState("");
+  const [of_m_initial, setMname] = useState("");
+  const [of_suffix, setSuffix] = useState("");
+  const [sex, setSex] = useState("");
+  const [of_dob, setDob] = useState("");
+  const [of_pob, setPob] = useState("");
+  const [of_contact, setContact] =useState("");
   const [of_email, setEmail] = useState("");
   const [of_role, setRole] = useState(defaultRole || ""); // will update if DSWD missing
 
-  const [sex, setSex] = useState("");
+  
 
   const [provinces, setProvinces] = useState([]);
   const [municipalities, setMunicipalities] = useState([]);
@@ -157,6 +163,12 @@ useEffect(() => {
     formData.append("of_lname", of_lname);
     formData.append("of_email", of_email);
     formData.append("of_role", of_role);
+    formData.append("of_m_initial", of_m_initial);
+    formData.append("of_suffix", of_suffix);
+    formData.append("of_sex", sex);
+    formData.append("of_dob", of_dob);
+    formData.append("of_pob", of_pob);
+    formData.append("of_contact", of_contact);
     formData.append("address.province", selectedProvince);
     formData.append("address.municipality", selectedMunicipality);
     formData.append("address.barangay", selectedBarangay);
@@ -219,7 +231,6 @@ useEffect(() => {
           username: data.username,
           password: data.password,
           role: data.role,
-          assigned_barangay_name: data.assigned_barangay_name,
         });
       }
 
@@ -227,6 +238,12 @@ useEffect(() => {
       setPhotos([]);
       setFname("");
       setLname("");
+      setMname("");
+      setSuffix("");
+      setSex("");
+      setDob("");
+      setPob("");
+      setContact("");
       setEmail("");
       setSitio("");
       setStreet("");
@@ -297,12 +314,24 @@ useEffect(() => {
 
               <div className="flex flex-col">
                 <label className="font-medium text-sm mb-1">Middle Initial</label>
-                <input type="text" placeholder="Middle Inital" className={inputStyle} />
+                <input 
+                  type="text" 
+                  placeholder="Middle Inital" 
+                  value={of_m_initial}
+                  onChange={(e) => setMname(e.target.value)}
+                  className={inputStyle} 
+                />
               </div>
 
               <div className="flex flex-col">
                 <label className="font-medium text-sm mb-1">Suffix</label>
-                <input type="text" placeholder="Jr., Sr., III" className={inputStyle} />
+                <input 
+                  type="text" 
+                  placeholder="Jr., Sr., III" 
+                  value={of_suffix}
+                  onChange={(e) => setSuffix(e.target.value)}
+                  className={inputStyle} 
+                />
               </div>
 
               <div className="flex flex-col">
@@ -320,18 +349,34 @@ useEffect(() => {
 
               <div className="flex flex-col">
                 <label className="font-medium text-sm mb-1">Date of Birth</label>
-                <input type="date" className={inputStyle} />
+                <input 
+                  type="date" 
+                  value={of_dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  className={inputStyle} 
+                />
               </div>
 
               <div className="flex flex-col">
                 <label className="font-medium text-sm mb-1">Place of Birth</label>
-                <input type="text" placeholder="Cebu City, Cebu" className={inputStyle} />
+                <input 
+                  type="text" 
+                  placeholder="Cebu City, Cebu" 
+                  value={of_pob}
+                  onChange={(e) => setPob(e.target.value)}
+                  className={inputStyle} 
+                />
               </div>
 
               {/* Contact & Role */}
               <div className="flex flex-col">
                 <label className="font-medium text-sm mb-1">Contact Number</label>
-                <input type="text" placeholder="09123456789" className={inputStyle} />
+                <input 
+                  type="text" 
+                  placeholder="09123456789" 
+                  value={of_contact}
+                  onChange={(e) => setContact(e.target.value)}
+                  className={inputStyle} />
               </div>
 
               {showRole && (
@@ -472,14 +517,6 @@ useEffect(() => {
                 />
               </div>
 
-
-              <div className="flex flex-col">
-                <label className="font-medium text-sm mb-1">Assigned Barangay</label>
-                <select className={inputStyle}>
-                  <option value="">Select Assigned Barangay</option>
-                  <option value="Tungkil">Tungkil</option>
-                </select>
-              </div>
             </div>
 
             {/* Face Capture Section */}

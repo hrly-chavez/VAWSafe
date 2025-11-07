@@ -32,12 +32,13 @@ export default function Sidebar() {
         // { icon: "/images/founder.png", label: "VAW Desk Officer", path: "/dswd/vawdesk-officer" },
         { icon: "/images/peace.png", label: "Services",path: "/dswd/services",},
         { icon: "/images/peace.png",label: "Questions Management",path: "/dswd/questions",},
-        { icon: "/images/account-settings.png",label: "Account Management",
-          children: [
-            { label: "User Management", path: "/dswd/account-management" },
-            { label: "Pending Account",path: "/dswd/account-management/pending",},
-          ],
-        },
+        { icon: "/images/account-settings.png",label: "Account Management",path: "/dswd/account-management",},
+        // { icon: "/images/account-settings.png",label: "Account Management",
+        //   children: [
+        //     { label: "User Management", path: "/dswd/account-management" },
+        //     { label: "Pending Account",path: "/dswd/account-management/pending",},
+        //   ],
+        // },
         {icon: "/images/dashboardnew.png",label: "Reports",
           children: [
             { label: "Daily Reports", path: "/dswd/account-management" },
