@@ -26,10 +26,15 @@ export default function Schedule({ victim, incident, back, next }) {
     const payload = {
       incident_id: incident?.incident_id,
       sess_next_sched: `${date}T${time}:00Z`,
-      sess_location: location,
-      sess_type: selectedTypes.map((t) => t.value),
-      assigned_official: selectedOfficials.map((id) => id),
+      sess_location: location || "",
+      sess_type: Array.isArray(selectedTypes)
+        ? selectedTypes.map((t) => Number(t.value))
+        : [],
+      assigned_official: Array.isArray(selectedOfficials)
+        ? selectedOfficials.map((id) => Number(id))
+        : [],
     };
+
 
     const res = await api.post("/api/social_worker/sessions/", payload);
 
