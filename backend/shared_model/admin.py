@@ -197,6 +197,7 @@ admin.site.register(SessionType)
 admin.site.register(Services)
 admin.site.register(ServiceCategory)
 admin.site.register(Perpetrator)
+admin.site.register(ContactPerson)
 
 #para sa kinsay ni edit ani nga official
 @admin.register(AuditLog)

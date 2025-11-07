@@ -1,5 +1,4 @@
 import os, tempfile, traceback, json, logging, threading
-
 from rest_framework import generics, permissions
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -110,17 +109,20 @@ class victim_detail(generics.RetrieveAPIView):
 
 # retrieve all information related to case ( Worker)
 class VictimIncidentsView(generics.ListAPIView):
-    """
-    Lists all incidents linked to a victim, accessible to any assigned official.
-    """
     serializer_class = IncidentInformationSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker', 'Nurse', 'Psychometrician', 'Home Life']
+    allowed_roles = ["Social Worker", "Nurse", "Psychometrician", "Home Life"]
 
     def get_queryset(self):
         vic_id = self.kwargs.get("vic_id")
-        return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by('incident_num')
-   
+        return IncidentInformation.objects.filter(vic_id__pk=vic_id).order_by("incident_num")
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True, context={"request": request})
+        return Response(serializer.data)
+
+  
 class search_victim_facial(APIView):
     """
     Face-based victim search accessible to any logged-in official role.
@@ -289,31 +291,6 @@ class SessionTypeListView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
 #Session Start 
-# @api_view(["GET"])
-# @permission_classes([IsAuthenticated])
-# def mapped_questions(request):
-#     """
-#     GET: Returns mapped questions for a specific session number and session type(s).
-#     Example: /api/social_worker/mapped-questions/?session_num=1&session_types=1,2
-#     """
-#     session_num = request.query_params.get("session_num")
-#     type_ids = request.query_params.get("session_types")
-
-#     if not session_num or not type_ids:
-#         return Response({"error": "session_num and session_types are required"}, status=400)
-
-#     type_ids = [int(t) for t in type_ids.split(",")]
-
-#     mappings = SessionTypeQuestion.objects.filter(
-#         session_number=session_num,
-#         session_type__id__in=type_ids
-#     ).select_related("question", "question__ques_category", "session_type")
-
-#     serializer = SessionTypeQuestionSerializer(mappings, many=True)
-#     return Response(serializer.data)
-
-from django.db.models import Q
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def mapped_questions(request):
@@ -365,21 +342,33 @@ def start_session(request, sess_id):
     """
     POST: Marks a session as Ongoing for this specific official and hydrates mapped questions.
     Uses SessionProgress to track per-official start times.
-    """             
+    Includes robust error handling for missing imports, null mappings, or invalid data.
+    """
+    from django.db.models import Q  
+    from django.utils import timezone
+
     user = request.user
-    official = user.official
+    official = getattr(user, "official", None)
+
+    if not official:
+        return Response({"error": "User is not linked to any official profile."}, status=400)
 
     # --- Get session assigned to this official ---
     try:
         session = Session.objects.get(pk=sess_id, assigned_official=official)
     except Session.DoesNotExist:
-        return Response({"error": "Session not found or not assigned to you"}, status=404)
+        return Response({"error": "Session not found or not assigned to you."}, status=404)
+    except Exception as e:
+        return Response({"error": f"Unexpected error while fetching session: {str(e)}"}, status=500)
 
     # --- Ensure session is Ongoing ---
-    if session.sess_status == "Pending":
-        session.sess_status = "Ongoing"
-        session.sess_date_today = timezone.now()
-        session.save()
+    try:
+        if session.sess_status == "Pending":
+            session.sess_status = "Ongoing"
+            session.sess_date_today = timezone.now()
+            session.save()
+    except Exception as e:
+        return Response({"error": f"Failed to update session status: {str(e)}"}, status=500)
 
     # --- Ensure progress record exists and mark start ---
     progress, _ = SessionProgress.objects.get_or_create(session=session, official=official)
@@ -388,40 +377,53 @@ def start_session(request, sess_id):
         progress.is_done = False
         progress.save()
 
-    # --- Hydrate mapped questions ---
-    type_ids = list(session.sess_type.values_list("id", flat=True))
-    user_role = official.of_role
+    # --- Hydrate mapped questions safely ---
+    try:
+        type_ids = list(session.sess_type.values_list("id", flat=True))
+        user_role = official.of_role
 
-    # Fetch all mapped questions for this session and type(s)
-    # For Session 1 → include all roles
-    # For Session 2+ → filter only questions assigned to this official's role
-    if session.sess_num == 1:
-        all_mappings = SessionTypeQuestion.objects.filter(
-            session_number=session.sess_num,
-            session_type__id__in=type_ids
-        ).select_related("question", "question__ques_category")
-    else:
-        all_mappings = SessionTypeQuestion.objects.filter(
-            session_number=session.sess_num,
-            session_type__id__in=type_ids
-        ).filter(
-            Q(question__role__iexact=user_role) |
-            Q(question__ques_category__role__iexact=user_role)
-        ).select_related("question", "question__ques_category")
+        if session.sess_num == 1:
+            # Shared session: all role questions
+            all_mappings = SessionTypeQuestion.objects.filter(
+                session_number=session.sess_num,
+                session_type__id__in=type_ids
+            ).select_related("question", "question__ques_category")
+        else:
+            # Individual session: role-filtered questions only
+            all_mappings = SessionTypeQuestion.objects.filter(
+                session_number=session.sess_num,
+                session_type__id__in=type_ids
+            ).filter(
+                Q(question__role__iexact=user_role) |
+                Q(question__ques_category__role__iexact=user_role)
+            ).select_related("question", "question__ques_category")
 
-    # Create SessionQuestion entries for the selected mappings
-    # (unique_together ensures no duplicates)
-    for m in all_mappings:
-        SessionQuestion.objects.get_or_create(
-            session=session,
-            question=m.question,
-            defaults={"sq_is_required": False}
+        # Create SessionQuestion entries safely (skip null questions)
+        for m in all_mappings:
+            if not m.question:
+                continue  # Skip invalid mapping rows with no linked question
+            SessionQuestion.objects.get_or_create(
+                session=session,
+                question=m.question,
+                defaults={"sq_is_required": False}
+            )
+
+    except Exception as e:
+        traceback.print_exc()
+        return Response(
+            {"error": f"Failed to hydrate mapped questions: {str(e)}"},
+            status=500
         )
 
-
     # --- Serialize and respond ---
-    serializer = SessionDetailSerializer(session, context={"request": request})
-    return Response(serializer.data, status=200)
+    try:
+        serializer = SessionDetailSerializer(session, context={"request": request})
+        return Response(serializer.data, status=200)
+    except Exception as e:
+        return Response(
+            {"error": f"Failed to serialize session data: {str(e)}"},
+            status=500
+        )
 
 @api_view(["POST"]) 
 @permission_classes([IsAuthenticated])
@@ -663,14 +665,16 @@ def schedule_next_session(request):
         # lightweight creation (no schedule/location)
         data = request.data.copy()
         data["assigned_official"] = [official.pk]  # auto assign current official
-        serializer = SessionCRUDSerializer(data=data)
+
+        # Pass the request context to serializer
+        serializer = SessionCRUDSerializer(data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         session = serializer.save()
 
         # create SessionProgress for the same official
         SessionProgress.objects.get_or_create(session=session, official=official)
 
-        return Response(SessionCRUDSerializer(session).data, status=status.HTTP_201_CREATED)
+        return Response(SessionCRUDSerializer(session, context={"request": request}).data, status=status.HTTP_201_CREATED)
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -748,7 +752,6 @@ def upload_service_proof(request, service_id):
     return Response(serializer.errors, status=400)
 
 #========================================SESSION 2====================================================
-
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def incident_summary(request, incident_id):
@@ -756,23 +759,43 @@ def incident_summary(request, incident_id):
     Returns a summarized view of an incident including:
     - Incident number
     - Victim name
-    - Next session number (auto computed)
-    - For CreateSession
+    - Next session number (auto computed per role)
+    - Used by CreateSession (Session 2+)
     """
     try:
         incident = IncidentInformation.objects.select_related("vic_id").get(pk=incident_id)
     except IncidentInformation.DoesNotExist:
         return Response({"error": "Incident not found"}, status=404)
 
-    # Compute next session number
-    last_session = incident.sessions.order_by("-sess_num").first()
-    next_num = (last_session.sess_num + 1) if last_session else 1
+    # --- Determine current official & role ---
+    user = request.user
+    official = getattr(user, "official", None)
+    role = getattr(official, "of_role", None)
 
+    # --- Compute next session number ---
+    if not role:
+        # fallback to global numbering if no role (should not happen for officials)
+        last_session = incident.sessions.order_by("-sess_num").first()
+        next_num = (last_session.sess_num + 1) if last_session else 1
+    else:
+        # filter sessions by role to compute independent numbering
+        last_role_session = (
+            Session.objects.filter(
+                incident_id=incident,
+                assigned_official__of_role=role
+            )
+            .order_by("-sess_num")
+            .values_list("sess_num", flat=True)
+            .first()
+        )
+        next_num = (last_role_session or 0) + 1
+
+    # --- Build response ---
     return Response({
         "incident_id": incident.incident_id,
         "incident_num": incident.incident_num,
         "victim_name": incident.vic_id.full_name if incident.vic_id else None,
-        "next_session_number": next_num
+        "next_session_number": next_num,
     })
 
 

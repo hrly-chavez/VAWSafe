@@ -375,7 +375,6 @@ class create_official(APIView):
                 "password": generated_password,
                 "role": official.of_role,
                 "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
-                "assigned_barangay_name": official.of_assigned_barangay.name if official.of_assigned_barangay else None
             }, status=status.HTTP_201_CREATED)
 
 

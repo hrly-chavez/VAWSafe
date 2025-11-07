@@ -4,16 +4,30 @@ import axios from "axios";
 
 export default function IncidentInfo({ formDataState, setFormDataState }) {
   const VIOLENCE_OPTIONS = {
-    Physical: [
+    "Physical Violence": [],
+    "Physical Abused": ["Rape", "Acts of lasciviousness", "Incest"],
+    "Psychological Violence": [],
+    "Psychological Abuse": [],
+    "Economic Abuse": [
+      "withdraw of financial support",
+      "deprivation of threat and deprivation of financial resources",
+      "destroying household property",
+      "controlling the victims own money",
     ],
-    Sexual: [
-      "Rape",
-      "Acts of lasciviousness",
+    Strandee: [],
+    "Sexually Abused": [
       "Incest",
+      "Rape",
+      "Acts of Lasciviousness",
+      "Sexual Harrassment",
+      "Others",
     ],
-    Psychological: [
-    ],
-    Economic: [
+    "Sexually Exploited": [
+      "Prostituted",
+      "Illegally Recruited",
+      "Pornography",
+      "Victim of Human Trafficking",
+      "Others",
     ],
   };
 
@@ -25,29 +39,29 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
   };
 
   const handleProvinceChange = (value) => {
-  setSelectedProvince(value);
-  handleChange("selectedProvince", value);
-};
+    setSelectedProvince(value);
+    handleChange("selectedProvince", value);
+  };
 
-const handleMunicipalityChange = (value) => {
-  setSelectedMunicipality(value);
-  handleChange("selectedMunicipality", value);
-};
+  const handleMunicipalityChange = (value) => {
+    setSelectedMunicipality(value);
+    handleChange("selectedMunicipality", value);
+  };
 
-const handleBarangayChange = (value) => {
-  setSelectedBarangay(value);
-  handleChange("selectedBarangay", value);
-};
+  const handleBarangayChange = (value) => {
+    setSelectedBarangay(value);
+    handleChange("selectedBarangay", value);
+  };
 
-const handleSitioChange = (value) => {
-  setSitio(value);
-  handleChange("sitio", value);
-};
+  const handleSitioChange = (value) => {
+    setSitio(value);
+    handleChange("sitio", value);
+  };
 
-const handleStreetChange = (value) => {
-  setStreet(value);
-  handleChange("street", value);
-};
+  const handleStreetChange = (value) => {
+    setStreet(value);
+    handleChange("street", value);
+  };
 
   const [provinces, setProvinces] = useState([]);
   const [municipalities, setMunicipalities] = useState([]);
@@ -62,15 +76,19 @@ const handleStreetChange = (value) => {
 
   // Fetch provinces
   useEffect(() => {
-    axios.get("http://localhost:8000/api/desk_officer/provinces/")
-      .then((res) => setProvinces(res.data))   // <-- store provinces
+    axios
+      .get("http://localhost:8000/api/desk_officer/provinces/")
+      .then((res) => setProvinces(res.data)) // <-- store provinces
       .catch((err) => console.error("Failed to load provinces:", err));
   }, []);
 
   // Fetch municipalities based on selected province
   useEffect(() => {
     if (selectedProvince) {
-      axios.get(`http://localhost:8000/api/desk_officer/provinces/${selectedProvince}/municipalities/`)
+      axios
+        .get(
+          `http://localhost:8000/api/desk_officer/provinces/${selectedProvince}/municipalities/`
+        )
         .then((res) => setMunicipalities(res.data))
         .catch((err) => console.error("Failed to load municipalities:", err));
     } else {
@@ -82,7 +100,10 @@ const handleStreetChange = (value) => {
   // Fetch barangays based on selected municipality
   useEffect(() => {
     if (selectedMunicipality) {
-      axios.get(`http://localhost:8000/api/desk_officer/municipalities/${selectedMunicipality}/barangays/`)
+      axios
+        .get(
+          `http://localhost:8000/api/desk_officer/municipalities/${selectedMunicipality}/barangays/`
+        )
         .then((res) => setBarangays(res.data))
         .catch((err) => console.error("Failed to load barangays:", err));
     } else {
@@ -165,18 +186,12 @@ const handleStreetChange = (value) => {
           </div>
         )}
 
-      {/* details of the incident */}
+      {/* physical description */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Details of the Incident
-        </label>
-        <textarea
-          type="text"
-          placeholder="e.g. Physical altercation at workplace"
-          rows={3}
-          className="input w-full"
-          onChange={(e) => handleChange("incident_description", e.target.value)}
-        ></textarea>
+        <b>PLEASE CHECK THE RELEVANT PHYSICAL DESCRIPTION:</b>
+        <div>Physical Description</div>
+        <input type="checkbox" value={true}></input>
+        <div>Manner of relating to Social Worker</div>
       </div>
 
       {/* Date & Time */}
@@ -218,11 +233,15 @@ const handleStreetChange = (value) => {
           <select
             className="w-full border border-gray-300 rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={selectedProvince}
-            onChange={(e) =>  handleProvinceChange(e.target.value)}
+            onChange={(e) => handleProvinceChange(e.target.value)}
           >
-            <option value="" disabled>Select Province</option>
+            <option value="" disabled>
+              Select Province
+            </option>
             {provinces.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
             ))}
           </select>
         </div>
@@ -237,9 +256,13 @@ const handleStreetChange = (value) => {
             onChange={(e) => handleMunicipalityChange(e.target.value)}
             disabled={!selectedProvince}
           >
-            <option value="" disabled>Select Municipality</option>
+            <option value="" disabled>
+              Select Municipality
+            </option>
             {municipalities.map((m) => (
-              <option key={m.id} value={m.id}>{m.name}</option>
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
             ))}
           </select>
         </div>
@@ -254,9 +277,13 @@ const handleStreetChange = (value) => {
             onChange={(e) => handleBarangayChange(e.target.value)}
             disabled={!selectedMunicipality}
           >
-            <option value="" disabled>Select Barangay</option>
+            <option value="" disabled>
+              Select Barangay
+            </option>
             {barangays.map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
             ))}
           </select>
         </div>
@@ -292,7 +319,9 @@ const handleStreetChange = (value) => {
 
       {/* Landmark */}
       <div className="flex flex-col">
-        <label className="text-sm font-medium text-gray-700 mb-1">Specific Landmark</label>
+        <label className="text-sm font-medium text-gray-700 mb-1">
+          Specific Landmark
+        </label>
         <input
           className="input"
           type="text"
@@ -302,151 +331,58 @@ const handleStreetChange = (value) => {
         />
       </div>
 
-      {/* Type of Place */}
-      <div className="flex flex-col">
-        <label className="text-sm font-medium text-gray-700 mb-1">Type of Place</label>
-        <select
-          className="input"
-          value={formDataState.type_of_place || ""}
-          onChange={(e) => handleChange("type_of_place", e.target.value)}
-        >
-          <option value="" disabled>Select type</option>
-          <option value="Conjugal Home">Conjugal Home</option>
-          <option value="Evacutaion Area">Evacutaion Area</option>
-          <option value="Malls/Hotels">Malls/Hotels</option>
-          <option value="Perpetrator's Home">Perpetrator's Home</option>
-          <option value="Public Utility Vehicle">Public Utility Vehicle</option>
-          <option value="Victim's Home">Victim's Home</option>
-          <option value="Workplace">Workplace</option>
-        </select>
+      {/* problems presented */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Problem Presented
+        </label>
+        <textarea
+          type="text"
+          rows={3}
+          className="input w-full"
+          onChange={(e) => handleChange("incident_description", e.target.value)}
+        ></textarea>
       </div>
 
-      {/* Electronic Means */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="flex flex-col justify-center">
-          <div className="flex items-center space-x-3 mb-2">
-            <input
-              type="checkbox"
-              checked={!!formDataState.is_via_electronic_means}
-              onChange={(e) => toggleElectronic(e.target.checked)}
-            />
-            <label className="text-sm font-medium text-gray-700">
-              Was it perpetrated via electronic means?
-            </label>
-          </div>
-          <p className="text-sm text-gray-500 italic">
-            Check the box if <span className="font-medium text-green-700">Yes</span>, uncheck if <span className="font-medium text-red-700">No</span>.
-          </p>
-        </div>
-
-        {formDataState.is_via_electronic_means ? (
-          <div className="flex flex-col justify-center">
-            <label className="text-sm font-medium text-gray-700 mb-2">Type of Electronic Means</label>
-            <select
-              className="input w-full"
-              value={formDataState.electronic_means || ""}
-              onChange={(e) => handleChange("electronic_means", e.target.value)}
-            >
-              <option value="" disabled>Select type</option>
-              <option value="Social Media">Social Media</option>
-              <option value="Messaging App">Messaging App</option>
-              <option value="Email">Email</option>
-              <option value="Online Platform">Online Platform</option>
-              <option value="Others">Others</option>
-            </select>
-          </div>
-        ) : (
-          <div className="flex flex-col justify-center text-sm text-gray-400 italic">
-            Dropdown will appear once checked.
-          </div>
-        )}
+      {/* observations about the victim */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          SIGNIFICANT OBSERVATION ABOUT THE VICTIM- SURVIVOR: (Physical,
+          Behavioral, Strengths, Weakness)
+        </label>
+        <textarea
+          type="text"
+          rows={3}
+          className="input w-full"
+          // onChange={(e) => handleChange("incident_description", e.target.value)}
+        ></textarea>
       </div>
 
-      {/* Conflict Area */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="flex flex-col justify-center">
-          <div className="flex items-center space-x-3 mb-2">
-            <input
-              type="checkbox"
-              checked={!!formDataState.is_conflict_area}
-              onChange={(e) => toggleConflict(e.target.checked)}
-            />
-            <label className="text-sm font-medium text-gray-700">
-              Did it happen in a conflict area?
-            </label>
-          </div>
-          <p className="text-sm text-gray-500 italic">
-            Check the box if <span className="font-medium text-green-700">Yes</span>, uncheck if <span className="font-medium text-red-700">No</span>.
-          </p>
-        </div>
-
-        {formDataState.is_conflict_area ? (
-          <div className="flex flex-col justify-center">
-            <label className="text-sm font-medium text-gray-700 mb-2">Type of Conflict</label>
-            <select
-              className="input w-full"
-              value={formDataState.conflict_area || ""}
-              onChange={(e) => handleChange("conflict_area", e.target.value)}
-            >
-              <option value="" disabled>Select type</option>
-              <option value="Insurgency">Insurgency</option>
-              <option value="Violent Extremism">Violent Extremism</option>
-              <option value="Tribal Violence">Tribal Violence</option>
-              <option value="Political Violence">Political Violence</option>
-              <option value="Rido">Rido</option>
-              <option value="Others">Others</option>
-            </select>
-          </div>
-        ) : (
-          <div className="flex flex-col justify-center text-sm text-gray-400 italic">
-            Dropdown will appear once checked.
-          </div>
-        )}
+      {/* circumstances */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          CIRCUMSTANCES/ BACKGROUND SURROUNDING THE PROBLEM:
+        </label>
+        <textarea
+          type="text"
+          rows={3}
+          className="input w-full"
+          // onChange={(e) => handleChange("incident_description", e.target.value)}
+        ></textarea>
       </div>
 
-      {/* Calamity Area */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="flex flex-col justify-center">
-          <div className="flex items-center space-x-3 mb-2">
-            <input
-              type="checkbox"
-              checked={!!formDataState.is_calamity_area}
-              onChange={(e) => toggleCalamity(e.target.checked)}
-            />
-            <label className="text-sm font-medium text-gray-700">
-              Did it happen in a calamity area?
-            </label>
-          </div>
-          <p className="text-sm text-gray-500 italic">
-            Check the box if <span className="font-medium text-green-700">Yes</span>, uncheck if <span className="font-medium text-red-700">No</span>.
-          </p>
-        </div>
-
-        {formDataState.is_calamity_area ? (
-          <div className="flex flex-col justify-center">
-            <label className="text-sm font-medium text-gray-700 mb-2">Type of Calamity</label>
-            <select
-              className="input w-full"
-              value={formDataState.calamity_type || ""}
-              onChange={(e) => handleChange("calamity_type", e.target.value)}
-            >
-              <option value="" disabled>Select type</option>
-              <option value="Typhoon">Typhoon</option>
-              <option value="Earthquake">Earthquake</option>
-              <option value="Flood">Flood</option>
-              <option value="Volcanic Eruption">Volcanic Eruption</option>
-              <option value="Fire">Fire</option>
-              <option value="Pandemic">Pandemic</option>
-              <option value="Others">Others</option>
-            </select>
-          </div>
-        ) : (
-          <div className="flex flex-col justify-center text-sm text-gray-400 italic">
-            Dropdown will appear once checked.
-          </div>
-        )}
+      {/* plan of action/ recommendations */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          PLAN OF ACTION/ RECOMMENDATION:
+        </label>
+        <textarea
+          type="text"
+          rows={3}
+          className="input w-full"
+          // onChange={(e) => handleChange("incident_description", e.target.value)}
+        ></textarea>
       </div>
     </div>
   );
 }
-

@@ -9,6 +9,14 @@ from shared_model.storage import EncryptedFileSystemStorage
 #para ni sa file encryption sa mga filepath
 encrypted_storage = EncryptedFileSystemStorage()
 
+CIVIL_STATUS_CHOICES = [
+        ('SINGLE', 'Single'),
+        ('MARRIED', 'Married'),
+        ('WIDOWED', 'Widowed'),
+        ('SEPARATED', 'Separated'),
+        ('DIVORCED', 'Divorced'),
+    ]
+
 # for address
 class Province(models.Model):  
     name = models.CharField(max_length=150, unique=True)
@@ -262,19 +270,6 @@ class Victim(models.Model):
         ('DIVORCED', 'Divorced'),
     ]
 
-    SOGIE_CHOICES = [
-        ('Yes', 'Yes'),
-        ('No', 'No'),
-        ('Does not want to identify', 'Does not want to identify'),
-    ]
-
-    CHILD_CLASS = [
-        ("Orphan", "Orphan"),
-        ("Unaccompanied", "Unaccompanied"),
-        ("Separated", "Separated"),
-        ("Vulnerable", "Vulnerable"),
-    ]
-
     EDUCATIONAL_ATTAINMENT_CHOICES = [
         ('No Formal Education', 'No Formal Education'),
         ('Elementary Level/Graduate', 'Elementary Level/Graduate'),
@@ -283,39 +278,6 @@ class Victim(models.Model):
         ('Technical/Vocational', 'Technical/Vocational'),
         ('College Level/Graduate', 'College Level/Graduate'),
         ('Post graduate', 'Post graduate'),
-    ]
-
-    NATIONALITY_CHOICES = [
-        ('Filipino', 'Filipino'),
-        ('Others', 'Others'),
-    ]
-
-    EMPLOYMENT_STATUS_CHOICES = [
-        ('Employed', 'Employed'),
-        ('Self-employed', 'Self-employed'),
-        ('Unemployed', 'Unemployed'),
-        ('Informal Sector', 'Informal Sector'),
-        ('Not Applicable', 'Not Applicable'),
-    ]
-
-    MIGRATORY_STATUS_CHOICES = [
-        ('Current OFW', 'Current OFW'),
-        ('Former/Returning OFW', 'Former/Returning OFW'),
-        ('Seeking employment abroad', 'Seeking employment abroad'),
-        ('Not Applicable', 'Not Applicable'),
-    ]
-
-    PWD_CHOICES = [
-        ('None', 'None'),
-        ('Deaf or Hard of Hearing', 'Deaf or Hard of Hearing'),
-        ('Intellectual Disability', 'Intellectual Disability'),
-        ('Learning Disability', 'Learning Disability'),
-        ('Mental Disability', 'Menatl Disability'),
-        ('Orthopedic Disability', 'Orthopedic Disability'),
-        ('Physical Disability', 'Physical Disability'),
-        ('Psychological Disability', 'Psychological Disability'),
-        ('Speech and Language Disability', 'Speech and Language Disability'),
-        ('Visual Disability', 'Visual Disability'),
     ]
     
     RELIGION_CHOICES = [
@@ -333,33 +295,23 @@ class Victim(models.Model):
     vic_middle_name = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_last_name = EncryptedCharField(max_length=512)
     vic_extension = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_alias = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_sex = EncryptedCharField(max_length=512, default='Female')
-    vic_is_SOGIE = EncryptedCharField(max_length=512, choices=SOGIE_CHOICES, default='No')
-    vic_specific_sogie = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_birth_date = EncryptedDateField( null=True, blank=True)
     vic_birth_place = EncryptedCharField(max_length=512, null=True, blank=True)
 
-    # if victime is minor, indicate guardian information and child class
-    vic_guardian_fname = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_guardian_mname = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_guardian_lname = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_guardian_contact = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_child_class = EncryptedCharField(max_length=512, choices=CHILD_CLASS, default="Orphan")
-
     vic_civil_status = EncryptedCharField(max_length=512, choices=CIVIL_STATUS_CHOICES, default='SINGLE')
-    vic_educational_attainment = EncryptedCharField(max_length=512, choices=EDUCATIONAL_ATTAINMENT_CHOICES, default='No Formal Education')
-    vic_nationality = EncryptedCharField(max_length=512, choices=NATIONALITY_CHOICES, default='Filipino')
-    vic_ethnicity = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_main_occupation = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_monthly_income = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
-    vic_employment_status = EncryptedCharField(max_length=512, choices=EMPLOYMENT_STATUS_CHOICES, default='Not Applicable')
-    vic_migratory_status = EncryptedCharField(max_length=512, choices=MIGRATORY_STATUS_CHOICES, default='Not Applicable')
     vic_religion = EncryptedCharField(max_length=512, choices=RELIGION_CHOICES, default='Roman Catholic')
-    vic_current_address = EncryptedCharField(max_length=512, default="Homeless")
-    vic_is_displaced = models.BooleanField(default=False)
-    vic_PWD_type = EncryptedCharField(max_length=512, choices=PWD_CHOICES, default='None')
+    vic_educational_attainment = EncryptedCharField(max_length=512, choices=EDUCATIONAL_ATTAINMENT_CHOICES, default='No Formal Education')
+    vic_last_school_attended = EncryptedCharField(max_length=512, null=True, blank=True)
+    vic_last_school_address = EncryptedCharField(max_length=512, null=True, blank=True)
+    vic_occupation = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_income = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    vic_skills = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_contact_number = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_provincial_address = EncryptedCharField(max_length=512, blank=True, null=True)
     
+    # present address
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, related_name="victim_address", null=True, blank=True)
 
     vic_account = models.OneToOneField(
@@ -384,71 +336,68 @@ class VictimFaceSample(models.Model):
         return f"FaceSample for {self.victim.vic_first_name} {self.victim.vic_last_name}"
 
 class Perpetrator(models.Model):
-    RELATIONSHIP_TO_VICTIM = [
-        ('Personal/Family', 'Personal/Family'),
-        ('Persons of Authority', 'Persons of Authority'),
-        ('State Actor', 'State Actor'),
-        ('Non-State Actor', 'Non-State Actor'),
-        ('Stranger/Unknown', 'Stranger/Unknown'),
+    EDUCATIONAL_ATTAINMENT_CHOICES = [
+        ('No Formal Education', 'No Formal Education'),
+        ('Elementary Level/Graduate', 'Elementary Level/Graduate'),
+        ('Junior High School Level/Graduate', 'Junior High School Level/Graduate'),
+        ('Senior High School Level/Graduate', 'Senior High School Level/Graduate'),
+        ('Technical/Vocational', 'Technical/Vocational'),
+        ('College Level/Graduate', 'College Level/Graduate'),
+        ('Post graduate', 'Post graduate'),
     ]
-
+    
     perp_id = models.AutoField(primary_key=True)
-    per_first_name = EncryptedCharField(max_length=512)
+    per_first_name = EncryptedCharField(max_length=512, blank=True, null=True)
     per_middle_name = EncryptedCharField(max_length=255, blank=True, null=True)
-    per_last_name = EncryptedCharField(max_length=512)
+    per_last_name = EncryptedCharField(max_length=512, blank=True, null=True)
+    per_extension = EncryptedCharField(max_length=512, blank=True, null=True)
+    per_alias = EncryptedCharField(max_length=512, blank=True, null=True)
     per_sex = EncryptedCharField(max_length=255, choices=[
         ('Male', 'Male'),
         ('Female', 'Female')
     ], blank=True, null=True)
     per_birth_date = EncryptedDateField(blank=True, null=True)
     per_birth_place = EncryptedCharField(max_length=512, blank=True, null=True)
-    
-    # if perpetrator is minor, indicate guardian information and child class
-    per_guardian_first_name = EncryptedCharField(max_length=512, blank=True, null=True)
-    per_guardian_middle_name = EncryptedCharField(max_length=255, blank=True, null=True)
-    per_guardian_last_name = EncryptedCharField(max_length=512, blank=True, null=True)
-    per_guardian_contact = EncryptedCharField(max_length=512, blank=True, null=True)
-    per_guardian_child_category = EncryptedCharField(max_length=512, blank=True, null=True)
-    
-    per_nationality = EncryptedCharField(max_length=255, blank=True, null=True)
-    per_main_occupation = EncryptedCharField(max_length=512, blank=True, null=True)
     per_religion = EncryptedCharField(max_length=255, blank=True, null=True)
-    per_current_address = EncryptedCharField(max_length=512, default="Homeless")
-
-    # relationship to victim
-    per_relationship_type = EncryptedCharField(max_length=255, choices=RELATIONSHIP_TO_VICTIM, blank=True, null=True)
-    per_relationship_subtype = EncryptedCharField(max_length=512, blank=True, null=True)
-    
-    per_contact = EncryptedIntegerField(null=True,blank=True)
+    per_victim_relationship = EncryptedCharField(max_length=255, blank=True, null=True)
+    per_educational_attainment = EncryptedCharField(max_length=512, choices=EDUCATIONAL_ATTAINMENT_CHOICES, default='No Formal Education')
+    # per_known_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
+    per_contact_number = EncryptedCharField(max_length=512, blank=True, null=True)
+    per_occupation = EncryptedCharField(max_length=512, blank=True, null=True)
 
     def __str__(self):
         return f"{self.per_last_name}, {self.per_first_name}"
   
+class ContactPerson(models.Model):
+    cont_fname = EncryptedCharField(max_length=512, blank=True, null=True)
+    cont_mname = EncryptedCharField(max_length=255, blank=True, null=True)
+    cont_lname = EncryptedCharField(max_length=512, blank=True, null=True)
+    cont_ext = EncryptedCharField(max_length=512, blank=True, null=True)
+    cont_sex = EncryptedCharField(max_length=255, choices=[
+        ('Male', 'Male'),
+        ('Female', 'Female')
+    ], blank=True, null=True)
+    cont_birth_date = EncryptedDateField(blank=True, null=True)
+    cont_birth_place = EncryptedCharField(max_length=512, blank=True, null=True)
+    cont_civil_status = EncryptedCharField(max_length=512, choices=CIVIL_STATUS_CHOICES, default='SINGLE')
+    cont_victim_relationship = EncryptedCharField(max_length=255, blank=True, null=True)
+    cont_contact_number = EncryptedCharField(max_length=512, blank=True, null=True)
+    # cont_prov_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
+    # cont_work_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
+
+    # new FK to IncidentInformation
+    incident = models.ForeignKey("IncidentInformation", on_delete=models.CASCADE, related_name="contact_persons")
+
 class IncidentInformation(models.Model): #Case in the frontend
     VIOLENCE_TYPE = [
-        ('Physical', 'Physical'),
-        ('Sexual', 'Sexual'),
-        ('Psychological', 'Psychological'),
-        ('Economic', 'Economic'),
-    ]
-
-    TYPE_OF_PLACE = [
-        ('Conjugal Home', 'Conjugal Home'),
-        ('Evacutaion Area', 'Evacutaion Area'),
-        ('Malls/Hotels', 'Malls/Hotels'),
-        ('Perpetrator\'s Home', 'Perpetrator\'s Home'),
-        ('Public Utility Vehicle', 'Public Utility Vehicle'),
-        ('Victim\'s Home', 'Victim\'s Home'),
-        ('Workplace', 'Workplace'),
-    ]
-
-    CONFLICT_AREA_CHOICES = [
-        ('Insurgency', 'Insurgency'),
-        ('Violent Extremism', 'Violent Extremism'),
-        ('Tribal Violence', 'Tribal Violence'),
-        ('Political Violence', 'Political Violence'),
-        ('Rido', 'Rido'),
-        ('Others', 'Others'),
+        ('Physical Violence', 'Physical Violence'),
+        ('Physical Abuse', 'Physical Abuse'),
+        ('Psychological Violence', 'Psychological Violence'),
+        ('Psychological Abuse', 'Psychological Abuse'),
+        ('Economic Abused', 'Economic Abused'),
+        ('Strandee', 'Strandee'),
+        ('Sexually Abused', 'Sexually Abused'),
+        ('Sexually Exploited', 'Sexually Exploited'),
     ]
     
     INCIDENT_CHOICES = [
@@ -463,17 +412,14 @@ class IncidentInformation(models.Model): #Case in the frontend
     incident_status= EncryptedCharField(max_length=512, choices=INCIDENT_CHOICES,default='Pending') #case status
     violence_type = EncryptedCharField(max_length=512, choices=VIOLENCE_TYPE, null=True, blank=True)
     violence_subtype = EncryptedCharField(max_length=512, null=True, blank=True)
-    
-    incident_description = EncryptedTextField(blank=True, null=True)
+
     incident_date = EncryptedDateField(blank=True, null=True)
     incident_time = models.TimeField(blank=True, null=True)
     incident_location = EncryptedCharField(max_length=512, blank=True, null=True) # Specific landmark (like near jollibee)
-    type_of_place = EncryptedCharField(max_length=512, choices=TYPE_OF_PLACE, blank=True, null=True)
-    is_via_electronic_means = models.BooleanField(default=False)
-    electronic_means = EncryptedCharField(max_length=512, blank=True, null=True)
-    is_conflict_area = models.BooleanField(default=False)
-    conflict_area = EncryptedCharField(max_length=512, choices=CONFLICT_AREA_CHOICES, blank=True, null=True)
-    is_calamity_area = models.BooleanField(default=False)
+    incident_description = EncryptedTextField(blank=True, null=True) # will act as 'problem presented'
+    incident_observations_about_survivor = EncryptedTextField(blank=True, null=True)
+    incident_circumstances = EncryptedTextField(blank=True, null=True)
+    incident_recommendation = EncryptedTextField(blank=True, null=True)
 
     # foreign keys
     vic_id = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name='incidents')
@@ -548,13 +494,21 @@ class IncidentInformation(models.Model): #Case in the frontend
     def __str__(self):
         return f"Incident {self.incident_id}"
 
-class VictimChildrenList(models.Model):
-    fname = models.CharField(max_length=50, blank=True, null=True)
-    mname = models.CharField(max_length=50, blank=True, null=True)
-    lname = models.CharField(max_length=50, blank=True, null=True)
-    extension = models.CharField(max_length=50, blank=True, null=True)
-    birth_date = models.DateField( null=True, blank=True)
-    sex = models.CharField(max_length=10, null=True, blank=True)
+class PhysicalDescription(models.Model):
+    pass
+
+class FamilyMember(models.Model):
+    fam_fname = models.CharField(max_length=50, blank=True, null=True)
+    fam_mname = models.CharField(max_length=50, blank=True, null=True)
+    fam_lname = models.CharField(max_length=50, blank=True, null=True)
+    fam_extension = models.CharField(max_length=50, blank=True, null=True)
+    fam_birth_date = models.DateField( null=True, blank=True)
+    fam_sex = models.CharField(max_length=10, null=True, blank=True)
+    fam_victim_relationship = models.CharField(max_length=50, null=True, blank=True)
+    fam_civil_status = models.CharField(max_length=50, null=True, blank=True)
+    fam_educational_attainment = models.CharField(max_length=50, null=True, blank=True)
+    fam_occupation = models.CharField(max_length=50, null=True, blank=True)
+    fam_income = models.CharField(max_length=50, null=True, blank=True)
 
     # foreign key
     victim = models.ForeignKey(Victim, on_delete=models.CASCADE, blank=True, null=True) 

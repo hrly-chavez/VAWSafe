@@ -10,7 +10,7 @@ urlpatterns = [
     path("victims/search_face/", search_victim_facial.as_view(), name="victim-face-search"),
     path("case/<int:vic_id>/", VictimIncidentsView.as_view(), name="socialworker-view-incidents"),
 
-    # Sessions
+    #Session1
     path("sessions/pending&Ongoing/", scheduled_session_lists.as_view(), name="my-sessions"),
     path("sessions/<int:pk>/", scheduled_session_detail.as_view(), name="session-detail"),
     path("session-types/", SessionTypeListView.as_view(), name="session-types-list"),
@@ -21,6 +21,10 @@ urlpatterns = [
     path("officials/social-workers/", list_workers, name="list-social-workers"),
     path("sessions/", schedule_next_session, name="social-worker-sessions"),
     path("cases/<int:incident_id>/close/", close_case, name="close-case"),
+
+    #Session2
+    path("incident/<int:incident_id>/summary/", incident_summary, name="incident-summary"),
+    path("more-sessions/", schedule_next_session, name="create-more-session"),
 
     
     #Service
