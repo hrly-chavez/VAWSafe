@@ -236,7 +236,6 @@ class SessionTypeSerializer(serializers.ModelSerializer):
         model = SessionType
         fields = ["id", "name"]
 
-
 class SessionSerializer(serializers.ModelSerializer):
     """
     Lightweight serializer for session list display.
@@ -709,22 +708,6 @@ class SessionTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = SessionType
         fields = ["id", "name"]
-
-# SESSION TYPE QUESTION (assignment link) 
-# class SessionTypeQuestionSerializer(serializers.ModelSerializer):
-#     question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
-#     session_type_name = serializers.CharField(source="session_type.name", read_only=True)
-
-#     class Meta:
-#         model = SessionTypeQuestion
-#         fields = [
-#             "id",
-#             "session_number",
-#             "session_type",
-#             "session_type_name",
-#             "question",
-#             "question_text",
-#         ]
 
 class BulkQuestionCreateSerializer(serializers.Serializer):
     """

@@ -120,7 +120,8 @@ class VictimIncidentsView(generics.ListAPIView):
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True, context={"request": request})
-        return Response(serializer.data)
+        return Response(serializer.data)  
+ 
 
   
 class search_victim_facial(APIView):

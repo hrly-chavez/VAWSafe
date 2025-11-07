@@ -320,6 +320,7 @@ class VictimIncidentsView(generics.ListAPIView):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True, context={"request": request})
         return Response(serializer.data)  
+    
 class search_victim_facial(APIView):
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [IsAuthenticated, IsRole]
@@ -871,19 +872,42 @@ def schedule_next_session(request):
         return Response(serializer.data)
 
     elif request.method == "POST":
-        # lightweight creation (no schedule/location)
         data = request.data.copy()
-        data["assigned_official"] = [official.pk]  # auto assign current official
 
-        # Pass the request context to serializer
+        # If frontend sends multiple officials → treat as shared session
+        assigned_officials = data.get("assigned_official", None)
+
+        # Ensure assigned_officials is a proper list of IDs
+        if isinstance(assigned_officials, str):
+            try:
+                import json
+                assigned_officials = json.loads(assigned_officials)
+            except Exception:
+                assigned_officials = [assigned_officials]
+
+        if not assigned_officials:
+            # fallback for individual sessions (Session 2+)
+            assigned_officials = [official.pk]
+
+        data["assigned_official"] = assigned_officials
+
+        # Serialize and save the session
         serializer = SessionCRUDSerializer(data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         session = serializer.save()
 
-        # create SessionProgress for the same official
-        SessionProgress.objects.get_or_create(session=session, official=official)
+        # Create SessionProgress entries for all assigned officials
+        for off_id in assigned_officials:
+            try:
+                off_obj = Official.objects.get(pk=off_id)
+                SessionProgress.objects.get_or_create(session=session, official=off_obj)
+            except Official.DoesNotExist:
+                continue
 
-        return Response(SessionCRUDSerializer(session, context={"request": request}).data, status=status.HTTP_201_CREATED)
+        return Response(
+            SessionCRUDSerializer(session, context={"request": request}).data,
+            status=status.HTTP_201_CREATED,
+        )
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
@@ -932,6 +956,7 @@ def services_by_category(request, category_id):
     )
     serializer = ServicesSerializer(services, many=True)
     return Response(serializer.data, status=200)
+
 
 # ==== Service ====
 #scheduled_session_detail handles the display of the service
