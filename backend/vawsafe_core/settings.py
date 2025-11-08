@@ -153,7 +153,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'vawsafe',
         'USER': 'postgres',
-        'PASSWORD': 'postgres', 
+        'PASSWORD': 'Caratao123', 
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -169,6 +169,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 12,  # Minimum password length
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -176,7 +179,18 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+    # Add custom validators here
+    {
+        'NAME': 'dswd.validators.UppercaseValidator',  # Adjust the path to your dswd
+    },
+    {
+        'NAME': 'dswd.validators.LowercaseValidator',
+    },
+    {
+        'NAME': 'dswd.validators.SpecialCharacterValidator',
+    },
 ]
+
 
 
 # Internationalization

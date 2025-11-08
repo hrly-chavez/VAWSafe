@@ -1,13 +1,24 @@
-// src/pages/ResetPasswordPage.js
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../../../api/axios";
+import zxcvbn from "zxcvbn";  // Import the zxcvbn library
 
 export default function ResetPasswordPage() {
   const { uid, token } = useParams();
   const navigate = useNavigate();
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState(null);
+
+  // Handle password input change
+  const handlePasswordChange = (e) => {
+    const password = e.target.value;
+    setNewPassword(password);
+
+    // Check password strength using zxcvbn
+    const strength = zxcvbn(password);
+    setPasswordStrength(strength.score); // Score between 0-4
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,6 +35,22 @@ export default function ResetPasswordPage() {
     }
   };
 
+  const getStrengthLabel = (score) => {
+    switch (score) {
+      case 0:
+        return "Very Weak";
+      case 1:
+        return "Weak";
+      case 2:
+        return "Fair";
+      case 3:
+        return "Strong";
+      case 4:
+        return "Very Strong";
+      default:
+        return "";
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">
@@ -33,11 +60,18 @@ export default function ResetPasswordPage() {
           type="password"
           placeholder="Enter new password"
           value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
+          onChange={handlePasswordChange}
           className="border p-2 rounded"
           required
         />
-        <button type="submit" className="bg-blue-500 text-white p-2 rounded">
+        <div className="mt-2">
+          <p>Password Strength: {passwordStrength !== null && getStrengthLabel(passwordStrength)}</p>
+        </div>
+        <button
+          type="submit"
+          className="bg-blue-500 text-white p-2 rounded"
+          disabled={passwordStrength < 2}  // Disable submit if password strength is below "Fair"
+        >
           Reset Password
         </button>
       </form>
