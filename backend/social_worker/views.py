@@ -174,25 +174,25 @@ def register_victim(request):
             contact_person = c_ser.save()
 
 
-        # -------------------------------
-        # 6) CREATE VICTIM ACCOUNT (new)
-        # -------------------------------
-        fname = victim_data.get("vic_first_name", "").strip().lower()
-        lname = victim_data.get("vic_last_name", "").strip().lower()
-        base_username = f"{fname}{lname}".replace(" ", "") or get_random_string(8)
+        # # -------------------------------
+        # # 6) CREATE VICTIM ACCOUNT (new)
+        # # -------------------------------
+        # fname = victim_data.get("vic_first_name", "").strip().lower()
+        # lname = victim_data.get("vic_last_name", "").strip().lower()
+        # base_username = f"{fname}{lname}".replace(" ", "") or get_random_string(8)
 
-        username = base_username
-        counter = 0
-        while User.objects.filter(username=username).exists():
-            counter += 1
-            username = f"{base_username}{counter}"
+        # username = base_username
+        # counter = 0
+        # while User.objects.filter(username=username).exists():
+        #     counter += 1
+        #     username = f"{base_username}{counter}"
 
-        generated_password = get_random_string(length=12)
-        user = User.objects.create_user(username=username, password=generated_password)
+        # generated_password = get_random_string(length=12)
+        # user = User.objects.create_user(username=username, password=generated_password)
 
-        # Optionally associate user with victim
-        victim.user = user  # <-- comment this out if Victim model has no FK to User
-        victim.save()
+        # # Optionally associate user with victim
+        # victim.user = user  # <-- comment this out if Victim model has no FK to User
+        # victim.save()
 
         return Response({
             "success": True,
@@ -200,8 +200,6 @@ def register_victim(request):
             "incident": IncidentInformationSerializer(incident).data if incident else None,
             "contact_person": ContactPersonSerializer(contact_person).data if contact_person else None,
             "perpetrator": PerpetratorSerializer(perpetrator).data if perpetrator else None,
-            "username": username,
-            "password": generated_password,
         }, status=status.HTTP_201_CREATED)
 
     except Exception as e:

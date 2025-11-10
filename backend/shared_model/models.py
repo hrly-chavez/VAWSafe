@@ -391,7 +391,7 @@ class ContactPerson(models.Model):
 class IncidentInformation(models.Model): #Case in the frontend
     VIOLENCE_TYPE = [
         ('Physical Violence', 'Physical Violence'),
-        ('Physical Abuse', 'Physical Abuse'),
+        ('Physical Abused', 'Physical Abused'),
         ('Psychological Violence', 'Psychological Violence'),
         ('Psychological Abuse', 'Psychological Abuse'),
         ('Economic Abused', 'Economic Abused'),
