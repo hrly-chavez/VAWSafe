@@ -86,7 +86,6 @@ const CreateSession = () => {
           <InfoCard label="Case Number" value={summary.incident_num || "—"} />
           <InfoCard label="Victim Name" value={summary.victim_name || "—"} />
           <InfoCard label="Next Session Number" value={summary.next_session_number || "—"} />
-          <InfoCard label="Assigned Official" value="Current User (Auto-detected)" />
         </div>
       </section>
 
