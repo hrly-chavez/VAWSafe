@@ -90,7 +90,7 @@ return (
                     : "—"
                 }
               />
-              <DetailItem label="Location" value={session.sess_location} />
+              
               <DetailItem
                 label="Assigned Officials"
                 value={
@@ -110,7 +110,7 @@ return (
             {/* Description */}
             <div>
               <h3 className="text-lg font-semibold text-[#292D96] mt-6 mb-2">
-                 Worker Feedback
+                 Session Feedback
               </h3>
               <p className="text-sm text-gray-800 whitespace-pre-wrap break-words bg-gray-50 border rounded-md p-3">
                 {session.sess_description || "—"}
@@ -235,62 +235,6 @@ return (
               })()}
             </div>
 
-
-            {/* Custom Questions */}
-            <div>
-              <h3 className="text-lg font-semibold text-[#292D96] mt-6 mb-2">
-                Custom Questions
-              </h3>
-              {session.questions?.filter((q) => q.sq_custom_text).length > 0 ? (
-                <div className="space-y-3">
-                  {session.questions
-                    .filter((q) => q.sq_custom_text)
-                    .map((q) => (
-                      <div
-                        key={q.sq_id}
-                        className="p-3 border rounded-md bg-gray-50"
-                      >
-                        <p className="text-sm font-medium text-gray-800">
-                          {q.sq_custom_text}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <span className="font-semibold">Answer:</span>{" "}
-                          {q.sq_value || "—"}
-                        </p>
-                        {q.sq_note && (
-                          <p className="text-sm text-gray-500 italic">
-                            Note: {q.sq_note}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">
-                  No custom questions answered.
-                </p>
-              )}
-            </div>
-
-            {/* Services */}
-            <div>
-              <h3 className="text-lg font-semibold text-[#292D96] mt-6 mb-2">
-                Services Given
-              </h3>
-              <ServiceList
-                services={session.services_given}
-                onFeedbackUpdate={async () => {
-                  try {
-                    const res = await api.get(
-                      `/api/social_worker/sessions/${sessionId}/`
-                    );
-                    setSession(res.data);
-                  } catch (err) {
-                    console.error("Failed to refresh session data", err);
-                  }
-                }}
-              />
-            </div>
           </>
         ) : (
           <p>No session found.</p>

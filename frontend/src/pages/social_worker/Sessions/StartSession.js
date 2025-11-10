@@ -5,7 +5,7 @@ import api from "../../../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import NextSessionModal from "./NextSessionModal";
 import CaseSessionFollowup from "./CaseSessionFollowup";
-import AddCustomQuestions from "./AddCustomQuestions";
+
 import Select from "react-select";
 
 export default function StartSession() {
@@ -16,11 +16,6 @@ export default function StartSession() {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showFollowupModal, setShowFollowupModal] = useState(false);
-  const [showAddCustomModal, setShowAddCustomModal] = useState(false);
-  const [availableServices, setAvailableServices] = useState([]);
-  const [serviceCategories, setServiceCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [categoryServices, setCategoryServices] = useState([]);
   const [selectedServices, setSelectedServices] = useState([]);
   const [progress, setProgress] = useState(null);
   const [role, setRole] = useState("");
@@ -29,21 +24,6 @@ export default function StartSession() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  useEffect(() => {
-    api
-      .get("/api/social_worker/service-categories/")
-      .then((res) => setServiceCategories(res.data))
-      .catch((err) => console.error("Failed to fetch service categories", err));
-  }, []);
-
-  useEffect(() => {
-    if (!selectedCategory) return;
-    api
-      .get(`/api/social_worker/services/category/${selectedCategory.value}/`)
-      .then((res) => setCategoryServices(res.data))
-      .catch((err) => console.error("Failed to fetch services by category", err));
-  }, [selectedCategory]);
 
   useEffect(() => {
     const loadSession = async () => {
@@ -121,10 +101,21 @@ export default function StartSession() {
       const response = await api.post(`/api/social_worker/sessions/${sess_id}/finish/`, payload);
       alert("Your part of the session is now marked as completed.");
 
-      if (response.data.all_finished) {
-        setShowFollowupModal(true);
+      // Safely extract the victim ID from the response
+      const victimId =
+        response?.data?.session?.incident?.vic_id?.vic_id ||
+        response?.data?.session?.incident?.vic_id ||
+        session?.incident?.vic_id?.vic_id || // fallback if available from current session
+        null;
+
+      if (victimId) {
+        // Wait a short moment after alert (for UX smoothness)
+        setTimeout(() => {
+          navigate(`/social_worker/victims/${victimId}`);
+        }, 500);
       } else {
-        navigate("/social_worker/sessions");
+        // Fallback if victim not found
+        navigate("/social_worker/victims");
       }
     } catch (err) {
       console.error("Failed to finish session", err);
@@ -136,49 +127,40 @@ export default function StartSession() {
 const mySectionRef = React.useRef(null);
 const hasScrolledRef = React.useRef(false); //  prevent repeated scrolls
 
-// Automatically scroll to the logged-in user's section (only once)
+// Automatically scroll to the logged-in user's role section (only once, after render)
 useEffect(() => {
-  if (
-    !loading &&
-    !hasScrolledRef.current && // only run once
-    questions.length > 0 &&
-    mySectionRef.current
-  ) {
-    hasScrolledRef.current = true; // mark as scrolled so it won’t trigger again
-
-    // Determine highlight color based on user role
-    const roleHighlights = {
-      "social worker": "ring-green-300",
-      "nurse": "ring-blue-300",
-      "psychometrician": "ring-purple-300",
-      "home life": "ring-orange-300",
-    };
-
-    const roleKey = role ? role.toLowerCase().trim() : "";
-    const ringColor = roleHighlights[roleKey] || "ring-gray-300";
-
-    // Delay a bit to ensure grouped sections are fully rendered
+  if (!loading && !hasScrolledRef.current && questions.length > 0 && role) {
     const timer = setTimeout(() => {
-      mySectionRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
-
-      // Add subtle highlight for visibility
-      mySectionRef.current.classList.add(
-        "ring-4",
-        ringColor,
-        "transition",
-        "duration-500"
+      const roleSection = document.querySelector(
+        `[data-role-section="${role.toLowerCase()}"]`
       );
-      setTimeout(() => {
-        mySectionRef.current.classList.remove("ring-4", ringColor);
-      }, 1500);
-    }, 500);
+
+      if (roleSection) {
+        hasScrolledRef.current = true; // mark as done
+        roleSection.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        // Determine highlight color based on user role
+        const roleHighlights = {
+          "social worker": "ring-green-300",
+          "nurse": "ring-blue-300",
+          "psychometrician": "ring-purple-300",
+          "home life": "ring-orange-300",
+        };
+        const ringColor =
+          roleHighlights[role.toLowerCase()] || "ring-gray-300";
+
+        // Temporary highlight for visibility
+        roleSection.classList.add("ring-4", ringColor, "transition", "duration-500");
+        setTimeout(() => {
+          roleSection.classList.remove("ring-4", ringColor);
+        }, 1500);
+      }
+    }, 700); // wait for DOM render
 
     return () => clearTimeout(timer);
   }
 }, [loading, questions, role]);
+
 
   if (loading) return <p className="p-6">Loading session...</p>;
 
@@ -204,7 +186,7 @@ useEffect(() => {
         )}
         <p className="text-gray-500 text-sm mt-1">
           Complete your part of this session below. Other officials’ answers are shown for
-          reference only.
+          review only.
         </p>
       </div>
 
@@ -222,6 +204,7 @@ useEffect(() => {
             <div
               key={r}
               ref={isUserRole ? mySectionRef : null}
+              data-role-section={r.toLowerCase()}
               className={`rounded-md border-2 ${colorClass} p-5 shadow-sm`}
             >
               <h3 className="text-xl font-semibold text-gray-800 mb-4 uppercase tracking-wide">
@@ -277,6 +260,8 @@ useEffect(() => {
                         />
                       )}
 
+                     {/* Show "Additional Notes" only if the answer type is not Text */}
+                    {(q.question_answer_type || q.sq_custom_answer_type) !== "Text" && (
                       <input
                         type="text"
                         value={q.sq_note || ""}
@@ -287,6 +272,8 @@ useEffect(() => {
                         placeholder="Additional notes (if any)..."
                         disabled={!editable}
                       />
+                    )}
+
 
                       {q.answered_by_name && (
                         <p className="text-xs text-gray-500 mt-1 italic">
@@ -302,57 +289,7 @@ useEffect(() => {
         })}
       </div>
 
-      {/* CUSTOM QUESTIONS */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => setShowAddCustomModal(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
-        >
-          Add Custom Question
-        </button>
-      </div>
-
-      {/* SERVICES PROVIDED */}
-      <div className="mt-10">
-        <h2 className="text-2xl font-bold text-green-700 mb-4">Services Provided</h2>
-        <div className="p-4 bg-gray-50 border rounded-md shadow-sm space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Select Service Category
-            </label>
-            <Select
-              value={selectedCategory}
-              onChange={(val) => {
-                setSelectedCategory(val);
-                setSelectedServices([]);
-              }}
-              options={serviceCategories.map((c) => ({
-                value: c.id,
-                label: c.name,
-              }))}
-              placeholder="Choose category..."
-            />
-          </div>
-
-          {selectedCategory && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Select Organization(s)
-              </label>
-              <Select
-                isMulti
-                value={selectedServices}
-                onChange={(val) => setSelectedServices(val)}
-                options={categoryServices.map((s) => ({
-                  value: s.serv_id,
-                  label: `${s.name} – ${s.contact_person} (${s.contact_number})`,
-                }))}
-                placeholder="Select organizations under this category..."
-              />
-            </div>
-          )}
-        </div>
-      </div>
+    
 
       {/* SESSION FEEDBACK */}
       <div className="mt-10">
@@ -390,30 +327,6 @@ useEffect(() => {
           Back
         </button>
       </div>
-
-      {/* MODALS */}
-      <NextSessionModal
-        show={showNextModal}
-        onClose={(success) => {
-          setShowNextModal(false);
-          if (success) navigate("/social_worker/sessions");
-        }}
-        session={session}
-      />
-      <CaseSessionFollowup
-        show={showFollowupModal}
-        onClose={(success) => {
-          setShowFollowupModal(false);
-          if (success) navigate("/social_worker/sessions");
-        }}
-        session={session}
-      />
-      <AddCustomQuestions
-        show={showAddCustomModal}
-        onClose={() => setShowAddCustomModal(false)}
-        sessionId={sess_id}
-        onAdded={(newQ) => setQuestions((prev) => [...prev, newQ])}
-      />
     </div>
   );
 }

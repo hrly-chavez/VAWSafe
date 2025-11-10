@@ -168,24 +168,23 @@ export default function ViewSessions() {
                     ? sess_type_display.map((t) => t.name).join(", ")
                     : "—"}
                 </p>
-                <button
-                  onClick={() => setEditingType(true)}
-                  className="ml-2 text-blue-600 text-sm hover:underline"
-                >
-                  Edit
-                </button>
+                {session.sess_status === "Pending" && !isDone && (
+                    <button
+                      onClick={() => setEditingType(true)}
+                      className="ml-2 text-blue-600 text-sm hover:underline"
+                    >
+                      Edit
+                    </button>
+                  )}
+
               </div>
             )}
-          </div>
-          <div>
-            <p className="text-gray-500">Location</p>
-            <p className="font-medium">{session.sess_location || "—"}</p>
           </div>
           <div>
             <p className="text-gray-500">Assigned Official(s)</p>
             <p className="font-medium">
               {session.official_names && session.official_names.length > 0
-                ? session.official_names.join(", ") : "—"}
+                ? session.official_names.join(" | ") : "—"}
             </p>
           </div>
         </div>

@@ -165,15 +165,19 @@ const StartMoreSession = () => {
                     />
                   )}
 
-                  <input
-                    type="text"
-                    value={q.sq_note || ""}
-                    onChange={(e) =>
-                      handleAnswerChange(q.sq_id, "sq_note", e.target.value)
-                    }
-                    className="w-full border rounded p-2 mt-2"
-                    placeholder="Additional notes (if any)..."
-                  />
+                  {/* Show notes only if the question type is not Text */}
+                    {(q.question_answer_type || q.sq_custom_answer_type) !== "Text" && (
+                      <input
+                        type="text"
+                        value={q.sq_note || ""}
+                        onChange={(e) =>
+                          handleAnswerChange(q.sq_id, "sq_note", e.target.value)
+                        }
+                        className="w-full border rounded p-2 mt-2"
+                        placeholder="Additional notes (if any)..."
+                      />
+                    )}
+                  
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -181,53 +185,7 @@ const StartMoreSession = () => {
         </div>
       ))}
 
-      {/* Custom Question Button */}
-      <div className="flex justify-end">
-        <button className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700">
-          + Add Custom Question (Coming Soon)
-        </button>
-      </div>
-
-      {/* Services */}
-      <div className="p-4 bg-gray-50 border rounded-md shadow-sm space-y-4">
-        <h3 className="text-lg font-semibold text-green-800">Services Provided</h3>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Select Service Category
-          </label>
-          <Select
-            value={selectedCategory}
-            onChange={(val) => {
-              setSelectedCategory(val);
-              setSelectedServices([]);
-            }}
-            options={serviceCategories.map((c) => ({
-              value: c.id,
-              label: c.name,
-            }))}
-            placeholder="Choose category..."
-          />
-        </div>
-
-        {selectedCategory && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Select Organization(s)
-            </label>
-            <Select
-              isMulti
-              value={selectedServices}
-              onChange={(val) => setSelectedServices(val)}
-              options={categoryServices.map((s) => ({
-                value: s.serv_id,
-                label: `${s.name} – ${s.contact_person} (${s.contact_number})`,
-              }))}
-              placeholder="Select organizations under this category..."
-            />
-          </div>
-        )}
-      </div>
+    
 
       {/* Feedback */}
       <div className="p-4 bg-gray-50 border rounded-md shadow-sm">
