@@ -83,45 +83,61 @@ export default function StartSession() {
   };
 
   const handleFinishSession = async () => {
-    try {
-      const answersPayload = questions
-        .filter((q) => isQuestionEditable(q))
-        .map((q) => ({
-          sq_id: q.sq_id,
-          value: q.sq_value,
-          note: q.sq_note,
-        }));
+  try {
+    const answersPayload = questions
+      .filter((q) => isQuestionEditable(q))
+      .map((q) => ({
+        sq_id: q.sq_id,
+        value: q.sq_value,
+        note: q.sq_note,
+      }));
 
-      const payload = {
-        answers: answersPayload,
-        sess_description: session?.sess_description || "",
-        services: selectedServices.map((s) => s.value),
-      };
+    const payload = {
+      answers: answersPayload,
+      sess_description: session?.sess_description || "",
+      services: selectedServices.map((s) => s.value),
+    };
 
-      const response = await api.post(`/api/social_worker/sessions/${sess_id}/finish/`, payload);
-      alert("Your part of the session is now marked as completed.");
+    const response = await api.post(`/api/social_worker/sessions/${sess_id}/finish/`, payload);
+    const { session_completed, all_finished } = response.data;
 
-      // Safely extract the victim ID from the response
-      const victimId =
-        response?.data?.session?.incident?.vic_id?.vic_id ||
-        response?.data?.session?.incident?.vic_id ||
-        session?.incident?.vic_id?.vic_id || // fallback if available from current session
-        null;
+    // Extract victim ID safely
+    const victimId =
+      response?.data?.session?.incident?.vic_id?.vic_id ||
+      response?.data?.session?.incident?.vic_id ||
+      session?.incident?.vic_id?.vic_id ||
+      null;
+
+    if (all_finished || session_completed) {
+      //  All officials finished
+      alert(
+        "All assigned officials have completed this session.\n" +
+        "The session is now marked as done.\n" +
+        "Redirecting to the victim’s profile..."
+      );
 
       if (victimId) {
-        // Wait a short moment after alert (for UX smoothness)
         setTimeout(() => {
           navigate(`/social_worker/victims/${victimId}`);
-        }, 500);
+        }, 1000);
       } else {
-        // Fallback if victim not found
         navigate("/social_worker/victims");
       }
-    } catch (err) {
-      console.error("Failed to finish session", err);
-      alert("Failed to finish session.");
+    } else {
+      //  Only this official finished
+      alert(
+        "Your part of this shared session has been completed.\n" +
+        "Please wait for the other assigned officials to finish."
+      );
+
+      // Don’t redirect yet — let them stay on page
+      setIsDone(true);
     }
-  };
+  } catch (err) {
+    console.error("Failed to finish session", err);
+    alert("Failed to finish session.");
+  }
+};
 
 // Reference to the current user's section
 const mySectionRef = React.useRef(null);

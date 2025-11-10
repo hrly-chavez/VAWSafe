@@ -216,15 +216,15 @@ class victim_list(generics.ListAPIView):
     allowed_roles = ['Social Worker']
 
     def get_queryset(self):
+        # Allow all authenticated users with valid roles to see all victims
         user = self.request.user
         official = getattr(user, "official", None)
         role = getattr(official, "of_role", None)
-        if not role:
-            return Victim.objects.none()
 
-        return Victim.objects.filter(
-            incidents__sessions__assigned_official=official
-        ).distinct()
+        if not role:
+            return Victim.objects.none()  #prevents non-officials
+
+        return Victim.objects.all().distinct()
 
 logger = logging.getLogger(__name__)
 
@@ -248,35 +248,25 @@ class victim_detail(generics.RetrieveAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        """
+        Allow all authenticated officials (any role) to view all victims.
+        """
         user = self.request.user
         if hasattr(user, "official"):
-            if user.official.of_role == "DSWD":
-                return Victim.objects.all()
-            if user.official.of_role in ["Social Worker", "Nurse", "Psychometrician"]:
-                return Victim.objects.filter(
-                    incidents__sessions__assigned_official=user.official
-                ).distinct()
+            return Victim.objects.all().distinct()
         return Victim.objects.none()
 
     def get_object(self):
+        """
+        Retrieve the victim directly — no role-based assignment restriction.
+        """
         vic_id = self.kwargs.get(self.lookup_field)
 
-        # Attempt to get the victim object
         try:
-            victim = Victim.objects.get(vic_id=vic_id)
+            return Victim.objects.get(vic_id=vic_id)
         except Victim.DoesNotExist:
-            # If the victim does not exist, raise a 404 Not Found
             raise NotFound("Victim not found.")
-
-        # If user is a Social Worker, Nurse, or Psychometrician, ensure they are assigned to the victim
-        user = self.request.user
-        if hasattr(user, "official") and user.official.of_role in ["Social Worker", "Nurse", "Psychometrician"]:
-            if not victim.incidents.filter(sessions__assigned_official=user.official).exists():
-                # If the user is not assigned to the victim, raise a 403 Forbidden
-                raise PermissionDenied("You are not assigned to view this victim's data.")
-
-        return victim
-
+        
     def retrieve(self, request, *args, **kwargs):
         victim = self.get_object()
 
@@ -306,7 +296,10 @@ class victim_detail(generics.RetrieveAPIView):
             threading.Thread(target=cleanup_decrypted_file_later, args=(decrypted_photo_path, victim.vic_id, 10)).start()
 
         return Response(serializer.data)
+
+
 # retrieve all information related to case ( Worker)
+
 class VictimIncidentsView(generics.ListAPIView):
     serializer_class = IncidentInformationSerializer
     permission_classes = [IsAuthenticated, IsRole]

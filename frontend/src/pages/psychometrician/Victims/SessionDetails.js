@@ -60,21 +60,17 @@ return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <DetailItem label="Session Number" value={session.sess_num} />
               <DetailItem label="Status" value={session.sess_status} />
-              <DetailItem
-                label="Scheduled Date"
-                value={
-                  session.sess_next_sched
-                    ? new Date(session.sess_next_sched).toLocaleString([], {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })
-                    : "—"
-                }
-              />
+              {session.sess_next_sched && (
+              <DetailItem label="Scheduled Date"
+                value={new Date(session.sess_next_sched).toLocaleString([], {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: true,
+                })}/>
+            )}
               <DetailItem
                 label="Start Date"
                 value={

@@ -19,6 +19,7 @@ from shared_model.permissions import IsRole
 from cryptography.fernet import Fernet
 from shared_model.views import serve_encrypted_file
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework import viewsets
@@ -43,67 +44,75 @@ def cleanup_decrypted_file_later(file_path, victim_id, delay=10):
 
 
 class victim_list(generics.ListAPIView):
-    """
-    Lists all victims whose sessions are assigned to the logged-in official.
-    Works for any role (Social Worker, Nurse, Psychometrician, Home Life).
-    """
     serializer_class = VictimListSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker', 'Nurse', 'Psychometrician', 'Home Life']
+    allowed_roles = ['Social Worker']
 
     def get_queryset(self):
+        # Allow all authenticated users with valid roles to see all victims
         user = self.request.user
         official = getattr(user, "official", None)
-        if not official or not official.of_role:
-            return Victim.objects.none()
-        return Victim.objects.filter(
-            incidents__sessions__assigned_official=official
-        ).distinct()
+        role = getattr(official, "of_role", None)
+
+        if not role:
+            return Victim.objects.none()  #prevents non-officials
+
+        return Victim.objects.all().distinct()
+
+
 
 class victim_detail(generics.RetrieveAPIView):
-    """
-    Retrieves detailed victim information (including decrypted photo if needed)
-    for any official assigned to that victim’s sessions.
-    """
     serializer_class = VictimDetailSerializer
     lookup_field = "vic_id"
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker', 'Nurse', 'Psychometrician', 'Home Life']
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        """
+        Allow all authenticated officials (any role) to view all victims.
+        """
         user = self.request.user
-        official = getattr(user, "official", None)
-        if not official or not official.of_role:
-            return Victim.objects.none()
-        return Victim.objects.filter(
-            incidents__sessions__assigned_official=official
-        ).distinct()
+        if hasattr(user, "official"):
+            return Victim.objects.all().distinct()
+        return Victim.objects.none()
 
+    def get_object(self):
+        """
+        Retrieve the victim directly — no role-based assignment restriction.
+        """
+        vic_id = self.kwargs.get(self.lookup_field)
+
+        try:
+            return Victim.objects.get(vic_id=vic_id)
+        except Victim.DoesNotExist:
+            raise NotFound("Victim not found.")
+        
     def retrieve(self, request, *args, **kwargs):
         victim = self.get_object()
-        decrypted_photo_path = None
 
+        decrypted_photo_path = None
         if victim.vic_photo.name.endswith('.enc'):
             try:
+                # Decrypt the photo
+                logger.info(f"Decrypting photo for victim {victim.vic_id}")
                 fernet = Fernet(settings.FERNET_KEY)
                 with open(victim.vic_photo.path, "rb") as enc_file:
                     encrypted_data = enc_file.read()
                 decrypted_data = fernet.decrypt(encrypted_data)
+
                 decrypted_photo_path = os.path.join(settings.MEDIA_ROOT, f"decrypted_{victim.vic_id}.jpg")
                 with open(decrypted_photo_path, 'wb') as decrypted_file:
                     decrypted_file.write(decrypted_data)
+
                 victim.vic_photo.name = os.path.relpath(decrypted_photo_path, settings.MEDIA_ROOT)
+
             except Exception as e:
                 logger.error(f"Failed to decrypt photo for victim {victim.vic_id}: {e}")
                 return Response({"error": f"Failed to decrypt photo: {str(e)}"}, status=400)
 
+        # Return the victim data
         serializer = self.get_serializer(victim)
-
         if decrypted_photo_path:
-            threading.Thread(
-                target=cleanup_decrypted_file_later,
-                args=(decrypted_photo_path, victim.vic_id, 10)
-            ).start()
+            threading.Thread(target=cleanup_decrypted_file_later, args=(decrypted_photo_path, victim.vic_id, 10)).start()
 
         return Response(serializer.data)
 
