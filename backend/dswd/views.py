@@ -98,7 +98,8 @@ class ViewVictim(generics.ListAPIView):
             queryset = filtered_victims
 
         return queryset
-    
+
+#===========================================Address(Used in Services)==========================================
 class ProvinceList(generics.ListAPIView):
     queryset = Province.objects.all()
     serializer_class = ProvinceSerializer
@@ -106,31 +107,71 @@ class ProvinceList(generics.ListAPIView):
     # allowed_roles = ['DSWD']
     permission_classes = [AllowAny]
 
+# class MunicipalityList(generics.ListAPIView):
+#     serializer_class = MunicipalitySerializer
+#     # permission_classes = [IsAuthenticated, IsRole]
+#     # allowed_roles = ['DSWD']
+#     permission_classes = [AllowAny]
+
+#     def get_queryset(self):
+#         province_id = self.request.query_params.get("province")
+#         queryset = Municipality.objects.all()
+#         if province_id:
+#             queryset = queryset.filter(province_id=province_id)
+#         return queryset
+
+# class BarangayList(generics.ListAPIView):
+#     serializer_class = BarangaySerializer
+#     # permission_classes = [IsAuthenticated, IsRole]
+#     # allowed_roles = ['DSWD']
+#     permission_classes = [AllowAny]
+
+#     def get_queryset(self):
+#         municipality_id = self.request.query_params.get("municipality")
+#         queryset = Barangay.objects.all()
+#         if municipality_id:
+#             queryset = queryset.filter(municipality_id=municipality_id)
+#         return queryset
+
 class MunicipalityList(generics.ListAPIView):
     serializer_class = MunicipalitySerializer
-    # permission_classes = [IsAuthenticated, IsRole]
-    # allowed_roles = ['DSWD']
     permission_classes = [AllowAny]
 
     def get_queryset(self):
         province_id = self.request.query_params.get("province")
         queryset = Municipality.objects.all()
-        if province_id:
-            queryset = queryset.filter(province_id=province_id)
-        return queryset
 
+        # Check if province_id is passed as an ID or a name
+        if province_id:
+            # Try filtering by ID first
+            try:
+                province_id = int(province_id)  # Try converting to an integer
+                queryset = queryset.filter(province_id=province_id)
+            except ValueError:
+                # If it fails, assume it's a province name and filter by name
+                queryset = queryset.filter(province__name=province_id)
+
+        return queryset
+    
 class BarangayList(generics.ListAPIView):
     serializer_class = BarangaySerializer
-    # permission_classes = [IsAuthenticated, IsRole]
-    # allowed_roles = ['DSWD']
     permission_classes = [AllowAny]
 
     def get_queryset(self):
         municipality_id = self.request.query_params.get("municipality")
         queryset = Barangay.objects.all()
+
+        # Check if municipality_id is passed as an ID or a name
         if municipality_id:
-            queryset = queryset.filter(municipality_id=municipality_id)
+            try:
+                municipality_id = int(municipality_id)  # Try converting to an integer
+                queryset = queryset.filter(municipality_id=municipality_id)
+            except ValueError:
+                # If it fails, assume it's a municipality name and filter by name
+                queryset = queryset.filter(municipality__name=municipality_id)
+
         return queryset
+
 
 class ViewDetail (generics.RetrieveAPIView):
     queryset = Victim.objects.all()
@@ -1323,3 +1364,121 @@ class DSWDDashboardAPIView(APIView):
             "incident_summary": IncidentSummarySerializer(incident_summary).data,
             "monthly_report_rows": MonthlyReportRowSerializer(report_rows, many=True).data,
         })
+    
+#===========================================Profile==========================================
+# class ProfileViewSet(viewsets.GenericViewSet):
+#     permission_classes = [permissions.IsAuthenticated]
+
+#     def get_object(self):
+#         """
+#         Get the official profile related to the authenticated user.
+#         """
+#         user = self.request.user
+#         try:
+#             official = user.official
+#         except Official.DoesNotExist:
+#             raise Response({"message": "Profile not found for the logged-in user."}, status=404)
+#         return official
+
+#     # GET request to fetch the current user's profile
+#     def retrieve(self, request, *args, **kwargs):
+#         official = self.get_object()
+#         serializer = OfficialSerializer(official)
+#         return Response(serializer.data)
+
+#     # PUT request to update the current user's profile
+#     def update(self, request, *args, **kwargs):
+#         official = self.get_object()
+#         serializer = OfficialSerializer(official, data=request.data, partial=True)  # partial=True allows partial updates
+#         if serializer.is_valid():
+#             serializer.save()  # Save the updated profile data
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=400)
+class ProfileViewSet(viewsets.GenericViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        """
+        Get the official profile related to the authenticated user.
+        """
+        user = self.request.user
+        try:
+            official = user.official
+        except Official.DoesNotExist:
+            raise Response({"message": "Profile not found for the logged-in user."}, status=404)
+        return official
+
+    # GET request to fetch the current user's profile
+    def retrieve(self, request, *args, **kwargs):
+        official = self.get_object()
+        serializer = OfficialSerializer(official)
+        return Response(serializer.data)
+
+    # ProfileViewSet update method
+    def update(self, request, *args, **kwargs):
+        official = self.get_object()
+        serializer = OfficialSerializer(official, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            new_address = request.data.get('address')
+            is_address_updated = request.data.get('isAddressUpdated', False)  # Get the flag
+
+            if is_address_updated:  # Check if address is updated
+                # If the address is updated, check for missing fields
+                missing_fields = []
+                if not new_address.get("province"):
+                    missing_fields.append("Province")
+                if not new_address.get("municipality"):
+                    missing_fields.append("Municipality")
+                if not new_address.get("barangay"):
+                    missing_fields.append("Barangay")
+                if not new_address.get("sitio"):
+                    missing_fields.append("Sitio")
+                if not new_address.get("street"):
+                    missing_fields.append("Street")
+
+                if missing_fields:
+                    return Response(
+                        {"error": f"The following address fields are required: {', '.join(missing_fields)}"},
+                        status=400
+                    )
+
+                # If the address is updated, delete the existing address and create a new one
+                if official.address:
+                    official.address.delete()
+
+                # Now process and update the address with the new values
+                province_id = new_address.get("province")
+                municipality_id = new_address.get("municipality")
+                barangay_id = new_address.get("barangay")
+
+                try:
+                    province = Province.objects.get(id=province_id)
+                except Province.DoesNotExist:
+                    return Response({"error": f"Province with ID {province_id} does not exist."}, status=400)
+
+                try:
+                    municipality = Municipality.objects.get(id=municipality_id)
+                except Municipality.DoesNotExist:
+                    return Response({"error": f"Municipality with ID {municipality_id} does not exist."}, status=400)
+
+                try:
+                    barangay = Barangay.objects.get(id=barangay_id)
+                except Barangay.DoesNotExist:
+                    return Response({"error": f"Barangay with ID {barangay_id} does not exist."}, status=400)
+
+                # Create a new address
+                official.address = Address.objects.create(
+                    province=province,
+                    municipality=municipality,
+                    barangay=barangay,
+                    sitio=new_address.get("sitio"),
+                    street=new_address.get("street"),
+                )
+
+            # Save the profile data (including the address if updated)
+            official.save()
+            serializer.save()
+            return Response(serializer.data)
+
+        return Response(serializer.errors, status=400)

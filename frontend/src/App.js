@@ -45,6 +45,7 @@ const Schedule = lazy(() => import("./pages/social_worker/Schedule/Schedule"));
 const Questions = lazy(() => import("./pages/social_worker/Questions/Questions"));
 const SocialWorkerCreateMoreSession = lazy(() => import("./pages/social_worker/Sessions/MoreSessions/CreateSession"));
 const SocialWorkerStartMoreSession = lazy(() => import("./pages/social_worker/Sessions/MoreSessions/StartMoreSession"));
+const SocialWorkerProfile = lazy(() => import("./pages/social_worker/Profile/SocialWorkerProfile"));
 
 //DSWD
 const DSWDDashboard = lazy(() =>import("./pages/dswd/Dashboard/DSWDDashboard"));
@@ -61,6 +62,7 @@ const DSWD_VAWDESK_OFFICER_Detail = lazy(() => import("./pages/dswd/VawDeskOffic
 const DSWDServices = lazy(() =>import("./pages/dswd/ServiceDSWD/DSWDServices"));
 const DSWDAccountManagement = lazy(() =>import("./pages/dswd/AccountManagement/DSWDAccountManagement"));
 const DSWDQuestions = lazy(() => import("./pages/dswd/Questions/Questions"));
+const DSWDProfile = lazy(() => import("./pages/dswd/Profile/DSWDProfile"));
 
 //Nurse
 const NurseDashboard = lazy(() =>import("./pages/nurse/Dashboard/NurseDashboard"));
@@ -74,6 +76,7 @@ const NurseViewSessions = lazy(() =>import("./pages/nurse/Sessions/ViewSessions"
 const NurseSocialWorkerStartSession = lazy(() =>import("./pages/nurse/Sessions/StartSession"));
 const NurseSchedule = lazy(() => import("./pages/nurse/Schedule/Schedule"));
 const NurseQuestions = lazy(() => import("./pages/nurse/Questions/Questions"));
+const NurseProfile = lazy(() => import("./pages/nurse/Profile/NurseProfile"));
 
 // Psychometrician
 const PsychDashboard = lazy(() =>import("./pages/psychometrician/Dashboard/Dashboard"));
@@ -89,6 +92,7 @@ const PsychSchedule = lazy(() => import("./pages/nurse/Schedule/Schedule"));
 const PsychQuestions = lazy(() => import("./pages/psychometrician/Questions/Questions"));
 const PsychCreateSession = lazy(() => import("./pages/psychometrician/Sessions/MoreSessions/CreateSession"));
 const PsychStartMoreSession = lazy(() => import("./pages/psychometrician/Sessions/MoreSessions/StartMoreSession"));
+const PsychometricianProfile = lazy(() => import("./pages/psychometrician/Profile/PsychometricianProfile"));
 
 export default function App() {
   return (
@@ -139,6 +143,7 @@ export default function App() {
               }
             >
               <Route path={ROUTES.DSWD} element={<DSWDDashboard />} />
+              <Route path={ROUTES.DSWD_PROFILE} element={<DSWDProfile />} />
               <Route path={ROUTES.DSWD_VAWC_VICTIMS} element={<DSWDVAWCVictims />}/>
               <Route path={ROUTES.DSWD_VICTIM_DETAIL} element={<DSWDVictimDetail />} />
               <Route path={ROUTES.DSWD_SEARCH_VICTIM}element={<DSWDSearchVictim />} />
@@ -160,6 +165,7 @@ export default function App() {
                 </ProtectedRoute>
               }>
               <Route path={ROUTES.SOCIAL_WORKER_DASHBOARD} element={<DashboardPage />}/>
+              <Route path={ROUTES.SOCIAL_WORKER_PROFILE} element={<SocialWorkerProfile />}/>
               <Route path={ROUTES.SOCIAL_WORKER_REGISTER_VICTIM} element={<RegisterVictim />}/>
               <Route path={ROUTES.SOCIAL_WORKER_CASE_RECORDS} element={<CaseRecords />}/>
               <Route path={ROUTES.SOCIAL_WORKER_SESSIONS} element={<Sessions />}/>
@@ -182,6 +188,7 @@ export default function App() {
                 </ProtectedRoute>
               }>
               <Route path={ROUTES.NURSE_DASHBOARD} element={<NurseDashboard />}/>
+              <Route path={ROUTES.NURSE_PROFILE} element={<NurseProfile />}/>
               <Route path={ROUTES.NURSE_CASE_RECORDS} element={<NurseCaseRecords />}/>
               <Route path={ROUTES.NURSE_SESSIONS} element={<NurseSessions />} />
               <Route path={ROUTES.NURSE_SERVICES} element={<NurseServices />} />
@@ -201,6 +208,7 @@ export default function App() {
                 </ProtectedRoute>
               }>
               <Route path={ROUTES.PSYCHOMETRICIAN_DASHBOARD} element={<PsychDashboard />} />
+              <Route path={ROUTES.PSYCHOMETRICIAN_PROFILE} element={<PsychometricianProfile />} />
               <Route path={ROUTES.PSYCHOMETRICIAN_CASE_RECORDS} element={<PsychCaseRecords />}/>
               <Route path={ROUTES.PSYCHOMETRICIAN_SESSIONS} element={<PsychSessions />}/>
               <Route path={ROUTES.PSYCHOMETRICIAN_SERVICES}element={<PsychServices />}/>

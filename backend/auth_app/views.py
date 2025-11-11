@@ -39,15 +39,24 @@ def me(request):
     if not user:
         return Response({"authenticated": False}, status=200)
 
-    # official = getattr(user, "official", None)
     try:
         official = user.official
     except Official.DoesNotExist:
         official = None
+
+    if not official:
+        return Response({"authenticated": False}, status=200)
+
     role = getattr(official, "of_role", None)
-    name = getattr(official, "full_name",
-                   f"{getattr(official, 'of_fname', '')} {getattr(official, 'of_lname', '')}".strip())
+    name = getattr(official, "full_name", f"{getattr(official, 'of_fname', '')} {getattr(official, 'of_lname', '')}".strip())
     official_id = getattr(official, "of_id", None)
+
+    # Get the profile photo URL
+    of_photo = getattr(official, "of_photo", None)
+    if of_photo:
+        of_photo_url = of_photo.url  # Access the .url property to get the URL of the image
+    else:
+        of_photo_url = None  # If no photo, return None or a default URL
 
     return Response({
         "authenticated": True,
@@ -56,6 +65,7 @@ def me(request):
             "role": role,
             "name": name,
             "official_id": official_id,
+            "of_photo": of_photo_url,  # Return the URL of the photo
         }
     }, status=200)
 
@@ -669,7 +679,8 @@ class CookieTokenObtainPairView(views.APIView):
             status="Success"
         )
         return resp
-    
+
+#=================================Login Tracker=====================================
 class LoginTrackerViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = LoginTracker.objects.all().order_by('-login_time')
     serializer_class = LoginTrackerSerializer

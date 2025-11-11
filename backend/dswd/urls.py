@@ -4,7 +4,8 @@ from .views import *
 router = DefaultRouter()
 
 router.register(r"officials", OfficialViewSet, basename='official')
-router.register(r'pending-officials', PendingOfficials, basename='pending-officials')
+# router.register(r'pending-officials', PendingOfficials, basename='pending-officials')
+router.register(r'profile', ProfileViewSet, basename='profile')
 
 urlpatterns = [
     #victim
@@ -14,6 +15,7 @@ urlpatterns = [
     #part gihapon sa victim pero view sessions sa victim
     path("victims/sessions/<int:sess_id>/", SessionDetailView.as_view(), name="session-detail"),
     path("victims/search-victim/", search_victim_facial.as_view(), name="search-face"),
+    #address
     path("provinces/", ProvinceList.as_view(), name="province"),
     path("municipalities/", MunicipalityList.as_view(), name="municipality"),
     path("barangays/", BarangayList.as_view(), name="barangay"),
@@ -54,4 +56,4 @@ urlpatterns = [
     path("dswddashboard/summary/", DSWDDashboardAPIView.as_view(), name="dswd-dashboard-summary"),
 
     path('', include(router.urls)),
-] + router.urls
+]# + router.urls
