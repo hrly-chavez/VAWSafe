@@ -629,8 +629,16 @@ def start_session(request, sess_id):
         for m in all_mappings:
             if not m.question:
                 continue  # Skip invalid mapping rows with no linked question
-            w
-
+            
+            SessionQuestion.objects.get_or_create(
+                session=session,
+                question=m.question,
+                defaults={
+                    "sq_is_required": False,
+                    "sq_question_text_snapshot": m.question.ques_question_text,
+                    "sq_answer_type_snapshot": m.question.ques_answer_type,
+                },
+            )
 
     except Exception as e:
         traceback.print_exc()
