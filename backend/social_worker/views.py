@@ -243,8 +243,9 @@ def cleanup_decrypted_file_later(file_path, victim_id, delay=10):
 class victim_detail(generics.RetrieveAPIView):
     serializer_class = VictimDetailSerializer
     lookup_field = "vic_id"
-    permission_classes = [IsAuthenticated]
-
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Social Worker", "Nurse", "Psychometrician", "Home Life"]
+    
     def get_queryset(self):
         """
         Allow all authenticated officials (any role) to view all victims.
@@ -604,11 +605,16 @@ def start_session(request, sess_id):
         user_role = official.of_role
 
         if session.sess_num == 1:
-            # Shared session: all role questions
+            # Shared session: only hydrate questions for assigned officials' roles
+            assigned_roles = list(session.assigned_official.values_list("of_role", flat=True))
             all_mappings = SessionTypeQuestion.objects.filter(
                 session_number=session.sess_num,
                 session_type__id__in=type_ids
+            ).filter(
+                Q(question__role__in=assigned_roles) |
+                Q(question__ques_category__role__in=assigned_roles)
             ).select_related("question", "question__ques_category")
+
         else:
             # Individual session: role-filtered questions only
             all_mappings = SessionTypeQuestion.objects.filter(
@@ -623,11 +629,8 @@ def start_session(request, sess_id):
         for m in all_mappings:
             if not m.question:
                 continue  # Skip invalid mapping rows with no linked question
-            SessionQuestion.objects.get_or_create(
-                session=session,
-                question=m.question,
-                defaults={"sq_is_required": False}
-            )
+            w
+
 
     except Exception as e:
         traceback.print_exc()

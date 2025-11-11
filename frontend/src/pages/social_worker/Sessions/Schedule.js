@@ -14,7 +14,7 @@ export default function Schedule({ victim, incident, back, next }) {
   const [sessionTypes, setSessionTypes] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [roleFilter, setRoleFilter] = useState("");
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   // New states for social workers display
@@ -24,6 +24,8 @@ export default function Schedule({ victim, incident, back, next }) {
   const [loadingSW, setLoadingSW] = useState(true);
 
   const handleSubmitSchedule = async () => {
+    if (isSubmitting) return; // Prevent multiple rapid clicks
+    setIsSubmitting(true);
     try {
       // Combine selected date & time into one Date object
       const selectedDateTime = new Date(`${date}T${time}:00`);
@@ -33,8 +35,9 @@ export default function Schedule({ victim, incident, back, next }) {
       if (selectedDateTime < now) {
         toast.error("You cannot schedule a session in the past!", {
           position: "top-right",
-          autoClose: 4000,
+          autoClose: 2000,
         });
+        setIsSubmitting(false);
         return; // Stop execution
       }
 
@@ -58,7 +61,7 @@ export default function Schedule({ victim, incident, back, next }) {
 
     toast.success(`Session scheduled successfully! 📅 ${readableDate}`, {
       position: "top-right",
-      autoClose: 3000,
+      autoClose: 2000,
       hideProgressBar: false,
       closeOnClick: true,
       pauseOnHover: true,
@@ -67,7 +70,7 @@ export default function Schedule({ victim, incident, back, next }) {
     });
 
     // Redirect after short delay to let user see toast
-    setTimeout(() => navigate("/social_worker/sessions"), 3000);
+    setTimeout(() => navigate("/social_worker/sessions"), 2000);
   } catch (err) {
     if (err.response?.data) {
       console.error("Schedule error:", err.response.data);
@@ -93,7 +96,7 @@ export default function Schedule({ victim, incident, back, next }) {
         autoClose: 4000,
       });
     }
- 
+    setIsSubmitting(false);
   }
 };
 
@@ -264,10 +267,14 @@ export default function Schedule({ victim, incident, back, next }) {
         )}
         <button
           onClick={handleSubmitSchedule}
-          className="flex items-center gap-2 px-6 py-2 rounded-md bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold shadow hover:from-green-600 hover:to-green-700 transition-all"
-        >
+          disabled={isSubmitting}
+          className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold shadow transition-all 
+            ${isSubmitting
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
+            }`}>
           <CheckCircleIcon className="h-5 w-5" />
-          Submit to Schedule Session
+          {isSubmitting ? "Submitting..." : "Submit to Schedule Session"}
         </button>
       </div>
        {/* Toast container */}

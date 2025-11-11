@@ -128,7 +128,7 @@ export default function StartSession() {
       services: selectedServices.map((s) => s.value),
     };
 
-    const response = await api.post(`/api/social_worker/sessions/${sess_id}/finish/`, payload);
+    const response = await api.post(`/api/psychometrician/sessions/${sess_id}/finish/`, payload);
     const { session_completed, all_finished } = response.data;
 
     // Extract victim ID safely
@@ -138,36 +138,34 @@ export default function StartSession() {
       session?.incident?.vic_id?.vic_id ||
       null;
 
+    //  Unified redirect behavior (always go to victim page)
     if (all_finished || session_completed) {
-      //  All officials finished
       alert(
         "All assigned officials have completed this session.\n" +
         "The session is now marked as done.\n" +
         "Redirecting to the victim’s profile..."
       );
-
-      if (victimId) {
-        setTimeout(() => {
-          navigate(`/social_worker/victims/${victimId}`);
-        }, 1000);
-      } else {
-        navigate("/social_worker/victims");
-      }
     } else {
-      //  Only this official finished
       alert(
         "Your part of this shared session has been completed.\n" +
-        "Please wait for the other assigned officials to finish."
+        "You’ll now be redirected to the victim’s profile."
       );
+    }
 
-      // Don’t redirect yet — let them stay on page
-      setIsDone(true);
+    //  Redirect regardless of completion state
+    if (victimId) {
+      setTimeout(() => {
+        navigate(`/psychometrician/victims/${victimId}`);
+      }, 1000);
+    } else {
+      navigate("/psychometrician/victims");
     }
   } catch (err) {
     console.error("Failed to finish session", err);
     alert("Failed to finish session.");
   }
 };
+
 
 
 // Reference to the current user's section
@@ -258,77 +256,99 @@ useEffect(() => {
                 {r} Section
               </h3>
 
-              <AnimatePresence>
-                {roleQuestions.map((q, index) => {
-                  const editable = isQuestionEditable(q);
-                  return (
-                    <motion.div
-                      key={q.sq_id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      className="p-4 border border-gray-300 bg-white rounded-md mb-4"
-                    >
-                      <div className="flex items-start justify-between">
-                        <p className="font-medium text-gray-900 mb-2">
-                          {q.question_text || q.sq_custom_text}
-                        </p>
-                        {!editable && (
-                          <span className="text-xs text-gray-500 italic ml-4">Read-only</span>
-                        )}
-                      </div>
+                            {/* Group questions by category within each role */}
+              {Object.entries(
+                roleQuestions.reduce((acc, q) => {
+                  const category = q.question_category_name || "Uncategorized";
+                  if (!acc[category]) acc[category] = [];
+                  acc[category].push(q);
+                  return acc;
+                }, {})
+              ).map(([category, catQuestions]) => (
+                <div key={category} className="mb-6">
+                  {/* Category Header */}
+                  <div className="bg-blue-50 border-l-4 border-blue-500 px-4 py-2 rounded-t-md">
+                    <h5 className="text-md font-semibold text-blue-800">{category}</h5>
+                  </div>
+              
+                  {/* Category Question List */}
+                  <div className="border border-t-0 rounded-b-md p-3 bg-white shadow-sm">
+                    <AnimatePresence>
+                      {catQuestions.map((q, index) => {
+                        const editable = isQuestionEditable(q);
+                        return (
+                          <motion.div
+                            key={q.sq_id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ duration: 0.3, delay: index * 0.05 }}
+                            className="p-4 border border-gray-300 bg-white rounded-md mb-4"
+                          >
+                            <div className="flex items-start justify-between">
+                              <p className="font-medium text-gray-900 mb-2">
+                                {q.sq_question_text_snapshot || q.question_text || q.sq_custom_text}
 
-                      {(q.question_answer_type || q.sq_custom_answer_type) === "Yes/No" && (
-                        <select
-                          value={q.sq_value || ""}
-                          onChange={(e) =>
-                            handleChange(q.sq_id, "sq_value", e.target.value)
-                          }
-                          className="w-full border rounded p-2"
-                          disabled={!editable}
-                        >
-                          <option value="">Select...</option>
-                          <option value="Yes">Yes</option>
-                          <option value="No">No</option>
-                        </select>
-                      )}
-
-                      {(q.question_answer_type || q.sq_custom_answer_type) === "Text" && (
-                        <textarea
-                          value={q.sq_value || ""}
-                          onChange={(e) =>
-                            handleChange(q.sq_id, "sq_value", e.target.value)
-                          }
-                          className="w-full border rounded p-2"
-                          rows={3}
-                          placeholder={editable ? "Enter your answer..." : "Read-only"}
-                          disabled={!editable}
-                        />
-                      )}
-
-                     {(q.question_answer_type || q.sq_custom_answer_type) !== "Text" && (
-                      <input
-                        type="text"
-                        value={q.sq_note || ""}
-                        onChange={(e) =>
-                          handleChange(q.sq_id, "sq_note", e.target.value)
-                        }
-                        className="w-full border rounded p-2 mt-2"
-                        placeholder="Additional notes (if any)..."
-                        disabled={!editable}
-                      />
-                    )}
-
-                      {q.answered_by_name && (
-                        <p className="text-xs text-gray-500 mt-1 italic">
-                          Answered by {q.answered_by_name}
-                        </p>
-                      )}
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
+                              </p>
+                              {!editable && (
+                                <span className="text-xs text-gray-500 italic ml-4">Read-only</span>
+                              )}
+                            </div>
+              
+                            {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Yes/No" && (
+                              <select
+                                value={q.sq_value || ""}
+                                onChange={(e) =>
+                                  handleChange(q.sq_id, "sq_value", e.target.value)
+                                }
+                                className="w-full border rounded p-2"
+                                disabled={!editable}
+                              >
+                                <option value="">Select...</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                              </select>
+                            )}
+              
+                            {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Text" && (
+                              <textarea
+                                value={q.sq_value || ""}
+                                onChange={(e) =>
+                                  handleChange(q.sq_id, "sq_value", e.target.value)
+                                }
+                                className="w-full border rounded p-2"
+                                rows={3}
+                                placeholder={editable ? "Enter your answer..." : "Read-only"}
+                                disabled={!editable}
+                              />
+                            )}
+              
+                            {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) !== "Text" && (
+                              <input
+                                type="text"
+                                value={q.sq_note || ""}
+                                onChange={(e) =>
+                                  handleChange(q.sq_id, "sq_note", e.target.value)
+                                }
+                                className="w-full border rounded p-2 mt-2"
+                                placeholder="Additional notes (if any)..."
+                                disabled={!editable}
+                              />
+                            )}
+              
+                            {q.answered_by_name && (
+                              <p className="text-xs text-gray-500 mt-1 italic">
+                                Answered by {q.answered_by_name}
+                              </p>
+                            )}
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              ))}
+              
             </div>
           );
         })}

@@ -96,7 +96,7 @@ export default function WorkerCardSection({
                 </div>
                 <p className="text-xs text-gray-500">Contact: {worker.contact || "N/A"}</p>
 
-                {/* Weekly Availability */}
+                {/* Weekly Availability
                 <div className="grid grid-cols-7 gap-1 mt-2 mb-2 text-[10px] text-center">
                   {daysOrder.map((day) => {
                     const time = worker.availability?.[day];
@@ -114,10 +114,10 @@ export default function WorkerCardSection({
                       </div>
                     );
                   })}
-                </div>
+                </div> */}
 
                 {/* Friendly Unavailability Section */}
-                {validUnavailable.length > 0 && (
+                {/* {validUnavailable.length > 0 && (
                   <div className="border-t pt-2 mt-2 text-xs bg-gray-50 p-2 rounded">
                     <p className="font-semibold text-gray-700 mb-1">Unavailable Dates:</p>
                     {isExpanded ? (
@@ -148,7 +148,7 @@ export default function WorkerCardSection({
                       </div>
                     )}
                   </div>
-                )}
+                )} */}
 
                 {/* Assign Button */}
                 <div className="flex justify-end mt-3">
