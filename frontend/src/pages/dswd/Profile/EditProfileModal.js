@@ -248,8 +248,8 @@ export default function EditProfileModal({ officialData, onClose, onSave }) {
       <div className="absolute inset-0 bg-black/40" onClick={() => onClose()} />
 
       {/* Modal shell */}
-      <div className="relative h-full w-full overflow-y-auto flex justify-center items-center p-4">
-        <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full sm:rounded-2xl p-6">
+      <div className="relative flex justify-center items-center w-full h-full overflow-auto p-4">
+        <div className="bg-white rounded-xl shadow-lg max-w-4xl w-full max-h-[90vh] overflow-auto p-6 sm:p-8">
           {/* Header */}
           <div className="text-center mb-6">
             <h3 className="text-lg font-semibold text-gray-900">Edit Profile</h3>

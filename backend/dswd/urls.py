@@ -47,10 +47,13 @@ urlpatterns = [
     path("service-categories/", ServiceCategoryListView.as_view(), name="service-categories"),
     path("services/<int:pk>/", ServicesDetailView.as_view(), name="dswd-service-detail"),
 
-    #change password
+    #change password (admin)
     path("change-pass/", ChangePasswordFaceView.as_view(), name="change-pass"),
     path("verify-email/", VerifyEmailView.as_view(), name="verify-email"),
     path("reset-pass/", ResetPasswordView.as_view(), name="reset-pass"),
+
+    #change password (user)
+    path('update-username-password/', UpdateUsernamePasswordView.as_view(), name='change-password-logged-in'),
 
     #reports
     path("dswddashboard/summary/", DSWDDashboardAPIView.as_view(), name="dswd-dashboard-summary"),

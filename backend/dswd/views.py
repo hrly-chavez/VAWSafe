@@ -1032,7 +1032,7 @@ class ServicesDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance.save()
 
 
-#==========================================Forgot Password==============================
+#==========================================Change Password (admin side)==============================
 class ChangePasswordFaceView(APIView):
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [IsAuthenticated, IsRole]
@@ -1396,89 +1396,130 @@ class DSWDDashboardAPIView(APIView):
 #         return Response(serializer.errors, status=400)
 class ProfileViewSet(viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]  # 👈 allows photo uploads + JSON
 
     def get_object(self):
-        """
-        Get the official profile related to the authenticated user.
-        """
         user = self.request.user
         try:
-            official = user.official
+            return user.official
         except Official.DoesNotExist:
             raise Response({"message": "Profile not found for the logged-in user."}, status=404)
-        return official
 
-    # GET request to fetch the current user's profile
     def retrieve(self, request, *args, **kwargs):
         official = self.get_object()
         serializer = OfficialSerializer(official)
         return Response(serializer.data)
 
-    # ProfileViewSet update method
     def update(self, request, *args, **kwargs):
         official = self.get_object()
-        serializer = OfficialSerializer(official, data=request.data, partial=True)
+        data = request.data.copy()  # make a mutable copy
 
-        if serializer.is_valid():
-            new_address = request.data.get('address')
-            is_address_updated = request.data.get('isAddressUpdated', False)  # Get the flag
+        # 🔹 Normalize isAddressUpdated flag
+        is_address_updated = data.get("isAddressUpdated", False)
+        if isinstance(is_address_updated, str):
+            is_address_updated = is_address_updated.lower() == "true"
 
-            if is_address_updated:  # Check if address is updated
-                # If the address is updated, check for missing fields
-                missing_fields = []
-                if not new_address.get("province"):
-                    missing_fields.append("Province")
-                if not new_address.get("municipality"):
-                    missing_fields.append("Municipality")
-                if not new_address.get("barangay"):
-                    missing_fields.append("Barangay")
-                if not new_address.get("sitio"):
-                    missing_fields.append("Sitio")
-                if not new_address.get("street"):
-                    missing_fields.append("Street")
+        # 🔹 Handle uploaded photo (if any)
+        if "of_photo" in request.FILES:
+            official.of_photo = request.FILES["of_photo"]
 
-                if missing_fields:
-                    return Response(
-                        {"error": f"The following address fields are required: {', '.join(missing_fields)}"},
-                        status=400
-                    )
+        # 🔹 Handle address: parse JSON if it's a string
+        new_address = data.get("address")
+        if isinstance(new_address, str):
+            try:
+                new_address = json.loads(new_address)
+            except json.JSONDecodeError:
+                new_address = None
 
-                # If the address is updated, delete the existing address and create a new one
-                if official.address:
-                    official.address.delete()
+        # 🧩 If only the address is being updated, don't overwrite names accidentally
+        if is_address_updated and new_address:
+            for field in ["of_fname", "of_lname"]:
+                data.pop(field, None)
 
-                # Now process and update the address with the new values
-                province_id = new_address.get("province")
-                municipality_id = new_address.get("municipality")
-                barangay_id = new_address.get("barangay")
+            # Validate address completeness
+            missing_fields = []
+            if not new_address.get("province"):
+                missing_fields.append("Province")
+            if not new_address.get("municipality"):
+                missing_fields.append("Municipality")
+            if not new_address.get("barangay"):
+                missing_fields.append("Barangay")
+            if not new_address.get("sitio"):
+                missing_fields.append("Sitio")
+            if not new_address.get("street"):
+                missing_fields.append("Street")
 
-                try:
-                    province = Province.objects.get(id=province_id)
-                except Province.DoesNotExist:
-                    return Response({"error": f"Province with ID {province_id} does not exist."}, status=400)
-
-                try:
-                    municipality = Municipality.objects.get(id=municipality_id)
-                except Municipality.DoesNotExist:
-                    return Response({"error": f"Municipality with ID {municipality_id} does not exist."}, status=400)
-
-                try:
-                    barangay = Barangay.objects.get(id=barangay_id)
-                except Barangay.DoesNotExist:
-                    return Response({"error": f"Barangay with ID {barangay_id} does not exist."}, status=400)
-
-                # Create a new address
-                official.address = Address.objects.create(
-                    province=province,
-                    municipality=municipality,
-                    barangay=barangay,
-                    sitio=new_address.get("sitio"),
-                    street=new_address.get("street"),
+            if missing_fields:
+                return Response(
+                    {"error": f"The following address fields are required: {', '.join(missing_fields)}"},
+                    status=400,
                 )
 
-            # Save the profile data (including the address if updated)
-            official.save()
+            # Delete old address if it exists
+            if official.address:
+                official.address.delete()
+
+            # Create new address
+            try:
+                province = Province.objects.get(id=new_address.get("province"))
+                municipality = Municipality.objects.get(id=new_address.get("municipality"))
+                barangay = Barangay.objects.get(id=new_address.get("barangay"))
+            except (Province.DoesNotExist, Municipality.DoesNotExist, Barangay.DoesNotExist):
+                return Response({"error": "Invalid address IDs provided."}, status=400)
+
+            official.address = Address.objects.create(
+                province=province,
+                municipality=municipality,
+                barangay=barangay,
+                sitio=new_address.get("sitio"),
+                street=new_address.get("street"),
+            )
+
+        # Save updates (address + photo + others)
+        serializer = OfficialSerializer(official, data=data, partial=True)
+        if serializer.is_valid():
             serializer.save()
+            official.save()
             return Response(serializer.data)
 
         return Response(serializer.errors, status=400)
+    
+#==========================================Change Password (user side)==============================
+User = get_user_model()
+
+class UpdateUsernamePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        new_username = request.data.get("username")
+        current_password = request.data.get("current_password")
+        new_password = request.data.get("new_password")
+        confirm_password = request.data.get("confirm_password")
+
+        # Basic validation
+        if not all([new_username, current_password, new_password, confirm_password]):
+            return Response({"error": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user.check_password(current_password):
+            return Response({"error": "Current password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if new_password != confirm_password:
+            return Response({"error": "New password and confirmation do not match"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate password strength
+        try:
+            validate_password(new_password, user)
+        except Exception as e:
+            return Response({"error": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update username & password
+        if new_username != user.username:
+            if User.objects.filter(username=new_username).exists():
+                return Response({"error": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
+            user.username = new_username
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response({"success": True, "message": "Username and password updated successfully"})
