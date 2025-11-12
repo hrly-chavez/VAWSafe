@@ -8,25 +8,6 @@ from rest_framework.exceptions import ValidationError
 from dswd.utils.logging import log_change
 from django.db.models import Q
 
-class AddressSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Address
-        fields = ["id", "province", "municipality", "barangay", "sitio", "street"]
-
-    def to_representation(self, instance):
-        parts = []
-        if instance.street:
-            parts.append(str(instance.street))
-        if instance.sitio:
-            parts.append(str(instance.sitio))
-        if instance.barangay:
-            parts.append(str(instance.barangay))
-        if instance.municipality:
-            parts.append(str(instance.municipality))
-        if instance.province:
-            parts.append(str(instance.province))
-        return ", ".join(parts) or "—"
-
 # --- Lightweight list serializer ---
 class VictimListSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
@@ -55,7 +36,6 @@ class VictimFaceSampleSerializer(serializers.ModelSerializer):
 
 class VictimSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
-    address = AddressSerializer()
 
     class Meta:
         model = Victim
@@ -63,18 +43,7 @@ class VictimSerializer(serializers.ModelSerializer):
 
     def get_full_name(self, obj):
         return obj.full_name
-    
-    def create(self, validated_data):
-        address_data = validated_data.pop("address")
-        address = Address.objects.create(**address_data)
-        victim = Victim.objects.create(address=address, **validated_data)
-        return victim
-
-class ContactPersonSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ContactPerson
-        fields = "__all__"
-
+        
 class PerpetratorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Perpetrator
@@ -160,37 +129,6 @@ class SessionCRUDSerializer(serializers.ModelSerializer):
     def get_official_names(self, obj):
         officials = obj.assigned_official.all()
         return [official.full_name for official in officials] if officials else []
-    
-    def validate(self, data):
-        """
-        Ensure valid role assignment and future schedule.
-        """
-        assigned_officials = data.get("assigned_official", [])
-        sched_datetime = data.get("sess_next_sched")
-
-        # --- Role uniqueness validation ---
-        if hasattr(assigned_officials, "all"):
-            assigned_officials = list(assigned_officials.all())
-
-        if assigned_officials:
-            roles = [off.of_role for off in assigned_officials if off.of_role]
-            duplicates = [r for r in set(roles) if roles.count(r) > 1]
-            if duplicates:
-                raise serializers.ValidationError({
-                    "assigned_official": (
-                        f"Only one official per role is allowed per session. "
-                        f"Duplicate role(s): {', '.join(duplicates)}."
-                    )
-                })
-
-        # --- Date/time validation (no past schedule) ---
-        from django.utils import timezone
-        if sched_datetime and sched_datetime < timezone.now():
-            raise serializers.ValidationError({
-                "sess_next_sched": "You cannot schedule a session in the past."
-            })
-
-        return data
 
     # --- Auto-increment session number when creating (role-based logic) ---
     def create(self, validated_data):
@@ -204,7 +142,7 @@ class SessionCRUDSerializer(serializers.ModelSerializer):
         role = getattr(official, "of_role", None)
 
         if incident:
-            # --- Detect shared session (multiple officials manually assigned) ---
+            # --- Detect shared session (multiple officials) ---
             is_shared_session = len(officials) > 1
 
             if is_shared_session:
@@ -238,18 +176,13 @@ class SessionCRUDSerializer(serializers.ModelSerializer):
         # --- Ensure session progress entries (ManyToMany through SessionProgress) ---
         from shared_model.models import SessionProgress
 
-        #  FIXED LOGIC: Handle shared vs. individual sessions properly
-        if validated_data.get("sess_num") == 1:
-            # Shared session: only link explicitly assigned officials
-            for off in officials:
-                SessionProgress.objects.get_or_create(session=session, official=off)
-        else:
-            # Session 2+: always link the logged-in official, even if not listed
-            if official:
-                SessionProgress.objects.get_or_create(session=session, official=official)
-            # And also link any additional explicitly assigned officials (if any)
-            for off in officials:
-                SessionProgress.objects.get_or_create(session=session, official=off)
+        # Link the current logged-in official
+        if official:
+            SessionProgress.objects.get_or_create(session=session, official=official)
+
+        # Link any additional officials passed
+        for off in officials:
+            SessionProgress.objects.get_or_create(session=session, official=off)
 
         session.save()
         return session
@@ -701,7 +634,6 @@ class OfficialUnavailabilitySerializer(serializers.ModelSerializer):
     
 
 #=========================QUESTIONS================================
-
 #  CATEGORY SERIALIZER 
 class QuestionCategorySerializer(serializers.ModelSerializer):
     """For displaying role-specific question categories."""
@@ -744,6 +676,22 @@ class SessionTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = SessionType
         fields = ["id", "name"]
+
+# SESSION TYPE QUESTION (assignment link) 
+# class SessionTypeQuestionSerializer(serializers.ModelSerializer):
+#     question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
+#     session_type_name = serializers.CharField(source="session_type.name", read_only=True)
+
+#     class Meta:
+#         model = SessionTypeQuestion
+#         fields = [
+#             "id",
+#             "session_number",
+#             "session_type",
+#             "session_type_name",
+#             "question",
+#             "question_text",
+#         ]
 
 class BulkQuestionCreateSerializer(serializers.Serializer):
     """

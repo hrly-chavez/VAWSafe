@@ -6,19 +6,33 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function SessionTypeQuestionPreview({ sessionNum, selectedTypes }) {
   const [questions, setQuestions] = useState([]);
 
+  
   useEffect(() => {
     if (!sessionNum || !selectedTypes || selectedTypes.length === 0) {
       setQuestions([]);
       return;
     }
 
-    // session.sess_type may already be IDs (integers) from backend
+    // Retrieve session ID from the current route (for backend filtering by assigned roles)
+    const currentUrl = window.location.pathname;
+    const match = currentUrl.match(/\/sessions\/(\d+)/);
+    const sessId = match ? match[1] : null;
+
+    // Build request parameters
     const typeIds = selectedTypes.join(",");
+    let endpoint = `/api/social_worker/mapped-questions/?session_num=${sessionNum}&session_types=${typeIds}`;
+
+    // Include session ID if available (important for shared Session 1)
+    if (sessId) {
+      endpoint += `&sess_id=${sessId}`;
+    }
+
     api
-      .get(`/api/social_worker/mapped-questions/?session_num=${sessionNum}&session_types=${typeIds}`)
+      .get(endpoint)
       .then((res) => setQuestions(res.data))
       .catch((err) => console.error("Failed to fetch mapped questions", err));
   }, [sessionNum, selectedTypes]);
+
 
   // Group by role first, then by category
   const groupedByRole = questions.reduce((acc, q) => {

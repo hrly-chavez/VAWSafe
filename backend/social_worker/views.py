@@ -174,25 +174,25 @@ def register_victim(request):
             contact_person = c_ser.save()
 
 
-        # -------------------------------
-        # 6) CREATE VICTIM ACCOUNT (new)
-        # -------------------------------
-        fname = victim_data.get("vic_first_name", "").strip().lower()
-        lname = victim_data.get("vic_last_name", "").strip().lower()
-        base_username = f"{fname}{lname}".replace(" ", "") or get_random_string(8)
+        # # -------------------------------
+        # # 6) CREATE VICTIM ACCOUNT (new)
+        # # -------------------------------
+        # fname = victim_data.get("vic_first_name", "").strip().lower()
+        # lname = victim_data.get("vic_last_name", "").strip().lower()
+        # base_username = f"{fname}{lname}".replace(" ", "") or get_random_string(8)
 
-        username = base_username
-        counter = 0
-        while User.objects.filter(username=username).exists():
-            counter += 1
-            username = f"{base_username}{counter}"
+        # username = base_username
+        # counter = 0
+        # while User.objects.filter(username=username).exists():
+        #     counter += 1
+        #     username = f"{base_username}{counter}"
 
-        generated_password = get_random_string(length=12)
-        user = User.objects.create_user(username=username, password=generated_password)
+        # generated_password = get_random_string(length=12)
+        # user = User.objects.create_user(username=username, password=generated_password)
 
-        # Optionally associate user with victim
-        victim.user = user  # <-- comment this out if Victim model has no FK to User
-        victim.save()
+        # # Optionally associate user with victim
+        # victim.user = user  # <-- comment this out if Victim model has no FK to User
+        # victim.save()
 
         return Response({
             "success": True,
@@ -200,8 +200,6 @@ def register_victim(request):
             "incident": IncidentInformationSerializer(incident).data if incident else None,
             "contact_person": ContactPersonSerializer(contact_person).data if contact_person else None,
             "perpetrator": PerpetratorSerializer(perpetrator).data if perpetrator else None,
-            "username": username,
-            "password": generated_password,
         }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
@@ -506,14 +504,17 @@ class SessionTypeListView(generics.ListAPIView):
 def mapped_questions(request):
     """
     GET: Returns mapped questions for a specific session number and session type(s).
-    Example: /api/psychometrician/mapped-questions/?session_num=2&session_types=3&role_filter=1
 
-    Optional query param:
-      - role_filter=1|true|yes  -> when present, filter mappings to only questions for the
-                                   current user's official role (question.role OR question.ques_category.role).
+    Behavior:
+    - If `sess_id` is provided, filters questions based on all assigned officials' roles for that session.
+    - Otherwise, defaults to old behavior (can still use role_filter=1 to filter by logged-in official's role).
+
+    Example:
+      /api/social_worker/mapped-questions/?session_num=1&session_types=3&sess_id=42
     """
     session_num = request.query_params.get("session_num")
     type_ids = request.query_params.get("session_types")
+    sess_id = request.query_params.get("sess_id")
     role_filter_flag = str(request.query_params.get("role_filter", "")).lower() in ("1", "true", "yes")
 
     if not session_num or not type_ids:
@@ -524,20 +525,37 @@ def mapped_questions(request):
     except ValueError:
         return Response({"error": "session_types must be a comma-separated list of integers"}, status=400)
 
+    # Base queryset
     base_qs = SessionTypeQuestion.objects.filter(
         session_number=session_num,
         session_type__id__in=type_ids
     ).select_related("question", "question__ques_category", "session_type")
 
-    # If frontend requests role-filtered results, restrict to current official's role
-    if role_filter_flag:
+    # --- New logic: filter by assigned officials' roles if sess_id is given ---
+    if sess_id:
+        try:
+            session = Session.objects.prefetch_related("assigned_official").get(pk=sess_id)
+        except Session.DoesNotExist:
+            return Response({"error": "Session not found"}, status=404)
+
+        assigned_roles = list(
+            session.assigned_official.values_list("of_role", flat=True)
+        )
+
+        # Filter to only questions belonging to any of these roles
+        base_qs = base_qs.filter(
+            Q(question__role__in=assigned_roles) |
+            Q(question__ques_category__role__in=assigned_roles)
+        )
+
+    # --- Legacy role_filter=1 (filter by logged-in user role) ---
+    elif role_filter_flag:
         user = request.user
         official = getattr(user, "official", None)
         user_role = getattr(official, "of_role", None)
         if not user_role:
             return Response({"error": "User has no official role to filter by"}, status=400)
 
-        # Filter mappings where question.role == user_role OR question.ques_category.role == user_role
         base_qs = base_qs.filter(
             Q(question__role__iexact=user_role) |
             Q(question__ques_category__role__iexact=user_role)
@@ -800,55 +818,7 @@ def close_case(request, incident_id):
     serializer.save()
 
     return Response({"message": "Case closed successfully!"}, status=200)
-
-#schedule session
-# @api_view(["GET", "POST"])
-# @permission_classes([IsAuthenticated])
-# def schedule_next_session(request):
-#     """
-#     GET: Lists current sessions (Pending/Ongoing) for the logged-in official.
-#     POST: Creates a new session (schedules the next one).
-#     Now role-agnostic: works for any official (Social Worker, Nurse, Psychometrician, Home Life).
-#     """
-#     user = request.user
-#     official = getattr(user, "official", None)
-#     role = getattr(official, "of_role", None)
-
-#     if not official or not role:
-#         return Response({"error": "Only registered officials can access this endpoint."},
-#                         status=status.HTTP_403_FORBIDDEN)
-
-#     # =========================
-#     # GET REQUEST
-#     # =========================
-#     if request.method == "GET":
-#         # Fetch all sessions where the current official is assigned
-#         sessions = Session.objects.filter(
-#             assigned_official=official,
-#             sess_status__in=["Pending", "Ongoing"]
-#         ).order_by("-sess_next_sched")
-
-#         serializer = SessionCRUDSerializer(sessions, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-
-#     # =========================
-#     # POST REQUEST
-#     # =========================
-#     elif request.method == "POST":
-#         serializer = SessionCRUDSerializer(data=request.data)
-#         if serializer.is_valid():
-#             # Save directly; the serializer handles sess_num auto-increment, etc.
-#             session = serializer.save()
-
-#             # Optional: Create SessionProgress entries automatically for assigned officials
-#             assigned_officials = session.assigned_official.all()
-#             for assigned in assigned_officials:
-#                 SessionProgress.objects.get_or_create(session=session, official=assigned)
-
-#             return Response(SessionCRUDSerializer(session).data, status=status.HTTP_201_CREATED)
-
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+   
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def schedule_next_session(request):

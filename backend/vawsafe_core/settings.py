@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     'dswd',
     'nurse',
     'psychometrician',
+    'home_life',
     
     #gibutangan nako ug apps.SharedModelConfig para sa face embeddings para sa /admin
     'shared_model.apps.SharedModelConfig',
@@ -274,7 +275,7 @@ EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "carataojoegie@gmail.com"        # your Gmail
-EMAIL_HOST_PASSWORD = "qvrt xcrf meek royf"  # 👈 from Step 2
+EMAIL_HOST_PASSWORD = "qvrt xcrf meek royf"  #  from Step 2
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
