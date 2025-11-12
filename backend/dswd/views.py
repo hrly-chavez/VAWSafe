@@ -25,7 +25,7 @@ from collections import Counter
 import json
 from dswd.utils.logging import log_change
 
-#forgot password
+#change password
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from cryptography.fernet import Fernet
 import numpy as np
@@ -33,6 +33,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_str, force_bytes
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 
 from django.utils.decorators import method_decorator
@@ -96,7 +98,8 @@ class ViewVictim(generics.ListAPIView):
             queryset = filtered_victims
 
         return queryset
-    
+
+#===========================================Address(Used in Services)==========================================
 class ProvinceList(generics.ListAPIView):
     queryset = Province.objects.all()
     serializer_class = ProvinceSerializer
@@ -104,31 +107,71 @@ class ProvinceList(generics.ListAPIView):
     # allowed_roles = ['DSWD']
     permission_classes = [AllowAny]
 
+# class MunicipalityList(generics.ListAPIView):
+#     serializer_class = MunicipalitySerializer
+#     # permission_classes = [IsAuthenticated, IsRole]
+#     # allowed_roles = ['DSWD']
+#     permission_classes = [AllowAny]
+
+#     def get_queryset(self):
+#         province_id = self.request.query_params.get("province")
+#         queryset = Municipality.objects.all()
+#         if province_id:
+#             queryset = queryset.filter(province_id=province_id)
+#         return queryset
+
+# class BarangayList(generics.ListAPIView):
+#     serializer_class = BarangaySerializer
+#     # permission_classes = [IsAuthenticated, IsRole]
+#     # allowed_roles = ['DSWD']
+#     permission_classes = [AllowAny]
+
+#     def get_queryset(self):
+#         municipality_id = self.request.query_params.get("municipality")
+#         queryset = Barangay.objects.all()
+#         if municipality_id:
+#             queryset = queryset.filter(municipality_id=municipality_id)
+#         return queryset
+
 class MunicipalityList(generics.ListAPIView):
     serializer_class = MunicipalitySerializer
-    # permission_classes = [IsAuthenticated, IsRole]
-    # allowed_roles = ['DSWD']
     permission_classes = [AllowAny]
 
     def get_queryset(self):
         province_id = self.request.query_params.get("province")
         queryset = Municipality.objects.all()
-        if province_id:
-            queryset = queryset.filter(province_id=province_id)
-        return queryset
 
+        # Check if province_id is passed as an ID or a name
+        if province_id:
+            # Try filtering by ID first
+            try:
+                province_id = int(province_id)  # Try converting to an integer
+                queryset = queryset.filter(province_id=province_id)
+            except ValueError:
+                # If it fails, assume it's a province name and filter by name
+                queryset = queryset.filter(province__name=province_id)
+
+        return queryset
+    
 class BarangayList(generics.ListAPIView):
     serializer_class = BarangaySerializer
-    # permission_classes = [IsAuthenticated, IsRole]
-    # allowed_roles = ['DSWD']
     permission_classes = [AllowAny]
 
     def get_queryset(self):
         municipality_id = self.request.query_params.get("municipality")
         queryset = Barangay.objects.all()
+
+        # Check if municipality_id is passed as an ID or a name
         if municipality_id:
-            queryset = queryset.filter(municipality_id=municipality_id)
+            try:
+                municipality_id = int(municipality_id)  # Try converting to an integer
+                queryset = queryset.filter(municipality_id=municipality_id)
+            except ValueError:
+                # If it fails, assume it's a municipality name and filter by name
+                queryset = queryset.filter(municipality__name=municipality_id)
+
         return queryset
+
 
 class ViewDetail (generics.RetrieveAPIView):
     queryset = Victim.objects.all()
@@ -989,7 +1032,7 @@ class ServicesDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance.save()
 
 
-#==========================================Forgot Password==============================
+#==========================================Change Password (admin side)==============================
 class ChangePasswordFaceView(APIView):
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [IsAuthenticated, IsRole]
@@ -1200,8 +1243,7 @@ class VerifyEmailView(APIView):
 
 # ✅ Step 3: Reset Password
 class ResetPasswordView(APIView):
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['DSWD']
+    permission_classes = [AllowAny]
 
     def post(self, request):
         uidb64 = request.data.get("uid")
@@ -1213,12 +1255,18 @@ class ResetPasswordView(APIView):
 
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(pk=uid)
-        except (User.DoesNotExist, ValueError, TypeError):
+            user = get_user_model().objects.get(pk=uid)
+        except (get_user_model().DoesNotExist, ValueError, TypeError):
             return Response({"error": "Invalid link"}, status=status.HTTP_400_BAD_REQUEST)
 
         if not default_token_generator.check_token(user, token):
             return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Validate the new password
+            validate_password(new_password, user)
+        except ValidationError as e:
+            return Response({"error": e.messages}, status=status.HTTP_400_BAD_REQUEST)
 
         user.set_password(new_password)
         user.save()
@@ -1316,3 +1364,162 @@ class DSWDDashboardAPIView(APIView):
             "incident_summary": IncidentSummarySerializer(incident_summary).data,
             "monthly_report_rows": MonthlyReportRowSerializer(report_rows, many=True).data,
         })
+    
+#===========================================Profile==========================================
+# class ProfileViewSet(viewsets.GenericViewSet):
+#     permission_classes = [permissions.IsAuthenticated]
+
+#     def get_object(self):
+#         """
+#         Get the official profile related to the authenticated user.
+#         """
+#         user = self.request.user
+#         try:
+#             official = user.official
+#         except Official.DoesNotExist:
+#             raise Response({"message": "Profile not found for the logged-in user."}, status=404)
+#         return official
+
+#     # GET request to fetch the current user's profile
+#     def retrieve(self, request, *args, **kwargs):
+#         official = self.get_object()
+#         serializer = OfficialSerializer(official)
+#         return Response(serializer.data)
+
+#     # PUT request to update the current user's profile
+#     def update(self, request, *args, **kwargs):
+#         official = self.get_object()
+#         serializer = OfficialSerializer(official, data=request.data, partial=True)  # partial=True allows partial updates
+#         if serializer.is_valid():
+#             serializer.save()  # Save the updated profile data
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=400)
+class ProfileViewSet(viewsets.GenericViewSet):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]  # 👈 allows photo uploads + JSON
+
+    def get_object(self):
+        user = self.request.user
+        try:
+            return user.official
+        except Official.DoesNotExist:
+            raise Response({"message": "Profile not found for the logged-in user."}, status=404)
+
+    def retrieve(self, request, *args, **kwargs):
+        official = self.get_object()
+        serializer = OfficialSerializer(official)
+        return Response(serializer.data)
+
+    def update(self, request, *args, **kwargs):
+        official = self.get_object()
+        data = request.data.copy()  # make a mutable copy
+
+        # 🔹 Normalize isAddressUpdated flag
+        is_address_updated = data.get("isAddressUpdated", False)
+        if isinstance(is_address_updated, str):
+            is_address_updated = is_address_updated.lower() == "true"
+
+        # 🔹 Handle uploaded photo (if any)
+        if "of_photo" in request.FILES:
+            official.of_photo = request.FILES["of_photo"]
+
+        # 🔹 Handle address: parse JSON if it's a string
+        new_address = data.get("address")
+        if isinstance(new_address, str):
+            try:
+                new_address = json.loads(new_address)
+            except json.JSONDecodeError:
+                new_address = None
+
+        # 🧩 If only the address is being updated, don't overwrite names accidentally
+        if is_address_updated and new_address:
+            for field in ["of_fname", "of_lname"]:
+                data.pop(field, None)
+
+            # Validate address completeness
+            missing_fields = []
+            if not new_address.get("province"):
+                missing_fields.append("Province")
+            if not new_address.get("municipality"):
+                missing_fields.append("Municipality")
+            if not new_address.get("barangay"):
+                missing_fields.append("Barangay")
+            if not new_address.get("sitio"):
+                missing_fields.append("Sitio")
+            if not new_address.get("street"):
+                missing_fields.append("Street")
+
+            if missing_fields:
+                return Response(
+                    {"error": f"The following address fields are required: {', '.join(missing_fields)}"},
+                    status=400,
+                )
+
+            # Delete old address if it exists
+            if official.address:
+                official.address.delete()
+
+            # Create new address
+            try:
+                province = Province.objects.get(id=new_address.get("province"))
+                municipality = Municipality.objects.get(id=new_address.get("municipality"))
+                barangay = Barangay.objects.get(id=new_address.get("barangay"))
+            except (Province.DoesNotExist, Municipality.DoesNotExist, Barangay.DoesNotExist):
+                return Response({"error": "Invalid address IDs provided."}, status=400)
+
+            official.address = Address.objects.create(
+                province=province,
+                municipality=municipality,
+                barangay=barangay,
+                sitio=new_address.get("sitio"),
+                street=new_address.get("street"),
+            )
+
+        # Save updates (address + photo + others)
+        serializer = OfficialSerializer(official, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            official.save()
+            return Response(serializer.data)
+
+        return Response(serializer.errors, status=400)
+    
+#==========================================Change Password (user side)==============================
+User = get_user_model()
+
+class UpdateUsernamePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        new_username = request.data.get("username")
+        current_password = request.data.get("current_password")
+        new_password = request.data.get("new_password")
+        confirm_password = request.data.get("confirm_password")
+
+        # Basic validation
+        if not all([new_username, current_password, new_password, confirm_password]):
+            return Response({"error": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user.check_password(current_password):
+            return Response({"error": "Current password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if new_password != confirm_password:
+            return Response({"error": "New password and confirmation do not match"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate password strength
+        try:
+            validate_password(new_password, user)
+        except Exception as e:
+            return Response({"error": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update username & password
+        if new_username != user.username:
+            if User.objects.filter(username=new_username).exists():
+                return Response({"error": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
+            user.username = new_username
+
+        user.set_password(new_password)
+        user.save()
+
+        return Response({"success": True, "message": "Username and password updated successfully"})
