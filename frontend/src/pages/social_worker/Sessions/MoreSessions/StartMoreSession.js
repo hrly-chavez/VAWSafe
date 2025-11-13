@@ -136,10 +136,10 @@ const StartMoreSession = () => {
                   className="p-3 border rounded mb-3 bg-gray-50"
                 >
                   <p className="font-medium text-gray-800 mb-2">
-                    {q.question_text || q.sq_custom_text}
+                    {q.sq_question_text_snapshot || q.question_text || q.sq_custom_text}
                   </p>
 
-                  {(q.question_answer_type || q.sq_custom_answer_type) === "Yes/No" && (
+                  {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Yes/No" && (
                     <select
                       value={q.sq_value || ""}
                       onChange={(e) =>
@@ -153,7 +153,7 @@ const StartMoreSession = () => {
                     </select>
                   )}
 
-                  {(q.question_answer_type || q.sq_custom_answer_type) === "Text" && (
+                  {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Text" && (
                     <textarea
                       value={q.sq_value || ""}
                       onChange={(e) =>
@@ -166,7 +166,7 @@ const StartMoreSession = () => {
                   )}
 
                   {/* Show notes only if the question type is not Text */}
-                  {(q.question_answer_type || q.sq_custom_answer_type) !== "Text" && (
+                  {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) !== "Text" && (
                     <input
                       type="text"
                       value={q.sq_note || ""}

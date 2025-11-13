@@ -1151,8 +1151,14 @@ class QuestionListCreateView(generics.ListCreateAPIView):
         official = getattr(self.request.user, "official", None)
         if not official:
             return Question.objects.none()
-        # Only show questions made by same role
-        return Question.objects.filter(role=official.of_role).order_by("-created_at")
+
+        queryset = Question.objects.filter(role=official.of_role).order_by("-created_at")
+
+        category_id = self.request.query_params.get("category")
+        if category_id:
+            queryset = queryset.filter(ques_category_id=category_id)
+
+        return queryset
 
     def perform_create(self, serializer):
         instance = serializer.save()
