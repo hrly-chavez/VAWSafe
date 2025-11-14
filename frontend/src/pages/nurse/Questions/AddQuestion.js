@@ -1,4 +1,4 @@
-// src/pages/psychometrician/Questions/AddQuestion.js
+// src/pages/nurse/Questions/AddQuestion.js
 import { useState, useEffect } from "react";
 import Select from "react-select";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,7 +25,7 @@ export default function AddQuestion({ onClose }) {
 
   // Load category + answer type
   useEffect(() => {
-    api.get("/api/psychometrician/questions/choices/").then((res) => {
+    api.get("/api/nurse/questions/choices/").then((res) => {
       setCategories(res.data.categories);
       setAnswerTypes(res.data.answer_types);
     });
@@ -40,7 +40,7 @@ export default function AddQuestion({ onClose }) {
       }));
       setSessionNumbers(nums);
 
-      api.get("/api/psychometrician/session-types/").then((res) =>
+      api.get("/api/nurse/session-types/").then((res) =>
         setSessionTypes(res.data.map((t) => ({ value: t.id, label: t.name })))
       );
     }
@@ -100,7 +100,7 @@ export default function AddQuestion({ onClose }) {
         session_types: selectedTypes.map((t) => t.value),
       };
 
-      await api.post("/api/psychometrician/questions/bulk-create/", payload);
+      await api.post("/api/nurse/questions/bulk-create/", payload);
       alert("Questions created and assigned successfully!");
       onClose();
     } catch (err) {

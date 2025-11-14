@@ -1,4 +1,4 @@
-//src/pages/psychometrician/Questions/ChangeLogModal.js
+//src/pages/nurse/Questions/ChangeLogModal.js
 import { useEffect, useState } from "react";
 import api from "../../../api/axios";
 
@@ -11,7 +11,7 @@ export default function ChangeLogModal({ questionId, onClose }) {
 
     const fetchLogs = async () => {
       try {
-        const res = await api.get("/api/psychometrician/change-logs/");
+        const res = await api.get("/api/nurse/change-logs/");
         // Filter logs only for this specific question
         const filtered = res.data.filter(
           (log) =>

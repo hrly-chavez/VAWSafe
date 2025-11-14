@@ -1,4 +1,4 @@
-// src/pages/psychometrician/Questions/Questions.js
+// src/pages/social_worker/Questions/Questions.js
 import { useState, useEffect } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import api from "../../../api/axios";
@@ -19,7 +19,7 @@ export default function Questions() {
   const fetchQuestions = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/api/psychometrician/questions/");
+      const res = await api.get("/api/nurse/questions/");
       setQuestions(res.data);
     } catch (err) {
       console.error("Failed to load questions:", err.response?.data || err);
@@ -57,7 +57,7 @@ export default function Questions() {
     if (!confirmed) return;
 
     try {
-      await api.delete(`/api/psychometrician/questions/${id}/`);
+      await api.delete(`/api/nurse/questions/${id}/`);
       alert(`Question ${isActive ? "deactivated" : "activated"} successfully.`);
       fetchQuestions(); // Refresh table
     } catch (err) {
@@ -76,7 +76,7 @@ export default function Questions() {
           Q&amp;A Library
         </h1>
         <p className="text-sm text-gray-600 mt-1">
-          VAWSAFE | Social Worker | Role-specific question library
+          VAWSAFE | Nurse | Role-specific question library
         </p>
       </div>
 
