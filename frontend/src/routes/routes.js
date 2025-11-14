@@ -36,6 +36,7 @@ export const ROUTES = {
   DSWD_VIEW_OFFICIALS: "/dswd/account-management/:of_id",
   DSWD_PENDING_ACCOUNT: "/dswd/account-management/pending",
   DSWD_QUESTIONS: "/dswd/questions",
+  DSWD_PROFILE: "/dswd/profile",
 
   // SOCIAL WORKER
   SOCIAL_WORKER: "/social_worker",
@@ -53,6 +54,7 @@ export const ROUTES = {
   SOCIAL_WORKER_SEARCH_FACIAL: "/social_worker/victims/search-facial",
   SOCIAL_WORKER_CREATE_MORE_SESSION: "/social_worker/more-sessions/create/:incident_id",
   SOCIAL_WORKER_START_MORE_SESSION: "/social_worker/more-sessions/:sess_id/start",
+  SOCIAL_WORKER_PROFILE: "/social_worker/profile",
 
   //nurse
   NURSE_DASHBOARD: "nurse/",
@@ -66,6 +68,7 @@ export const ROUTES = {
   NURSE_VICTIM_DETAIL: "/nurse/victims/:vic_id",
   NURSE_SEARCH_FACIAL: "/nurse/victims/search-facial",
   NURSE_QUESTIONS: "/nurse/questions",
+  NURSE_PROFILE: "/nurse/profile",
 
   // psychometrician
   PSYCHOMETRICIAN_DASHBOARD: "psychometrician/",
@@ -81,6 +84,7 @@ export const ROUTES = {
   PSYCHOMETRICIAN_QUESTIONS: "/psychometrician/questions",
   PSYCHOMETRICIAN_CREATE_MORE_SESSION: "/psychometrician/more-sessions/create/:incident_id",
   PSYCHOMETRICIAN_START_MORE_SESSION: "/psychometrician/more-sessions/:sess_id/start",
+  PSYCHOMETRICIAN_PROFILE: "/psychometrician/profile",
 
   // landing page
   LANDING: "/landing",
