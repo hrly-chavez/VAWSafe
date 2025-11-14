@@ -29,9 +29,10 @@ const StartMoreSession = () => {
           api.get(`/api/social_worker/sessions/${sess_id}/`),
           api.get(`/api/social_worker/service-categories/`),
         ]);
-        setSession(sessRes.data);
-        setQuestions(sessRes.data.questions || []);
-        setFeedback(sessRes.data.sess_description || "");
+        const sessData = sessRes.data;
+        setSession(sessData);
+        setQuestions(sessData.questions || []); // backend returns assigned_role on each question
+        setFeedback(sessData?.my_progress?.notes || sessData.sess_description || "");
         setServiceCategories(catRes.data);
       } catch (err) {
         console.error("Failed to load session data", err);
@@ -66,11 +67,38 @@ const StartMoreSession = () => {
     );
   };
 
+  // ===== New: derive list of roles from questions (keeps compatibility with Session 1 grouping) =====
+  const roles = React.useMemo(() => {
+    const setRoles = new Set();
+    (questions || []).forEach((q) => {
+      const roleFromQ = q.assigned_role || (q.question && q.question.role) || "Unassigned";
+      setRoles.add(roleFromQ);
+    });
+    return Array.from(setRoles);
+  }, [questions]);
+
+  // Group questions by role -> category
+  const questionsByRole = React.useMemo(() => {
+    const out = {};
+    (roles || []).forEach((r) => {
+      out[r] = {};
+    });
+    (questions || []).forEach((q) => {
+      const role = q.assigned_role || (q.question && q.question.role) || "Unassigned";
+      const cat = q.question_category_name || "Uncategorized";
+      if (!out[role]) out[role] = {};
+      if (!out[role][cat]) out[role][cat] = [];
+      out[role][cat].push(q);
+    });
+    return out;
+  }, [roles, questions]);
+
   const handleFinishSession = async () => {
     setFinishing(true);
     try {
-      const answersPayload = questions
-        .filter((q) => q.assigned_role && q.sq_value !== undefined)
+      // Send all session question answers — don't require assigned_role to be present
+      const answersPayload = (questions || [])
+        .filter((q) => q.sq_id) // ensure we only send existing SessionQuestion rows
         .map((q) => ({
           sq_id: q.sq_id,
           value: q.sq_value,
@@ -79,19 +107,26 @@ const StartMoreSession = () => {
 
       const payload = {
         answers: answersPayload,
-        sess_description: feedback,
+        my_feedback: feedback, // <-- IMPORTANT: backend expects my_feedback for SessionProgress.notes
         services: selectedServices.map((s) => s.value),
       };
 
-      await api.post(`/api/social_worker/sessions/${sess_id}/finish/`, payload);
+      const response = await api.post(`/api/social_worker/sessions/${sess_id}/finish/`, payload);
+
       alert("Session completed successfully!");
 
-      // Redirect back to the victim's detail page
-      if (session?.incident?.vic_id?.vic_id) {
-        navigate(`/social_worker/victims/${session.incident.vic_id.vic_id}`);
+      const victimId =
+        response?.data?.session?.incident?.vic_id?.vic_id ||
+        response?.data?.session?.incident?.vic_id ||
+        session?.incident?.vic_id?.vic_id ||
+        null;
+
+      if (victimId) {
+        navigate(`/social_worker/victims/${victimId}`);
       } else {
         navigate("/social_worker/victims");
       }
+
     } catch (err) {
       console.error("Failed to finish session", err);
       alert("Failed to finish session. Please try again.");
@@ -104,100 +139,100 @@ const StartMoreSession = () => {
   if (error) return <p className="p-6 text-red-600">{error}</p>;
   if (!session) return <p className="p-6">No session found.</p>;
 
-  // Group questions by category
-  const grouped = questions.reduce((acc, q) => {
-    const cat = q.question_category_name || "Uncategorized";
-    if (!acc[cat]) acc[cat] = [];
-    acc[cat].push(q);
-    return acc;
-  }, {});
-
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-8">
       <h2 className="text-2xl font-bold text-green-700 border-b pb-2">
-        Start Session – Role-Based Questions
+        Wako kaybaw sakong I butang ari
       </h2>
 
-      {/* Questions */}
-      {Object.entries(grouped).map(([category, qs]) => (
-        <div key={category} className="mb-6">
-          <div className="bg-green-50 border-l-4 border-green-600 px-4 py-2 rounded-t-md">
-            <h5 className="text-md font-semibold text-green-800">{category}</h5>
+      {/* Render role sections (even if only one role exists) */}
+      {roles.map((role) => {
+        const grouped = questionsByRole[role] || {};
+        return (
+          <div key={role} className="mb-6">
+            <div className="bg-green-50 border-l-4 border-green-600 px-4 py-2 rounded-t-md">
+              <h5 className="text-md font-semibold text-green-800">{role} Section</h5>
+            </div>
+
+            <div className="border border-t-0 rounded-b-md p-3 bg-white shadow-sm">
+              <AnimatePresence>
+                {Object.entries(grouped).map(([category, qs]) => (
+                  <div key={category} className="mb-4">
+                    <div className="mb-2">
+                      <h6 className="font-semibold text-gray-700">{category}</h6>
+                    </div>
+                    {qs.map((q, index) => (
+                      <motion.div
+                        key={q.sq_id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        transition={{ duration: 0.22, delay: index * 0.04 }}
+                        className="p-3 border rounded mb-3 bg-gray-50"
+                      >
+                        <p className="font-medium text-gray-800 mb-2">
+                          {q.sq_question_text_snapshot || q.question_text || q.sq_custom_text}
+                        </p>
+
+                        {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Yes/No" && (
+                          <select
+                            value={q.sq_value || ""}
+                            onChange={(e) =>
+                              handleAnswerChange(q.sq_id, "sq_value", e.target.value)
+                            }
+                            className="w-full border rounded p-2"
+                          >
+                            <option value="">Select...</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                          </select>
+                        )}
+
+                        {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Text" && (
+                          <textarea
+                            value={q.sq_value || ""}
+                            onChange={(e) =>
+                              handleAnswerChange(q.sq_id, "sq_value", e.target.value)
+                            }
+                            className="w-full border rounded p-2"
+                            rows={3}
+                            placeholder="Enter your answer..."
+                          />
+                        )}
+
+                        {/* Show notes only if the question type is not Text */}
+                        {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) !== "Text" && (
+                          <input
+                            type="text"
+                            value={q.sq_note || ""}
+                            onChange={(e) =>
+                              handleAnswerChange(q.sq_id, "sq_note", e.target.value)
+                            }
+                            className="w-full border rounded p-2 mt-2"
+                            placeholder="Additional notes (if any)..."
+                          />
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                ))}
+              </AnimatePresence>
+            </div>
+
+            {/* Per-role feedback box */}
+            <div className="p-4 bg-gray-50 border rounded-md shadow-sm mt-3">
+              <h3 className="text-lg font-semibold text-green-800">{role} Feedback</h3>
+              <textarea
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                className="w-full border rounded-md p-3 text-sm text-gray-800"
+                rows={4}
+                placeholder="Write your feedback about this role's part..."
+              />
+            </div>
           </div>
-          <div className="border border-t-0 rounded-b-md p-3 bg-white shadow-sm">
-            <AnimatePresence>
-              {qs.map((q, index) => (
-                <motion.div
-                  key={q.sq_id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                  className="p-3 border rounded mb-3 bg-gray-50"
-                >
-                  <p className="font-medium text-gray-800 mb-2">
-                    {q.sq_question_text_snapshot || q.question_text || q.sq_custom_text}
-                  </p>
-
-                  {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Yes/No" && (
-                    <select
-                      value={q.sq_value || ""}
-                      onChange={(e) =>
-                        handleAnswerChange(q.sq_id, "sq_value", e.target.value)
-                      }
-                      className="w-full border rounded p-2"
-                    >
-                      <option value="">Select...</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  )}
-
-                  {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Text" && (
-                    <textarea
-                      value={q.sq_value || ""}
-                      onChange={(e) =>
-                        handleAnswerChange(q.sq_id, "sq_value", e.target.value)
-                      }
-                      className="w-full border rounded p-2"
-                      rows={3}
-                      placeholder="Enter your answer..."
-                    />
-                  )}
-
-                  {/* Show notes only if the question type is not Text */}
-                  {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) !== "Text" && (
-                    <input
-                      type="text"
-                      value={q.sq_note || ""}
-                      onChange={(e) =>
-                        handleAnswerChange(q.sq_id, "sq_note", e.target.value)
-                      }
-                      className="w-full border rounded p-2 mt-2"
-                      placeholder="Additional notes (if any)..."
-                    />
-                  )}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-        </div>
-      ))}
-
-      
-
-
-      {/* Feedback */}
-      <div className="p-4 bg-gray-50 border rounded-md shadow-sm">
-        <h3 className="text-lg font-semibold text-green-800">Session Feedback</h3>
-        <textarea
-          value={feedback}
-          onChange={(e) => setFeedback(e.target.value)}
-          className="w-full border rounded-md p-3 text-sm text-gray-800"
-          rows={4}
-          placeholder="Write your feedback about this session..."
-        />
-      </div>
+        );
+      })}
 
       {/* Finish Button */}
       <div className="flex justify-end gap-4 mt-6">
@@ -211,33 +246,9 @@ const StartMoreSession = () => {
           onClick={handleFinishSession}
           disabled={finishing}
           className={`px-6 py-2 rounded-md font-semibold text-white flex items-center justify-center gap-2 transition ${
-            finishing
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-green-600 hover:bg-green-700"
+            finishing ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
           }`}
         >
-          {finishing && (
-            <svg
-              className="animate-spin h-5 w-5 text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              ></circle>
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-              ></path>
-            </svg>
-          )}
           {finishing ? "Finishing..." : "Finish Session"}
         </button>
       </div>

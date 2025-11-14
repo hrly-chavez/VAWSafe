@@ -331,7 +331,9 @@ def mapped_questions(request):
     # Base queryset
     base_qs = SessionTypeQuestion.objects.filter(
         session_number=session_num,
-        session_type__id__in=type_ids
+        session_type__id__in=type_ids,
+        question__ques_is_active=True,                          
+        question__ques_category__is_active=True                 
     ).select_related("question", "question__ques_category", "session_type")
 
     # --- New logic: filter by assigned officials' roles if sess_id is given ---
@@ -418,7 +420,9 @@ def start_session(request, sess_id):
             assigned_roles = list(session.assigned_official.values_list("of_role", flat=True))
             all_mappings = SessionTypeQuestion.objects.filter(
                 session_number=session.sess_num,
-                session_type__id__in=type_ids
+                session_type__id__in=type_ids,
+                question__ques_is_active=True,
+                question__ques_category__is_active=True 
             ).filter(
                 Q(question__role__in=assigned_roles) |
                 Q(question__ques_category__role__in=assigned_roles)
@@ -428,7 +432,9 @@ def start_session(request, sess_id):
             # Individual session: role-filtered questions only
             all_mappings = SessionTypeQuestion.objects.filter(
                 session_number=session.sess_num,
-                session_type__id__in=type_ids
+                session_type__id__in=type_ids,
+                question__ques_is_active=True,
+                question__ques_category__is_active=True 
             ).filter(
                 Q(question__role__iexact=user_role) |
                 Q(question__ques_category__role__iexact=user_role)
@@ -438,6 +444,7 @@ def start_session(request, sess_id):
         for m in all_mappings:
             if not m.question:
                 continue  # Skip invalid mapping rows with no linked question
+            
             SessionQuestion.objects.get_or_create(
                 session=session,
                 question=m.question,
@@ -445,7 +452,7 @@ def start_session(request, sess_id):
                     "sq_is_required": False,
                     "sq_question_text_snapshot": m.question.ques_question_text,
                     "sq_answer_type_snapshot": m.question.ques_answer_type,
-                }
+                },
             )
 
     except Exception as e:
@@ -505,10 +512,11 @@ def add_custom_question(request, sess_id):
 def finish_session(request, sess_id):
     """
     POST: Marks current official's session progress as Done.
-    - Saves provided answers and records who answered them (answered_by, answered_at)
-    - Enforces that an official can only answer questions matching their role (if mapped)
-    - Marks SessionProgress for this official as done, and marks the overall session Done only
-      when all assigned officials finished.
+    - Saves provided answers
+    - Saves individual feedback inside SessionProgress.notes
+    - Rebuilds combined sess_description for the whole session
+    - Marks per-official progress as done
+    - Marks session done only when ALL officials finish
     """
     user = request.user
     if not hasattr(user, "official"):
@@ -520,60 +528,79 @@ def finish_session(request, sess_id):
         return Response({"error": "Session not found or not assigned to you"}, status=404)
 
     answers = request.data.get("answers", [])
-    skipped = []  # collect any skipped answers due to role mismatch or missing sq
+    skipped = []
     saved = 0
 
-    # Save answers inside a transaction to keep data consistent
     with transaction.atomic():
+        # ===============================
+        # SAVE ANSWERS
+        # ===============================
         for ans in answers:
             sq_id = ans.get("sq_id")
             if not sq_id:
                 continue
+
             try:
-                sq = SessionQuestion.objects.select_related("question").get(pk=sq_id, session=session)
+                sq = SessionQuestion.objects.select_related("question").get(
+                    pk=sq_id, session=session
+                )
             except SessionQuestion.DoesNotExist:
                 skipped.append({"sq_id": sq_id, "reason": "not_found"})
                 continue
 
-            # Server-side role enforcement:
+            # Enforce role-based permissions
             q_role = None
             if sq.question:
-                # prefer question.role (string), fallback to question.ques_category.role
-                q_role = sq.question.role or getattr(sq.question.ques_category, "role", None)
+                q_role = sq.question.role or getattr(
+                    sq.question.ques_category, "role", None
+                )
 
             if q_role and user.official.of_role and q_role != user.official.of_role:
-                # skip saving - not allowed for this official
-                skipped.append({"sq_id": sq_id, "reason": "role_mismatch", "question_role": q_role})
+                skipped.append({
+                    "sq_id": sq_id,
+                    "reason": "role_mismatch",
+                    "question_role": q_role
+                })
                 continue
 
-            # Save the provided answer
+            # Save value + note
             new_value = ans.get("value")
             new_note = ans.get("note")
-
-            # Only update fields if they changed (optional optimization)
             changed = False
+
             if new_value is not None and new_value != sq.sq_value:
                 sq.sq_value = new_value
                 changed = True
+
             if new_note is not None and new_note != sq.sq_note:
                 sq.sq_note = new_note
                 changed = True
 
-            # Always set who answered (even if they edited their previous answer)
             sq.answered_by = user.official
             sq.answered_at = timezone.now()
 
-            # Save
             if changed or True:
                 sq.save(update_fields=["sq_value", "sq_note", "answered_by", "answered_at"])
                 saved += 1
 
-        # Save description (if updated)
-        description = request.data.get("sess_description")
-        if description is not None:
-            session.sess_description = description
+        # ===============================
+        # SAVE INDIVIDUAL FEEDBACK
+        # ===============================
+        my_feedback = request.data.get("my_feedback", "").strip()
 
-        # Save selected services
+        progress, _ = SessionProgress.objects.get_or_create(
+            session=session,
+            official=user.official,
+        )
+
+        progress.notes = my_feedback
+        progress.finished_at = timezone.now()
+        progress.is_done = True
+        progress.save()
+
+        # ===============================
+        # SAVE SELECTED SERVICES
+        # ===============================
         service_ids = request.data.get("services", [])
         if isinstance(service_ids, list):
             session.services_given.all().delete()
@@ -584,25 +611,28 @@ def finish_session(request, sess_id):
                     of_id=user.official
                 )
 
-        # Update this official’s progress
-        progress, _ = SessionProgress.objects.get_or_create(
-            session=session,
-            official=user.official,
-        )
-        progress.is_done = True
-        progress.finished_at = timezone.now()
-        progress.save()
+        # ===============================
+        # REBUILD COMBINED sess_description
+        # ===============================
+        combined = []
+        for p in session.progress.select_related("official").all():
+            if p.notes and p.notes.strip():
+                combined.append(f"{p.official.of_role} – {p.notes.strip()}")
 
-        # Update session status only after saving progress
+        session.sess_description = "\n\n".join(combined).strip()
+
+        # ===============================
+        # UPDATE SESSION OVERALL STATUS
+        # ===============================
         if session.all_officials_done():
             session.sess_status = "Done"
         else:
             session.sess_status = "Ongoing"
+
         session.save()
 
     all_finished = session.all_officials_done()
 
-    # Return details including warnings about skipped answers
     return Response({
         "message": "Your session progress has been marked as done.",
         "saved_answers": saved,
