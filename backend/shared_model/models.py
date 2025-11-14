@@ -646,6 +646,10 @@ class SessionQuestion(models.Model):
     sq_custom_text = models.TextField(null=True, blank=True)
     sq_custom_answer_type = models.CharField(max_length=512, choices=Question.ANSWER_TYPES, null=True, blank=True)
 
+    # Immutable snapshots of the original Question at the time of hydration
+    sq_question_text_snapshot = models.TextField(null=True, blank=True)
+    sq_answer_type_snapshot = models.CharField(max_length=512, null=True, blank=True)
+
     # Direct answer fields
     sq_value = models.TextField(null=True, blank=True)
     sq_note = models.TextField(null=True, blank=True)
@@ -660,10 +664,12 @@ class SessionQuestion(models.Model):
     class Meta:
         unique_together = ('session', 'question')
 
+
     def __str__(self):
-        if self.question:
-            return f"Session {self.session.sess_id} - Q {self.question.ques_id} -> {self.sq_value or 'No answer'}"
-        return f"Session {self.session.sess_id} - Custom Q -> {self.sq_value or 'No answer'}"
+        text = self.sq_question_text_snapshot or (
+            self.question.ques_question_text if self.question else "Custom Question"
+        )
+        return f"Session {self.session.sess_id} - {text[:50]} -> {self.sq_value or 'No answer'}"
 
 #logging
 class ChangeLog(models.Model):

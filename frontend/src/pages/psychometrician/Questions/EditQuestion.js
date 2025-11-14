@@ -1,4 +1,4 @@
-//src/pages/social_worker/Questions/EditQuestion.js
+//src/pages/psychometrician/Questions/EditQuestion.js
 
 import { useEffect, useState } from "react";
 import Select from "react-select";
@@ -26,7 +26,7 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
   useEffect(() => {
     if (!show || !questionId) return;
     api
-      .get(`/api/social_worker/questions/${questionId}/`)
+      .get(`/api/psychometrician/questions/${questionId}/`)
       .then((res) => {
         setQuestion(res.data);
 
@@ -57,7 +57,7 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
 
   // Fetch dropdown data
   useEffect(() => {
-    api.get("/api/social_worker/questions/choices/").then((res) => {
+    api.get("/api/psychometrician/questions/choices/").then((res) => {
       setCategories(res.data.categories);
       setAnswerTypes(res.data.answer_types);
     });
@@ -73,7 +73,7 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
       setSessionNumbers(nums);
 
       api
-        .get("/api/social_worker/session-types/")
+        .get("/api/psychometrician/session-types/")
         .then((res) =>
           setSessionTypes(res.data.map((t) => ({ value: t.id, label: t.name })))
         )
@@ -89,14 +89,14 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
 
     try {
         const { mappings, created_by_name, ...editableFields } = question;
-        const res = await api.patch(`/api/social_worker/questions/${questionId}/`, editableFields);
+        const res = await api.patch(`/api/psychometrician/questions/${questionId}/`, editableFields);
 
         //  Backend only returns 200 if real changes occurred
         if (res.status === 200) {
         alert("Question updated successfully!");
 
         // Fetch latest question mappings
-        const updatedRes = await api.get(`/api/social_worker/questions/${questionId}/`);
+        const updatedRes = await api.get(`/api/psychometrician/questions/${questionId}/`);
         setQuestion(updatedRes.data);
 
         // Rebuild session number/type selections
@@ -172,7 +172,7 @@ const handleAssign = async () => {
   }
 
   try {
-    await api.post("/api/social_worker/questions/bulk-assign/", {
+    await api.post("/api/psychometrician/questions/bulk-assign/", {
       questions: [questionId],
       session_numbers: currentNumbers,
       session_types: currentTypes,
