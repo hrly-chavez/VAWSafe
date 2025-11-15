@@ -2,6 +2,7 @@ from rest_framework import serializers, generics, permissions
 from shared_model.models import *
 from datetime import date
 
+#===========================================VAWC Victim==========================================
 class VictimListSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
     violence_type = serializers.SerializerMethodField()
@@ -421,10 +422,15 @@ class ChangeLogSerializer(serializers.ModelSerializer):
 #             parts.append(str(instance.province))
 #         return ", ".join(parts) or "—"
 
+#===========================================Address==========================================
 class AddressSerializer(serializers.ModelSerializer):
     province_name = serializers.SerializerMethodField()
     municipality_name = serializers.SerializerMethodField()
     barangay_name = serializers.SerializerMethodField()
+
+    # province_name = serializers.CharField(source='province.name', read_only=True)
+    # municipality_name = serializers.CharField(source='municipality.name', read_only=True)
+    # barangay_name = serializers.CharField(source='barangay.name', read_only=True)
 
     class Meta:
         model = Address
@@ -456,18 +462,7 @@ class AddressSerializer(serializers.ModelSerializer):
         return getattr(obj.barangay, "name", getattr(obj.barangay, "brgy_name", str(obj.barangay)))
 
 
-
-# class OfficialSerializer(serializers.ModelSerializer):
-#     full_name = serializers.ReadOnlyField()
-#     address = AddressSerializer(read_only=True)
-
-#     class Meta:
-#         model = Official
-#         fields = [
-#             "of_id", "full_name", "of_role", "of_contact", "of_photo",
-#             "address", "of_assigned_barangay", "status"
-#         ]
-
+#===========================================Official==========================================
 class OfficialSerializer(serializers.ModelSerializer):
     full_name = serializers.ReadOnlyField()
     address = AddressSerializer(read_only=True)
@@ -477,8 +472,8 @@ class OfficialSerializer(serializers.ModelSerializer):
     class Meta:
         model = Official
         fields = [
-            "of_id", "full_name", "of_role", "of_contact", "of_email", "of_photo",
-            "address", "of_assigned_barangay", "status",
+            "of_id", "full_name", "of_role", "of_contact", "of_email", "of_photo", "of_dob", "of_pob", "of_fname", "of_lname", "of_m_initial", "of_sex",
+            "address", "status",
             "user_is_active", "deleted_at"
         ]
 
@@ -513,6 +508,7 @@ class BarangaySerializer(serializers.ModelSerializer):
         model = Barangay
         fields = "__all__"
 
+#===========================================Services==========================================
 class ServiceCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceCategory
@@ -592,7 +588,7 @@ class ServicesSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-# Serializers for Dashboard views
+#===========================================Serializers for Dashboard views==========================================
 class FemaleVictimSummarySerializer(serializers.Serializer):
     total_female_victims = serializers.IntegerField()
     minors = serializers.IntegerField()

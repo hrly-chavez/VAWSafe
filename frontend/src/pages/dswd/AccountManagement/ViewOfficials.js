@@ -51,10 +51,12 @@ export default function ViewOfficials() {
     switch ((role || "").toLowerCase()) {
       case "social worker":
         return "bg-yellow-500";
-      case "vawdesk":
+      case "nurse":
         return "bg-blue-600";
       case "dswd":
         return "bg-green-600";
+      case "pyschometrician":
+        return "bg-red-600";
       default:
         return "bg-gray-400";
     }
@@ -97,14 +99,10 @@ export default function ViewOfficials() {
   const [formEmail, setFormEmail] = useState("");
   const [formContact, setFormContact] = useState("");
   const [formSpec, setFormSpec] = useState("");
-  const [formAssignedBrgy, setFormAssignedBrgy] = useState("");
-  const [formStatus, setFormStatus] = useState("");   // optional
+  //const [formStatus, setFormStatus] = useState("");   // optional
   const [formPhoto, setFormPhoto] = useState(null);
   const [formReason, setFormReason] = useState("");
 
-  // dropdown options
-  const ROLE_OPTIONS = ["VAWDesk", "Social Worker"];
-  const STATUS_OPTIONS = ["pending", "approved", "rejected"];
 
   // barangay options fetched
   const [barangays, setBarangays] = useState([]);
@@ -118,8 +116,7 @@ export default function ViewOfficials() {
       setFormEmail(official.of_email || "");
       setFormContact(official.of_contact || "");
       setFormSpec(official.of_specialization || "");
-      setFormAssignedBrgy(official.of_assigned_barangay?.id || ""); // assumes serializer returns id
-      setFormStatus(official.status || "");
+      //setFormStatus(official.status || "");
       setFormPhoto(null);
       setFormReason("");
 
@@ -145,12 +142,7 @@ export default function ViewOfficials() {
     if ((official.of_email || "") !== (formEmail || "")) changed.of_email = formEmail || null;
     if ((official.of_contact || "") !== (formContact || "")) changed.of_contact = formContact || null;
     if ((official.of_specialization || "") !== (formSpec || "")) changed.of_specialization = formSpec || null;
-    if ((official.status || "") !== (formStatus || "")) changed.status = formStatus || null;
-
-    const currentBrgyId = official.of_assigned_barangay?.id ? String(official.of_assigned_barangay.id) : "";
-    if (String(currentBrgyId) !== String(formAssignedBrgy || "")) {
-      changed.of_assigned_barangay = formAssignedBrgy || null; // send ID
-    }
+    //if ((official.status || "") !== (formStatus || "")) changed.status = formStatus || null;
 
     if (formPhoto) changed.of_photo = formPhoto; // file
     return changed;
@@ -242,7 +234,7 @@ export default function ViewOfficials() {
           <img
             src={official.of_photo || "https://via.placeholder.com/80"}
             alt="Profile"
-            className="w-20 h-20 rounded-full object-cover border border-gray-300"
+            className="w-20 h-20 rounded-full object-cover border border-gr ay-300"
           />
           <div>
             <h2 className="text-xl font-semibold text-gray-800">{official.full_name}</h2>
@@ -263,7 +255,6 @@ export default function ViewOfficials() {
           <div><strong>Barangay:</strong> {official.address?.barangay?.name || "—"}</div>
           <div><strong>Sitio:</strong> {official.address?.sitio?.name || "—"}</div>
           <div><strong>Street:</strong> {official.address?.street?.name || "—"}</div>
-          <div><strong>Assigned Barangay:</strong> {official.of_assigned_barangay?.name || "—"}</div>
         </div>
 
         {/* Status summary */}
@@ -421,9 +412,6 @@ export default function ViewOfficials() {
                 {/* Header */}
                 <div className="px-6 pt-5 pb-3 border-b">
                   <h3 className="text-lg font-semibold text-gray-900 text-center">Edit Official</h3>
-                  <p className="text-xs text-gray-500 mt-1 text-center">
-                    Only admin-level fields are editable here. Changes are audited.
-                  </p>
                 </div>
 
                 {/* Body (scrolls if long) */}
@@ -538,12 +526,12 @@ export default function ViewOfficials() {
                         onChange={(e) => setFormRole(e.target.value)}
                       >
                         <option value="">—</option>
-                        {["DSWD","VAWDesk","Social Worker"].map(r => <option key={r} value={r}>{r}</option>)}
+                        {["DSWD","Nurse","Social Worker", "Psychometrician"].map(r => <option key={r} value={r}>{r}</option>)}
                       </select>
                     </div>
 
                     {/* Status */}
-                    <div>
+                    {/* <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                       <select
                         className="w-full border rounded px-3 py-2 text-sm"
@@ -553,7 +541,7 @@ export default function ViewOfficials() {
                         <option value="">—</option>
                         {["pending","approved","rejected"].map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
-                    </div>
+                    </div> */}
 
                     {/* Email */}
                     <div>
@@ -589,30 +577,6 @@ export default function ViewOfficials() {
                         onChange={(e) => setFormSpec(e.target.value)}
                         placeholder="e.g. Legal, Counseling"
                       />
-                    </div>
-
-                    {/* Assigned Barangay */}
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Assigned Barangay {brgyLoading && <span className="text-xs text-gray-400">(loading…)</span>}
-                      </label>
-                      <select
-                        className="w-full border rounded px-3 py-2 text-sm"
-                        value={formAssignedBrgy}
-                        onChange={(e) => setFormAssignedBrgy(e.target.value)}
-                      >
-                        <option value="">—</option>
-                        {formAssignedBrgy &&
-                          !barangays.some(b => String(b.id) === String(formAssignedBrgy)) && (
-                            <option value={formAssignedBrgy}>
-                              {official.of_assigned_barangay?.name || `Barangay #${formAssignedBrgy}`} (current)
-                            </option>
-                        )}
-                        {barangays.map(b => (
-                          <option key={b.id} value={b.id}>{b.name}</option>
-                        ))}
-                      </select>
-                      {brgyErr && <div className="text-xs text-red-500 mt-1">{brgyErr}</div>}
                     </div>
 
                     {/* Reason */}

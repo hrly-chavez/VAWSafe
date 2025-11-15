@@ -55,7 +55,7 @@ export default function Sidebar() {
         { icon: "/images/heart.png", label: "VAWC Victims",path: "/psychometrician/victims",},
         { icon: "/images/case.png", label: "Case Records",path: "/psychometrician/case-records",},
         { icon: "/images/meeting.png", label: "Scheduled Sessions",path: "/psychometrician/sessions",},
-        { icon: "/images/calendar.png", label: "My Schedule",path: "/psychometrician/schedule",},
+        // { icon: "/images/calendar.png", label: "My Schedule",path: "/psychometrician/schedule",},
         { icon: "/images/peace.png", label: "Services",path: "/psychometrician/services",},
         { icon: "/images/calendar.png", label: "Questions", path: "/psychometrician/questions" },
         { icon: "/images/logout.png", label: "Log Out", path: "/login",isLogout: true,},
@@ -69,7 +69,7 @@ export default function Sidebar() {
         { icon: "/images/heart.png", label: "VAWC Victims",path: "/social_worker/victims",},
         { icon: "/images/case.png", label: "Case Records",path: "/social_worker/case-records",},
         { icon: "/images/meeting.png",label: "Scheduled Sessions",path: "/social_worker/sessions",},
-        { icon: "/images/calendar.png", label: "My Schedule",path: "/social_worker/schedule",},
+        // { icon: "/images/calendar.png", label: "My Schedule",path: "/social_worker/schedule",},
         { icon: "/images/calendar.png", label: "Questions", path: "/social_worker/questions" },
         { icon: "/images/peace.png", label: "Services", path: "/social_worker/services",},
         { icon: "/images/logout.png", label: "Log Out", path: "/login",isLogout: true,},
@@ -108,7 +108,29 @@ export default function Sidebar() {
   const sidebarItems = getSidebarItems();
   const displayName =
     user?.name || `${user?.fname || ""} ${user?.lname || ""}`.trim();
-  const profilePhoto = user?.profile_photo_url || "/images/bussiness-man.png";
+  // Use the correct field for the user's profile photo
+  const profilePhoto = user?.of_photo ? `http://localhost:8000${user.of_photo}` : "/images/bussiness-man.png"; // Fallback to default if no photo is found
+
+  // Handle dynamic redirection based on user role
+  const handleProfileClick = () => {
+    const role = user?.role?.toLowerCase();
+    switch (role) {
+      case "dswd":
+        navigate("/dswd/profile");
+        break;
+      case "nurse":
+        navigate("/nurse/profile");
+        break;
+      case "psychometrician":
+        navigate("/psychometrician/profile");
+        break;
+      case "social worker":
+        navigate("/social_worker/profile");
+        break;
+      default:
+        break;
+    }
+  };
 
   return (
     <aside className="min-h-screen w-[220px] bg-[#2F2F4F] text-white font-poppins sticky top-[70px] shadow-lg z-10">
@@ -117,10 +139,11 @@ export default function Sidebar() {
         <img
           src={profilePhoto}
           alt="Profile"
-          className="h-[90px] w-[90px] object-cover rounded-full shadow-md"
+          className="h-[90px] w-[90px] object-cover rounded-full shadow-md cursor-pointer"  // Added cursor pointer for clickable image
+          onClick={handleProfileClick}  // On click, redirect based on user role
         />
         <div className="mt-3 text-center w-full px-2">
-          <h1 className="text-sm font-bold text-white truncate uppercase">
+          <h1 className="text-sm font-bold text-white truncate uppercase cursor-pointer" onClick={handleProfileClick}>
             {displayName || "USER"}
           </h1>
           <p className="text-xs text-gray-300 mt-1">{user?.role || ""}</p>

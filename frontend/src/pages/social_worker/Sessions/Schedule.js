@@ -5,14 +5,16 @@ import { CheckCircleIcon, PlayCircleIcon } from "@heroicons/react/24/solid";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import WorkerCardSection from "./WorkerCardSection";
-
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Schedule({ victim, incident, back, next }) {
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [time, setTime] = useState(new Date().toTimeString().slice(0, 5));
-  const [location, setLocation] = useState("");
   const [sessionTypes, setSessionTypes] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
+  const [roleFilter, setRoleFilter] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   // New states for social workers display
@@ -22,14 +24,33 @@ export default function Schedule({ victim, incident, back, next }) {
   const [loadingSW, setLoadingSW] = useState(true);
 
   const handleSubmitSchedule = async () => {
-  try {
-    const payload = {
-      incident_id: incident?.incident_id,
-      sess_next_sched: `${date}T${time}:00Z`,
-      sess_location: location,
-      sess_type: selectedTypes.map((t) => t.value),
-      assigned_official: selectedOfficials.map((id) => id),
-    };
+    if (isSubmitting) return; // Prevent multiple rapid clicks
+    setIsSubmitting(true);
+    try {
+      // Combine selected date & time into one Date object
+      const selectedDateTime = new Date(`${date}T${time}:00`);
+      const now = new Date();
+
+      // Validate that selected schedule is not in the past
+      if (selectedDateTime < now) {
+        toast.error("You cannot schedule a session in the past!", {
+          position: "top-right",
+          autoClose: 2000,
+        });
+        setIsSubmitting(false);
+        return; // Stop execution
+      }
+
+      const payload = {
+        incident_id: incident?.incident_id,
+        sess_next_sched: `${date}T${time}:00Z`,
+        sess_type: Array.isArray(selectedTypes)
+          ? selectedTypes.map((t) => Number(t.value))
+          : [],
+        assigned_official: Array.isArray(selectedOfficials)
+          ? selectedOfficials.map((id) => Number(id))
+          : [],
+      };
 
     const res = await api.post("/api/social_worker/sessions/", payload);
 
@@ -38,20 +59,47 @@ export default function Schedule({ victim, incident, back, next }) {
       { dateStyle: "medium", timeStyle: "short" }
     );
 
-    alert(`Session scheduled successfully!\nDate: ${readableDate}`);
-    if (next) next();
+    toast.success(`Session scheduled successfully! 📅 ${readableDate}`, {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+    });
+
+    // Redirect after short delay to let user see toast
+    setTimeout(() => navigate("/social_worker/sessions"), 2000);
   } catch (err) {
     if (err.response?.data) {
       console.error("Schedule error:", err.response.data);
-      alert(
-        "Failed to schedule session:\n" +
-          JSON.stringify(err.response.data, null, 2)
-      );
+
+      // Extract backend error message (handles multiple formats)
+      const errorMsg =
+        typeof err.response.data === "object"
+          ? Object.values(err.response.data).flat().join(" ")
+          : err.response.data;
+
+      toast.error(`Failed to schedule session: ${errorMsg}`, {
+        position: "top-right",
+        autoClose: 4000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+      });
     } else {
-      alert("Failed to schedule session: " + err.message);
+      toast.error("Failed to schedule session: " + err.message, {
+        position: "top-right",
+        autoClose: 4000,
+      });
     }
+    setIsSubmitting(false);
   }
 };
+
 
 
   // Load session types
@@ -144,16 +192,7 @@ export default function Schedule({ victim, incident, back, next }) {
           </div>
         </div>
 
-        {/* Location */}
-        <div>
-          <label className="text-xs text-gray-600">Location Address</label>
-          <input
-            type="text"
-            className="w-full border rounded p-2"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-          />
-        </div>
+        
 
         {/* Type of Session */}
         <div>
@@ -175,6 +214,7 @@ export default function Schedule({ victim, incident, back, next }) {
             Assign  Official
           </h3>
           <div className="flex flex-wrap gap-3 mb-3">
+          
             <input
               type="text"
               placeholder="Search by name..."
@@ -185,17 +225,24 @@ export default function Schedule({ victim, incident, back, next }) {
               }}
               className="border px-3 py-2 rounded-md w-64 text-sm"
             />
-             <input
-                type="text"
-                placeholder="Search by role (coming soon)"
-                disabled
-                className="border px-3 py-2 rounded-md w-64 text-sm bg-gray-100 cursor-not-allowed"
-              />
+
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              className="border px-3 py-2 rounded-md w-64 text-sm"
+            >
+              <option value="">All Roles</option>
+              <option value="Social Worker">Social Worker</option>
+              <option value="Nurse">Nurse</option>
+              <option value="Psychometrician">Psychometrician</option>
+              <option value="Home Life">Home Life</option>
+            </select>
+
           </div>
 
           {/* Cards Section */}
           <WorkerCardSection
-          officials={officials}
+          officials={officials.filter((w) =>roleFilter ? w.role === roleFilter : true)}
           loadingSW={loadingSW}
           selectedOfficials={selectedOfficials}
           setSelectedOfficials={setSelectedOfficials}
@@ -220,12 +267,18 @@ export default function Schedule({ victim, incident, back, next }) {
         )}
         <button
           onClick={handleSubmitSchedule}
-          className="flex items-center gap-2 px-6 py-2 rounded-md bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold shadow hover:from-green-600 hover:to-green-700 transition-all"
-        >
+          disabled={isSubmitting}
+          className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold shadow transition-all 
+            ${isSubmitting
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
+            }`}>
           <CheckCircleIcon className="h-5 w-5" />
-          Submit to Schedule Session
+          {isSubmitting ? "Submitting..." : "Submit to Schedule Session"}
         </button>
       </div>
+       {/* Toast container */}
+      <ToastContainer />
     </div>
   );
 }

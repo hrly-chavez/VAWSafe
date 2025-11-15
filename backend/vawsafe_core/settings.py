@@ -86,6 +86,7 @@ INSTALLED_APPS = [
     'dswd',
     'nurse',
     'psychometrician',
+    'home_life',
     
     #gibutangan nako ug apps.SharedModelConfig para sa face embeddings para sa /admin
     'shared_model.apps.SharedModelConfig',
@@ -153,7 +154,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'vawsafe',
         'USER': 'postgres',
-        'PASSWORD': 'postgres', 
+        'PASSWORD': '123456', 
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -169,6 +170,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 12,  # Minimum password length
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -176,7 +180,18 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+    # Add custom validators here
+    {
+        'NAME': 'dswd.validators.UppercaseValidator',  # Adjust the path to your dswd
+    },
+    {
+        'NAME': 'dswd.validators.LowercaseValidator',
+    },
+    {
+        'NAME': 'dswd.validators.SpecialCharacterValidator',
+    },
 ]
+
 
 
 # Internationalization
@@ -260,7 +275,7 @@ EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "carataojoegie@gmail.com"        # your Gmail
-EMAIL_HOST_PASSWORD = "qvrt xcrf meek royf"  # 👈 from Step 2
+EMAIL_HOST_PASSWORD = "qvrt xcrf meek royf"  #  from Step 2
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 

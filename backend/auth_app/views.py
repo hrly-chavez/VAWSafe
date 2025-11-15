@@ -25,7 +25,7 @@ from shared_model.views import serve_encrypted_file
 
 from deepface import DeepFace
 from PIL import Image
-from django.utils.crypto import get_random_string
+import random, string
 from vawsafe_core.blink_model.blink_utils import detect_blink
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 
@@ -39,15 +39,24 @@ def me(request):
     if not user:
         return Response({"authenticated": False}, status=200)
 
-    # official = getattr(user, "official", None)
     try:
         official = user.official
     except Official.DoesNotExist:
         official = None
+
+    if not official:
+        return Response({"authenticated": False}, status=200)
+
     role = getattr(official, "of_role", None)
-    name = getattr(official, "full_name",
-                   f"{getattr(official, 'of_fname', '')} {getattr(official, 'of_lname', '')}".strip())
+    name = getattr(official, "full_name", f"{getattr(official, 'of_fname', '')} {getattr(official, 'of_lname', '')}".strip())
     official_id = getattr(official, "of_id", None)
+
+    # Get the profile photo URL
+    of_photo = getattr(official, "of_photo", None)
+    if of_photo:
+        of_photo_url = of_photo.url  # Access the .url property to get the URL of the image
+    else:
+        of_photo_url = None  # If no photo, return None or a default URL
 
     return Response({
         "authenticated": True,
@@ -56,6 +65,7 @@ def me(request):
             "role": role,
             "name": name,
             "official_id": official_id,
+            "of_photo": of_photo_url,  # Return the URL of the photo
         }
     }, status=200)
 
@@ -182,6 +192,34 @@ def check_dswd_exists(request):
 #                 if os.path.exists(f):
 #                     os.remove(f)
 
+def generate_strong_password(length=12):
+    if length < 12:
+        raise ValueError("Password length must be at least 12 characters.")
+
+    # Define character sets
+    lowercase = string.ascii_lowercase
+    uppercase = string.ascii_uppercase
+    digits = string.digits
+    special_characters = string.punctuation
+
+    # Ensure that password contains at least one character from each set
+    password = [
+        random.choice(lowercase),
+        random.choice(uppercase),
+        random.choice(digits),
+        random.choice(special_characters),
+    ]
+
+    # Fill the rest of the password length with random choices from all sets
+    remaining_length = length - len(password)
+    all_characters = lowercase + uppercase + digits + special_characters
+    password += random.choices(all_characters, k=remaining_length)
+
+    # Shuffle the result to ensure randomness
+    random.shuffle(password)
+
+    # Return the password as a string
+    return ''.join(password)
 
 class create_official(APIView):
     parser_classes = [MultiPartParser, FormParser]
@@ -213,7 +251,7 @@ class create_official(APIView):
 
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or get_random_string(8)
+            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(12)
 
             # Ensure unique username
             username = base_username
@@ -222,14 +260,14 @@ class create_official(APIView):
                 counter += 1
                 username = f"{base_username}{counter}"
 
-            generated_password = get_random_string(length=12)
+            generated_password = generate_strong_password(length=12)
             user = User.objects.create_user(username=username, password=generated_password)
             status_value = "approved"
 
         elif role == "Social Worker":
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or get_random_string(8)
+            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(12)
 
             username = base_username
             counter = 0
@@ -237,14 +275,14 @@ class create_official(APIView):
                 counter += 1
                 username = f"{base_username}{counter}"
 
-            generated_password = get_random_string(length=12)
+            generated_password = generate_strong_password(length=12)
             user = User.objects.create_user(username=username, password=generated_password)
             status_value = "approved"
 
         elif role == "Nurse":
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or get_random_string(8)
+            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(12)
 
             username = base_username
             counter = 0
@@ -252,14 +290,14 @@ class create_official(APIView):
                 counter += 1
                 username = f"{base_username}{counter}"
 
-            generated_password = get_random_string(length=12)
+            generated_password = generate_strong_password(length=12)
             user = User.objects.create_user(username=username, password=generated_password)
             status_value = "approved"
 
         elif role == "Psychometrician":
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or get_random_string(8)
+            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(12)
 
             username = base_username
             counter = 0
@@ -267,7 +305,7 @@ class create_official(APIView):
                 counter += 1
                 username = f"{base_username}{counter}"
 
-            generated_password = get_random_string(length=12)
+            generated_password = generate_strong_password(length=12)
             user = User.objects.create_user(username=username, password=generated_password)
             status_value = "approved"
         else:
@@ -641,7 +679,8 @@ class CookieTokenObtainPairView(views.APIView):
             status="Success"
         )
         return resp
-    
+
+#=================================Login Tracker=====================================
 class LoginTrackerViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = LoginTracker.objects.all().order_by('-login_time')
     serializer_class = LoginTrackerSerializer

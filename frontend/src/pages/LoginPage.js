@@ -262,6 +262,16 @@ const LoginPage = () => {
           official_id: loginData.official_id,
         });
 
+        // ✅ Fetch full user info including profile photo
+        try {
+          const meRes = await api.get("/api/auth/me/"); // ensure CSRF token if needed
+          if (meRes.data?.authenticated && meRes.data.user) {
+            authLogin(meRes.data.user); // update context with full user object including of_photo
+          }
+        } catch (err) {
+          console.error("Failed to fetch full user info:", err);
+        }
+
         // ✅ Welcome card
         setWelcomeData({
           name: loginData.name,
@@ -464,13 +474,23 @@ const LoginPage = () => {
       const data = await response.json();
 
       if (response.ok && data.match) {
-        // ✅ Tokens are in HttpOnly cookies; just store user in context
+        // Step 1: optionally set basic info. Tokens are in HttpOnly cookies; just store user in context
         authLogin({
           username: data.username,
           role: data.role,
           name: data.name,
           official_id: data.official_id,
         });
+
+        // Step 2: fetch the full user info including profile photo
+        try {
+          const meRes = await api.get("/api/auth/me/"); // Ensure CSRF cookie is set if needed
+          if (meRes.data?.authenticated && meRes.data.user) {
+            authLogin(meRes.data.user); // update context with full user object including of_photo
+          }
+        } catch (err) {
+          console.error("Failed to fetch full user info:", err);
+        }
 
         setMessage(`Welcome, ${data.name} (${data.role})`);
 

@@ -4,7 +4,8 @@ from .views import *
 router = DefaultRouter()
 
 router.register(r"officials", OfficialViewSet, basename='official')
-router.register(r'pending-officials', PendingOfficials, basename='pending-officials')
+# router.register(r'pending-officials', PendingOfficials, basename='pending-officials')
+router.register(r'profile', ProfileViewSet, basename='profile')
 
 urlpatterns = [
     #victim
@@ -14,6 +15,7 @@ urlpatterns = [
     #part gihapon sa victim pero view sessions sa victim
     path("victims/sessions/<int:sess_id>/", SessionDetailView.as_view(), name="session-detail"),
     path("victims/search-victim/", search_victim_facial.as_view(), name="search-face"),
+    #address
     path("provinces/", ProvinceList.as_view(), name="province"),
     path("municipalities/", MunicipalityList.as_view(), name="municipality"),
     path("barangays/", BarangayList.as_view(), name="barangay"),
@@ -45,13 +47,16 @@ urlpatterns = [
     path("service-categories/", ServiceCategoryListView.as_view(), name="service-categories"),
     path("services/<int:pk>/", ServicesDetailView.as_view(), name="dswd-service-detail"),
 
-    #change password
+    #change password (admin)
     path("change-pass/", ChangePasswordFaceView.as_view(), name="change-pass"),
     path("verify-email/", VerifyEmailView.as_view(), name="verify-email"),
     path("reset-pass/", ResetPasswordView.as_view(), name="reset-pass"),
+
+    #change password (user)
+    path('update-username-password/', UpdateUsernamePasswordView.as_view(), name='change-password-logged-in'),
 
     #reports
     path("dswddashboard/summary/", DSWDDashboardAPIView.as_view(), name="dswd-dashboard-summary"),
 
     path('', include(router.urls)),
-] + router.urls
+]# + router.urls
