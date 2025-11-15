@@ -1302,10 +1302,14 @@ class DSWDDashboardAPIView(APIView):
             report_rows.append({
                 "month": month_name[i],
                 "totalVictims": len(month_incidents),
-                "sexual": sum(1 for inc in month_incidents if inc.violence_type == "Sexual"),
-                "physical": sum(1 for inc in month_incidents if inc.violence_type == "Physical"),
-                "psychological": sum(1 for inc in month_incidents if inc.violence_type == "Psychological"),
-                "economic": sum(1 for inc in month_incidents if inc.violence_type == "Economic"),
+                "Physical_Violence": sum(1 for inc in month_incidents if inc.violence_type == "Physical Violence"),
+                "Physical_Abuse": sum(1 for inc in month_incidents if inc.violence_type == "Physical Abuse"),
+                "Psychological_Violence": sum(1 for inc in month_incidents if inc.violence_type == "Psychological Violence"),
+                "Psychological_Abuse": sum(1 for inc in month_incidents if inc.violence_type == "Psychological Abuse"),
+                "Economic_Abused": sum(1 for inc in month_incidents if inc.violence_type == "Economic Abused"),
+                "Strandee": sum(1 for inc in month_incidents if inc.violence_type == "Strandee"),
+                "Sexually_Abused": sum(1 for inc in month_incidents if inc.violence_type == "Sexually Abused"),
+                "Sexually_Exploited": sum(1 for inc in month_incidents if inc.violence_type == "Sexually Exploited"),
                 "referredDSWD": 0,
                 "referredHospital": 0,
             })
