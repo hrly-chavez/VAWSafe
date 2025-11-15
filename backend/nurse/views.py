@@ -204,12 +204,16 @@ class victim_list(generics.ListAPIView):
     allowed_roles = ['Social Worker']
 
     def get_queryset(self):
+        # Allow all authenticated users with valid roles to see all victims
         user = self.request.user
-        if hasattr(user, "official") and user.official.of_role == "Social Worker":
-            return Victim.objects.filter(
-                incidents__sessions__assigned_official=user.official
-            ).distinct()
-        return Victim.objects.none()
+        official = getattr(user, "official", None)
+        role = getattr(official, "of_role", None)
+
+        if not role:
+            return Victim.objects.none()  #prevents non-officials
+
+        return Victim.objects.all().distinct()
+
 
 class victim_detail(generics.RetrieveAPIView):
     serializer_class = VictimDetailSerializer

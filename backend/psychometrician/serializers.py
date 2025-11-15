@@ -326,9 +326,9 @@ class SessionTypeQuestionSerializer(serializers.ModelSerializer):
             return "Unassigned"
 
 class SessionQuestionSerializer(serializers.ModelSerializer):
-    question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
+    question_text = serializers.SerializerMethodField()
     question_category_name = serializers.SerializerMethodField()
-    question_answer_type = serializers.CharField(source="question.ques_answer_type", read_only=True)
+    question_answer_type = serializers.SerializerMethodField()
 
     #fields to expose who answered this question (if any)
     answered_by = serializers.IntegerField(source="answered_by.pk", read_only=True)
@@ -358,7 +358,20 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
             "is_answered",
             "assigned_role",
         ]
-
+    def get_question_text(self, obj):
+    # Prefer snapshot version, then fall back to linked question
+        return (
+            obj.sq_question_text_snapshot
+            or (obj.question.ques_question_text if obj.question else obj.sq_custom_text)
+            or None
+        )
+    def get_question_answer_type(self, obj):
+    # Prefer snapshot version, then fall back to linked question
+        return (
+            obj.sq_answer_type_snapshot
+            or (obj.question.ques_answer_type if obj.question else obj.sq_custom_answer_type)
+            or None
+        )
     def get_is_answered(self, obj):
         return obj.sq_value is not None and obj.sq_value != ""
 
@@ -380,6 +393,7 @@ class SessionQuestionSerializer(serializers.ModelSerializer):
             return obj.question.role or getattr(obj.question.ques_category, "role", None)
         except Exception:
             return None
+
 #=====SERVICES======
 class ServicesSerializer(serializers.ModelSerializer):
     """Lists all available services or organizations under each category."""

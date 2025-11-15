@@ -300,151 +300,12 @@ const LoginPage = () => {
     }
   };
 
-  //old face login
-  // const handleFaceLogin = async () => {
-  //     loginCancelledRef.current = false; // reset on new attempt
-  //     setShowCamera(true);
-  //     setShowCounter(true);
-  //     setLoading(true);
-  //     setMessage(
-  //       <div className="flex items-center gap-2 text-white-600 text-lg">
-  //         <CameraIcon className="w-5 h-5" />
-  //         <span>Please look at the camera to log in.</span>
-  //       </div>
-  //     );
-  //     setBlinkCaptured(false);
-
-  //     // countdown
-  //     for (let i = 3; i > 0; i--) {
-  //       if (loginCancelledRef.current) return; // stop if cancelled
-  //       setCountdown(i);
-  //       await delay(1000);
-  //     }
-
-  //     if (loginCancelledRef.current) return;
-
-  //     setCountdown(null);
-  //     setMessage(
-  //       <div className="flex items-center gap-2 text-white-600 text-lg">
-  //         <EyeIcon className="w-5 h-5" />
-  //         <span>Capturing frames... Please blink now!</span>
-  //       </div>
-  //     );
-
-  //     const frames = await captureBurstFrames();
-  //     if (loginCancelledRef.current) return;
-
-  //     if (frames.length === 0) {
-  //       setMessage(" Failed to capture webcam images.");
-  //       setLoading(false);
-  //       return;
-  //     }
-
-  //     // Step 1: Blink check
-  //     const blinkForm = new FormData();
-  //     frames.forEach((frame, i) => {
-  //       const blob = base64ToBlob(frame);
-  //       blinkForm.append(`frame${i + 1}`, blob, `frame${i + 1}.jpg`);
-  //     });
-
-  //     try {
-  //       const blinkRes = await fetch(
-  //         "http://localhost:8000/api/auth/blink-check/",
-  //         {
-  //           method: "POST",
-  //           body: blinkForm,
-  //         }
-  //       );
-  //       if (loginCancelledRef.current) return;
-  //       const blinkData = await blinkRes.json();
-
-  //       if (!blinkRes.ok || !blinkData.blink) {
-  //         setMessage(blinkData.message || " No blink detected, please try again.");
-  //         setLoading(false);
-  //         return;
-  //       }
-
-  //       setBlinkCaptured(true);
-  //       setMessage(
-  //         <div className="flex items-center gap-2 text-green-600 text-lg">
-  //           <CheckCircleIcon className="w-5 h-5" />
-  //           <span>Blink captured. Now verifying face...</span>
-  //         </div>
-  //       );
-
-  //       // Step 2: Send candidate frames to face-login
-  //       const loginForm = new FormData();
-  //       blinkData.candidate_indices.forEach((idx, j) => {
-  //         const chosenBlob = base64ToBlob(frames[idx]);
-  //         loginForm.append(`frame${j + 1}`, chosenBlob, `frame${j + 1}.jpg`);
-  //       });
-
-  //       const loginRes = await fetch(
-  //         "http://localhost:8000/api/auth/face-login/",
-  //         {
-  //           method: "POST",
-  //           body: loginForm,
-  //         }
-  //       );
-  //       if (loginCancelledRef.current) return;
-
-  //       const loginData = await loginRes.json();
-  //       console.log("Face login response:", loginData);
-  //       setLoading(false);
-
-  //       if (loginRes.ok && loginData.match) {
-  //         console.log("loginData.user:", loginData.user);
-  //         //  Store JWT tokens and user info in localStorage for axios interceptor
-  //         localStorage.setItem(
-  //           "vawsafeAuth",
-  //           JSON.stringify({
-  //             access: loginData.tokens.access,
-  //             refresh: loginData.tokens.refresh,
-  //             user: {
-  //               username: loginData.username,
-  //               role: loginData.role,
-  //               name: loginData.name,
-  //               official_id: loginData.official_id,
-  //             },
-  //           })
-  //         );
-
-  //         // ✅ Also set welcome card info
-  //         setWelcomeData({
-  //           name: loginData.name,
-  //           role: loginData.role,
-  //           username: loginData.username,
-  //           official_id: loginData.official_id,
-  //         });
-  //         setShowWelcomeCard(true);
-
-  //         const user = loginData;
-  //         setTimeout(() => {
-  //           // ✅ Redirect based on role
-  //           if (user.role === "DSWD") {
-  //             navigate("/dswd");
-  //           } else if (user.role === "VAWDesk") {
-  //             navigate("/desk_officer");
-  //           } else if (user.role === "Social Worker") {
-  //             navigate("/social_worker");
-  //           } else {
-  //             navigate("/login"); // fallback
-  //           }
-  //         }, 5000);
-  //       } else {
-  //         setMessage(loginData.message || " Face verification failed.");
-  //       }
-  //     } catch (err) {
-  //       console.error(err);
-  //       setMessage("Server error. Please try again.");
-  //       setLoading(false);
-  //     }
-
-  //   };
-
   const handleManualLogin = async () => {
-    const newErrors = { username: "", password: "" };
+    setLoginErrors({ username: "", password: "" });
+    setBackendErrors({ username: "", password: "" });
+
     let hasError = false;
+    const newErrors = { username: "", password: "" };
 
     if (!username.trim()) {
       newErrors.username = "Username is required.";
@@ -455,26 +316,21 @@ const LoginPage = () => {
       hasError = true;
     }
 
-    setLoginErrors(newErrors);
-    if (hasError) return;
-
-    setMessage("Logging in...");
+    if (hasError) {
+      setLoginErrors(newErrors);
+      return;
+    }
 
     try {
-      const response = await apiFetch(
-        "http://localhost:8000/api/auth/manual-login/",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          // credentials: "include", // ⬅️ send/receive cookies
-          body: JSON.stringify({ username, password }),
-        }
-      );
+      const response = await apiFetch("http://localhost:8000/api/auth/manual-login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
       const data = await response.json();
 
       if (response.ok && data.match) {
-        // Step 1: optionally set basic info. Tokens are in HttpOnly cookies; just store user in context
         authLogin({
           username: data.username,
           role: data.role,
@@ -482,17 +338,14 @@ const LoginPage = () => {
           official_id: data.official_id,
         });
 
-        // Step 2: fetch the full user info including profile photo
         try {
-          const meRes = await api.get("/api/auth/me/"); // Ensure CSRF cookie is set if needed
+          const meRes = await api.get("/api/auth/me/");
           if (meRes.data?.authenticated && meRes.data.user) {
-            authLogin(meRes.data.user); // update context with full user object including of_photo
+            authLogin(meRes.data.user);
           }
         } catch (err) {
           console.error("Failed to fetch full user info:", err);
         }
-
-        setMessage(`Welcome, ${data.name} (${data.role})`);
 
         const role = (data.role || "").toLowerCase();
         if (role === "social worker") navigate("/social_worker");
@@ -500,23 +353,19 @@ const LoginPage = () => {
         else if (role === "psychometrician") navigate("/psychometrician");
         else if (role === "dswd") navigate("/dswd");
       } else {
-        if (data.message?.toLowerCase().includes("username")) {
-          setBackendErrors({ username: "Username not found", password: "" });
-        } else if (data.message?.toLowerCase().includes("password")) {
-          setBackendErrors({ username: "", password: "Incorrect password" });
-        } else {
-          setBackendErrors({ username: "", password: "" });
-          setMessage(data.message || "Invalid credentials");
-        }
+        // Generic inline error for both fields
+        const genericError = "Username or password is incorrect.";
+        setBackendErrors({ username: "", password: genericError });
       }
     } catch (err) {
       console.error(err);
-      setMessage("Server error. Try again later.");
+      const genericError = "Username or password is incorrect.";
+      setBackendErrors({ username: "", password: genericError });
     }
   };
 
-  //old manual login
-  // Utility Functions for ManualLogin
+
+
   // const handleManualLogin = async () => {
   //   const newErrors = { username: "", password: "" };
   //   let hasError = false;
@@ -525,7 +374,6 @@ const LoginPage = () => {
   //     newErrors.username = "Username is required.";
   //     hasError = true;
   //   }
-
   //   if (!password.trim()) {
   //     newErrors.password = "Password is required.";
   //     hasError = true;
@@ -537,11 +385,12 @@ const LoginPage = () => {
   //   setMessage("Logging in...");
 
   //   try {
-  //     const response = await fetch(
+  //     const response = await apiFetch(
   //       "http://localhost:8000/api/auth/manual-login/",
   //       {
   //         method: "POST",
   //         headers: { "Content-Type": "application/json" },
+  //         // credentials: "include", // ⬅️ send/receive cookies
   //         body: JSON.stringify({ username, password }),
   //       }
   //     );
@@ -549,36 +398,36 @@ const LoginPage = () => {
   //     const data = await response.json();
 
   //     if (response.ok && data.match) {
-  //       // ✅ Store JWT tokens and user info for axios interceptor
-  //       localStorage.setItem(
-  //         "vawsafeAuth",
-  //         JSON.stringify({
-  //           access: data.tokens.access,
-  //           refresh: data.tokens.refresh,
-  //           user: {
-  //             username: data.username,
-  //             role: data.role,
-  //             name: data.name,
-  //             official_id: data.official_id,
-  //           },
-  //         })
-  //       );
+  //       // Step 1: optionally set basic info. Tokens are in HttpOnly cookies; just store user in context
+  //       authLogin({
+  //         username: data.username,
+  //         role: data.role,
+  //         name: data.name,
+  //         official_id: data.official_id,
+  //       });
+
+  //       // Step 2: fetch the full user info including profile photo
+  //       try {
+  //         const meRes = await api.get("/api/auth/me/"); // Ensure CSRF cookie is set if needed
+  //         if (meRes.data?.authenticated && meRes.data.user) {
+  //           authLogin(meRes.data.user); // update context with full user object including of_photo
+  //         }
+  //       } catch (err) {
+  //         console.error("Failed to fetch full user info:", err);
+  //       }
 
   //       setMessage(`Welcome, ${data.name} (${data.role})`);
 
-  //       const role = data.role?.toLowerCase();
+  //       const role = (data.role || "").toLowerCase();
   //       if (role === "social worker") navigate("/social_worker");
-  //       else if (role === "vawdesk") navigate("/desk_officer");
+  //       else if (role === "nurse") navigate("/nurse");
+  //       else if (role === "psychometrician") navigate("/psychometrician");
   //       else if (role === "dswd") navigate("/dswd");
   //     } else {
-  //       if (data.message?.toLowerCase().includes("username")) {
-  //         setBackendErrors({ username: "Username not found", password: "" });
-  //       } else if (data.message?.toLowerCase().includes("password")) {
-  //         setBackendErrors({ username: "", password: "Incorrect password" });
-  //       } else {
-  //         setBackendErrors({ username: "", password: "" });
-  //         setMessage(data.message || "Invalid credentials");
-  //       }
+  //       setBackendErrors({
+  //       username: "Incorrect username",
+  //       password: "Incorrect password",
+  //   });
   //     }
   //   } catch (err) {
   //     console.error(err);
@@ -707,7 +556,6 @@ const LoginPage = () => {
                         value={username}
                         onChange={(e) => {
                           setUsername(e.target.value);
-                          setBackendErrors({ ...backendErrors, username: "" });
                         }}
                         className="bg-transparent w-full outline-none placeholder-gray-400"
                       />
@@ -722,7 +570,6 @@ const LoginPage = () => {
                     )}
                   </div>
 
-
                   {/* Password */}
                   <div className="relative w-full">
                     <div className="w-full flex items-center px-4 py-3 rounded-full bg-gray-50 border border-gray-200 text-gray-700 shadow-inner">
@@ -733,7 +580,6 @@ const LoginPage = () => {
                         value={password}
                         onChange={(e) => {
                           setPassword(e.target.value);
-                          setBackendErrors({ ...backendErrors, password: "" });
                         }}
                         className="bg-transparent w-full outline-none placeholder-gray-400"
                       />
