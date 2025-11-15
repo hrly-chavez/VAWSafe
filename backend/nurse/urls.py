@@ -1,5 +1,6 @@
 from django.urls import path
 from .views import *
+from . import views
 
 urlpatterns = [
     path("register-victim/", register_victim, name="register-victim"),
@@ -28,8 +29,18 @@ urlpatterns = [
 
 
     path("cases/", SocialWorkerCaseList.as_view(), name="list-of-cases"),
-    
 
+    #Questions
+    path("question-categories/", views.QuestionCategoryListView.as_view(), name="nurse-question-categories"),
+    path("questions/", views.QuestionListCreateView.as_view(), name="nurse-question-list-create"),
+    path("questions/<int:pk>/", views.QuestionDetailView.as_view(), name="nurse-question-detail"),
+    path("questions/bulk-create/", views.BulkQuestionCreateAndAssignView.as_view(), name="nurse-question-bulk-create"),
+    path("questions/choices/", views.QuestionChoicesView.as_view(), name="nurse-question-choices"),
+    path("session-types/", views.SessionTypeListView.as_view(), name="nurse-session-type-list"),
+    path("session-type-questions/", views.SessionTypeQuestionListCreateView.as_view(), name="nurse-session-type-question"),
+    path("questions/bulk-assign/", views.BulkAssignView.as_view(), name="nurse-question-bulk-assign"),
+    path("change-logs/", views.ChangeLogListView.as_view(), name="nurse-change-logs"),
+    
     # --- Availability CRUD ---
     path("availability/",OfficialAvailabilityViewSet.as_view({"get": "list", "post": "create"}),name="availability-list"),
     path("availability/<int:pk>/",OfficialAvailabilityViewSet.as_view({"get": "retrieve", "put": "update", "delete": "destroy"}),name="availability-detail"),

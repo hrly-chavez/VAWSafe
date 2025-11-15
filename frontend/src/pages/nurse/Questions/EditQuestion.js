@@ -1,4 +1,4 @@
-//src/pages/psychometrician/Questions/EditQuestion.js
+//src/pages/nurse/Questions/EditQuestion.js
 
 import { useEffect, useState } from "react";
 import Select from "react-select";
@@ -26,7 +26,7 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
   useEffect(() => {
     if (!show || !questionId) return;
     api
-      .get(`/api/psychometrician/questions/${questionId}/`)
+      .get(`/api/nurse/questions/${questionId}/`)
       .then((res) => {
         setQuestion(res.data);
 
@@ -57,7 +57,7 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
 
   // Fetch dropdown data
   useEffect(() => {
-    api.get("/api/psychometrician/questions/choices/").then((res) => {
+    api.get("/api/nurse/questions/choices/").then((res) => {
       setCategories(res.data.categories);
       setAnswerTypes(res.data.answer_types);
     });
@@ -73,7 +73,7 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
       setSessionNumbers(nums);
 
       api
-        .get("/api/psychometrician/session-types/")
+        .get("/api/nurse/session-types/")
         .then((res) =>
           setSessionTypes(res.data.map((t) => ({ value: t.id, label: t.name })))
         )
@@ -83,111 +83,112 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
 
   // Save question edits
 
-    const handleSaveQuestion = async (e) => {
+  const handleSaveQuestion = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-        const { mappings, created_by_name, ...editableFields } = question;
-        const res = await api.patch(`/api/psychometrician/questions/${questionId}/`, editableFields);
+      const { mappings, created_by_name, ...editableFields } = question;
+      const res = await api.patch(
+        `/api/nurse/questions/${questionId}/`,
+        editableFields
+      );
 
-        //  Backend only returns 200 if real changes occurred
-        if (res.status === 200) {
+      //  Backend only returns 200 if real changes occurred
+      if (res.status === 200) {
         alert("Question updated successfully!");
 
         // Fetch latest question mappings
-        const updatedRes = await api.get(`/api/psychometrician/questions/${questionId}/`);
+        const updatedRes = await api.get(`/api/nurse/questions/${questionId}/`);
         setQuestion(updatedRes.data);
 
         // Rebuild session number/type selections
         if (updatedRes.data.mappings && updatedRes.data.mappings.length > 0) {
-            const nums = [
+          const nums = [
             ...new Set(updatedRes.data.mappings.map((m) => m.session_number)),
-            ].map((num) => ({ value: num, label: `Session ${num}` }));
+          ].map((num) => ({ value: num, label: `Session ${num}` }));
 
-            const typeMap = new Map();
-            updatedRes.data.mappings.forEach((m) => {
+          const typeMap = new Map();
+          updatedRes.data.mappings.forEach((m) => {
             if (!typeMap.has(m.session_type_id)) {
-                typeMap.set(m.session_type_id, m.session_type);
+              typeMap.set(m.session_type_id, m.session_type);
             }
-            });
+          });
 
-            const types = Array.from(typeMap.entries()).map(([id, name]) => ({
+          const types = Array.from(typeMap.entries()).map(([id, name]) => ({
             value: id,
             label: name,
-            }));
+          }));
 
-            setSelectedNumbers(nums);
-            setSelectedTypes(types);
+          setSelectedNumbers(nums);
+          setSelectedTypes(types);
         }
 
         setStep(2);
-        }
+      }
     } catch (err) {
-        if (err.response) {
-            if (err.response.status === 400 && err.response.data?.detail?.includes("No changes")) {
-                alert("No changes detected — proceeding to assignments.");
-                setStep(2); //  Go to Step 2 even if nothing changed
-            } else {
-                console.error("Failed to update question:", err);
-                alert("Error updating question.");
-            }
-            } else {
-            console.error("Failed to update question:", err);
-            alert("Error updating question.");
-            }
+      if (err.response) {
+        if (
+          err.response.status === 400 &&
+          err.response.data?.detail?.includes("No changes")
+        ) {
+          alert("No changes detected — proceeding to assignments.");
+          setStep(2); //  Go to Step 2 even if nothing changed
+        } else {
+          console.error("Failed to update question:", err);
+          alert("Error updating question.");
+        }
+      } else {
+        console.error("Failed to update question:", err);
+        alert("Error updating question.");
+      }
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-    };
+  };
 
+  // Save session assignments
+  const handleAssign = async () => {
+    const currentNumbers = selectedNumbers.map((n) => n.value).sort();
+    const currentTypes = selectedTypes.map((t) => t.value).sort();
 
-  
-// Save session assignments
-const handleAssign = async () => {
-  const currentNumbers = selectedNumbers.map((n) => n.value).sort();
-  const currentTypes = selectedTypes.map((t) => t.value).sort();
+    const originalNumbers = (question.mappings || [])
+      .map((m) => m.session_number)
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .sort();
 
-  const originalNumbers = (question.mappings || [])
-    .map((m) => m.session_number)
-    .filter((v, i, a) => a.indexOf(v) === i)
-    .sort();
+    const originalTypes = (question.mappings || [])
+      .map((m) => m.session_type_id)
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .sort();
 
-  const originalTypes = (question.mappings || [])
-    .map((m) => m.session_type_id)
-    .filter((v, i, a) => a.indexOf(v) === i)
-    .sort();
+    const numbersChanged =
+      JSON.stringify(currentNumbers) !== JSON.stringify(originalNumbers);
+    const typesChanged =
+      JSON.stringify(currentTypes) !== JSON.stringify(originalTypes);
 
-  const numbersChanged =
-    JSON.stringify(currentNumbers) !== JSON.stringify(originalNumbers);
-  const typesChanged =
-    JSON.stringify(currentTypes) !== JSON.stringify(originalTypes);
+    // If nothing changed — show alert, then close
+    if (!numbersChanged && !typesChanged) {
+      alert("No changes detected in session assignments.");
+      if (onUpdated) onUpdated(); // refresh parent table if needed
+      onClose(); //  close modal
+      return;
+    }
 
-  // If nothing changed — show alert, then close
-  if (!numbersChanged && !typesChanged) {
-    alert("No changes detected in session assignments.");
-    if (onUpdated) onUpdated(); // refresh parent table if needed
-    onClose(); //  close modal
-    return;
-  }
-
-  try {
-    await api.post("/api/psychometrician/questions/bulk-assign/", {
-      questions: [questionId],
-      session_numbers: currentNumbers,
-      session_types: currentTypes,
-    });
-    alert("Assignments updated successfully!");
-    if (onUpdated) onUpdated();
-    onClose();
-  } catch (err) {
-    console.error("Error assigning question:", err);
-    alert("Error updating assignments.");
-  }
-};
-
-
-
+    try {
+      await api.post("/api/nurse/questions/bulk-assign/", {
+        questions: [questionId],
+        session_numbers: currentNumbers,
+        session_types: currentTypes,
+      });
+      alert("Assignments updated successfully!");
+      if (onUpdated) onUpdated();
+      onClose();
+    } catch (err) {
+      console.error("Error assigning question:", err);
+      alert("Error updating assignments.");
+    }
+  };
 
   if (!show) return null;
 
@@ -204,7 +205,9 @@ const handleAssign = async () => {
               exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.3 }}
             >
-              <h2 className="text-xl font-bold text-blue-700 mb-4">Edit Question</h2>
+              <h2 className="text-xl font-bold text-blue-700 mb-4">
+                Edit Question
+              </h2>
 
               <form
                 onSubmit={handleSaveQuestion}
@@ -212,11 +215,16 @@ const handleAssign = async () => {
               >
                 {/* Category */}
                 <div>
-                  <label className="block text-sm text-gray-600">Category</label>
+                  <label className="block text-sm text-gray-600">
+                    Category
+                  </label>
                   <select
                     value={question.ques_category || ""}
                     onChange={(e) =>
-                      setQuestion({ ...question, ques_category: e.target.value })
+                      setQuestion({
+                        ...question,
+                        ques_category: e.target.value,
+                      })
                     }
                     className="w-full border rounded p-2"
                     required
@@ -232,7 +240,9 @@ const handleAssign = async () => {
 
                 {/* Question text */}
                 <div>
-                  <label className="block text-sm text-gray-600">Question</label>
+                  <label className="block text-sm text-gray-600">
+                    Question
+                  </label>
                   <textarea
                     value={question.ques_question_text || ""}
                     onChange={(e) =>
@@ -249,7 +259,9 @@ const handleAssign = async () => {
 
                 {/* Answer type */}
                 <div>
-                  <label className="block text-sm text-gray-600">Answer Type</label>
+                  <label className="block text-sm text-gray-600">
+                    Answer Type
+                  </label>
                   <select
                     value={question.ques_answer_type || ""}
                     onChange={(e) =>
