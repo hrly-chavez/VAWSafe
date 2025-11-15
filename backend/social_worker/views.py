@@ -26,6 +26,7 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from dswd.utils.logging import log_change
+from docxtpl import DocxTemplate
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
@@ -172,27 +173,6 @@ def register_victim(request):
                 return Response({"success": False, "errors": c_ser.errors},
                                 status=status.HTTP_400_BAD_REQUEST)
             contact_person = c_ser.save()
-
-
-        # # -------------------------------
-        # # 6) CREATE VICTIM ACCOUNT (new)
-        # # -------------------------------
-        # fname = victim_data.get("vic_first_name", "").strip().lower()
-        # lname = victim_data.get("vic_last_name", "").strip().lower()
-        # base_username = f"{fname}{lname}".replace(" ", "") or get_random_string(8)
-
-        # username = base_username
-        # counter = 0
-        # while User.objects.filter(username=username).exists():
-        #     counter += 1
-        #     username = f"{base_username}{counter}"
-
-        # generated_password = get_random_string(length=12)
-        # user = User.objects.create_user(username=username, password=generated_password)
-
-        # # Optionally associate user with victim
-        # victim.user = user  # <-- comment this out if Victim model has no FK to User
-        # victim.save()
 
         return Response({
             "success": True,
@@ -1461,3 +1441,16 @@ class ServeVictimFacePhotoView(APIView):
         except VictimFaceSample.DoesNotExist:
             raise Http404("Victim face sample not found")
         return serve_encrypted_file(request, sample, sample.photo, content_type='image/jpeg')
+    
+# file generation
+
+def generate_consent_forms():
+    doc = DocxTemplate("C:\\Users\\Rhainer\\Desktop\\Templates\\Consent Forms\\Referrals.docx")
+
+    context = {
+        "full_name": "Juan Dela Cruz",
+        "age": 20,
+    }
+
+    doc.render(context)
+    doc.save("C:\\Users\\Rhainer\\Desktop\\Templates\\output.docx")
