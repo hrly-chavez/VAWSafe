@@ -220,20 +220,6 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
         </div>
       </div>
 
-      {/* Landmark */}
-      <div className="flex flex-col">
-        <label className="text-sm font-medium text-gray-700 mb-1">
-          Specific Landmark
-        </label>
-        <input
-          className="input"
-          type="text"
-          placeholder="e.g. Near Jollibee"
-          value={formDataState.incident_location || ""}
-          onChange={(e) => handleChange("incident_location", e.target.value)}
-        />
-      </div>
-
       {/* problems presented */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
