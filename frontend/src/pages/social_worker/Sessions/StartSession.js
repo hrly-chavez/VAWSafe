@@ -261,21 +261,24 @@ useEffect(() => {
                   ).map(([category, catQuestions]) => (
                     <div key={category} className="mb-6">
                       {/* Category Header */}
-                      <div
-                      className={`px-4 py-2 rounded-t-md border-l-4 ${
-                        r === "Social Worker"
-                          ? "bg-green-100 border-green-600"
-                          : r === "Nurse"
-                          ? "bg-blue-100 border-blue-600"
-                          : r === "Psychometrician"
-                          ? "bg-purple-100 border-purple-600"
-                          : r === "Home Life"
-                          ? "bg-orange-100 border-orange-600"
-                          : "bg-gray-100 border-gray-300"
-                      }`}
-                    >
-                      <h5 className="text-md font-semibold text-gray-700">{category}</h5>
-                    </div>
+                    <div
+                    className={`px-4 py-2 rounded-t-md border-l-4 shadow-sm ${
+                      r === "Social Worker"
+                        ? "bg-gradient-to-r from-green-100 to-green-50 border-green-600"
+                        : r === "Nurse"
+                        ? "bg-gradient-to-r from-blue-100 to-blue-50 border-blue-600"
+                        : r === "Psychometrician"
+                        ? "bg-gradient-to-r from-purple-100 to-purple-50 border-purple-600"
+                        : r === "Home Life"
+                        ? "bg-gradient-to-r from-orange-100 to-orange-50 border-orange-600"
+                        : "bg-gradient-to-r from-gray-100 to-gray-50 border-gray-400"
+                    }`}
+                  >
+                    <h5 className="text-md font-semibold text-gray-800 tracking-wide drop-shadow-sm">
+                      {category}
+                    </h5>
+                  </div>
+
 
                       {/* Category Question List */}
                       <div className="border border-t-0 rounded-b-md p-3 bg-white shadow-sm">

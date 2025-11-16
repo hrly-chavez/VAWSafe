@@ -31,20 +31,43 @@ export default function AddQuestion({ onClose }) {
     });
   }, []);
 
-  // Load session types when step 3
+  // ========= NEW SESSION NUMBER LOGIC =========
+  // Load session numbers + session types when step === 3
   useEffect(() => {
     if (step === 3) {
-      const nums = Array.from({ length: 10 }, (_, i) => ({
-        value: i + 1,
-        label: `Session ${i + 1}`,
-      }));
+      // Only show 1, 2, 3, and 4+ (auto expands to 4..15)
+      const nums = [
+        { value: 1, label: "Session 1" },
+        { value: 2, label: "Session 2" },
+        { value: 3, label: "Session 3" },
+        { value: "4+", label: "Session 4+" }, // special option
+      ];
       setSessionNumbers(nums);
 
+      // Load session types
       api.get("/api/social_worker/session-types/").then((res) =>
         setSessionTypes(res.data.map((t) => ({ value: t.id, label: t.name })))
       );
     }
   }, [step]);
+
+  // Helper: expand "4+" into integers [4..15]
+  const expandSessionNumbers = (selectedNumbers) => {
+    const OUT = new Set();
+
+    (selectedNumbers || []).forEach((n) => {
+      const sessionValue = typeof n === "object" ? n.value : n;
+
+      if (sessionValue === "4+") {
+        for (let i = 4; i <= 15; i++) OUT.add(i);
+      } else {
+        const iv = Number(sessionValue);
+        if (!isNaN(iv)) OUT.add(iv);
+      }
+    });
+
+    return Array.from(OUT).sort((a, b) => a - b);
+  };
 
   // Handle question change
   const handleQuestionChange = (index, field, value) => {
@@ -64,7 +87,7 @@ export default function AddQuestion({ onClose }) {
     setQuestions(newQuestions);
   };
 
-  // Step 1 → Step 2 (choose category)
+  // Step 1 → Step 2
   const handleCategoryContinue = () => {
     if (!selectedCategory) {
       alert("Please select a category first.");
@@ -73,7 +96,7 @@ export default function AddQuestion({ onClose }) {
     setStep(2);
   };
 
-  // Step 2 → Step 3 (after adding questions)
+  // Step 2 → Step 3
   const handleQuestionsContinue = () => {
     if (questions.some((q) => !q.ques_question_text || !q.ques_answer_type)) {
       alert("Please fill in all question fields.");
@@ -82,7 +105,7 @@ export default function AddQuestion({ onClose }) {
     setStep(3);
   };
 
-  // Step 3 (bulk create + assign)
+  // Step 3: bulk create + assign
   const handleBulkSubmit = async () => {
     if (!selectedNumbers.length || !selectedTypes.length) {
       alert("Please select session numbers and session types.");
@@ -90,13 +113,16 @@ export default function AddQuestion({ onClose }) {
     }
 
     try {
+      // Expand "4+" into [4..15]
+      const finalSessionNumbers = expandSessionNumbers(selectedNumbers);
+
       const payload = {
         category_id: selectedCategory.value,
         questions: questions.map((q) => ({
           ques_question_text: q.ques_question_text,
           ques_answer_type: q.ques_answer_type,
         })),
-        session_numbers: selectedNumbers.map((n) => n.value),
+        session_numbers: finalSessionNumbers, // <= already unrolled
         session_types: selectedTypes.map((t) => t.value),
       };
 
@@ -108,6 +134,7 @@ export default function AddQuestion({ onClose }) {
       alert("Error creating and assigning questions.");
     }
   };
+
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
