@@ -134,8 +134,14 @@ class Official(models.Model):
 
     @property
     def full_name(self):
-        middle = f"{self.of_m_initial or ''}."
-        return f"{self.of_fname} {middle} {self.of_lname} {self.of_suffix or ''}".strip()
+        parts = [self.of_fname]
+        if self.of_m_initial:
+            parts.append(f"{self.of_m_initial}.")
+        parts.append(self.of_lname)
+        if self.of_suffix:
+            parts.append(self.of_suffix)
+        return " ".join(parts)
+
 
 class OfficialFaceSample(models.Model):
     official = models.ForeignKey(Official, on_delete=models.CASCADE, related_name='face_samples')
