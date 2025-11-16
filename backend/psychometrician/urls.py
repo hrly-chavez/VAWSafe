@@ -30,7 +30,7 @@ urlpatterns = [
     path("services/<int:service_id>/upload/", upload_service_proof, name="upload-service-proof"),
     path("cases/", CaseListView.as_view(), name="list-of-cases"),   
 
-     #Questions
+    #Questions
     path("question-categories/", views.QuestionCategoryListView.as_view(), name="sw-question-categories"),
     path("questions/", views.QuestionListCreateView.as_view(), name="sw-question-list-create"),
     path("questions/<int:pk>/", views.QuestionDetailView.as_view(), name="sw-question-detail"),
