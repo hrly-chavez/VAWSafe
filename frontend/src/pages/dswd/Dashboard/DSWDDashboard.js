@@ -56,22 +56,36 @@ export default function DSWDDashboard() {
         );
 
         setViolenceTypeData({
-          labels: Object.keys(data.incident_summary.violence_types),
+          labels: [
+            "Physical Violence",
+            "Physical Abused",
+            "Psychological Violence",
+            "Psychological Abuse",
+            "Economic Abused",
+            "Strandee",
+            "Sexually Abused",
+            "Sexually Exploited",
+          ],
           datasets: [
             {
               label: "Cases",
-              data: Object.values(data.incident_summary.violence_types),
+              data: [
+                data.incident_summary.violence_types["Physical Violence"] || 0,
+                data.incident_summary.violence_types["Physical Abused"] || 0,
+                data.incident_summary.violence_types["Psychological Violence"] || 0,
+                data.incident_summary.violence_types["Psychological Abuse"] || 0,
+                data.incident_summary.violence_types["Economic Abused"] || 0,
+                data.incident_summary.violence_types["Strandee"] || 0,
+                data.incident_summary.violence_types["Sexually Abused"] || 0,
+                data.incident_summary.violence_types["Sexually Exploited"] || 0,
+              ],
               backgroundColor: [
-                "rgba(245, 158, 11, 0.7)", // yellow 
-                "rgba(16, 185, 129, 0.7)", // green 
-                "rgba(59, 130, 246, 0.7)", // blue 
-                "rgba(139, 92, 246, 0.7)", // purple 
+                "#F87171", "#FBBF24", "#60A5FA", "#A78BFA",
+                "#34D399", "#F472B6", "#F59E0B", "#3B82F6",
               ],
               borderColor: [
-                "#F59E0B",
-                "#10B981",
-                "#3B82F6",
-                "#8B5CF6",
+                "#DC2626", "#D97706", "#2563EB", "#7C3AED",
+                "#059669", "#BE185D", "#B45309", "#1D4ED8",
               ],
               borderWidth: 2,
               borderRadius: 6,
@@ -127,8 +141,12 @@ export default function DSWDDashboard() {
     },
     scales: {
       x: {
+        beginAtZero: true,
+        ticks: { 
+          stepSize: 1,
+          color: "#374151",
+        },
         grid: { color: "rgba(209, 213, 219, 0.4)" },
-        ticks: { color: "#374151" },
       },
       y: {
         grid: { color: "rgba(209, 213, 219, 0.4)" },
@@ -262,9 +280,15 @@ export default function DSWDDashboard() {
               options={{
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                  legend: { display: false },
-                },
+                plugins: { legend: { display: false }  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      ticks: {
+                        stepSize: 1,
+                      }
+                    }
+                  }
               }}
             />
           </div>
@@ -292,10 +316,14 @@ export default function DSWDDashboard() {
               <tr>
                 <th className="px-4 py-2 border bg-blue-100">Month</th>
                 <th className="px-4 py-2 border bg-blue-200">Total</th>
-                <th className="px-4 py-2 border bg-yellow-200 text-yellow-800">Sexual</th>
-                <th className="px-4 py-2 border bg-red-200 text-red-800">Physical</th>
-                <th className="px-4 py-2 border bg-green-200 text-green-800">Psychological</th>
-                <th className="px-4 py-2 border bg-indigo-200 text-indigo-800">Economic</th>
+                <th className="px-4 py-2 border bg-red-100 text-red-800">Physical Violence</th>
+                <th className="px-4 py-2 border bg-red-200 text-red-800">Physical Abused</th>
+                <th className="px-4 py-2 border bg-green-100 text-green-800">Psychological Violence</th>
+                <th className="px-4 py-2 border bg-green-200 text-green-800">Psychological Abuse</th>
+                <th className="px-4 py-2 border bg-indigo-100 text-indigo-800">Economic Abused</th>
+                <th className="px-4 py-2 border bg-pink-100 text-pink-800">Strandee</th>
+                <th className="px-4 py-2 border bg-yellow-100 text-yellow-800">Sexually Abused</th>
+                <th className="px-4 py-2 border bg-yellow-200 text-yellow-800">Sexually Exploited</th>
               </tr>
             </thead>
             <tbody>
@@ -306,10 +334,14 @@ export default function DSWDDashboard() {
                 >
                   <td className="px-4 py-2 border font-medium">{row.month}</td>
                   <td className="px-4 py-2 border bg-blue-50 font-semibold text-blue-800">{row.totalVictims}</td>
-                  <td className="px-4 py-2 border bg-yellow-50 text-yellow-700 font-semibold">{row.sexual}</td>
-                  <td className="px-4 py-2 border bg-red-50 text-red-700 font-semibold">{row.physical}</td>
-                  <td className="px-4 py-2 border bg-green-50 text-green-700 font-semibold">{row.psychological}</td>
-                  <td className="px-4 py-2 border bg-indigo-50 text-indigo-700 font-semibold">{row.economic}</td>
+                  <td className="px-4 py-2 border bg-red-50 text-red-700 font-semibold">{row.Physical_Violence || ""}</td>
+                  <td className="px-4 py-2 border bg-red-100 text-red-700 font-semibold">{row.Physical_Abused || ""}</td>
+                  <td className="px-4 py-2 border bg-green-50 text-green-700 font-semibold">{row.Psychological_Violence || ""}</td>
+                  <td className="px-4 py-2 border bg-green-100 text-green-700 font-semibold">{row.Psychological_Abuse || ""}</td>
+                  <td className="px-4 py-2 border bg-indigo-50 text-indigo-700 font-semibold">{row.Economic_Abused || ""}</td>
+                  <td className="px-4 py-2 border bg-pink-50 text-pink-700 font-semibold">{row.Strandee || ""}</td>
+                  <td className="px-4 py-2 border bg-yellow-50 text-yellow-700 font-semibold">{row.Sexually_Abused || ""}</td>
+                  <td className="px-4 py-2 border bg-yellow-100 text-yellow-700 font-semibold">{row.Sexually_Exploited || ""}</td>
                 </tr>
               ))}
             </tbody>

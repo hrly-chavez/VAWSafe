@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
 import api from "../../../api/axios"; 
 import EditProfileModal from "./EditProfileModal";
+import ChangePasswordModal from "./ChangePasswordModal"; // We'll create this modal
 
 export default function SocialWorkerProfile() {
   const [officialData, setOfficialData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+
 
   useEffect(() => {
     setLoading(true);
@@ -27,7 +30,6 @@ export default function SocialWorkerProfile() {
   if (loading) return <div className="p-6 text-gray-600">Loading...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
 
-  const handleEditProfile = () => setShowModal(true);
   const handleSaveProfile = (updatedData) => setOfficialData(updatedData);
 
   return (
@@ -69,24 +71,38 @@ export default function SocialWorkerProfile() {
             </div>
           </div>
 
-          {/* Edit Button */}
-          <div className="mt-6">
+          {/* Action Buttons */}
+          <div className="mt-6 flex flex-wrap gap-3">
             <button
-              onClick={handleEditProfile}
+              onClick={() => setShowEditModal(true)}
               className="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 transition"
             >
               Edit Profile
+            </button>
+
+            <button
+              onClick={() => setShowChangePassword(true)}
+              className="bg-green-500 text-white px-5 py-2 rounded-lg hover:bg-green-600 transition ml-4"
+            >
+              Change Password / Username
             </button>
           </div>
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
-      {showModal && (
+      {/* Modals */}
+      {showEditModal && (
         <EditProfileModal
           officialData={officialData}
-          onClose={() => setShowModal(false)}
+          onClose={() => setShowEditModal(false)}
           onSave={handleSaveProfile}
+        />
+      )}
+
+      {showChangePassword && (
+        <ChangePasswordModal
+          onClose={() => setShowChangePassword(false)}
+          // You can add an onSave function here if needed
         />
       )}
     </div>
