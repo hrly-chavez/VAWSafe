@@ -628,7 +628,7 @@ class Question(models.Model):
         return f"[{category_name}] {text}"
 
 class SessionTypeQuestion(models.Model):
-    session_number = models.IntegerField()  # 1, 2, 3, 4, 5.
+    session_number = models.IntegerField()  # 1, 2, 3, 4, 5...
     #Fk
     session_type = models.ForeignKey(SessionType, on_delete=models.CASCADE, related_name="type_questions")
     question = models.ForeignKey('Question', on_delete=models.CASCADE, related_name="type_questions")
