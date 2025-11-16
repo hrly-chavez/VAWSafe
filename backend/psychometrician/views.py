@@ -29,19 +29,6 @@ from docxtpl import DocxTemplate
 
 logger = logging.getLogger(__name__)
 
-# def generate_doc():
-#     doc = DocxTemplate("C:\\Users\\Rhainer\\Desktop\\Templates\\test.docx")
-
-#     context = {
-#         "name": "Juan Dela Cruz",
-#         "total": 5000,
-#     }
-
-#     doc.render(context)
-#     doc.save("C:\\Users\\Rhainer\\Desktop\\Templates\\output.docx")
-
-# generate_doc()
-
 def cleanup_decrypted_file_later(file_path, victim_id, delay=10):
     """Helper function to delete the decrypted photo after a delay (in seconds)."""
     # Sleep for the delay period
