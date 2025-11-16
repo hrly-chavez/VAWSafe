@@ -68,6 +68,8 @@ export const ROUTES = {
   NURSE_VICTIM_DETAIL: "/nurse/victims/:vic_id",
   NURSE_SEARCH_FACIAL: "/nurse/victims/search-facial",
   NURSE_QUESTIONS: "/nurse/questions",
+  NURSE_CREATE_MORE_SESSION: "/nurse/more-sessions/create/:incident_id",
+  NURSE_START_MORE_SESSION: "/nurse/more-sessions/:sess_id/start",
   NURSE_PROFILE: "/nurse/profile",
 
   // psychometrician
