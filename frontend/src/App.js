@@ -73,9 +73,11 @@ const NurseVictims = lazy(() => import("./pages/nurse/Victims/Victims"));
 const NurseVictimDetailPage = lazy(() =>import("./pages/nurse/Victims/VictimDetailPage"));
 const NurseSearchVictimFacial = lazy(() =>import("./pages/nurse/Victims/SearchVictimFacial"));
 const NurseViewSessions = lazy(() =>import("./pages/nurse/Sessions/ViewSessions"));
-const NurseSocialWorkerStartSession = lazy(() =>import("./pages/nurse/Sessions/StartSession"));
+const NurseSession = lazy(() =>import("./pages/nurse/Sessions/StartSession"));
 const NurseSchedule = lazy(() => import("./pages/nurse/Schedule/Schedule"));
 const NurseQuestions = lazy(() => import("./pages/nurse/Questions/Questions"));
+const NurseCreateSession = lazy(() => import("./pages/nurse/Sessions/MoreSessions/CreateSession"));
+const NurseStartMoreSession = lazy(() => import("./pages/nurse/Sessions/MoreSessions/StartMoreSession"));
 const NurseProfile = lazy(() => import("./pages/nurse/Profile/NurseProfile"));
 
 // Psychometrician
@@ -196,9 +198,11 @@ export default function App() {
               <Route path={ROUTES.NURSE_VICTIM_DETAIL}element={<NurseVictimDetailPage />}/>
               <Route path={ROUTES.NURSE_SEARCH_FACIAL}element={<NurseSearchVictimFacial />}/>
               <Route path={ROUTES.NURSE_VIEW_SESSION}element={<NurseViewSessions />}/>
-              <Route path={ROUTES.NURSE_START_SESSION}element={<NurseSocialWorkerStartSession />} />
+              <Route path={ROUTES.NURSE_START_SESSION}element={<NurseSession />} />
               <Route path={ROUTES.NURSE_SCHEDULE} element={<NurseSchedule />} />
               <Route path={ROUTES.NURSE_QUESTIONS} element={<NurseQuestions />} />
+              <Route path={ROUTES.NURSE_CREATE_MORE_SESSION} element={<NurseCreateSession />} />
+              <Route path={ROUTES.NURSE_START_MORE_SESSION} element={<NurseStartMoreSession />} />
             </Route>
 
             {/* Psychometrician group */}
