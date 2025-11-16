@@ -40,7 +40,7 @@ export default function AddCustomQuestions({ show, onClose, sessionId, onAdded }
     setLoading(true);
     try {
       const res = await api.post(
-        `/api/social_worker/sessions/${sessionId}/add-custom-question/`,
+        `/api/nurse/sessions/${sessionId}/add-custom-question/`,
         payload
       );
 
