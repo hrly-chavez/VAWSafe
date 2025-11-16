@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from datetime import datetime, time
 from rest_framework.exceptions import ValidationError
 from dswd.utils.logging import log_change
+from django.db.models import Q
 
 # --- Lightweight list serializer ---
 class VictimListSerializer(serializers.ModelSerializer):
@@ -73,7 +74,7 @@ class VictimDetailSerializer(serializers.ModelSerializer):
             )
         return None
 #=====================================SESSIONS=============================================
-class SocialWorkerSessionCRUDSerializer(serializers.ModelSerializer):
+class SessionCRUDSerializer(serializers.ModelSerializer):
     """
     Handles creation and editing of session records.
     - Auto-increments session number per incident.
@@ -129,25 +130,63 @@ class SocialWorkerSessionCRUDSerializer(serializers.ModelSerializer):
         officials = obj.assigned_official.all()
         return [official.full_name for official in officials] if officials else []
 
-    # --- Auto-increment session number when creating ---
+    # --- Auto-increment session number when creating (role-based logic) ---
     def create(self, validated_data):
         session_types = validated_data.pop("sess_type", [])
         officials = validated_data.pop("assigned_official", [])
         incident = validated_data.get("incident_id")
 
-        if incident:
-            last_num = (
-                Session.objects.filter(incident_id=incident)
-                .order_by("-sess_num")
-                .values_list("sess_num", flat=True)
-                .first()
-            )
-            validated_data["sess_num"] = (last_num or 0) + 1
+        # --- Identify current user and role ---
+        request = self.context.get("request")
+        official = getattr(request.user, "official", None)
+        role = getattr(official, "of_role", None)
 
+        if incident:
+            # --- Detect shared session (multiple officials) ---
+            is_shared_session = len(officials) > 1
+
+            if is_shared_session:
+                validated_data["sess_num"] = 1
+            else:
+                # --- Role-based numbering ---
+                if role:
+                    last_num = (
+                        Session.objects.filter(
+                            incident_id=incident,
+                            assigned_official__of_role=role
+                        )
+                        .order_by("-sess_num")
+                        .values_list("sess_num", flat=True)
+                        .first()
+                    )
+                    validated_data["sess_num"] = (last_num or 0) + 1
+                else:
+                    last_num = (
+                        Session.objects.filter(incident_id=incident)
+                        .order_by("-sess_num")
+                        .values_list("sess_num", flat=True)
+                        .first()
+                    )
+                    validated_data["sess_num"] = (last_num or 0) + 1
+
+        # --- Create the session ---
         session = super().create(validated_data)
         session.sess_type.set(session_types)
-        session.assigned_official.set(officials)
+
+        # --- Ensure session progress entries (ManyToMany through SessionProgress) ---
+        from shared_model.models import SessionProgress
+
+        # Link the current logged-in official
+        if official:
+            SessionProgress.objects.get_or_create(session=session, official=official)
+
+        # Link any additional officials passed
+        for off in officials:
+            SessionProgress.objects.get_or_create(session=session, official=off)
+
+        session.save()
         return session
+
 
     def update(self, instance, validated_data):
         session_types = validated_data.pop("sess_type", None)
@@ -166,14 +205,15 @@ class SessionTypeSerializer(serializers.ModelSerializer):
         model = SessionType
         fields = ["id", "name"]
 
-class SocialWorkerSessionSerializer(serializers.ModelSerializer):
+class SessionSerializer(serializers.ModelSerializer):
     """
     Lightweight serializer for session list display.
-    - Used in Social Worker session list endpoint.
+    - Used session list endpoint.
     """
     victim_name = serializers.SerializerMethodField()
     case_no = serializers.SerializerMethodField()
     official_names = serializers.SerializerMethodField()
+    official_roles = serializers.SerializerMethodField()  
     location = serializers.SerializerMethodField()
 
     class Meta:
@@ -183,10 +223,12 @@ class SocialWorkerSessionSerializer(serializers.ModelSerializer):
             "sess_num",
             "sess_status",
             "sess_next_sched",
+            "sess_date_today",  
             "sess_type",
             "victim_name",
             "case_no",
             "official_names",
+            "official_roles",  
             "location",
         ]
 
@@ -201,28 +243,61 @@ class SocialWorkerSessionSerializer(serializers.ModelSerializer):
         return None
 
     def get_official_names(self, obj):
-        officials = obj.assigned_official.all()
-        return [official.full_name for official in officials] if officials else []
+        progress_entries = getattr(obj, "_prefetched_progress", None)
+        if progress_entries is None:
+            progress_entries = obj.progress.select_related("official").all()
+        return [p.official.full_name for p in progress_entries if p.official]
+
+    def get_official_roles(self, obj):
+        progress_entries = getattr(obj, "_prefetched_progress", None)
+        if progress_entries is None:
+            progress_entries = obj.progress.select_related("official").all()
+        return [p.official.of_role for p in progress_entries if p.official]
 
     def get_location(self, obj):
         return obj.sess_location or None
 
-class IncidentInformationSerializer(serializers.ModelSerializer): 
-    """Displays incident info along with its linked sessions and perpetrator details."""
+class IncidentInformationSerializer(serializers.ModelSerializer):
+    """
+    Displays incident info along with all linked sessions for debugging.
+    Temporarily logs how many sessions are being serialized per incident.
+    """
+    sessions = serializers.SerializerMethodField()
+    perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)
 
-    sessions = SocialWorkerSessionSerializer(many=True, read_only=True)
-    perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)  
     class Meta:
         model = IncidentInformation
         fields = "__all__"
 
-class SocialWorkerSessionTypeQuestionSerializer(serializers.ModelSerializer): 
+    def get_sessions(self, obj):
+        from shared_model.models import Session
+        import sys
+
+        # Force a fresh query directly by numeric FK ID (not encrypted FK object)
+        queryset = (
+            Session.objects.filter(incident_id_id=obj.incident_id)
+            .select_related("incident_id")
+            .prefetch_related("progress__official", "sess_type")
+            .order_by("sess_num", "sess_id")
+        )
+
+        count = queryset.count()
+        print(f"[DEBUG] Incident {obj.incident_id}: Found {count} sessions", file=sys.stderr)
+
+        # Prefetch for official names
+        for s in queryset:
+            s._prefetched_progress = list(s.progress.select_related("official").all())
+
+        return SessionSerializer(queryset, many=True, context={"request": self.context.get("request")}).data
+
+class SessionTypeQuestionSerializer(serializers.ModelSerializer): 
     """
     Serializer for mapped (template) questions per session type and number.
     - Used when previewing or hydrating session questions.
     """
     question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
-    question_category = serializers.CharField(source="question.ques_category", read_only=True)
+    question_category_name = serializers.SerializerMethodField()
+    question_role = serializers.SerializerMethodField()
     question_answer_type = serializers.CharField(source="question.ques_answer_type", read_only=True)
 
     class Meta:
@@ -233,34 +308,92 @@ class SocialWorkerSessionTypeQuestionSerializer(serializers.ModelSerializer):
             "session_type",
             "question",
             "question_text",
-            "question_category",
+            "question_category_name",
+            "question_role",
             "question_answer_type",
         ]
 
-class SocialWorkerSessionQuestionSerializer(serializers.ModelSerializer):
-    """
-    Serializer for actual session questions (hydrated).
-    - Can include both mapped and custom questions.
-    - Used when starting or answering a session.
-    """
-    question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
-    question_category = serializers.CharField(source="question.ques_category", read_only=True)
-    question_answer_type = serializers.CharField(source="question.ques_answer_type", read_only=True)
+    def get_question_category_name(self, obj):
+        try:
+            return obj.question.ques_category.name if obj.question and obj.question.ques_category else "(Uncategorized)"
+        except Exception:
+            return "(Uncategorized)"
+
+    def get_question_role(self, obj):
+        try:
+            return obj.question.role if obj.question and obj.question.role else "Unassigned"
+        except Exception:
+            return "Unassigned"
+
+class SessionQuestionSerializer(serializers.ModelSerializer):
+    question_text = serializers.SerializerMethodField()
+    question_category_name = serializers.SerializerMethodField()
+    question_answer_type = serializers.SerializerMethodField()
+
+    #fields to expose who answered this question (if any)
+    answered_by = serializers.IntegerField(source="answered_by.pk", read_only=True)
+    answered_by_name = serializers.CharField(source="answered_by.full_name", read_only=True)
+    answered_at = serializers.DateTimeField(read_only=True)
+
+    # helpful computed flags
+    is_answered = serializers.SerializerMethodField()
+    assigned_role = serializers.SerializerMethodField()  # returns role string (e.g., "Social Worker")
 
     class Meta:
         model = SessionQuestion
         fields = [
             "sq_id",
             "question",
-            "question_text",    
-            "question_category",
+            "question_text",
+            "question_category_name",
             "question_answer_type",
-            "sq_custom_text",        #for ad-hoc questions
+            "sq_custom_text",
             "sq_custom_answer_type",
             "sq_is_required",
             "sq_value",
             "sq_note",
+            "answered_by",
+            "answered_by_name",
+            "answered_at",
+            "is_answered",
+            "assigned_role",
         ]
+    def get_question_text(self, obj):
+    # Prefer snapshot version, then fall back to linked question
+        return (
+            obj.sq_question_text_snapshot
+            or (obj.question.ques_question_text if obj.question else obj.sq_custom_text)
+            or None
+        )
+    def get_question_answer_type(self, obj):
+    # Prefer snapshot version, then fall back to linked question
+        return (
+            obj.sq_answer_type_snapshot
+            or (obj.question.ques_answer_type if obj.question else obj.sq_custom_answer_type)
+            or None
+        )
+    def get_is_answered(self, obj):
+        return obj.sq_value is not None and obj.sq_value != ""
+
+    def get_question_category_name(self, obj):
+        try:
+            return obj.question.ques_category.name if obj.question and obj.question.ques_category else None
+        except Exception:
+            return None
+
+    def get_assigned_role(self, obj):
+        """
+        Return the role string that this question belongs to.
+        Prefer question.role if set, else fallback to question.ques_category.role.
+        """
+        try:
+            if not obj.question:
+                return None
+            # question.role is set when creating question; fallback to category.role
+            return obj.question.role or getattr(obj.question.ques_category, "role", None)
+        except Exception:
+            return None
+
 #=====SERVICES======
 class ServicesSerializer(serializers.ModelSerializer):
     """Lists all available services or organizations under each category."""
@@ -292,23 +425,45 @@ class ServiceGivenSerializer(serializers.ModelSerializer):
             "service_feedback",
         ]
 #===========
-class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer): 
+class SessionProgressSerializer(serializers.ModelSerializer):
+    official = serializers.IntegerField(source="official.pk", read_only=True)
+    official_name = serializers.CharField(source="official.full_name", read_only=True)
+    official_role = serializers.CharField(source="official.of_role", read_only=True)  
+    date_ended = serializers.DateTimeField(source="finished_at", read_only=True)
+
+    class Meta:
+        model = SessionProgress
+        fields = [
+            "official",
+            "official_name",
+            "official_role",   
+            "started_at",
+            "finished_at",
+            "date_ended",
+            "is_done",
+            "notes",
+        ]
+
+class SessionDetailSerializer(serializers.ModelSerializer): 
     """
     Full session detail serializer.
     - Used for viewing or updating session info.
     - Includes victim, incident, case, questions, and services given.
+    - Adds 'my_progress' for the current logged-in official.
     """
     victim = VictimSerializer(source="incident_id.vic_id", read_only=True)
     incident = IncidentWithPerpetratorSerializer(source="incident_id", read_only=True)
-    official_names = serializers.SerializerMethodField()  # ← FIXED
+    official_names = serializers.SerializerMethodField()
     sess_type = serializers.PrimaryKeyRelatedField(
         many=True, queryset=SessionType.objects.all(), write_only=True
     )
     sess_type_display = SessionTypeSerializer(source="sess_type", many=True, read_only=True)
-    questions = SocialWorkerSessionQuestionSerializer(
+    questions = SessionQuestionSerializer(
         source="session_questions", many=True, read_only=True
     )
     services_given = ServiceGivenSerializer(many=True, read_only=True)
+    progress = SessionProgressSerializer(many=True, read_only=True)
+    my_progress = serializers.SerializerMethodField() 
 
     class Meta:
         model = Session
@@ -319,20 +474,29 @@ class SocialWorkerSessionDetailSerializer(serializers.ModelSerializer):
             "sess_next_sched",
             "sess_date_today",
             "sess_location",
-            "sess_type",           # for PATCH/PUT (IDs only)
-            "sess_type_display",   # for GET (id + name)
+            "sess_type",
+            "sess_type_display",
             "sess_description",
             "victim",
             "incident",
-            "case_report",
-            "official_names",      # ← FIXED
+            "official_names",
             "questions",
             "services_given",
+            "progress",
+            "my_progress",  # ← include new field
         ]
 
     def get_official_names(self, obj):
         officials = obj.assigned_official.all()
         return [official.full_name for official in officials] if officials else []
+
+    def get_my_progress(self, obj):
+        """Return current official's progress info if available."""
+        request = self.context.get("request")
+        if not request or not hasattr(request.user, "official"):
+            return None
+        progress = obj.progress.filter(official=request.user.official).first()
+        return SessionProgressSerializer(progress).data if progress else None
 
 class CloseCaseSerializer(serializers.ModelSerializer):
     """Used to mark a VAWC incident case as closed."""
@@ -484,42 +648,6 @@ class OfficialUnavailabilitySerializer(serializers.ModelSerializer):
     
 
 #=========================QUESTIONS================================
-class SessionTypeQuestionSerializer(serializers.ModelSerializer): 
-    """
-    Serializer for mapped (template) questions per session type and number.
-    - Used when previewing or hydrating session questions.
-    """
-    question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
-    question_category_name = serializers.SerializerMethodField()
-    question_role = serializers.SerializerMethodField()
-    question_answer_type = serializers.CharField(source="question.ques_answer_type", read_only=True)
-
-    class Meta:
-        model = SessionTypeQuestion
-        fields = [
-            "id",
-            "session_number",
-            "session_type",
-            "question",
-            "question_text",
-            "question_category_name",
-            "question_role",
-            "question_answer_type",
-        ]
-
-    def get_question_category_name(self, obj):
-        try:
-            return obj.question.ques_category.name if obj.question and obj.question.ques_category else "(Uncategorized)"
-        except Exception:
-            return "(Uncategorized)"
-
-    def get_question_role(self, obj):
-        try:
-            return obj.question.role if obj.question and obj.question.role else "Unassigned"
-        except Exception:
-            return "Unassigned"
-
-
 #  CATEGORY SERIALIZER 
 class QuestionCategorySerializer(serializers.ModelSerializer):
     """For displaying role-specific question categories."""
@@ -562,6 +690,22 @@ class SessionTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = SessionType
         fields = ["id", "name"]
+
+# SESSION TYPE QUESTION (assignment link) 
+# class SessionTypeQuestionSerializer(serializers.ModelSerializer):
+#     question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
+#     session_type_name = serializers.CharField(source="session_type.name", read_only=True)
+
+#     class Meta:
+#         model = SessionTypeQuestion
+#         fields = [
+#             "id",
+#             "session_number",
+#             "session_type",
+#             "session_type_name",
+#             "question",
+#             "question_text",
+#         ]
 
 class BulkQuestionCreateSerializer(serializers.Serializer):
     """
