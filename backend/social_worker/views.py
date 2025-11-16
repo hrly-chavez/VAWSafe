@@ -28,6 +28,114 @@ from rest_framework.decorators import action
 from dswd.utils.logging import log_change
 from docxtpl import DocxTemplate
 
+def generate_consent_forms(victim_serializer_data, victim_id, assigned_official=None):
+    """
+    Will generate:
+    C:\...\Templates\victim<id>\consent forms\Referrals.docx
+    C:\...\Templates\victim<id>\consent forms\Data Privacy.docx
+    C:\...\Templates\victim<id>\consent forms\Informed Consent.docx
+    """
+
+    # Template file paths
+    templates = [
+        r"C:\Users\Rhainer\Desktop\Templates\Consent Forms\Referrals.docx",
+        r"C:\Users\Rhainer\Desktop\Templates\Consent Forms\Data Privacy.docx",
+        r"C:\Users\Rhainer\Desktop\Templates\Consent Forms\Informed Consent.docx"
+    ]
+
+    # CREATE correct directory:
+    # victim1/consent forms/
+    base_dir = r"C:\Users\Rhainer\Desktop\Templates"
+
+    victim_folder = os.path.join(base_dir, f"victim{victim_id}")
+    consent_folder = os.path.join(victim_folder, "consent forms")
+
+    os.makedirs(consent_folder, exist_ok=True)
+
+    output_files = []
+
+    # AGE
+    birth_date_str = victim_serializer_data.get("vic_birth_date")
+    age = "N/A"
+    if birth_date_str:
+        try:
+            birth_date = date.fromisoformat(birth_date_str)
+            today = date.today()
+            age = (
+                today.year
+                - birth_date.year
+                - ((today.month, today.day) < (birth_date.month, birth_date.day))
+            )
+        except:
+            pass
+
+    # Social worker
+    social_worker = assigned_official.full_name if assigned_official else "N/A"
+
+    # Context
+    context = {
+        "full_name": victim_serializer_data.get("full_name", "N/A"),
+        "age": age,
+        "current_date": date.today().strftime("%B %d, %Y"),
+        "assigned_social_worker": social_worker,
+    }
+
+    # Generate forms
+    for template_path in templates:
+        if not os.path.exists(template_path):
+            print(f"⚠ Template missing: {template_path}")
+            continue
+
+        template_name = os.path.splitext(os.path.basename(template_path))[0]
+        output_path = os.path.join(consent_folder, f"{template_name}.docx")
+
+        doc = DocxTemplate(template_path)
+        doc.render(context)
+        doc.save(output_path)
+
+        output_files.append(output_path)
+
+    return output_files
+
+def generate_session_docx(session_data, victim_id):
+    """
+    Generate a Word document for a session with all answers and feedback.
+    session_data: the JSON returned by your session_answers_docx endpoint
+    victim_id: the victim's ID
+    """
+
+    # Single template path
+    template_path = r"C:\Users\Rhainer\Desktop\Templates\Session_Template.docx"
+
+    # CREATE correct directory:
+    # victim1/sessions/
+    base_dir = r"C:\Users\Rhainer\Desktop\Templates"
+    victim_folder = os.path.join(base_dir, f"victim{victim_id}")
+    session_folder = os.path.join(victim_folder, "sessions")
+    os.makedirs(session_folder, exist_ok=True)
+
+    # Build context
+    context = {
+        "session_num": session_data.get("session_num", "N/A"),
+        "victim_name": session_data.get("victim_name", "N/A"),
+        "current_date": date.today().strftime("%B %d, %Y"),
+        "answers": session_data.get("answers", []),  # list of dicts with question/answer/note/role
+        "feedback": session_data.get("my_feedback", "")
+    }
+
+    # Output file
+    output_path = os.path.join(session_folder, f"Session_{session_data.get('session_num', 'N/A')}.docx")
+
+    if not os.path.exists(template_path):
+        print(f"⚠ Template missing: {template_path}")
+        return None
+
+    doc = DocxTemplate(template_path)
+    doc.render(context)
+    doc.save(output_path)
+
+    return output_path
+
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
 @transaction.atomic
@@ -141,6 +249,12 @@ def register_victim(request):
 
             if perpetrator:
                 incident_data["perp_id"] = perpetrator.pk
+
+            if request.user.is_authenticated:
+                try:
+                    incident_data["of_id"] = request.user.official.pk  
+                except:
+                    pass  # user may not be an official
        
             for key in ("is_via_electronic_means", "is_conflict_area", "is_calamity_area"):
                 if key in incident_data:
@@ -173,6 +287,11 @@ def register_victim(request):
                 return Response({"success": False, "errors": c_ser.errors},
                                 status=status.HTTP_400_BAD_REQUEST)
             contact_person = c_ser.save()
+
+        # 7) Generate Consent Form AFTER incident creation
+        victim_serializer_data = VictimSerializer(victim).data
+        assigned_official = incident.of_id if incident and incident.of_id else None
+        generated_file_path = generate_consent_forms(victim_serializer_data, victim.vic_id, assigned_official)
 
         return Response({
             "success": True,
@@ -1592,16 +1711,3 @@ class ServeVictimFacePhotoView(APIView):
         except VictimFaceSample.DoesNotExist:
             raise Http404("Victim face sample not found")
         return serve_encrypted_file(request, sample, sample.photo, content_type='image/jpeg')
-    
-# file generation
-
-def generate_consent_forms():
-    doc = DocxTemplate("C:\\Users\\Rhainer\\Desktop\\Templates\\Consent Forms\\Referrals.docx")
-
-    context = {
-        "full_name": "Juan Dela Cruz",
-        "age": 20,
-    }
-
-    doc.render(context)
-    doc.save("C:\\Users\\Rhainer\\Desktop\\Templates\\output.docx")
