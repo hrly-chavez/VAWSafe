@@ -43,21 +43,6 @@ export default function Sessions() {
             <h2 className="sessionstext">Sessions</h2>
             <p className="list-text">List of Scheduled Sessions</p>
 
-            {/* Search & Filter Row */}
-            <div className="row-one mb-4 flex flex-wrap gap-3 items-center">
-              {/* Search box */}
-              <div className="search">
-                <input
-                  type="text"
-                  placeholder="Search victim name..."
-                  className="searchbar"
-                  aria-label="Search sessions"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-                <img src="/images/loupe.png" alt="Search" />
-              </div>
-
               {/* Status filter */}
               <select
                 value={statusFilter}
@@ -68,7 +53,7 @@ export default function Sessions() {
                 <option value="Pending">Pending</option>
                 <option value="Ongoing">Ongoing</option>
               </select>
-            </div>
+            
 
             {/* Table */}
             <div className="table-container overflow-x-auto">
