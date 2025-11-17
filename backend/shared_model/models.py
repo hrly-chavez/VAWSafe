@@ -538,9 +538,12 @@ class SessionType(models.Model):
         ('Intake / Initial Assessment', 'Intake / Initial Assessment'),
         ('Case Study / Psychosocial Assessment', 'Case Study / Psychosocial Assessment'),
         ('Intervention Planning / Case Conference', 'Intervention Planning / Case Conference'),
+        ('Family Counseling / Reintegration', 'Family Counseling / Reintegration'),
+        ('Pyschological Evaluation', 'Pyschological Evaluation'),
+        ('Legal Assistance Session', 'Legal Assistance Session'),
         ('Counseling', 'Counseling'),
-        ('Follow-up', 'Follow-up'),
-        ('Case Closure', 'Case Closure'),
+        ('Follow-up / After Care', 'Follow-up / After Care'),
+        ('Termination / Discharge Planning', 'Termination / Discharge Planning'),
         ('Others', 'Others'),
     ]
 
