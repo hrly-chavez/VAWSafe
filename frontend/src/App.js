@@ -16,20 +16,6 @@ import ResetPasswordPage from "./pages/dswd/AccountManagement/ChangePass/ResetPa
 //Landing Page
 const LandingLayout = lazy(() => import("./pages/landing/LandingLayout"));
 
-//Desk officer
-const BPOApplication = lazy(() =>import("./pages/desk_officer/RegisterVictim/BPOApplication"));
-const DeskOfficerPage = lazy(() =>import("./pages/desk_officer/DeskOfficer/Dashboard"));
-const VictimFacial = lazy(() =>import("./pages/desk_officer/RegisterVictim/VictimFacial"));
-const Session = lazy(() => import("./pages/desk_officer/Session/Session"));
-const StartSession = lazy(() =>import("./pages/desk_officer/Session/StartSession"));
-const DOVictims = lazy(() => import("./pages/desk_officer/Victims/Victims"));
-const DOVictimDetail = lazy(() =>import("./pages/desk_officer/Victims/VictimDetails"));
-const DOVictimSearch = lazy(() =>import("./pages/desk_officer/Victims/SearchVictim"));
-const DOSocialWorkers = lazy(() =>import("./pages/desk_officer/SocialWorker/SocialWorker"));
-const DOServices = lazy(() => import("./pages/desk_officer/Services/Services"));
-const DOCaseRecords = lazy(() =>import("./pages/desk_officer/CaseRecords/CaseRecords"));
-
-
 // Social Worker Pages
 const DashboardPage = lazy(() =>import("./pages/social_worker/Dashboard/Dashboard"));
 const RegisterVictim = lazy(() =>import("./pages/social_worker/RegisterVictim/RegisterVictim"));
@@ -117,25 +103,6 @@ export default function App() {
               element={<ResetPasswordPage />}
             />
             <Route path="/unauthorized" element={<Unauthorized />} />
-            {/* DESK OFFICER group (Sidebar + protected) */}
-            <Route element={
-                <ProtectedRoute roles={["VAWDesk"]}>
-                  <SidebarLayout />
-                </ProtectedRoute>
-              }>
-              <Route path={ROUTES.DESK_OFFICER} element={<DeskOfficerPage />} />
-              <Route path={ROUTES.DESK_OFFICER_REGISTER_VICTIM} element={<RegisterVictim />}/>
-              <Route path={ROUTES.DESK_OFFICER_BPO_APPLICATION}element={<BPOApplication />}/>
-              <Route path={ROUTES.DESK_OFFICER_VICTIM_FACIAL} element={<VictimFacial />}/>
-              <Route path={ROUTES.DESK_OFFICER_SESSION} element={<Session />} />
-              <Route path={ROUTES.DESK_OFFICER_VICTIMS}element={<DOVictims />}/>
-              <Route path={ROUTES.DESK_OFFICER_VICTIM_DETAIL}element={<DOVictimDetail />}/>
-              <Route path={ROUTES.DESK_OFFICER_VICTIM_SEARCH}element={<DOVictimSearch />}/>
-              <Route path={ROUTES.DESK_OFFICER_START_SESSION} element={<StartSession />}/>
-              <Route path={ROUTES.DESK_OFFICER_SOCIAL_WORKERS}element={<DOSocialWorkers />}/>
-              <Route path={ROUTES.DESK_OFFICER_SERVICES}element={<DOServices />}/>
-
-            </Route>
 
             {/* DSWD group */}
             <Route element={
