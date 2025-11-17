@@ -1,4 +1,4 @@
-// src/pages/social_worker/Victims/ImagePreviewModal.js
+// src/pages/nurse/Victims/ImagePreviewModal.js
 import React from "react";
 
 export default function ImagePreviewModal({ imageSrc, onClose }) {

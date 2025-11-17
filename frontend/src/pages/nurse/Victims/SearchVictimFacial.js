@@ -1,4 +1,4 @@
-// frontend/src/pages/social_worker/victims/SearchVictimFacial.js
+// frontend/src/pages/nurse/victims/SearchVictimFacial.js
 import React, { useRef, useState } from "react";
 import Webcam from "react-webcam";
 import api from "../../../api/axios"; // ✅ import your axios instance
@@ -35,7 +35,7 @@ export default function SearchVictimFacial({ onClose, onFound }) {
       const formData = new FormData();
       formData.append("frame", blob, "capture.jpg");
 
-      const res = await api.post("/api/social_worker/victims/search_face/", formData, {
+      const res = await api.post("/api/nurse/victims/search_face/", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

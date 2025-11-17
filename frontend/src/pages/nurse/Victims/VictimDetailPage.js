@@ -1,10 +1,13 @@
-  // src/pages/social_worker/Victims/VictimDetailPage.js
+  // src/pages/nurse/Victims/VictimDetailPage.js
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
+
+
 import Navbar from "../../Navbar";
 import api from "../../../api/axios";
 import VictimCases from "./VictimCases";
 import SessionDetails from "./SessionDetails";
+import SessionCard from "./SessionCard";
 
 export default function VictimDetailPage() {
   const { vic_id } = useParams();
@@ -16,7 +19,7 @@ export default function VictimDetailPage() {
   const [showModal, setShowModal] = useState(false);
   const [openSessionIndex, setOpenSessionIndex] = useState(null);
   const [selectedSessionIndex, setSelectedSessionIndex] = useState(null);
-
+  const navigate = useNavigate();
   useEffect(() => {
     document.body.style.overflow = showModal ? "hidden" : "auto";
     return () => {
@@ -24,35 +27,37 @@ export default function VictimDetailPage() {
     };
   }, [showModal]);
 
-  useEffect(() => {
-    const fetchVictim = async () => {
-      try {
-        const res = await api.get(`/api/social_worker/victims/${vic_id}/`);
-        const data = Array.isArray(res.data) ? res.data[0] : res.data;
-        setVictim(data || null);
-      } catch (err) {
-        setError(err?.response?.status ? `Error ${err.response.status}` : "Request failed");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const fetchIncidents = async () => {
-      try {
-        const res = await api.get(`/api/social_worker/case/${vic_id}/`);
-        if (Array.isArray(res.data)) {
-          setIncidentList(res.data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch incidents", err);
-      }
-    };
-
-    if (vic_id) {
-      fetchVictim();
-      fetchIncidents();
+  // Reusable function to fetch incidents
+const fetchIncidents = async () => {
+  try {
+    const res = await api.get(`/api/nurse/case/${vic_id}/`);
+    if (Array.isArray(res.data)) {
+      setIncidentList(res.data);
     }
-  }, [vic_id]);
+  } catch (err) {
+    console.error("Failed to fetch incidents", err);
+  }
+};
+
+useEffect(() => {
+  const fetchVictim = async () => {
+    try {
+      const res = await api.get(`/api/nurse/victims/${vic_id}/`);
+      const data = Array.isArray(res.data) ? res.data[0] : res.data;
+      setVictim(data || null);
+    } catch (err) {
+      setError(err?.response?.status ? `Error ${err.response.status}` : "Request failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (vic_id) {
+    fetchVictim();
+    fetchIncidents(); // now calls the global function
+  }
+}, [vic_id]);
+
 
   const get = (obj, keys, fallback = "N/A") => {
     for (const k of keys) {
@@ -191,92 +196,23 @@ export default function VictimDetailPage() {
               </div>
             </div>
             {/* Card/Box and clickable Session */}
-          {openSessionIndex === index && (
-            <div className="mt-4 space-y-4">
-              <p className="text-sm font-semibold text-[#292D96]">Sessions:</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {(incident.sessions || []).map((session) => (
-                 <div key={session.sess_id}
-                  className="border rounded-lg p-4 bg-white shadow hover:shadow-md transition cursor-pointer"
-                  onClick={() => setSelectedSessionIndex(session.sess_id)}>
-                    {/* Session number */}
-                    <h4 className="text-base font-semibold text-[#292D96] mb-2">
-                      Session {session.sess_num || "—"}
-                    </h4>
-                    {/* Status */}
-                    <p className="text-sm">
-                      <span className="font-medium">Status:</span>{" "}
-                      <span
-                        className={`px-2 py-0.5 rounded text-xs ${
-                          session.sess_status === "Pending"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : session.sess_status === "Ongoing"
-                            ? "bg-blue-100 text-blue-700"
-                            : session.sess_status === "Done"
-                            ? "bg-green-100 text-green-700"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {session.sess_status}
-                      </span>
-                    </p>
-                  
-                {/* Scheduled Date */}
-                <p className="text-sm">
-                  <span className="font-medium">Scheduled Date:</span>{" "}
-                  {session.sess_next_sched
-                    ? new Date(session.sess_next_sched).toLocaleString([], {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })
-                    : "—"}
-                </p>
-
-                {/* Actual Start Date — only show if available */}
-                {session.sess_date_today && (
-                  <p className="text-sm">
-                    <span className="font-medium">Started On:</span>{" "}
-                    {new Date(session.sess_date_today).toLocaleString([], {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: true,
-                    })}
-                  </p>
-                )}
-
-
-                    {/* location */}
-                    <p className="text-sm">
-                      <span className="font-medium">Location:</span>{" "}
-                      {session.location || "—"}
-                    </p>
-                    {/* Official */}
-                    <p className="text-sm">
-                      <span className="font-medium">Assigned Official:</span>{" "}
-                      {session.official_name || "—"}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-
-
+                  {openSessionIndex === index && (
+                <SessionCard
+                  incident={incident}
+                  onSelectSession={(id) => setSelectedSessionIndex(id)}
+                  onCreateSession={() =>
+                    navigate(`/nurse/more-sessions/create/${incident.incident_id}`)
+                  }
+                  navigate={navigate}
+                />
+              )}
           </div>
         ))}
 
         {/* Back Button */}
         <div className="flex justify-end">
           <Link
-            to="/social_worker/victims"
+            to="/nurse/victims"
             className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-4 py-2 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
           >
             ← Back to List
@@ -294,10 +230,11 @@ export default function VictimDetailPage() {
         />
       )}
       {selectedSessionIndex && (
-      <SessionDetails
-        sessionId={selectedSessionIndex}
-        onClose={() => setSelectedSessionIndex(null)}
-      />
+        <SessionDetails
+          sessionId={selectedSessionIndex}
+          onClose={() => setSelectedSessionIndex(null)}
+          onSessionCompleted={() => fetchIncidents()}  
+        />
       )}
 
     </div>

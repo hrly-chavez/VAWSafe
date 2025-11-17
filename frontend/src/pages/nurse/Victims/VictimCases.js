@@ -1,4 +1,4 @@
-// src/pages/social_worker/Victims/VictimCases.js
+// src/pages/nurse/Victims/VictimCases.js
 import React from "react";
 import {
   FolderIcon,

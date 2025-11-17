@@ -1,4 +1,4 @@
-// src/pages/social_worker/Victims/SessionDetails/ServiceList.js
+// src/pages/nurse/Victims/SessionDetails/ServiceList.js
 import React, { useState } from "react";
 import api from "../../../../api/axios";
 import UploadServiceModal from "./UploadServiceModal";
@@ -14,7 +14,7 @@ export default function ServiceList({ services, onFeedbackUpdate }) {
 
   const handleSaveFeedback = async (serviceId) => {
     try {
-      await api.patch(`/api/social_worker/services/${serviceId}/`, {
+      await api.patch(`/api/nurse/services/${serviceId}/`, {
         service_feedback: feedbackText,
       });
       alert("Feedback saved successfully!");
