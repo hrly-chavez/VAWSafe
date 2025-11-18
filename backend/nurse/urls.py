@@ -46,4 +46,9 @@ urlpatterns = [
 
     # --- Schedule Overview ---
     path("schedule-overview/week/", OfficialScheduleOverviewViewSet.as_view({"get": "week"}),name="schedule-overview-week"),
+
+    # --- Report ---
+    path("victims/<int:vic_id>/monthly-reports/", NurseMonthlyReportViewSet.as_view({"get": "list", "post": "create"}), name="nurse-monthly-reports"),
+    path("victims/<int:vic_id>/monthly-reports/<int:pk>/", NurseMonthlyReportViewSet.as_view({ "get": "retrieve", "put": "update", "patch": "partial_update"}),name="nurse-monthly-report-detail",
+),
 ]

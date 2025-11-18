@@ -154,7 +154,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'vawsafe',
         'USER': 'postgres',
-        'PASSWORD': '123456', 
+        'PASSWORD': 'postgres', 
         'HOST': 'localhost',
         'PORT': '5432',
     }
