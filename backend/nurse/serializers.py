@@ -56,6 +56,33 @@ class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
         model = IncidentInformation
         fields = "__all__"
 
+class ContactPersonSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ContactPerson
+        fields = [
+            "__all__"
+        ]
+
+    def get_full_name(self, obj):
+        parts = [obj.cont_fname, obj.cont_mname, obj.cont_lname, obj.cont_ext]
+        return " ".join(filter(None, parts))
+
+
+class FamilyMemberSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FamilyMember
+        fields = [
+            "__all__"
+        ]
+
+    def get_full_name(self, obj):
+        parts = [obj.fam_fname, obj.fam_mname, obj.fam_lname, obj.fam_extension]
+        return " ".join(filter(None, parts))
+
 class VictimDetailSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
     face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
@@ -73,6 +100,16 @@ class VictimDetailSerializer(serializers.ModelSerializer):
                 - ((today.month, today.day) < (obj.vic_birth_date.month, obj.vic_birth_date.day))
             )
         return None
+    
+    def get_contact_persons(self, obj):
+        # collect all contact persons linked via incidents
+        incident_ids = obj.incidents.values_list("incident_id", flat=True)
+        contacts = ContactPerson.objects.filter(incident_id__in=incident_ids)
+        return ContactPersonSerializer(contacts, many=True).data
+
+    def get_family_members(self, obj):
+        members = FamilyMember.objects.filter(victim=obj)
+        return FamilyMemberSerializer(members, many=True).data
 #=====================================SESSIONS=============================================
 class SessionCRUDSerializer(serializers.ModelSerializer):
     """
@@ -790,3 +827,38 @@ class ChangeLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChangeLog
         fields = "__all__"
+
+
+# ========================= REPORTS =========================
+class MonthlyProgressReportSerializer(serializers.ModelSerializer):
+    # FK display fields
+    full_name = serializers.CharField(source="victim.full_name", read_only=True)
+    prepared_by_name = serializers.CharField(source="prepared_by.full_name", read_only=True)
+
+    class Meta:
+        model = MonthlyProgressReport
+        fields = "__all__"
+        read_only_fields = [
+            "id",
+            "prepared_by",
+            "prepared_by_name",
+            "full_name",
+            "name",
+            "sex",
+            "age",
+            "date_of_birth",
+            "report_type",
+            "victim",
+            "incident",
+            "report_month",
+        ]
+
+    # ✅ Only require these fields
+    def validate(self, data):
+        errors = {}
+        for field in ["height", "weight", "bmi", "report_info"]:
+            if not data.get(field):
+                errors[field] = f"{field} is required."
+        if errors:
+            raise serializers.ValidationError(errors)
+        return data

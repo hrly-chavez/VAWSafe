@@ -5,6 +5,7 @@ from django.utils.timezone import now
 from fernet_fields import EncryptedCharField, EncryptedDateField, EncryptedIntegerField, EncryptedTextField, EncryptedDateTimeField
 from django.contrib.auth import get_user_model
 from shared_model.storage import EncryptedFileSystemStorage
+from datetime import date
 
 #para ni sa file encryption sa mga filepath
 encrypted_storage = EncryptedFileSystemStorage()
@@ -531,6 +532,78 @@ class Evidence(models.Model):
 
     def __str__(self):
         return f"Evidence {self.id} for Incident {self.incident_id}"
+    
+#=======================================REPORT================================== 
+class MonthlyProgressReport(models.Model):
+    REPORT_TYPE_CHOICES = [
+        ("Nurse", "Nurse"),
+        ("Psychometrician", "Psychometrician"),
+        ("Social Worker", "Social Worker"),
+    ]
+
+    victim = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name="monthly_reports")
+    incident = models.ForeignKey(IncidentInformation, on_delete=models.CASCADE, related_name="monthly_reports")
+    report_month = models.DateField()
+    report_type = models.CharField(max_length=50, choices=REPORT_TYPE_CHOICES)
+    prepared_by = models.ForeignKey(Official, on_delete=models.SET_NULL, null=True, blank=True)
+
+    # Auto-filled victim info
+    name = models.CharField(max_length=255)
+    sex = models.CharField(max_length=50)
+    age = models.IntegerField(null=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+
+    # Structured medical metrics
+    height = models.CharField(max_length=50, blank=True, null=True)
+    weight = models.CharField(max_length=50, blank=True, null=True)
+    bmi = models.CharField(max_length=50, blank=True, null=True)
+    bmi_category = models.CharField(max_length=50, blank=True, null=True)
+
+    # Unified medical summary
+    report_info = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if self.victim:
+            self.name = self.victim.full_name
+            self.sex = self.victim.vic_sex
+            self.date_of_birth = self.victim.vic_birth_date
+            if self.victim.vic_birth_date:
+                today = date.today()
+                self.age = (
+                    today.year - self.victim.vic_birth_date.year -
+                    ((today.month, today.day) < (self.victim.vic_birth_date.month, self.victim.vic_birth_date.day))
+                )
+
+        # Auto-calculate BMI category
+        try:
+            h = float(self.height)
+            w = float(self.weight)
+            if self.height and self.weight and self.bmi:
+                height_m = h / 100 if self.heightUnit == "cm" else h * 0.3048
+                weight_kg = w if self.weightUnit == "kg" else w * 0.453592
+                bmi_val = weight_kg / (height_m * height_m)
+
+                if self.age and self.age >= 18:
+                    if bmi_val < 18.5:
+                        self.bmi_category = "Underweight"
+                    elif bmi_val < 25:
+                        self.bmi_category = "Normal"
+                    elif bmi_val < 30:
+                        self.bmi_category = "Overweight"
+                    else:
+                        self.bmi_category = "Obese"
+                else:
+                    self.bmi_category = "Age-based BMI not classified"
+        except Exception:
+            self.bmi_category = None
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.report_type} Report for {self.name} - {self.report_month.strftime('%B %Y')}"
+
     
 #=======================================SESSSION================================== 
 class SessionType(models.Model):

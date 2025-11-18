@@ -1339,3 +1339,37 @@ class ServeVictimFacePhotoView(APIView):
         except VictimFaceSample.DoesNotExist:
             raise Http404("Victim face sample not found")
         return serve_encrypted_file(request, sample, sample.photo, content_type='image/jpeg')
+    
+#============================REPORTS==============================================
+class NurseMonthlyReportViewSet(viewsets.ModelViewSet):
+    serializer_class = MonthlyProgressReportSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        vic_id = self.kwargs.get("vic_id")
+        return MonthlyProgressReport.objects.filter(
+            victim__vic_id=vic_id
+        ).order_by("-created_at")
+
+    def perform_create(self, serializer):
+        official = self.request.user.official
+        if not official or official.of_role != "Nurse":
+            raise PermissionDenied("Only nurses can add nurse reports.")
+
+        # Incident is optional now — pick the first incident if not provided
+        incident_id = self.request.data.get("incident")
+        incident = None
+        if incident_id:
+            try:
+                incident = IncidentInformation.objects.get(pk=incident_id)
+            except IncidentInformation.DoesNotExist:
+                raise NotFound("Incident not found.")
+
+        serializer.save(
+            prepared_by=official,
+            report_type="Nurse",
+            victim=incident.vic_id if incident else None,
+            incident=incident,
+            report_month=date.today()  # auto-fill with today if not provided
+        )
+
