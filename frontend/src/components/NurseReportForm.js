@@ -149,7 +149,21 @@ export default function NurseReportForm({ victim, incident, onSubmit, onClose })
             />
             {formData.bmi && (
               <p className="text-xs mt-1 text-gray-600">
-                Category: <span className="font-semibold">{formData.bmiCategory}</span>
+                Category:{" "}
+                <span
+                  className={`font-semibold ${formData.bmiCategory === "Normal"
+                      ? "text-green-600"
+                      : formData.bmiCategory === "Underweight"
+                        ? "text-blue-600"
+                        : formData.bmiCategory === "Overweight"
+                          ? "text-orange-600"
+                          : formData.bmiCategory === "Obese"
+                            ? "text-red-600"
+                            : "text-gray-600"
+                    }`}
+                >
+                  {formData.bmiCategory}
+                </span>
               </p>
             )}
           </div>

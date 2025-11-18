@@ -26,6 +26,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from dswd.utils.logging import log_change
 from docxtpl import DocxTemplate
+from django.shortcuts import get_object_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -1339,3 +1340,58 @@ class ServeVictimFacePhotoView(APIView):
         except VictimFaceSample.DoesNotExist:
             raise Http404("Victim face sample not found")
         return serve_encrypted_file(request, sample, sample.photo, content_type='image/jpeg')
+    
+# ========================= REPORTS =========================
+class ComprehensivePsychReportViewSet(viewsets.ModelViewSet):
+    queryset = ComprehensivePsychReport.objects.all()
+    serializer_class = ComprehensivePsychReportSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Psychometrician"]
+
+    def get_queryset(self):
+        vic_id = self.kwargs.get("vic_id")
+        return self.queryset.filter(victim_id=vic_id)
+
+    def perform_create(self, serializer):
+        vic_id = self.kwargs.get("vic_id")
+        victim = get_object_or_404(Victim, pk=vic_id)
+
+        official = getattr(self.request.user, "official", None)
+        if not official or official.of_role != "Psychometrician":
+            raise PermissionDenied("Only psychometricians can add comprehensive reports.")
+
+        # Attach incident automatically from request data
+        incident_id = self.request.data.get("incident")
+        incident = get_object_or_404(IncidentInformation, pk=incident_id)
+
+        # Auto-fill report_month with today's date
+        today = date.today()
+
+        serializer.save(
+            victim=victim,
+            prepared_by=official,
+            incident=incident,
+            report_month=today
+        )
+
+class MonthlyPsychProgressReportViewSet(viewsets.ModelViewSet):
+    queryset = MonthlyPsychProgressReport.objects.all()
+    serializer_class = MonthlyPsychProgressReportSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Psychometrician"]
+
+    def get_queryset(self):
+        vic_id = self.kwargs.get("vic_id")
+        return self.queryset.filter(victim_id=vic_id)
+
+    def perform_create(self, serializer):
+        official = self.request.user.official
+        if official.of_role != "Psychometrician":
+            raise PermissionDenied("Only psychometricians can add monthly progress reports.")
+        serializer.save(prepared_by=official)
+
+    def perform_update(self, serializer):
+        official = self.request.user.official
+        if serializer.instance.prepared_by != official:
+            raise PermissionDenied("You can only edit your own monthly progress reports.")
+        serializer.save()

@@ -252,3 +252,16 @@ class MonthlyProgressReportAdmin(admin.ModelAdmin):
     list_filter = ("report_type", "report_month")
     search_fields = ("name", "report_info", "prepared_by__of_fname", "prepared_by__of_lname")
     ordering = ("-report_month",)
+
+@admin.register(ComprehensivePsychReport)
+class ComprehensivePsychReportAdmin(admin.ModelAdmin):
+    list_display = ("id", "victim", "incident", "report_month", "prepared_by")
+    list_filter = ("report_month", "prepared_by")
+    search_fields = (
+        "victim__vic_first_name",
+        "victim__vic_last_name",
+        "incident__incident_num",
+        "prepared_by__of_fname",
+        "prepared_by__of_lname",
+    )
+    ordering = ("-report_month",)

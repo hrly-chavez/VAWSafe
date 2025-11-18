@@ -110,6 +110,7 @@ class VictimDetailSerializer(serializers.ModelSerializer):
     def get_family_members(self, obj):
         members = FamilyMember.objects.filter(victim=obj)
         return FamilyMemberSerializer(members, many=True).data
+    
 #=====================================SESSIONS=============================================
 class SessionCRUDSerializer(serializers.ModelSerializer):
     """
@@ -834,6 +835,7 @@ class MonthlyProgressReportSerializer(serializers.ModelSerializer):
     # FK display fields
     full_name = serializers.CharField(source="victim.full_name", read_only=True)
     prepared_by_name = serializers.CharField(source="prepared_by.full_name", read_only=True)
+    bmi_category = serializers.CharField(read_only=True)  
 
     class Meta:
         model = MonthlyProgressReport
@@ -851,9 +853,9 @@ class MonthlyProgressReportSerializer(serializers.ModelSerializer):
             "victim",
             "incident",
             "report_month",
+            "bmi_category", 
         ]
 
-    # ✅ Only require these fields
     def validate(self, data):
         errors = {}
         for field in ["height", "weight", "bmi", "report_info"]:
