@@ -30,8 +30,8 @@ export default function Sidebar() {
         { icon: "/images/heart.png", label: "VAWC Victims", path: "/dswd/victims", },
         // { icon: "/images/customer.png", label: "Social Workers", path: "/dswd/social-workers" },
         // { icon: "/images/founder.png", label: "VAW Desk Officer", path: "/dswd/vawdesk-officer" },
-        { icon: "/images/peace.png", label: "Services",path: "/dswd/services",},
-        { icon: "/images/peace.png",label: "Questions Management",path: "/dswd/questions",},
+        // { icon: "/images/peace.png", label: "Services",path: "/dswd/services",},
+        // { icon: "/images/peace.png",label: "Questions Management",path: "/dswd/questions",},
         { icon: "/images/account-settings.png",label: "Account Management",path: "/dswd/account-management",},
         // { icon: "/images/account-settings.png",label: "Account Management",
         //   children: [
@@ -55,7 +55,7 @@ export default function Sidebar() {
         { icon: "/images/heart.png", label: "VAWC Victims",path: "/psychometrician/victims",},
         { icon: "/images/case.png", label: "Case Records",path: "/psychometrician/case-records",},
         { icon: "/images/meeting.png", label: "Scheduled Sessions",path: "/psychometrician/sessions",},
-        { icon: "/images/calendar.png", label: "My Schedule",path: "/psychometrician/schedule",},
+        // { icon: "/images/calendar.png", label: "My Schedule",path: "/psychometrician/schedule",},
         { icon: "/images/peace.png", label: "Services",path: "/psychometrician/services",},
         { icon: "/images/calendar.png", label: "Questions", path: "/psychometrician/questions" },
         { icon: "/images/logout.png", label: "Log Out", path: "/login",isLogout: true,},
@@ -69,23 +69,24 @@ export default function Sidebar() {
         { icon: "/images/heart.png", label: "VAWC Victims",path: "/social_worker/victims",},
         { icon: "/images/case.png", label: "Case Records",path: "/social_worker/case-records",},
         { icon: "/images/meeting.png",label: "Scheduled Sessions",path: "/social_worker/sessions",},
-        { icon: "/images/calendar.png", label: "My Schedule",path: "/social_worker/schedule",},
         { icon: "/images/calendar.png", label: "Questions", path: "/social_worker/questions" },
-        { icon: "/images/peace.png", label: "Services", path: "/social_worker/services",},
         { icon: "/images/logout.png", label: "Log Out", path: "/login",isLogout: true,},
+        
+        // { icon: "/images/calendar.png", label: "My Schedule",path: "/social_worker/schedule",},
+        // { icon: "/images/peace.png", label: "Services", path: "/social_worker/services",},
       ];
     }
 
     if (role === "nurse") {
       return [
-        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/nurse",},
         { icon: "/images/heart.png", label: "VAWC Victims",path: "/nurse/victims",},
-        { icon: "/images/case.png", label: "Case Records",path: "/nurse/case-records",},
         { icon: "/images/meeting.png",label: "Scheduled Sessions",path: "/nurse/sessions",},
-        { icon: "/images/calendar.png", label: "My Schedule", path: "/nurse/schedule",},
-        { icon: "/images/peace.png",label: "Services", path: "/nurse/services",},
         { icon: "/images/calendar.png", label: "Questions", path: "/nurse/questions" },
         { icon: "/images/logout.png", label: "Log Out",path: "/login",isLogout: true,},
+        // { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/nurse",},
+        // { icon: "/images/case.png", label: "Case Records",path: "/nurse/case-records",},
+        // { icon: "/images/peace.png",label: "Services", path: "/nurse/services",},
+        // { icon: "/images/calendar.png", label: "My Schedule", path: "/nurse/schedule",},
       ];
     }
 

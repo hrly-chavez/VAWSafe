@@ -16,20 +16,6 @@ import ResetPasswordPage from "./pages/dswd/AccountManagement/ChangePass/ResetPa
 //Landing Page
 const LandingLayout = lazy(() => import("./pages/landing/LandingLayout"));
 
-//Desk officer
-const BPOApplication = lazy(() =>import("./pages/desk_officer/RegisterVictim/BPOApplication"));
-const DeskOfficerPage = lazy(() =>import("./pages/desk_officer/DeskOfficer/Dashboard"));
-const VictimFacial = lazy(() =>import("./pages/desk_officer/RegisterVictim/VictimFacial"));
-const Session = lazy(() => import("./pages/desk_officer/Session/Session"));
-const StartSession = lazy(() =>import("./pages/desk_officer/Session/StartSession"));
-const DOVictims = lazy(() => import("./pages/desk_officer/Victims/Victims"));
-const DOVictimDetail = lazy(() =>import("./pages/desk_officer/Victims/VictimDetails"));
-const DOVictimSearch = lazy(() =>import("./pages/desk_officer/Victims/SearchVictim"));
-const DOSocialWorkers = lazy(() =>import("./pages/desk_officer/SocialWorker/SocialWorker"));
-const DOServices = lazy(() => import("./pages/desk_officer/Services/Services"));
-const DOCaseRecords = lazy(() =>import("./pages/desk_officer/CaseRecords/CaseRecords"));
-
-
 // Social Worker Pages
 const DashboardPage = lazy(() =>import("./pages/social_worker/Dashboard/Dashboard"));
 const RegisterVictim = lazy(() =>import("./pages/social_worker/RegisterVictim/RegisterVictim"));
@@ -73,9 +59,11 @@ const NurseVictims = lazy(() => import("./pages/nurse/Victims/Victims"));
 const NurseVictimDetailPage = lazy(() =>import("./pages/nurse/Victims/VictimDetailPage"));
 const NurseSearchVictimFacial = lazy(() =>import("./pages/nurse/Victims/SearchVictimFacial"));
 const NurseViewSessions = lazy(() =>import("./pages/nurse/Sessions/ViewSessions"));
-const NurseSocialWorkerStartSession = lazy(() =>import("./pages/nurse/Sessions/StartSession"));
+const NurseSession = lazy(() =>import("./pages/nurse/Sessions/StartSession"));
 const NurseSchedule = lazy(() => import("./pages/nurse/Schedule/Schedule"));
 const NurseQuestions = lazy(() => import("./pages/nurse/Questions/Questions"));
+const NurseCreateSession = lazy(() => import("./pages/nurse/Sessions/MoreSessions/CreateSession"));
+const NurseStartMoreSession = lazy(() => import("./pages/nurse/Sessions/MoreSessions/StartMoreSession"));
 const NurseProfile = lazy(() => import("./pages/nurse/Profile/NurseProfile"));
 
 // Psychometrician
@@ -115,25 +103,6 @@ export default function App() {
               element={<ResetPasswordPage />}
             />
             <Route path="/unauthorized" element={<Unauthorized />} />
-            {/* DESK OFFICER group (Sidebar + protected) */}
-            <Route element={
-                <ProtectedRoute roles={["VAWDesk"]}>
-                  <SidebarLayout />
-                </ProtectedRoute>
-              }>
-              <Route path={ROUTES.DESK_OFFICER} element={<DeskOfficerPage />} />
-              <Route path={ROUTES.DESK_OFFICER_REGISTER_VICTIM} element={<RegisterVictim />}/>
-              <Route path={ROUTES.DESK_OFFICER_BPO_APPLICATION}element={<BPOApplication />}/>
-              <Route path={ROUTES.DESK_OFFICER_VICTIM_FACIAL} element={<VictimFacial />}/>
-              <Route path={ROUTES.DESK_OFFICER_SESSION} element={<Session />} />
-              <Route path={ROUTES.DESK_OFFICER_VICTIMS}element={<DOVictims />}/>
-              <Route path={ROUTES.DESK_OFFICER_VICTIM_DETAIL}element={<DOVictimDetail />}/>
-              <Route path={ROUTES.DESK_OFFICER_VICTIM_SEARCH}element={<DOVictimSearch />}/>
-              <Route path={ROUTES.DESK_OFFICER_START_SESSION} element={<StartSession />}/>
-              <Route path={ROUTES.DESK_OFFICER_SOCIAL_WORKERS}element={<DOSocialWorkers />}/>
-              <Route path={ROUTES.DESK_OFFICER_SERVICES}element={<DOServices />}/>
-
-            </Route>
 
             {/* DSWD group */}
             <Route element={
@@ -196,9 +165,11 @@ export default function App() {
               <Route path={ROUTES.NURSE_VICTIM_DETAIL}element={<NurseVictimDetailPage />}/>
               <Route path={ROUTES.NURSE_SEARCH_FACIAL}element={<NurseSearchVictimFacial />}/>
               <Route path={ROUTES.NURSE_VIEW_SESSION}element={<NurseViewSessions />}/>
-              <Route path={ROUTES.NURSE_START_SESSION}element={<NurseSocialWorkerStartSession />} />
+              <Route path={ROUTES.NURSE_START_SESSION}element={<NurseSession />} />
               <Route path={ROUTES.NURSE_SCHEDULE} element={<NurseSchedule />} />
               <Route path={ROUTES.NURSE_QUESTIONS} element={<NurseQuestions />} />
+              <Route path={ROUTES.NURSE_CREATE_MORE_SESSION} element={<NurseCreateSession />} />
+              <Route path={ROUTES.NURSE_START_MORE_SESSION} element={<NurseStartMoreSession />} />
             </Route>
 
             {/* Psychometrician group */}

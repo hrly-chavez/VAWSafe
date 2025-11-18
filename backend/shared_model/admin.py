@@ -245,3 +245,10 @@ class QuestionAdmin(admin.ModelAdmin):
     list_filter = ("role", "ques_category", "ques_is_active")
     search_fields = ("ques_question_text",)
     readonly_fields = ("created_at", "created_by")
+
+@admin.register(MonthlyProgressReport)
+class MonthlyProgressReportAdmin(admin.ModelAdmin):
+    list_display = ("report_type", "name", "report_month", "incident", "prepared_by")
+    list_filter = ("report_type", "report_month")
+    search_fields = ("name", "report_info", "prepared_by__of_fname", "prepared_by__of_lname")
+    ordering = ("-report_month",)

@@ -26,6 +26,115 @@ from rest_framework.decorators import api_view, permission_classes, parser_class
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from dswd.utils.logging import log_change
+from docxtpl import DocxTemplate
+
+def generate_consent_forms(victim_serializer_data, victim_id, assigned_official=None):
+    """
+    Will generate:
+    C:\...\Templates\victim<id>\consent forms\Referrals.docx
+    C:\...\Templates\victim<id>\consent forms\Data Privacy.docx
+    C:\...\Templates\victim<id>\consent forms\Informed Consent.docx
+    """
+
+    # Template file paths
+    templates = [
+        r"C:\Users\relon\Desktop\Templates\Consent Forms\Referrals.docx",
+        r"C:\Users\relon\Desktop\Templates\Consent Forms\Data Privacy.docx",
+        r"C:\Users\relon\Desktop\Templates\Consent Forms\Informed Consent.docx"
+    ]
+
+    # CREATE correct directory:
+    # victim1/consent forms/
+    base_dir = r"C:\Users\relon\Desktop\Templates"
+
+    victim_folder = os.path.join(base_dir, f"victim{victim_id}")
+    consent_folder = os.path.join(victim_folder, "consent forms")
+
+    os.makedirs(consent_folder, exist_ok=True)
+
+    output_files = []
+
+    # AGE
+    birth_date_str = victim_serializer_data.get("vic_birth_date")
+    age = "N/A"
+    if birth_date_str:
+        try:
+            birth_date = date.fromisoformat(birth_date_str)
+            today = date.today()
+            age = (
+                today.year
+                - birth_date.year
+                - ((today.month, today.day) < (birth_date.month, birth_date.day))
+            )
+        except:
+            pass
+
+    # Social worker
+    social_worker = assigned_official.full_name if assigned_official else "N/A"
+
+    # Context
+    context = {
+        "full_name": victim_serializer_data.get("full_name", "N/A"),
+        "age": age,
+        "current_date": date.today().strftime("%B %d, %Y"),
+        "assigned_social_worker": social_worker,
+    }
+
+    # Generate forms
+    for template_path in templates:
+        if not os.path.exists(template_path):
+            print(f"⚠ Template missing: {template_path}")
+            continue
+
+        template_name = os.path.splitext(os.path.basename(template_path))[0]
+        output_path = os.path.join(consent_folder, f"{template_name}.docx")
+
+        doc = DocxTemplate(template_path)
+        doc.render(context)
+        doc.save(output_path)
+
+        output_files.append(output_path)
+
+    return output_files
+
+def generate_session_docx(session_data, victim_id):
+    """
+    Generate a Word document for a session with all answers and feedback.
+    session_data: the JSON returned by your session_answers_docx endpoint
+    victim_id: the victim's ID
+    """
+
+    # Single template path
+    template_path = r"C:\Users\relon\Desktop\Templates\Session_Template.docx"
+
+    # CREATE correct directory:
+    # victim1/sessions/
+    base_dir = r"C:\Users\relon\Desktop\Templates"
+    victim_folder = os.path.join(base_dir, f"victim{victim_id}")
+    session_folder = os.path.join(victim_folder, "sessions")
+    os.makedirs(session_folder, exist_ok=True)
+
+    # Build context
+    context = {
+        "session_num": session_data.get("session_num", "N/A"),
+        "victim_name": session_data.get("victim_name", "N/A"),
+        "current_date": date.today().strftime("%B %d, %Y"),
+        "answers": session_data.get("answers", []),  # list of dicts with question/answer/note/role
+        "feedback": session_data.get("my_feedback", "")
+    }
+
+    # Output file
+    output_path = os.path.join(session_folder, f"Session_{session_data.get('session_num', 'N/A')}.docx")
+
+    if not os.path.exists(template_path):
+        print(f"⚠ Template missing: {template_path}")
+        return None
+
+    doc = DocxTemplate(template_path)
+    doc.render(context)
+    doc.save(output_path)
+
+    return output_path
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
@@ -140,6 +249,12 @@ def register_victim(request):
 
             if perpetrator:
                 incident_data["perp_id"] = perpetrator.pk
+
+            if request.user.is_authenticated:
+                try:
+                    incident_data["of_id"] = request.user.official.pk  
+                except:
+                    pass  # user may not be an official
        
             for key in ("is_via_electronic_means", "is_conflict_area", "is_calamity_area"):
                 if key in incident_data:
@@ -173,26 +288,10 @@ def register_victim(request):
                                 status=status.HTTP_400_BAD_REQUEST)
             contact_person = c_ser.save()
 
-
-        # # -------------------------------
-        # # 6) CREATE VICTIM ACCOUNT (new)
-        # # -------------------------------
-        # fname = victim_data.get("vic_first_name", "").strip().lower()
-        # lname = victim_data.get("vic_last_name", "").strip().lower()
-        # base_username = f"{fname}{lname}".replace(" ", "") or get_random_string(8)
-
-        # username = base_username
-        # counter = 0
-        # while User.objects.filter(username=username).exists():
-        #     counter += 1
-        #     username = f"{base_username}{counter}"
-
-        # generated_password = get_random_string(length=12)
-        # user = User.objects.create_user(username=username, password=generated_password)
-
-        # # Optionally associate user with victim
-        # victim.user = user  # <-- comment this out if Victim model has no FK to User
-        # victim.save()
+        # 7) Generate Consent Form AFTER incident creation
+        victim_serializer_data = VictimSerializer(victim).data
+        assigned_official = incident.of_id if incident and incident.of_id else None
+        generated_file_path = generate_consent_forms(victim_serializer_data, victim.vic_id, assigned_official)
 
         return Response({
             "success": True,
@@ -214,15 +313,15 @@ class victim_list(generics.ListAPIView):
     allowed_roles = ['Social Worker']
 
     def get_queryset(self):
+        # Allow all authenticated users with valid roles to see all victims
         user = self.request.user
         official = getattr(user, "official", None)
         role = getattr(official, "of_role", None)
-        if not role:
-            return Victim.objects.none()
 
-        return Victim.objects.filter(
-            incidents__sessions__assigned_official=official
-        ).distinct()
+        if not role:
+            return Victim.objects.none()  #prevents non-officials
+
+        return Victim.objects.all().distinct()
 
 logger = logging.getLogger(__name__)
 
@@ -243,38 +342,29 @@ def cleanup_decrypted_file_later(file_path, victim_id, delay=10):
 class victim_detail(generics.RetrieveAPIView):
     serializer_class = VictimDetailSerializer
     lookup_field = "vic_id"
-    permission_classes = [IsAuthenticated]
-
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Social Worker", "Nurse", "Psychometrician", "Home Life"]
+    
     def get_queryset(self):
+        """
+        Allow all authenticated officials (any role) to view all victims.
+        """
         user = self.request.user
         if hasattr(user, "official"):
-            if user.official.of_role == "DSWD":
-                return Victim.objects.all()
-            if user.official.of_role in ["Social Worker", "Nurse", "Psychometrician"]:
-                return Victim.objects.filter(
-                    incidents__sessions__assigned_official=user.official
-                ).distinct()
+            return Victim.objects.all().distinct()
         return Victim.objects.none()
 
     def get_object(self):
+        """
+        Retrieve the victim directly — no role-based assignment restriction.
+        """
         vic_id = self.kwargs.get(self.lookup_field)
 
-        # Attempt to get the victim object
         try:
-            victim = Victim.objects.get(vic_id=vic_id)
+            return Victim.objects.get(vic_id=vic_id)
         except Victim.DoesNotExist:
-            # If the victim does not exist, raise a 404 Not Found
             raise NotFound("Victim not found.")
-
-        # If user is a Social Worker, Nurse, or Psychometrician, ensure they are assigned to the victim
-        user = self.request.user
-        if hasattr(user, "official") and user.official.of_role in ["Social Worker", "Nurse", "Psychometrician"]:
-            if not victim.incidents.filter(sessions__assigned_official=user.official).exists():
-                # If the user is not assigned to the victim, raise a 403 Forbidden
-                raise PermissionDenied("You are not assigned to view this victim's data.")
-
-        return victim
-
+        
     def retrieve(self, request, *args, **kwargs):
         victim = self.get_object()
 
@@ -304,7 +394,10 @@ class victim_detail(generics.RetrieveAPIView):
             threading.Thread(target=cleanup_decrypted_file_later, args=(decrypted_photo_path, victim.vic_id, 10)).start()
 
         return Response(serializer.data)
+
+
 # retrieve all information related to case ( Worker)
+
 class VictimIncidentsView(generics.ListAPIView):
     serializer_class = IncidentInformationSerializer
     permission_classes = [IsAuthenticated, IsRole]
@@ -528,7 +621,9 @@ def mapped_questions(request):
     # Base queryset
     base_qs = SessionTypeQuestion.objects.filter(
         session_number=session_num,
-        session_type__id__in=type_ids
+        session_type__id__in=type_ids,
+        question__ques_is_active=True,                          
+        question__ques_category__is_active=True                 
     ).select_related("question", "question__ques_category", "session_type")
 
     # --- New logic: filter by assigned officials' roles if sess_id is given ---
@@ -611,16 +706,25 @@ def start_session(request, sess_id):
         user_role = official.of_role
 
         if session.sess_num == 1:
-            # Shared session: all role questions
+            # Shared session: only hydrate questions for assigned officials' roles
+            assigned_roles = list(session.assigned_official.values_list("of_role", flat=True))
             all_mappings = SessionTypeQuestion.objects.filter(
                 session_number=session.sess_num,
-                session_type__id__in=type_ids
+                session_type__id__in=type_ids,
+                question__ques_is_active=True,
+                question__ques_category__is_active=True 
+            ).filter(
+                Q(question__role__in=assigned_roles) |
+                Q(question__ques_category__role__in=assigned_roles)
             ).select_related("question", "question__ques_category")
+
         else:
             # Individual session: role-filtered questions only
             all_mappings = SessionTypeQuestion.objects.filter(
                 session_number=session.sess_num,
-                session_type__id__in=type_ids
+                session_type__id__in=type_ids,
+                question__ques_is_active=True,
+                question__ques_category__is_active=True 
             ).filter(
                 Q(question__role__iexact=user_role) |
                 Q(question__ques_category__role__iexact=user_role)
@@ -630,10 +734,15 @@ def start_session(request, sess_id):
         for m in all_mappings:
             if not m.question:
                 continue  # Skip invalid mapping rows with no linked question
+            
             SessionQuestion.objects.get_or_create(
                 session=session,
                 question=m.question,
-                defaults={"sq_is_required": False}
+                defaults={
+                    "sq_is_required": False,
+                    "sq_question_text_snapshot": m.question.ques_question_text,
+                    "sq_answer_type_snapshot": m.question.ques_answer_type,
+                },
             )
 
     except Exception as e:
@@ -688,15 +797,128 @@ def add_custom_question(request, sess_id):
 
     return Response(SessionQuestionSerializer(created, many=True).data, status=201)
 
+# @api_view(["POST"])
+# @permission_classes([IsAuthenticated])
+# def finish_session(request, sess_id):
+#     """
+#     POST: Marks current official's session progress as Done.
+#     - Saves provided answers and records who answered them (answered_by, answered_at)
+#     - Enforces that an official can only answer questions matching their role (if mapped)
+#     - Marks SessionProgress for this official as done, and marks the overall session Done only
+#       when all assigned officials finished.
+#     """
+#     user = request.user
+#     if not hasattr(user, "official"):
+#         return Response({"error": "User is not an official"}, status=403)
+
+#     try:
+#         session = Session.objects.get(pk=sess_id, assigned_official=user.official)
+#     except Session.DoesNotExist:
+#         return Response({"error": "Session not found or not assigned to you"}, status=404)
+
+#     answers = request.data.get("answers", [])
+#     skipped = []  # collect any skipped answers due to role mismatch or missing sq
+#     saved = 0
+
+#     # Save answers inside a transaction to keep data consistent
+#     with transaction.atomic():
+#         for ans in answers:
+#             sq_id = ans.get("sq_id")
+#             if not sq_id:
+#                 continue
+#             try:
+#                 sq = SessionQuestion.objects.select_related("question").get(pk=sq_id, session=session)
+#             except SessionQuestion.DoesNotExist:
+#                 skipped.append({"sq_id": sq_id, "reason": "not_found"})
+#                 continue
+
+#             # Server-side role enforcement:
+#             q_role = None
+#             if sq.question:
+#                 # prefer question.role (string), fallback to question.ques_category.role
+#                 q_role = sq.question.role or getattr(sq.question.ques_category, "role", None)
+
+#             if q_role and user.official.of_role and q_role != user.official.of_role:
+#                 # skip saving - not allowed for this official
+#                 skipped.append({"sq_id": sq_id, "reason": "role_mismatch", "question_role": q_role})
+#                 continue
+
+#             # Save the provided answer
+#             new_value = ans.get("value")
+#             new_note = ans.get("note")
+
+#             # Only update fields if they changed (optional optimization)
+#             changed = False
+#             if new_value is not None and new_value != sq.sq_value:
+#                 sq.sq_value = new_value
+#                 changed = True
+#             if new_note is not None and new_note != sq.sq_note:
+#                 sq.sq_note = new_note
+#                 changed = True
+
+#             # Always set who answered (even if they edited their previous answer)
+#             sq.answered_by = user.official
+#             sq.answered_at = timezone.now()
+
+#             # Save
+#             if changed or True:
+#                 sq.save(update_fields=["sq_value", "sq_note", "answered_by", "answered_at"])
+#                 saved += 1
+
+#         # Save description (if updated)
+#         description = request.data.get("sess_description")
+#         if description is not None:
+#             session.sess_description = description
+
+#         # Save selected services
+#         service_ids = request.data.get("services", [])
+#         if isinstance(service_ids, list):
+#             session.services_given.all().delete()
+#             for sid in service_ids:
+#                 ServiceGiven.objects.create(
+#                     session=session,
+#                     serv_id_id=sid,
+#                     of_id=user.official
+#                 )
+
+#         # Update this official’s progress
+#         progress, _ = SessionProgress.objects.get_or_create(
+#             session=session,
+#             official=user.official,
+#         )
+#         progress.is_done = True
+#         progress.finished_at = timezone.now()
+#         progress.save()
+
+#         # Update session status only after saving progress
+#         if session.all_officials_done():
+#             session.sess_status = "Done"
+#         else:
+#             session.sess_status = "Ongoing"
+#         session.save()
+
+#     all_finished = session.all_officials_done()
+
+#     # Return details including warnings about skipped answers
+#     return Response({
+#         "message": "Your session progress has been marked as done.",
+#         "saved_answers": saved,
+#         "skipped_answers": skipped,
+#         "session_completed": all_finished,
+#         "all_finished": all_finished,
+#         "session": SessionDetailSerializer(session, context={"request": request}).data
+#     }, status=200)
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def finish_session(request, sess_id):
     """
     POST: Marks current official's session progress as Done.
-    - Saves provided answers and records who answered them (answered_by, answered_at)
-    - Enforces that an official can only answer questions matching their role (if mapped)
-    - Marks SessionProgress for this official as done, and marks the overall session Done only
-      when all assigned officials finished.
+    - Saves provided answers
+    - Saves individual feedback inside SessionProgress.notes
+    - Rebuilds combined sess_description for the whole session
+    - Marks per-official progress as done
+    - Marks session done only when ALL officials finish
     """
     user = request.user
     if not hasattr(user, "official"):
@@ -708,60 +930,79 @@ def finish_session(request, sess_id):
         return Response({"error": "Session not found or not assigned to you"}, status=404)
 
     answers = request.data.get("answers", [])
-    skipped = []  # collect any skipped answers due to role mismatch or missing sq
+    skipped = []
     saved = 0
 
-    # Save answers inside a transaction to keep data consistent
     with transaction.atomic():
+        # ===============================
+        # SAVE ANSWERS
+        # ===============================
         for ans in answers:
             sq_id = ans.get("sq_id")
             if not sq_id:
                 continue
+
             try:
-                sq = SessionQuestion.objects.select_related("question").get(pk=sq_id, session=session)
+                sq = SessionQuestion.objects.select_related("question").get(
+                    pk=sq_id, session=session
+                )
             except SessionQuestion.DoesNotExist:
                 skipped.append({"sq_id": sq_id, "reason": "not_found"})
                 continue
 
-            # Server-side role enforcement:
+            # Enforce role-based permissions
             q_role = None
             if sq.question:
-                # prefer question.role (string), fallback to question.ques_category.role
-                q_role = sq.question.role or getattr(sq.question.ques_category, "role", None)
+                q_role = sq.question.role or getattr(
+                    sq.question.ques_category, "role", None
+                )
 
             if q_role and user.official.of_role and q_role != user.official.of_role:
-                # skip saving - not allowed for this official
-                skipped.append({"sq_id": sq_id, "reason": "role_mismatch", "question_role": q_role})
+                skipped.append({
+                    "sq_id": sq_id,
+                    "reason": "role_mismatch",
+                    "question_role": q_role
+                })
                 continue
 
-            # Save the provided answer
+            # Save value + note
             new_value = ans.get("value")
             new_note = ans.get("note")
-
-            # Only update fields if they changed (optional optimization)
             changed = False
+
             if new_value is not None and new_value != sq.sq_value:
                 sq.sq_value = new_value
                 changed = True
+
             if new_note is not None and new_note != sq.sq_note:
                 sq.sq_note = new_note
                 changed = True
 
-            # Always set who answered (even if they edited their previous answer)
             sq.answered_by = user.official
             sq.answered_at = timezone.now()
 
-            # Save
             if changed or True:
                 sq.save(update_fields=["sq_value", "sq_note", "answered_by", "answered_at"])
                 saved += 1
 
-        # Save description (if updated)
-        description = request.data.get("sess_description")
-        if description is not None:
-            session.sess_description = description
+        # ===============================
+        # SAVE INDIVIDUAL FEEDBACK
+        # ===============================
+        my_feedback = request.data.get("my_feedback", "").strip()
 
-        # Save selected services
+        progress, _ = SessionProgress.objects.get_or_create(
+            session=session,
+            official=user.official,
+        )
+
+        progress.notes = my_feedback
+        progress.finished_at = timezone.now()
+        progress.is_done = True
+        progress.save()
+
+        # ===============================
+        # SAVE SELECTED SERVICES
+        # ===============================
         service_ids = request.data.get("services", [])
         if isinstance(service_ids, list):
             session.services_given.all().delete()
@@ -772,25 +1013,28 @@ def finish_session(request, sess_id):
                     of_id=user.official
                 )
 
-        # Update this official’s progress
-        progress, _ = SessionProgress.objects.get_or_create(
-            session=session,
-            official=user.official,
-        )
-        progress.is_done = True
-        progress.finished_at = timezone.now()
-        progress.save()
+        # ===============================
+        # REBUILD COMBINED sess_description
+        # ===============================
+        combined = []
+        for p in session.progress.select_related("official").all():
+            if p.notes and p.notes.strip():
+                combined.append(f"{p.official.of_role} – {p.notes.strip()}")
 
-        # Update session status only after saving progress
+        session.sess_description = "\n\n".join(combined).strip()
+
+        # ===============================
+        # UPDATE SESSION OVERALL STATUS
+        # ===============================
         if session.all_officials_done():
             session.sess_status = "Done"
         else:
             session.sess_status = "Ongoing"
+
         session.save()
 
     all_finished = session.all_officials_done()
 
-    # Return details including warnings about skipped answers
     return Response({
         "message": "Your session progress has been marked as done.",
         "saved_answers": saved,
@@ -799,6 +1043,7 @@ def finish_session(request, sess_id):
         "all_finished": all_finished,
         "session": SessionDetailSerializer(session, context={"request": request}).data
     }, status=200)
+
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -908,6 +1153,9 @@ def list_workers(request):
     
     return Response(data, status=200)
 
+
+# ==== Service ====
+#scheduled_session_detail handles the display of the service
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def list_service_categories(request):
@@ -926,10 +1174,6 @@ def services_by_category(request, category_id):
     )
     serializer = ServicesSerializer(services, many=True)
     return Response(serializer.data, status=200)
-
-
-# ==== Service ====
-#scheduled_session_detail handles the display of the service
 
 @api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
@@ -1147,8 +1391,14 @@ class QuestionListCreateView(generics.ListCreateAPIView):
         official = getattr(self.request.user, "official", None)
         if not official:
             return Question.objects.none()
-        # Only show questions made by same role
-        return Question.objects.filter(role=official.of_role).order_by("-created_at")
+
+        queryset = Question.objects.filter(role=official.of_role).order_by("-created_at")
+
+        category_id = self.request.query_params.get("category")
+        if category_id:
+            queryset = queryset.filter(ques_category_id=category_id)
+
+        return queryset
 
     def perform_create(self, serializer):
         instance = serializer.save()

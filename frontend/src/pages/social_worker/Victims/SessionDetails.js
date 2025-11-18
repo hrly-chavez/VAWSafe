@@ -60,21 +60,18 @@ return (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <DetailItem label="Session Number" value={session.sess_num} />
               <DetailItem label="Status" value={session.sess_status} />
-              <DetailItem
-                label="Scheduled Date"
-                value={
-                  session.sess_next_sched
-                    ? new Date(session.sess_next_sched).toLocaleString([], {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: true,
-                      })
-                    : "—"
-                }
-              />
+              {session.sess_next_sched && (
+              <DetailItem label="Scheduled Date"
+                value={new Date(session.sess_next_sched).toLocaleString([], {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: true,
+                })}/>
+            )}
+
               <DetailItem
                 label="Start Date"
                 value={
@@ -108,14 +105,14 @@ return (
             </div>
 
             {/* Description */}
-            <div>
+            {/* <div>
               <h3 className="text-lg font-semibold text-[#292D96] mt-6 mb-2">
                  Session Feedback
               </h3>
               <p className="text-sm text-gray-800 whitespace-pre-wrap break-words bg-gray-50 border rounded-md p-3">
                 {session.sess_description || "—"}
               </p>
-            </div>
+            </div> */}
 
             {/* Session Types */}
             {session.sess_type_display?.length > 0 && (
@@ -135,105 +132,150 @@ return (
 
             {/* Grouped Questions by Role → Category */}        
             <div>
-              <h3 className="text-lg font-semibold text-[#292D96] mt-6 mb-2">
+              <h3 className="text-lg font-semibold text-[#292D96] mt-6 mb-3">
                 Questions by Role
               </h3>
 
               {(() => {
-                // Group questions by Role → Category
-                const groupedByRole = session.questions?.reduce((acc, q) => {
-                  const role = q.assigned_role || "Unassigned";
-                  const category = q.question_category_name || "Uncategorized";
-                  if (!acc[role]) acc[role] = {};
-                  if (!acc[role][category]) acc[role][category] = [];
-                  acc[role][category].push(q);
-                  return acc;
-                }, {});
+                const questions = session.questions || [];
+                const progress = session.progress || [];
 
-                if (!groupedByRole || Object.keys(groupedByRole).length === 0)
+                // Collect roles from questions + progress
+                const rolesSet = new Set();
+
+                questions.forEach((q) => {
+                  const r = q.assigned_role || q.question_role || "Unassigned";
+                  rolesSet.add(r);
+                });
+
+                progress.forEach((p) => {
+                  if (p.official_role) rolesSet.add(p.official_role);
+                });
+
+                const roles = Array.from(rolesSet);
+                if (roles.length === 0) {
                   return (
-                    <p className="text-sm text-gray-500">
-                      No mapped questions answered.
-                    </p>
+                    <p className="text-sm text-gray-500">No mapped questions answered.</p>
                   );
+                }
+
+                // Build structure: Role → Category → Questions
+                const grouped = {};
+                roles.forEach((role) => (grouped[role] = {}));
+
+                questions.forEach((q) => {
+                  const role = q.assigned_role || q.question_role || "Unassigned";
+                  const category = q.question_category_name || "Uncategorized";
+
+                  if (!grouped[role]) grouped[role] = {};
+                  if (!grouped[role][category]) grouped[role][category] = [];
+                  grouped[role][category].push(q);
+                });
 
                 const roleColors = {
                   "Social Worker": "border-green-400 bg-green-50",
-                  "Nurse": "border-blue-400 bg-blue-50",
-                  "Psychometrician": "border-purple-400 bg-purple-50",
+                  Nurse: "border-blue-400 bg-blue-50",
+                  Psychometrician: "border-purple-400 bg-purple-50",
                   "Home Life": "border-orange-400 bg-orange-50",
-                  "Unassigned": "border-gray-300 bg-gray-50",
+                  Unassigned: "border-gray-300 bg-gray-50",
                 };
 
-                return Object.entries(groupedByRole).map(([role, categories]) => (
-                  <div
-                    key={role}
-                    className="mb-5 border rounded-lg shadow-sm overflow-hidden"
-                  >
-                    {/* Toggle button */}
-                          <button
-                            onClick={() => {
-                              setOpenRole((prev) =>
-                                prev.includes(role)
-                                  ? prev.filter((r) => r !== role)
-                                  : [...prev, role]
-                              );
-                            }}
-                            className={`w-full text-left px-5 py-3 font-semibold text-gray-900 border-b ${
-                              roleColors[role] || "border-gray-300 bg-gray-50"
-                            } flex items-center justify-between`}
-                          >
-                            <span>{role}</span>
-                            <span className="text-lg">
-                              {openRole.includes(role) ? "−" : "+"}
-                            </span>
-                          </button>
+                return roles.map((role) => {
+                  const categories = grouped[role] || {};
+                  const roleProgress = progress.find(
+                    (p) =>
+                      String(p.official_role || "").toLowerCase() ===
+                      String(role).toLowerCase()
+                  );
 
-                          {/* Smooth slide-down animation */}
-                          <div
-                            className={`overflow-hidden transition-all duration-500 ease-in-out ${
-                              openRole.includes(role)
-                                ? "max-h-[1000px] opacity-100"
-                                : "max-h-0 opacity-0"
-                            }`}
-                          >
+                  return (
+                    <div
+                      key={role}
+                      className="mb-6 border rounded-lg shadow-sm overflow-hidden"
+                    >
+                      {/* Role Header */}
+                      <button
+                        onClick={() => {
+                          setOpenRole((prev) =>
+                            prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
+                          );
+                        }}
+                        className={`w-full text-left px-5 py-3 font-semibold text-gray-900 flex items-center justify-between border-b ${roleColors[role]}`}
+                      >
+                        <span>{role}</span>
+                        <span className="text-lg">
+                          {openRole.includes(role) ? "−" : "+"}
+                        </span>
+                      </button>
 
-
-                      <div className="p-4 bg-white space-y-4">
-                        {Object.entries(categories).map(([category, qs]) => (
-                          <div key={category}>
-                            <h4 className="text-md font-semibold text-gray-700 mb-2">{category}</h4>
-                            <div className="space-y-3">
-                              {qs.map((q) => (
-                                <div
-                                  key={q.sq_id}
-                                  className="p-3 border rounded-md bg-gray-50"
-                                >
-                                  <p className="text-sm font-medium text-gray-800">
-                                    {q.question_text}
-                                  </p>
-                                  <p className="text-sm text-gray-600">
-                                    <span className="font-semibold">Answer:</span>{" "}
-                                    {q.sq_value || "—"}
-                                  </p>
-                                  {q.sq_note && (
-                                    <p className="text-sm text-gray-500 italic">
-                                      Note: {q.sq_note}
+                      {/* Slide down */}
+                      <div
+                        className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                          openRole.includes(role)
+                            ? "max-h-[2000px] opacity-100"
+                            : "max-h-0 opacity-0"
+                        }`}
+                      >
+                        {/* Questions + Answers */}
+                        <div className="p-4 bg-white space-y-5">
+                          {Object.entries(categories).map(([category, qs]) => (
+                            <div key={category}>
+                              <h4 className="text-md font-semibold text-gray-700 mb-2">
+                                {category}
+                              </h4>
+                              <div className="space-y-3">
+                                {qs.map((q) => (
+                                  <div
+                                    key={q.sq_id}
+                                    className="p-3 border rounded-md bg-gray-50"
+                                  >
+                                    <p className="text-sm font-medium text-gray-800">
+                                      {q.question_text}
                                     </p>
-                                  )}
-                                </div>
-                              ))}
+
+                                    <p className="text-sm text-gray-600">
+                                      <span className="font-semibold">Answer:</span>{" "}
+                                      {q.sq_value || "—"}
+                                    </p>
+
+                                    {q.sq_note && (
+                                      <p className="text-sm text-gray-500 italic">
+                                        Note: {q.sq_note}
+                                      </p>
+                                    )}
+
+                                    {/* {q.answered_by_name && (
+                                      <p className="text-xs text-gray-400 italic">
+                                        Answered by {q.answered_by_name}
+                                      </p>
+                                    )} */}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
+                          ))}
+
+                          {/* Per-role feedback */}
+                          <div className="mt-4">
+                            <h4 className="text-md font-semibold text-gray-700 mb-2">
+                              {role} Feedback
+                            </h4>
+                            <textarea
+                              readOnly
+                              value={roleProgress?.notes || ""}
+                              className="w-full border rounded-md p-2 bg-gray-50 text-sm"
+                              rows={3}
+                              placeholder="No feedback submitted"
+                            />
                           </div>
-                        ))}
+                        </div>
                       </div>
                     </div>
-
-
-                  </div>
-                ));
+                  );
+                });
               })()}
             </div>
+
 
           </>
         ) : (

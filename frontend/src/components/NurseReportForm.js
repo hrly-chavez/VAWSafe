@@ -1,0 +1,239 @@
+import React, { useState, useEffect } from "react";
+import { ListBulletIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/outline';
+
+export default function NurseReportForm({ victim, incident, onSubmit, onClose }) {
+  const [formData, setFormData] = useState({
+    height: "",
+    heightUnit: "cm",
+    weight: "",
+    weightUnit: "kg",
+    bmi: "",
+    report_info: "",
+    attachments: [],
+  });
+
+  const handleChange = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const handleAddNote = (type) => {
+    let newText = "";
+    if (type === "bullet") newText = "\n• ";
+    if (type === "checkbox") newText = "\n☐ ";
+    setFormData({ ...formData, report_info: formData.report_info + newText });
+  };
+
+  const handleFileUpload = (e) => {
+    setFormData({ ...formData, attachments: [...e.target.files] });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit({
+      ...formData,
+      bmi_category: formData.bmiCategory,
+    });
+  };
+
+  useEffect(() => {
+    const h = parseFloat(formData.height);
+    const w = parseFloat(formData.weight);
+    const age = parseInt(victim.age);
+
+    if (!h || !w || !age) return;
+
+    let heightInMeters =
+      formData.heightUnit === "cm" ? h / 100 : h * 0.3048;
+    let weightInKg =
+      formData.weightUnit === "kg" ? w : w * 0.453592;
+
+    const bmi = weightInKg / (heightInMeters * heightInMeters);
+    const roundedBMI = parseFloat(bmi.toFixed(1));
+
+    let category = "—";
+
+    if (age >= 18) {
+      if (roundedBMI < 18.5) category = "Underweight";
+      else if (roundedBMI < 25) category = "Normal";
+      else if (roundedBMI < 30) category = "Overweight";
+      else category = "Obese";
+    } else {
+      category = "Age-based BMI not classified";
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      bmi: roundedBMI,
+      bmiCategory: category,
+    }));
+  }, [formData.height, formData.weight, formData.heightUnit, formData.weightUnit, victim.age]);
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-8 text-sm text-gray-700">
+      {/* Header */}
+      <h2 className="text-xl font-bold text-[#292D96]">Add Monthly Patient Report</h2>
+
+      {/* Patient Details */}
+      <div className="bg-gray-50 border rounded-lg p-4 space-y-2">
+        <h3 className="text-md font-semibold text-[#292D96]">Patient Details</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <InfoItem label="Name" value={victim.full_name} />
+          <InfoItem label="Sex" value={victim.vic_sex} />
+          <InfoItem label="Date of Birth" value={victim.vic_birth_date} />
+          <InfoItem label="Age" value={victim.age} />
+        </div>
+      </div>
+
+      {/* Vitals & Measurements */}
+      <div className="bg-gray-50 border rounded-lg p-4 space-y-2">
+        <h3 className="text-md font-semibold text-[#292D96]">Vitals & Measurements</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Height */}
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500 mb-1">Height</label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                step="0.1"
+                name="height"
+                value={formData.height}
+                onChange={handleChange}
+                className="input w-full"
+                placeholder="e.g. 145.5"
+              />
+              <select
+                name="heightUnit"
+                value={formData.heightUnit}
+                onChange={handleChange}
+                className="input w-16"
+              >
+                <option value="cm">cm</option>
+                <option value="ft">ft</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Weight */}
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500 mb-1">Weight</label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                step="0.1"
+                name="weight"
+                value={formData.weight}
+                onChange={handleChange}
+                className="input w-full"
+                placeholder="e.g. 60.2"
+              />
+              <select
+                name="weightUnit"
+                value={formData.weightUnit}
+                onChange={handleChange}
+                className="input w-16"
+              >
+                <option value="kg">kg</option>
+                <option value="lbs">lbs</option>
+              </select>
+            </div>
+          </div>
+
+          {/* BMI */}
+          <div className="flex flex-col">
+            <label className="text-xs text-gray-500 mb-1">BMI</label>
+            <input
+              name="bmi"
+              placeholder="Calculated BMI"
+              value={formData.bmi}
+              readOnly
+              className="input"
+            />
+            {formData.bmi && (
+              <p className="text-xs mt-1 text-gray-600">
+                Category: <span className="font-semibold">{formData.bmiCategory}</span>
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Medical Summary & Observations */}
+      <div className="bg-gray-50 border rounded-lg p-4 space-y-2">
+        <h3 className="text-md font-semibold text-[#292D96]">Medical Summary & Observations</h3>
+        <textarea
+          name="report_info"
+          placeholder="Write medical summary and observations here..."
+          value={formData.report_info}
+          onChange={handleChange}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const cursorPos = e.target.selectionStart;
+              const before = formData.report_info.substring(0, cursorPos);
+              const after = formData.report_info.substring(cursorPos);
+              const newValue = before + "\n• " + after;
+              setFormData({ ...formData, report_info: newValue });
+              setTimeout(() => {
+                e.target.selectionStart = e.target.selectionEnd = cursorPos + 3;
+              }, 0);
+            }
+          }}
+          className="textarea h-40 w-full"
+        />
+        <div className="flex gap-2 mt-2">
+          <button
+            type="button"
+            onClick={() => handleAddNote("bullet")}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <ListBulletIcon className="h-5 w-5 text-[#292D96]" />
+            Bullet
+          </button>
+          <button
+            type="button"
+            onClick={() => handleAddNote("checkbox")}
+            className="btn-secondary flex items-center gap-2"
+          >
+            <ClipboardDocumentCheckIcon className="h-5 w-5 text-[#292D96]" />
+            Checkbox
+          </button>
+        </div>
+      </div>
+
+      {/* Attachments */}
+      <div className="bg-gray-50 border rounded-lg p-4 space-y-2">
+        <h3 className="text-md font-semibold text-[#292D96]">Attachments</h3>
+        <label className="text-xs text-gray-500 block mb-2">Lab results, X-rays, etc.</label>
+        <label className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition cursor-pointer">
+          Choose Files
+          <input type="file" multiple onChange={handleFileUpload} className="hidden" />
+        </label>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-4 py-2 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          className="inline-flex items-center gap-2 rounded-md border border-green-600 text-green-600 px-4 py-2 text-sm font-medium hover:bg-green-600 hover:text-white transition"
+        >
+          Save Report
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function InfoItem({ label, value }) {
+  return (
+    <div>
+      <p className="text-xs text-gray-500">{label}</p>
+      <p className="font-medium">{value || "—"}</p>
+    </div>
+  );
+}

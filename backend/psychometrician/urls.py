@@ -2,8 +2,6 @@ from django.urls import path
 from .views import *
 from . import views
 urlpatterns = [
-    
-
     # --- Existing endpoints ---
     path("victims/", victim_list.as_view(), name="victim-list"),
     path("victims/<int:vic_id>/", victim_detail.as_view(), name="victim-detail"),
@@ -32,8 +30,7 @@ urlpatterns = [
     path("services/<int:service_id>/upload/", upload_service_proof, name="upload-service-proof"),
     path("cases/", CaseListView.as_view(), name="list-of-cases"),   
 
-
-     #Questions
+    #Questions
     path("question-categories/", views.QuestionCategoryListView.as_view(), name="sw-question-categories"),
     path("questions/", views.QuestionListCreateView.as_view(), name="sw-question-list-create"),
     path("questions/<int:pk>/", views.QuestionDetailView.as_view(), name="sw-question-detail"),
@@ -44,10 +41,6 @@ urlpatterns = [
     path("questions/bulk-assign/", views.BulkAssignView.as_view(), name="sw-question-bulk-assign"),
     path("change-logs/", views.ChangeLogListView.as_view(), name="sw-change-logs"),
     
-
-
-    
-
     # --- Availability CRUD ---
     path("availability/",OfficialAvailabilityViewSet.as_view({"get": "list", "post": "create"}),name="availability-list"),
     path("availability/<int:pk>/",OfficialAvailabilityViewSet.as_view({"get": "retrieve", "put": "update", "delete": "destroy"}),name="availability-detail"),

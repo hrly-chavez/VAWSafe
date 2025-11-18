@@ -1,4 +1,4 @@
-//src/pages/social_worker/Questions/EditQuestion.js
+//src/pages/psychometrician/Questions/EditQuestion.js
 
 import { useEffect, useState } from "react";
 import Select from "react-select";
@@ -13,6 +13,7 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
     ques_answer_type: "",
     mappings: [],
   });
+
   const [categories, setCategories] = useState([]);
   const [answerTypes, setAnswerTypes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -22,20 +23,43 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
   const [sessionTypes, setSessionTypes] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
 
+  // =============================
   // Fetch question details
+  // =============================
   useEffect(() => {
     if (!show || !questionId) return;
-    api
-      .get(`/api/social_worker/questions/${questionId}/`)
+
+    api.get(`/api/psychometrician/questions/${questionId}/`)
       .then((res) => {
         setQuestion(res.data);
 
-        // Prefill mappings
+        // ===== PREFILL MAPPINGS =====
         if (res.data.mappings && res.data.mappings.length > 0) {
-          const nums = [
+          const rawSessionNumbers = [
             ...new Set(res.data.mappings.map((m) => m.session_number)),
-          ].map((num) => ({ value: num, label: `Session ${num}` }));
+          ].sort((a, b) => a - b);
 
+          let prefill = [];
+
+          // If any session >= 4 → use only Session 4+
+          if (rawSessionNumbers.some((n) => n >= 4)) {
+            prefill.push({ value: "4+", label: "Session 4+" });
+          }
+
+          // Add 1–3 normally
+          if (rawSessionNumbers.includes(1)) {
+            prefill.push({ value: 1, label: "Session 1" });
+          }
+          if (rawSessionNumbers.includes(2)) {
+            prefill.push({ value: 2, label: "Session 2" });
+          }
+          if (rawSessionNumbers.includes(3)) {
+            prefill.push({ value: 3, label: "Session 3" });
+          }
+
+          setSelectedNumbers(prefill);
+
+          // ===== PREFILL SESSION TYPES =====
           const typeMap = new Map();
           res.data.mappings.forEach((m) => {
             if (!typeMap.has(m.session_type_id)) {
@@ -48,32 +72,38 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
             label: name,
           }));
 
-          setSelectedNumbers(nums);
           setSelectedTypes(types);
         }
       })
       .catch((err) => console.error("Failed to load question:", err));
   }, [questionId, show]);
 
+  // =============================
   // Fetch dropdown data
+  // =============================
   useEffect(() => {
-    api.get("/api/social_worker/questions/choices/").then((res) => {
+    api.get("/api/psychometrician/questions/choices/").then((res) => {
       setCategories(res.data.categories);
       setAnswerTypes(res.data.answer_types);
     });
   }, []);
 
-  // Fetch session types + numbers
+  // =============================
+  // Fetch SESSION TYPES + NUMBERS
+  // =============================
   useEffect(() => {
     if (step === 2) {
-      const nums = Array.from({ length: 10 }, (_, i) => ({
-        value: i + 1,
-        label: `Session ${i + 1}`,
-      }));
+      // New dropdown: 1,2,3,4+
+      const nums = [
+        { value: 1, label: "Session 1" },
+        { value: 2, label: "Session 2" },
+        { value: 3, label: "Session 3" },
+        { value: "4+", label: "Session 4+" }, // special
+      ];
       setSessionNumbers(nums);
 
       api
-        .get("/api/social_worker/session-types/")
+        .get("/api/psychometrician/session-types/")
         .then((res) =>
           setSessionTypes(res.data.map((t) => ({ value: t.id, label: t.name })))
         )
@@ -81,113 +111,145 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
     }
   }, [step]);
 
-  // Save question edits
-
-    const handleSaveQuestion = async (e) => {
+  // =============================
+  // Save QUESTION Edits
+  // =============================
+  const handleSaveQuestion = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-        const { mappings, created_by_name, ...editableFields } = question;
-        const res = await api.patch(`/api/social_worker/questions/${questionId}/`, editableFields);
+      const { mappings, created_by_name, ...editableFields } = question;
 
-        //  Backend only returns 200 if real changes occurred
-        if (res.status === 200) {
+      const res = await api.patch(
+        `/api/psychometrician/questions/${questionId}/`,
+        editableFields
+      );
+
+      if (res.status === 200) {
         alert("Question updated successfully!");
 
-        // Fetch latest question mappings
-        const updatedRes = await api.get(`/api/social_worker/questions/${questionId}/`);
+        const updatedRes = await api.get(
+          `/api/psychometrician/questions/${questionId}/`
+        );
         setQuestion(updatedRes.data);
 
-        // Rebuild session number/type selections
+        // Prefill again
         if (updatedRes.data.mappings && updatedRes.data.mappings.length > 0) {
-            const nums = [
+          const rawSessionNumbers = [
             ...new Set(updatedRes.data.mappings.map((m) => m.session_number)),
-            ].map((num) => ({ value: num, label: `Session ${num}` }));
+          ].sort((a, b) => a - b);
 
-            const typeMap = new Map();
-            updatedRes.data.mappings.forEach((m) => {
+          let prefill = [];
+
+          if (rawSessionNumbers.some((n) => n >= 4)) {
+            prefill.push({ value: "4+", label: "Session 4+" });
+          }
+          if (rawSessionNumbers.includes(1))
+            prefill.push({ value: 1, label: "Session 1" });
+          if (rawSessionNumbers.includes(2))
+            prefill.push({ value: 2, label: "Session 2" });
+          if (rawSessionNumbers.includes(3))
+            prefill.push({ value: 3, label: "Session 3" });
+
+          setSelectedNumbers(prefill);
+
+          const typeMap = new Map();
+          updatedRes.data.mappings.forEach((m) => {
             if (!typeMap.has(m.session_type_id)) {
-                typeMap.set(m.session_type_id, m.session_type);
+              typeMap.set(m.session_type_id, m.session_type);
             }
-            });
+          });
 
-            const types = Array.from(typeMap.entries()).map(([id, name]) => ({
+          const types = Array.from(typeMap.entries()).map(([id, name]) => ({
             value: id,
             label: name,
-            }));
+          }));
 
-            setSelectedNumbers(nums);
-            setSelectedTypes(types);
+          setSelectedTypes(types);
         }
 
         setStep(2);
-        }
+      }
     } catch (err) {
-        if (err.response) {
-            if (err.response.status === 400 && err.response.data?.detail?.includes("No changes")) {
-                alert("No changes detected — proceeding to assignments.");
-                setStep(2); //  Go to Step 2 even if nothing changed
-            } else {
-                console.error("Failed to update question:", err);
-                alert("Error updating question.");
-            }
-            } else {
-            console.error("Failed to update question:", err);
-            alert("Error updating question.");
-            }
+      if (err.response) {
+        if (
+          err.response.status === 400 &&
+          err.response.data?.detail?.includes("No changes")
+        ) {
+          alert("No changes detected — proceeding to assignments.");
+          setStep(2);
+        } else {
+          alert("Error updating question.");
+        }
+      }
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-    };
+  };
 
+  // =============================
+  // Helper: expand 4+ into 4..15
+  // =============================
+  const expandSessionNumbers = (selected) => {
+    const OUT = new Set();
 
-  
-// Save session assignments
-const handleAssign = async () => {
-  const currentNumbers = selectedNumbers.map((n) => n.value).sort();
-  const currentTypes = selectedTypes.map((t) => t.value).sort();
-
-  const originalNumbers = (question.mappings || [])
-    .map((m) => m.session_number)
-    .filter((v, i, a) => a.indexOf(v) === i)
-    .sort();
-
-  const originalTypes = (question.mappings || [])
-    .map((m) => m.session_type_id)
-    .filter((v, i, a) => a.indexOf(v) === i)
-    .sort();
-
-  const numbersChanged =
-    JSON.stringify(currentNumbers) !== JSON.stringify(originalNumbers);
-  const typesChanged =
-    JSON.stringify(currentTypes) !== JSON.stringify(originalTypes);
-
-  // If nothing changed — show alert, then close
-  if (!numbersChanged && !typesChanged) {
-    alert("No changes detected in session assignments.");
-    if (onUpdated) onUpdated(); // refresh parent table if needed
-    onClose(); //  close modal
-    return;
-  }
-
-  try {
-    await api.post("/api/social_worker/questions/bulk-assign/", {
-      questions: [questionId],
-      session_numbers: currentNumbers,
-      session_types: currentTypes,
+    selected.forEach((n) => {
+      const v = typeof n === "object" ? n.value : n;
+      if (v === "4+") {
+        for (let i = 4; i <= 15; i++) OUT.add(i);
+      } else {
+        OUT.add(Number(v));
+      }
     });
-    alert("Assignments updated successfully!");
-    if (onUpdated) onUpdated();
-    onClose();
-  } catch (err) {
-    console.error("Error assigning question:", err);
-    alert("Error updating assignments.");
-  }
-};
 
+    return Array.from(OUT).sort((a, b) => a - b);
+  };
 
+  // =============================
+  // Save ASSIGNMENTS (session numbers & types)
+  // =============================
+  const handleAssign = async () => {
+    const currentNumbers = expandSessionNumbers(selectedNumbers); // expand here
+    const currentTypes = selectedTypes.map((t) => t.value).sort();
 
+    const originalNumbers = (question.mappings || [])
+      .map((m) => m.session_number)
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .sort();
+
+    const originalTypes = (question.mappings || [])
+      .map((m) => m.session_type_id)
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .sort();
+
+    const numbersChanged =
+      JSON.stringify(currentNumbers) !== JSON.stringify(originalNumbers);
+    const typesChanged =
+      JSON.stringify(currentTypes) !== JSON.stringify(originalTypes);
+
+    if (!numbersChanged && !typesChanged) {
+      alert("No changes detected in session assignments.");
+      if (onUpdated) onUpdated();
+      onClose();
+      return;
+    }
+
+    try {
+      await api.post("/api/psychometrician/questions/bulk-assign/", {
+        questions: [questionId],
+        session_numbers: currentNumbers,
+        session_types: currentTypes,
+      });
+
+      alert("Assignments updated successfully!");
+      if (onUpdated) onUpdated();
+      onClose();
+    } catch (err) {
+      console.error("Error assigning question:", err);
+      alert("Error updating assignments.");
+    }
+  };
 
   if (!show) return null;
 

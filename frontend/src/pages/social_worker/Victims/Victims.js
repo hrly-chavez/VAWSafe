@@ -27,7 +27,9 @@ export default function Victims() {
   const handleDelete = async (vic_id) => {
     if (window.confirm("Are you sure you want to delete this victim?")) {
       try {
-        await axios.delete(`http://127.0.0.1:8000/api/social_worker/victims/${vic_id}/`);
+        await axios.delete(
+          `http://127.0.0.1:8000/api/social_worker/victims/${vic_id}/`
+        );
         setVictims(victims.filter((v) => v.vic_id !== vic_id));
       } catch (err) {
         console.error("Error deleting victim", err);
@@ -37,7 +39,6 @@ export default function Victims() {
 
   return (
     <div>
-
       <div className="flex min-h-screen bg-white">
         <div className="sw-victims-page">
           <div className="sw-victims-card">
@@ -68,13 +69,19 @@ export default function Victims() {
                       <tr key={v.vic_id}>
                         <td>{v.vic_id}</td>
                         <td>
-                          {v.vic_first_name} {v.vic_middle_name || ""} {v.vic_last_name} {v.vic_extension || ""}
+                          {v.vic_first_name} {v.vic_middle_name || ""}{" "}
+                          {v.vic_last_name} {v.vic_extension || ""}
                         </td>
                         <td>{v.age || "N/A"}</td>
                         <td>{v.vic_birth_place || "N/A"}</td>
                         <td>
                           <div className="action-buttons">
-                            <Link to={`/social_worker/victims/${v.vic_id}`} className="btn-view">View</Link>
+                            <Link
+                              to={`/social_worker/victims/${v.vic_id}`}
+                              className="btn-view"
+                            >
+                              View
+                            </Link>
                           </div>
                         </td>
                       </tr>
@@ -104,4 +111,3 @@ export default function Victims() {
     </div>
   );
 }
-

@@ -632,24 +632,23 @@ class blick_check(APIView):
 
     
 #manual login ni sya para sa cookie instead of localstorage
-class CookieTokenObtainPairView(views.APIView):
+class CookieTokenObtainPairView(APIView):
     permission_classes = [permissions.AllowAny]
 
     @method_decorator(csrf_protect)
     def post(self, request):
-        """
-        Manual login using SimpleJWT serializer.
-        - Validates username/password
-        - Issues access/refresh as HttpOnly cookies
-        - Returns ONLY user info in body (no tokens)
-        """
         serializer = TokenObtainPairSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception:
+            return Response(
+                {"match": False, "message": "Incorrect username or password."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
-        tokens = serializer.validated_data  # {"access": "...", "refresh": "..."}
+        tokens = serializer.validated_data
         user = serializer.user
 
-        # Pull any fields you were returning before
         official = getattr(user, "official", None)
         role = getattr(official, "of_role", None)
         name = getattr(official, "full_name", f"{getattr(official, 'of_fname', '')} {getattr(official, 'of_lname', '')}".strip())
@@ -665,10 +664,10 @@ class CookieTokenObtainPairView(views.APIView):
             "profile_photo_url": photo_url,
         }, status=status.HTTP_200_OK)
 
-        # 👉 Set HttpOnly cookies (access + refresh)
+        # Set cookies
         set_auth_cookies(resp, tokens["access"], tokens.get("refresh"))
 
-        # Track successful login
+        #Track successful login
         ip = get_client_ip(request)
         user_agent = request.META.get('HTTP_USER_AGENT', '')
         LoginTracker.objects.create(
@@ -678,7 +677,56 @@ class CookieTokenObtainPairView(views.APIView):
             user_agent=user_agent,
             status="Success"
         )
+
         return resp
+
+# class CookieTokenObtainPairView(views.APIView):
+#     permission_classes = [permissions.AllowAny]
+
+#     @method_decorator(csrf_protect)
+#     def post(self, request):
+#         """
+#         Manual login using SimpleJWT serializer.
+#         - Validates username/password
+#         - Issues access/refresh as HttpOnly cookies
+#         - Returns ONLY user info in body (no tokens)
+#         """
+#         serializer = TokenObtainPairSerializer(data=request.data)
+#         serializer.is_valid(raise_exception=True)
+
+#         tokens = serializer.validated_data  # {"access": "...", "refresh": "..."}
+#         user = serializer.user
+
+#         # Pull any fields you were returning before
+#         official = getattr(user, "official", None)
+#         role = getattr(official, "of_role", None)
+#         name = getattr(official, "full_name", f"{getattr(official, 'of_fname', '')} {getattr(official, 'of_lname', '')}".strip())
+#         official_id = getattr(official, "of_id", None)
+#         photo_url = request.build_absolute_uri(getattr(official, "of_photo").url) if getattr(official, "of_photo", None) else None
+
+#         resp = Response({
+#             "match": True,
+#             "official_id": official_id,
+#             "name": name,
+#             "username": user.username,
+#             "role": role,
+#             "profile_photo_url": photo_url,
+#         }, status=status.HTTP_200_OK)
+
+#         # 👉 Set HttpOnly cookies (access + refresh)
+#         set_auth_cookies(resp, tokens["access"], tokens.get("refresh"))
+
+#         # Track successful login
+#         ip = get_client_ip(request)
+#         user_agent = request.META.get('HTTP_USER_AGENT', '')
+#         LoginTracker.objects.create(
+#             user=user,
+#             role=role,
+#             ip_address=ip,
+#             user_agent=user_agent,
+#             status="Success"
+#         )
+#         return resp
 
 #=================================Login Tracker=====================================
 class LoginTrackerViewSet(viewsets.ReadOnlyModelViewSet):
