@@ -13,6 +13,7 @@ export default function Schedule({ victim, incident, back, next }) {
   const [time, setTime] = useState(new Date().toTimeString().slice(0, 5));
   const [sessionTypes, setSessionTypes] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
+  const [disableSessionType, setDisableSessionType] = useState(false);
   const [roleFilter, setRoleFilter] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ export default function Schedule({ victim, incident, back, next }) {
 
       const payload = {
         incident_id: incident?.incident_id,
-        sess_next_sched: `${date}T${time}:00Z`,
+        sess_next_sched: `${date}T${time}:00`,
         sess_type: Array.isArray(selectedTypes)
           ? selectedTypes.map((t) => Number(t.value))
           : [],
@@ -103,18 +104,42 @@ export default function Schedule({ victim, incident, back, next }) {
 
 
   // Load session types
-  useEffect(() => {
-    api
-      .get("/api/social_worker/session-types/")
-      .then((res) => {
-        const options = res.data.map((t) => ({
-          value: t.id,
-          label: t.name,
-        }));
-        setSessionTypes(options);
-      })
-      .catch((err) => console.error("Failed to fetch session types", err));
-  }, []);
+  // useEffect(() => {
+  //   api
+  //     .get("/api/social_worker/session-types/")
+  //     .then((res) => {
+  //       const options = res.data.map((t) => ({
+  //         value: t.id,
+  //         label: t.name,
+  //       }));
+  //       setSessionTypes(options);
+  //     })
+  //     .catch((err) => console.error("Failed to fetch session types", err));
+  // }, []);
+
+    useEffect(() => {
+      api
+        .get("/api/social_worker/session-types/")
+        .then((res) => {
+          const options = res.data.map((t) => ({
+            value: t.id,
+            label: t.name,
+          }));
+
+          setSessionTypes(options);
+
+          // Auto-select "Intake / Initial Assessment"
+          const intake = options.find(
+            (t) => t.label === "Intake / Initial Assessment"
+          );
+
+          if (intake) {
+            setSelectedTypes([intake]);
+            setDisableSessionType(true); // Lock the dropdown
+          }
+        })
+        .catch((err) => console.error("Failed to fetch session types", err));
+    }, []);
 
   // Load all Social Workers (with availability)
   const fetchSocialWorkers = async (query = "") => {
@@ -199,13 +224,24 @@ export default function Schedule({ victim, incident, back, next }) {
           <label className="text-xs text-gray-600 block mb-1">
             Type of Session (you can pick multiple)
           </label>
-          <Select
+          {/* <Select
             options={sessionTypes}
             isMulti
             value={selectedTypes}
             onChange={setSelectedTypes}
             placeholder="Select session types..."
+          /> */}
+          <Select
+            options={sessionTypes}
+            isMulti
+            value={selectedTypes}
+            onChange={(val) => {
+              if (!disableSessionType) setSelectedTypes(val);
+            }}
+            isDisabled={disableSessionType}
+            placeholder="Intake / Initial Assessment"
           />
+
         </div>
 
         {/* === Placeholder Filters === */}

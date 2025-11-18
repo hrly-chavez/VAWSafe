@@ -183,6 +183,18 @@ class SessionCRUDSerializer(serializers.ModelSerializer):
                     )
                 })
 
+        # --- Require at least one assigned official ONLY for Session 1 ---
+        is_create = self.instance is None
+        incident = data.get("incident_id")
+
+        if is_create and incident:
+            existing_sessions = Session.objects.filter(incident_id=incident).count()
+
+            if existing_sessions == 0 and not assigned_officials:
+                raise serializers.ValidationError({
+                    "assigned_official": "Please select at least one official for the intake session."
+                })
+
         # --- Date/time validation (no past schedule) ---
         from django.utils import timezone
         if sched_datetime and sched_datetime < timezone.now():
@@ -190,7 +202,55 @@ class SessionCRUDSerializer(serializers.ModelSerializer):
                 "sess_next_sched": "You cannot schedule a session in the past."
             })
 
+        # --- Prevent scheduling conflicts within 30 minutes ---
+        if sched_datetime:
+            from datetime import timedelta
+
+            conflict_window_start = sched_datetime - timedelta(minutes=30)
+            conflict_window_end = sched_datetime + timedelta(minutes=30)
+
+            current_session_id = None
+            if self.instance:
+                current_session_id = self.instance.pk
+
+            # --- 1) Check conflict for SAME INCIDENT ---
+            incident_obj = data.get("incident_id")  # renamed (FIXED)
+            if incident_obj:
+                qs = Session.objects.filter(
+                    incident_id=incident_obj,
+                    sess_status__in=["Pending", "Ongoing"],
+                    sess_next_sched__range=[conflict_window_start, conflict_window_end],
+                )
+
+                if current_session_id:
+                    qs = qs.exclude(pk=current_session_id)
+
+                if qs.exists():
+                    raise serializers.ValidationError({
+                        "sess_next_sched":
+                            "There is already a scheduled session within 30 minutes for this victim."
+                    })
+
+            # --- 2) Check conflict for ASSIGNED OFFICIALS ---
+            if assigned_officials:
+                qs = Session.objects.filter(
+                    assigned_official__in=assigned_officials,
+                    sess_status__in=["Pending", "Ongoing"],
+                    sess_next_sched__range=[conflict_window_start, conflict_window_end],
+                )
+
+                if current_session_id:
+                    qs = qs.exclude(pk=current_session_id)
+
+                if qs.exists():
+                    raise serializers.ValidationError({
+                        "assigned_official":
+                            "One of the assigned officials has another session within 30 minutes."
+                    })
+
         return data
+
+
 
     # --- Auto-increment session number when creating (role-based logic) ---
     def create(self, validated_data):
