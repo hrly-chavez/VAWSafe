@@ -27,34 +27,38 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from dswd.utils.logging import log_change
 from docxtpl import DocxTemplate
+from pathlib import Path
 
 def generate_consent_forms(victim_serializer_data, victim_id, assigned_official=None):
     """
     Will generate:
-    C:\...\Templates\victim<id>\consent forms\Referrals.docx
-    C:\...\Templates\victim<id>\consent forms\Data Privacy.docx
-    C:\...\Templates\victim<id>\consent forms\Informed Consent.docx
+    Desktop/Templates/victim<id>/consent forms/Referrals.docx
+    Desktop/Templates/victim<id>/consent forms/Data Privacy.docx
+    Desktop/Templates/victim<id>/consent forms/Informed Consent.docx
     """
 
-    # Template file paths
+    # ---- AUTO-DETECT DESKTOP ----
+    desktop = Path.home() / "Desktop"
+    base_dir = desktop / "Templates"
+
+    # Template file paths inside Desktop/Templates/Consent Forms/
+    consent_template_dir = base_dir / "Consent Forms"
+
     templates = [
-        r"C:\Users\Rhainer\Desktop\Templates\Consent Forms\Referrals.docx",
-        r"C:\Users\Rhainer\Desktop\Templates\Consent Forms\Data Privacy.docx",
-        r"C:\Users\Rhainer\Desktop\Templates\Consent Forms\Informed Consent.docx"
+        consent_template_dir / "Referrals.docx",
+        consent_template_dir / "Data Privacy.docx",
+        consent_template_dir / "Informed Consent.docx"
     ]
 
-    # CREATE correct directory:
-    # victim1/consent forms/
-    base_dir = r"C:\Users\Rhainer\Desktop\Templates"
+    # ---- Create Output Folder ----
+    victim_folder = base_dir / f"victim{victim_id}"
+    consent_folder = victim_folder / "consent forms"
 
-    victim_folder = os.path.join(base_dir, f"victim{victim_id}")
-    consent_folder = os.path.join(victim_folder, "consent forms")
-
-    os.makedirs(consent_folder, exist_ok=True)
+    consent_folder.mkdir(parents=True, exist_ok=True)
 
     output_files = []
 
-    # AGE
+    # ---- Age computation ----
     birth_date_str = victim_serializer_data.get("vic_birth_date")
     age = "N/A"
     if birth_date_str:
@@ -69,10 +73,10 @@ def generate_consent_forms(victim_serializer_data, victim_id, assigned_official=
         except:
             pass
 
-    # Social worker
+    # ---- Social worker ----
     social_worker = assigned_official.full_name if assigned_official else "N/A"
 
-    # Context
+    # ---- Context ----
     context = {
         "full_name": victim_serializer_data.get("full_name", "N/A"),
         "age": age,
@@ -80,20 +84,20 @@ def generate_consent_forms(victim_serializer_data, victim_id, assigned_official=
         "assigned_social_worker": social_worker,
     }
 
-    # Generate forms
+    # ---- Generate forms ----
     for template_path in templates:
-        if not os.path.exists(template_path):
-            print(f"⚠ Template missing: {template_path}")
+        if not template_path.exists():
+            print(f"Template missing: {template_path}")
             continue
 
-        template_name = os.path.splitext(os.path.basename(template_path))[0]
-        output_path = os.path.join(consent_folder, f"{template_name}.docx")
+        template_name = template_path.stem  # filename without extension
+        output_path = consent_folder / f"{template_name}.docx"
 
-        doc = DocxTemplate(template_path)
+        doc = DocxTemplate(str(template_path))
         doc.render(context)
-        doc.save(output_path)
+        doc.save(str(output_path))
 
-        output_files.append(output_path)
+        output_files.append(str(output_path))
 
     return output_files
 
