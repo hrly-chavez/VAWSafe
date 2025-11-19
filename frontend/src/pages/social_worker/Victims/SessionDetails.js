@@ -9,6 +9,29 @@ export default function SessionDetails({ sessionId, onClose }) {
   const [error, setError] = useState("");
   const [openRole, setOpenRole] = useState([]);
 
+  function formatDateTime(dateStr) {
+    if (!dateStr) return "—";
+
+    const [datePart, timePart] = dateStr.split("T");
+    const [year, month, day] = datePart.split("-");
+    const [hour, minute] = timePart.split(":");
+
+    // Convert to 12-hour format manually
+    let h = parseInt(hour, 10);
+    const suffix = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+
+    const finalTime = `${h}:${minute} ${suffix}`;
+
+    // Convert date only (safe)
+    const readableDate = new Date(`${year}-${month}-${day}T00:00:00`).toLocaleDateString(
+      "en-US",
+      { year: "numeric", month: "long", day: "numeric" }
+    );
+
+    return `${readableDate} ${finalTime}`;
+  }
+
   useEffect(() => {
     if (!sessionId) return;
 
@@ -61,15 +84,11 @@ return (
               <DetailItem label="Session Number" value={session.sess_num} />
               <DetailItem label="Status" value={session.sess_status} />
               {session.sess_next_sched && (
-              <DetailItem label="Scheduled Date"
-                value={new Date(session.sess_next_sched).toLocaleString([], {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: true,
-                })}/>
+              <DetailItem
+                label="Scheduled Date"
+                value={formatDateTime(session.sess_next_sched)}
+              />
+
             )}
 
               <DetailItem

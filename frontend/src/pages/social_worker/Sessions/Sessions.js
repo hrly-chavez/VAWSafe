@@ -28,12 +28,28 @@ export default function Sessions() {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
-    const d = new Date(dateStr);
-    return d.toLocaleString("en-US", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
+
+    // Split date manually to prevent timezone auto-adjust
+    const parts = dateStr.split("T");
+    const date = parts[0];        // YYYY-MM-DD
+    const time = parts[1]?.slice(0,5); // HH:MM
+
+    // Convert to readable format without timezone shifting
+    const [year, month, day] = date.split("-");
+    const readableDate = new Date(`${year}-${month}-${day}T00:00:00`);
+
+    return `${readableDate.toLocaleDateString("en-US", { dateStyle: "medium" })} ${convertTo12Hour(time)}`;
   };
+
+  // Helper to convert 24h → 12h
+  const convertTo12Hour = (hhmm) => {
+    let [h, m] = hhmm.split(":");
+    h = parseInt(h, 10);
+    const suffix = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return `${h}:${m} ${suffix}`;
+  };
+
 
   return (
     <div>
