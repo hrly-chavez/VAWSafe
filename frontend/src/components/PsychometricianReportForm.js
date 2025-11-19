@@ -8,7 +8,7 @@ const tabs = [
   { key: "recommendations", label: "Recommendations" },
 ];
 
-export default function PsychometricianReportForm({ victim, incident, onSubmit }) {
+export default function PsychometricianReportForm({ victim, incident, onSubmit, onClose }) {
   const [formData, setFormData] = useState({
     reason_for_referral: "",
     brief_history: "",
@@ -25,6 +25,26 @@ export default function PsychometricianReportForm({ victim, incident, onSubmit }
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(formData);
+  };
+
+  // ✅ Insert Word-style list block with tab spacing
+  const insertFormat = (format) => {
+    const currentText = formData[activeTab] || "";
+    let newText = currentText;
+
+    if (format === "bullet") {
+      newText += "\n•\tItem 1\n•\tItem 2\n•\tItem 3\n";
+    }
+
+    if (format === "number") {
+      newText += "\n1.\tItem 1\n2.\tItem 2\n3.\tItem 3\n";
+    }
+
+    if (format === "letter") {
+      newText += "\na.\tItem 1\nb.\tItem 2\nc.\tItem 3\n";
+    }
+
+    setFormData({ ...formData, [activeTab]: newText });
   };
 
   return (
@@ -47,7 +67,7 @@ export default function PsychometricianReportForm({ victim, incident, onSubmit }
           <button
             key={tab.key}
             type="button"
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => setActiveTab(tab.key)} // ✅ no listCount reset needed
             className={`px-4 py-2 text-sm font-medium rounded-t-md ${
               activeTab === tab.key
                 ? "bg-[#292D96] text-white"
@@ -61,15 +81,46 @@ export default function PsychometricianReportForm({ victim, incident, onSubmit }
 
       {/* Active Section */}
       <div className="bg-white border rounded-lg shadow-sm p-4 mb-6">
-        <h3 className="text-md font-semibold text-[#292D96] mb-2">
-          {tabs.find((t) => t.key === activeTab)?.label}
-        </h3>
+        <div className="flex items-center justify-between mb-3 border-b border-gray-200 pb-2">
+          <h3 className="text-base font-semibold text-[#292D96]">
+            {tabs.find((t) => t.key === activeTab)?.label}
+          </h3>
+
+          {/* Word-style formatting toolbar */}
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => insertFormat("bullet")}
+              title="Bullet"
+              className="px-2 py-1 text-sm font-medium border border-gray-300 rounded hover:bg-gray-100"
+            >
+              •
+            </button>
+            <button
+              type="button"
+              onClick={() => insertFormat("number")}
+              title="Numbered List"
+              className="px-2 py-1 text-sm font-medium border border-gray-300 rounded hover:bg-gray-100"
+            >
+              1.
+            </button>
+            <button
+              type="button"
+              onClick={() => insertFormat("letter")}
+              title="Lettered List"
+              className="px-2 py-1 text-sm font-medium border border-gray-300 rounded hover:bg-gray-100"
+            >
+              a.
+            </button>
+          </div>
+        </div>
+
         <textarea
           name={activeTab}
           value={formData[activeTab]}
           onChange={handleChange}
-          placeholder={`Provide detailed ${tabs.find((t) => t.key === activeTab)?.label.toLowerCase()}...`}
-          className="w-full border rounded-md p-3 text-sm text-gray-800 resize-none h-40"
+          placeholder={`Type your ${tabs.find((t) => t.key === activeTab)?.label.toLowerCase()} here...`}
+          className="w-full border border-gray-300 rounded-md p-3 text-base text-gray-800 resize-none h-72 focus:outline-none focus:ring-2 focus:ring-[#292D96]"
         />
       </div>
 
@@ -77,19 +128,12 @@ export default function PsychometricianReportForm({ victim, incident, onSubmit }
       <div className="flex justify-end gap-3">
         <button
           type="button"
-          onClick={() =>
-            setFormData({
-              reason_for_referral: "",
-              brief_history: "",
-              behavioral_observation: "",
-              test_results_discussion: "",
-              recommendations: "",
-            })
-          }
+          onClick={onClose}
           className="px-4 py-2 text-sm font-medium border border-gray-400 text-gray-600 rounded-md hover:bg-gray-100 transition"
         >
           Cancel
         </button>
+
         <button
           type="submit"
           className="px-4 py-2 text-sm font-medium border border-[#292D96] text-[#292D96] rounded-md hover:bg-[#292D96] hover:text-white transition"

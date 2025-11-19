@@ -10,8 +10,6 @@ import SectionHeader from "../../../components/SectionHeader";
 import ReportModal from "../../../components/ReportModal";
 import Modal from "../../../components/Modal";
 import NurseReportForm from "../../../components/NurseReportForm";
-import PsychometricianReportForm from "../../../components/PsychometricianReportForm";
-import SocialWorkerReportForm from "../../../components/SocialWorkerReportForm";
 
 export default function VictimDetailPage() {
   const { vic_id } = useParams();
@@ -30,11 +28,10 @@ export default function VictimDetailPage() {
   const [selectedReport, setSelectedReport] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showAddReportModal, setShowAddReportModal] = useState(false);
-  const [showEditReportModal, setShowEditReportModal] = useState(false);
 
-  // Assume you pass userRole from context or props
   const userRole = "Nurse";
 
+  // ✅ Only nurse report submission
   const handleSubmitNurseReport = async (data) => {
     try {
       const res = await api.post(`/api/nurse/victims/${vic_id}/monthly-reports/`, {
@@ -43,48 +40,13 @@ export default function VictimDetailPage() {
         report_month: new Date().toISOString().split("T")[0],
       });
 
-      // ✅ close the Add Report modal
       setShowAddReportModal(false);
-
-      // ✅ refresh reports list
       await fetchReports();
-
-      // ✅ switch to Reports tab
       setActiveTab("reports");
-
-      // ✅ auto-open the newly created report in the View Report modal
       setSelectedReport(res.data);
       setShowReportModal(true);
     } catch (err) {
       console.error("Failed to submit nurse report", err);
-    }
-  };
-
-  const handleSubmitPsychReport = async (data) => {
-    try {
-      await api.post(`/api/psychometrician/victims/${vic_id}/monthly-reports/`, {
-        ...data,
-        incident: selectedIncident?.incident_id,
-        report_month: new Date().toISOString().split("T")[0],
-      });
-      setShowAddReportModal(false);
-      fetchReports();
-    } catch (err) {
-      console.error("Failed to submit psychometrician report", err);
-    }
-  };
-
-  const handleSubmitSWReport = async (data) => {
-    try {
-      await api.post(`/api/socialworker/victims/${vic_id}/monthly-reports/`, {
-        ...data,
-        incident: selectedIncident?.incident_id,
-        report_month: new Date().toISOString().split("T")[0],
-      });
-      setShowAddReportModal(false);
-      fetchReports();
-    } catch (err) {
-      console.error("Failed to submit social worker report", err);
     }
   };
 
@@ -95,14 +57,51 @@ export default function VictimDetailPage() {
     };
   }, [showModal]);
 
+  // ✅ Fetch all reports
   const fetchReports = async () => {
     try {
-      const res = await api.get(`/api/nurse/victims/${vic_id}/monthly-reports/`);
-      if (Array.isArray(res.data)) {
-        setReportsList(res.data);
+      let nurseData = [];
+      let psychComData = [];
+      let psychMonthlyData = [];
+
+      try {
+        const nurseRes = await api.get(`/api/nurse/victims/${vic_id}/monthly-reports/`);
+        nurseData = Array.isArray(nurseRes.data) ? nurseRes.data : [];
+      } catch (err) {
+        console.error("Failed to fetch nurse reports", err);
       }
+
+      try {
+        const psychComRes = await api.get(`/api/nurse/victims/${vic_id}/psych-comprehensive-reports/`);
+        psychComData = Array.isArray(psychComRes.data) ? psychComRes.data : [];
+      } catch (err) {
+        console.error("Failed to fetch psychometrician comprehensive reports", err);
+      }
+
+      try {
+        const psychMonthlyRes = await api.get(`/api/nurse/victims/${vic_id}/psych-monthly-progress-reports/`);
+        psychMonthlyData = Array.isArray(psychMonthlyRes.data) ? psychMonthlyRes.data : [];
+      } catch (err) {
+        console.error("Failed to fetch psychometrician monthly progress reports", err);
+      }
+
+      const normalize = (report, type) => ({
+        ...report,
+        report_type: report.report_type ?? type,
+        prepared_by_id: report.prepared_by_id ?? report.prepared_by?.id ?? null,
+        prepared_by_name: report.prepared_by_name ?? report.prepared_by?.full_name ?? "—",
+        incident: report.incident?.id ?? report.incident ?? null,
+      });
+
+      const combined = [
+        ...nurseData.map(r => normalize(r, "Nurse")),
+        ...psychComData.map(r => normalize(r, "Psychometrician Comprehensive")),
+        ...psychMonthlyData.map(r => normalize(r, "Psychometrician Monthly")),
+      ];
+
+      setReportsList(combined);
     } catch (err) {
-      console.error("Failed to fetch reports", err);
+      console.error("Unexpected error in fetchReports", err);
     }
   };
 
@@ -150,8 +149,6 @@ export default function VictimDetailPage() {
       get(victim, ["vic_extension"]),
     ].filter(Boolean).join(" ")
     : "";
-
-  const isMinor = victim?.vic_child_class != null;
 
   if (loading) return <p>Loading victim details...</p>;
   if (error) return <p className="text-red-600">{error}</p>;
@@ -435,6 +432,8 @@ export default function VictimDetailPage() {
                     (r) => r.incident === incident.incident_id
                   );
 
+                  const isOpen = openSessionIndex === index; // reuse or create a new state like openReportsIndex
+
                   return (
                     <div
                       key={incident.incident_id}
@@ -448,14 +447,13 @@ export default function VictimDetailPage() {
                         <div className="flex gap-3">
                           <button
                             onClick={() => {
-                              setShowAddReportModal(false);
+                              const isSame = openSessionIndex === index;
+                              setOpenSessionIndex(isSame ? null : index);
                               setSelectedIncident(incident);
-                              setSelectedReport(null);
-                              setShowReportModal(true);
                             }}
                             className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
                           >
-                            View Reports
+                            {isOpen ? "Hide Reports" : "View Reports"}
                           </button>
                           {userRole && (
                             <button
@@ -474,39 +472,43 @@ export default function VictimDetailPage() {
                       </div>
 
                       {/* Reports list for this incident */}
-                      {incidentReports.length === 0 ? (
-                        <p className="text-sm text-gray-500 italic mt-3">
-                          No reports available yet.
-                        </p>
-                      ) : (
-                        incidentReports.map((report) => (
-                          <div
-                            key={report.id}
-                            className="bg-white border rounded-lg shadow-sm p-4 mt-3"
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <h4 className="text-md font-semibold text-[#292D96]">
-                                {report.report_type} Report —{" "}
-                                {new Date(report.report_month).toLocaleDateString(
-                                  "en-US",
-                                  { month: "long", year: "numeric" }
-                                )}
-                              </h4>
-                              <button
+                      {isOpen && (
+                        <div className="mt-3">
+                          {incidentReports.length === 0 ? (
+                            <p className="text-sm text-gray-500 italic">
+                              No reports available yet.
+                            </p>
+                          ) : (
+                            incidentReports.map((report) => (
+                              <div
+                                key={report.id}
                                 onClick={() => {
                                   setSelectedReport(report);
                                   setShowReportModal(true);
                                 }}
-                                className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-2 py-1 text-xs font-medium hover:bg-[#292D96] hover:text-white transition"
+                                className="bg-white border rounded-lg shadow-sm p-4 mt-3 cursor-pointer hover:shadow-md transition"
                               >
-                                View Report
-                              </button>
-                            </div>
-                            <p className="text-xs text-gray-500">
-                              Prepared by: {report.prepared_by_name}
-                            </p>
-                          </div>
-                        ))
+                                <h4
+                                  className={`text-md font-semibold ${report.report_type?.toLowerCase().includes("nurse")
+                                      ? "text-blue-600"
+                                      : report.report_type?.toLowerCase().includes("psychometrician")
+                                        ? "text-red-600"
+                                        : "text-[#292D96]"
+                                    }`}
+                                >
+                                  {report.report_type} Report —{" "}
+                                  {new Date(report.report_month).toLocaleDateString(
+                                    "en-US",
+                                    { month: "long", year: "numeric" }
+                                  )}
+                                </h4>
+                                <p className="text-xs text-gray-500">
+                                  Prepared by: {report.prepared_by_name}
+                                </p>
+                              </div>
+                            ))
+                          )}
+                        </div>
                       )}
                     </div>
                   );
@@ -516,42 +518,24 @@ export default function VictimDetailPage() {
 
             {/* Report Modal */}
             {showReportModal && !showAddReportModal && selectedReport && (
-              <Modal title="View Monthly Report" onClose={() => setShowReportModal(false)}>
+              <Modal title="View Report" onClose={() => setShowReportModal(false)}>
                 <ReportModal
                   report={selectedReport}
                   userRole={userRole}
                   onClose={() => setShowReportModal(false)}
-                  onEdit={() => setShowEditReportModal(true)}
                 />
               </Modal>
             )}
 
+            {/* Add Report Modal */}
             {showAddReportModal && !showReportModal && (
-              <Modal title="Add Monthly Report" onClose={() => setShowAddReportModal(false)}>
-                {userRole === "Nurse" && (
-                  <NurseReportForm
-                    victim={victim}
-                    incident={selectedIncident}
-                    onSubmit={handleSubmitNurseReport}
-                    onClose={() => setShowAddReportModal(false)}
-                  />
-                )}
-                {userRole === "Psychometrician" && (
-                  <PsychometricianReportForm
-                    victim={victim}
-                    incident={selectedIncident}
-                    onSubmit={handleSubmitPsychReport}
-                    onClose={() => setShowAddReportModal(false)}
-                  />
-                )}
-                {userRole === "Social Worker" && (
-                  <SocialWorkerReportForm
-                    victim={victim}
-                    incident={selectedIncident}
-                    onSubmit={handleSubmitSWReport}
-                    onClose={() => setShowAddReportModal(false)}
-                  />
-                )}
+              <Modal onClose={() => setShowAddReportModal(false)}>
+                <NurseReportForm
+                  victim={victim}
+                  incident={selectedIncident}
+                  onSubmit={handleSubmitNurseReport}
+                  onClose={() => setShowAddReportModal(false)}
+                />
               </Modal>
             )}
           </div>

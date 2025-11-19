@@ -1385,13 +1385,34 @@ class MonthlyPsychProgressReportViewSet(viewsets.ModelViewSet):
         return self.queryset.filter(victim_id=vic_id)
 
     def perform_create(self, serializer):
-        official = self.request.user.official
-        if official.of_role != "Psychometrician":
+        vic_id = self.kwargs.get("vic_id")
+        victim = get_object_or_404(Victim, pk=vic_id)
+
+        official = getattr(self.request.user, "official", None)
+        if not official or official.of_role != "Psychometrician":
             raise PermissionDenied("Only psychometricians can add monthly progress reports.")
-        serializer.save(prepared_by=official)
+
+        incident_id = self.request.data.get("incident")
+        incident = get_object_or_404(IncidentInformation, pk=incident_id)
+
+        today = date.today()
+
+        report = serializer.save(
+            victim=victim,
+            prepared_by=official,
+            incident=incident,
+            report_month=today
+        )
+
+        sessions = Session.objects.filter(incident_id=incident, incident_id__vic_id=victim)
+        report.individual_sessions.set(sessions)
 
     def perform_update(self, serializer):
         official = self.request.user.official
         if serializer.instance.prepared_by != official:
             raise PermissionDenied("You can only edit your own monthly progress reports.")
-        serializer.save()
+        report = serializer.save()
+
+        # Keep sessions in sync on update too
+        sessions = Session.objects.filter(victim=report.victim, incident=report.incident)
+        report.individual_sessions.set(sessions)

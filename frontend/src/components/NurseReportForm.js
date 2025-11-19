@@ -4,9 +4,7 @@ import { ListBulletIcon, ClipboardDocumentCheckIcon } from '@heroicons/react/24/
 export default function NurseReportForm({ victim, incident, onSubmit, onClose }) {
   const [formData, setFormData] = useState({
     height: "",
-    heightUnit: "cm",
     weight: "",
-    weightUnit: "kg",
     bmi: "",
     report_info: "",
     attachments: [],
@@ -41,16 +39,14 @@ export default function NurseReportForm({ victim, incident, onSubmit, onClose })
 
     if (!h || !w || !age) return;
 
-    let heightInMeters =
-      formData.heightUnit === "cm" ? h / 100 : h * 0.3048;
-    let weightInKg =
-      formData.weightUnit === "kg" ? w : w * 0.453592;
+    // ✅ Always cm and kg
+    const heightInMeters = h / 100;
+    const weightInKg = w;
 
     const bmi = weightInKg / (heightInMeters * heightInMeters);
     const roundedBMI = parseFloat(bmi.toFixed(1));
 
     let category = "—";
-
     if (age >= 18) {
       if (roundedBMI < 18.5) category = "Underweight";
       else if (roundedBMI < 25) category = "Normal";
@@ -65,12 +61,15 @@ export default function NurseReportForm({ victim, incident, onSubmit, onClose })
       bmi: roundedBMI,
       bmiCategory: category,
     }));
-  }, [formData.height, formData.weight, formData.heightUnit, formData.weightUnit, victim.age]);
+  }, [formData.height, formData.weight, victim.age]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 text-sm text-gray-700">
       {/* Header */}
-      <h2 className="text-xl font-bold text-[#292D96]">Add Monthly Patient Report</h2>
+       <div className="text-center">
+                <h2 className="text-2xl font-bold text-[#292D96]">Monthly Patient Report</h2>
+                <p className="text-xs text-gray-500 mt-1">Nurse Medical Assessment</p>
+            </div>
 
       {/* Patient Details */}
       <div className="bg-gray-50 border rounded-lg p-4 space-y-2">
@@ -89,52 +88,30 @@ export default function NurseReportForm({ victim, incident, onSubmit, onClose })
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Height */}
           <div className="flex flex-col">
-            <label className="text-xs text-gray-500 mb-1">Height</label>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                step="0.1"
-                name="height"
-                value={formData.height}
-                onChange={handleChange}
-                className="input w-full"
-                placeholder="e.g. 145.5"
-              />
-              <select
-                name="heightUnit"
-                value={formData.heightUnit}
-                onChange={handleChange}
-                className="input w-16"
-              >
-                <option value="cm">cm</option>
-                <option value="ft">ft</option>
-              </select>
-            </div>
+            <label className="text-xs text-gray-500 mb-1">Height (cm)</label>
+            <input
+              type="number"
+              step="0.1"
+              name="height"
+              value={formData.height}
+              onChange={handleChange}
+              className="input w-full"
+              placeholder="e.g. 160"
+            />
           </div>
 
           {/* Weight */}
           <div className="flex flex-col">
-            <label className="text-xs text-gray-500 mb-1">Weight</label>
-            <div className="flex gap-2">
-              <input
-                type="number"
-                step="0.1"
-                name="weight"
-                value={formData.weight}
-                onChange={handleChange}
-                className="input w-full"
-                placeholder="e.g. 60.2"
-              />
-              <select
-                name="weightUnit"
-                value={formData.weightUnit}
-                onChange={handleChange}
-                className="input w-16"
-              >
-                <option value="kg">kg</option>
-                <option value="lbs">lbs</option>
-              </select>
-            </div>
+            <label className="text-xs text-gray-500 mb-1">Weight (kg)</label>
+            <input
+              type="number"
+              step="0.1"
+              name="weight"
+              value={formData.weight}
+              onChange={handleChange}
+              className="input w-full"
+              placeholder="e.g. 60.2"
+            />
           </div>
 
           {/* BMI */}
@@ -151,16 +128,17 @@ export default function NurseReportForm({ victim, incident, onSubmit, onClose })
               <p className="text-xs mt-1 text-gray-600">
                 Category:{" "}
                 <span
-                  className={`font-semibold ${formData.bmiCategory === "Normal"
+                  className={`font-semibold ${
+                    formData.bmiCategory === "Normal"
                       ? "text-green-600"
                       : formData.bmiCategory === "Underweight"
-                        ? "text-blue-600"
-                        : formData.bmiCategory === "Overweight"
-                          ? "text-orange-600"
-                          : formData.bmiCategory === "Obese"
-                            ? "text-red-600"
-                            : "text-gray-600"
-                    }`}
+                      ? "text-blue-600"
+                      : formData.bmiCategory === "Overweight"
+                      ? "text-orange-600"
+                      : formData.bmiCategory === "Obese"
+                      ? "text-red-600"
+                      : "text-gray-600"
+                  }`}
                 >
                   {formData.bmiCategory}
                 </span>
@@ -178,19 +156,6 @@ export default function NurseReportForm({ victim, incident, onSubmit, onClose })
           placeholder="Write medical summary and observations here..."
           value={formData.report_info}
           onChange={handleChange}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              const cursorPos = e.target.selectionStart;
-              const before = formData.report_info.substring(0, cursorPos);
-              const after = formData.report_info.substring(cursorPos);
-              const newValue = before + "\n• " + after;
-              setFormData({ ...formData, report_info: newValue });
-              setTimeout(() => {
-                e.target.selectionStart = e.target.selectionEnd = cursorPos + 3;
-              }, 0);
-            }
-          }}
           className="textarea h-40 w-full"
         />
         <div className="flex gap-2 mt-2">

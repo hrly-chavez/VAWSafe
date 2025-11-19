@@ -49,6 +49,7 @@ urlpatterns = [
 
     # --- Report ---
     path("victims/<int:vic_id>/monthly-reports/", NurseMonthlyReportViewSet.as_view({"get": "list", "post": "create"}), name="nurse-monthly-reports"),
-    path("victims/<int:vic_id>/monthly-reports/<int:pk>/", NurseMonthlyReportViewSet.as_view({ "get": "retrieve", "put": "update", "patch": "partial_update"}),name="nurse-monthly-report-detail",
-),
+    path("victims/<int:vic_id>/monthly-reports/<int:pk>/", NurseMonthlyReportViewSet.as_view({ "get": "retrieve", "put": "update", "patch": "partial_update"}),name="nurse-monthly-report-detail"),
+    path("victims/<int:vic_id>/psych-comprehensive-reports/",PsychometricianComprehensiveReportReadOnlyViewSet.as_view({"get": "list"}),name="nurse-psych-comprehensive-reports"),
+    path("victims/<int:vic_id>/psych-monthly-progress-reports/",PsychometricianMonthlyProgressReportReadOnlyViewSet.as_view({"get": "list"}),name="nurse-psych-monthly-progress-reports"),
 ]

@@ -3,6 +3,23 @@ import SectionHeader from "./SectionHeader";
 export default function ReportModal({ report, userRole, currentOfficialId, onClose, onEdit }) {
   if (!report) return null;
 
+  const renderCheckboxGroup = (title, options, values, otherValue, icon = "/images/clipboard.png") => (
+    <div className="bg-white border rounded-lg shadow-sm p-4">
+      <SectionHeader icon={icon} title={title} />
+      <div className="grid grid-cols-2 gap-2 mt-2">
+        {options.map((opt) => (
+          <label key={opt} className="flex items-center gap-2">
+            <input type="checkbox" checked={values?.includes(opt)} disabled />
+            {opt}
+          </label>
+        ))}
+      </div>
+      {otherValue && (
+        <p className="mt-2 text-sm text-gray-600">Other: {otherValue}</p>
+      )}
+    </div>
+  );
+
   const getCategoryColor = (category) => {
     switch (category) {
       case "Normal": return "text-green-600";
@@ -11,6 +28,13 @@ export default function ReportModal({ report, userRole, currentOfficialId, onClo
       case "Obese": return "text-red-600";
       default: return "text-gray-600";
     }
+  };
+
+  const getBoxColorClass = (type) => {
+    const lower = type?.toLowerCase();
+    if (lower.includes("nurse")) return "border-blue-600 hover:border-blue-700";
+    if (lower.includes("psychometrician")) return "border-red-600 hover:border-red-700";
+    return "border-gray-300 hover:border-gray-400";
   };
 
   const safeJoin = (val) =>
@@ -27,9 +51,9 @@ export default function ReportModal({ report, userRole, currentOfficialId, onClo
         <p className="font-medium">
           {report.report_month
             ? new Date(report.report_month).toLocaleDateString("en-US", {
-                month: "long",
-                year: "numeric",
-              })
+              month: "long",
+              year: "numeric",
+            })
             : "—"}
         </p>
 
@@ -71,38 +95,149 @@ export default function ReportModal({ report, userRole, currentOfficialId, onClo
 
       {/* Psychometrician Comprehensive Report */}
       {report.report_type?.toLowerCase().includes("comprehensive") && (
-        <div className="bg-gray-50 border rounded-lg p-4 space-y-2">
-          <h3 className="text-md font-semibold text-[#292D96]">Comprehensive Report Details</h3>
-          <p><span className="font-medium">Reason for Referral:</span> {report.reason_for_referral || "—"}</p>
-          <p><span className="font-medium">Brief History:</span> {report.brief_history || "—"}</p>
-          <p><span className="font-medium">Behavioral Observation:</span> {report.behavioral_observation || "—"}</p>
-          <p><span className="font-medium">Test Results & Discussion:</span> {report.test_results_discussion || "—"}</p>
-          <p><span className="font-medium">Recommendations:</span> {report.recommendations || "—"}</p>
+        <div className="space-y-6">
+          <div className="bg-gray-50 border rounded-lg p-4">
+            <h3 className="text-md font-semibold text-[#292D96] mb-2">Reason for Referral</h3>
+            <p className="whitespace-pre-wrap bg-white border rounded-md p-3 text-gray-800">
+              {report.reason_for_referral || "—"}
+            </p>
+          </div>
+
+          <div className="bg-gray-50 border rounded-lg p-4">
+            <h3 className="text-md font-semibold text-[#292D96] mb-2">Brief History</h3>
+            <p className="whitespace-pre-wrap bg-white border rounded-md p-3 text-gray-800">
+              {report.brief_history || "—"}
+            </p>
+          </div>
+
+          <div className="bg-gray-50 border rounded-lg p-4">
+            <h3 className="text-md font-semibold text-[#292D96] mb-2">Behavioral Observation</h3>
+            <p className="whitespace-pre-wrap bg-white border rounded-md p-3 text-gray-800">
+              {report.behavioral_observation || "—"}
+            </p>
+          </div>
+
+          <div className="bg-gray-50 border rounded-lg p-4">
+            <h3 className="text-md font-semibold text-[#292D96] mb-2">Test Results & Discussion</h3>
+            <p className="whitespace-pre-wrap bg-white border rounded-md p-3 text-gray-800">
+              {report.test_results_discussion || "—"}
+            </p>
+          </div>
+
+          <div className="bg-gray-50 border rounded-lg p-4">
+            <h3 className="text-md font-semibold text-[#292D96] mb-2">Recommendations</h3>
+            <p className="whitespace-pre-wrap bg-white border rounded-md p-3 text-gray-800">
+              {report.recommendations || "—"}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Psychometrician Comprehensive Report */}
+      {report.report_type?.toLowerCase().includes("comprehensive") && (
+        <div className="space-y-6">
+          {["reason_for_referral", "brief_history", "behavioral_observation", "test_results_discussion", "recommendations"].map((field, idx) => (
+            <div key={idx} className="bg-gray-50 border rounded-lg p-4">
+              <h3 className="text-md font-semibold text-[#292D96] mb-2">
+                {field.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}
+              </h3>
+              <p className="whitespace-pre-wrap bg-white border rounded-md p-3 text-gray-800">
+                {report[field] || "—"}
+              </p>
+            </div>
+          ))}
         </div>
       )}
 
       {/* Psychometrician Monthly Progress Report */}
       {report.report_type?.toLowerCase().includes("monthly") && (
-        <div className="bg-gray-50 border rounded-lg p-4 space-y-2">
-          <h3 className="text-md font-semibold text-[#292D96]">Monthly Progress Details</h3>
-          <p><span className="font-medium">Presentation:</span> {safeJoin(report.presentation)}</p>
-          <p><span className="font-medium">Affect:</span> {safeJoin(report.affect)}</p>
-          <p><span className="font-medium">Mood:</span> {safeJoin(report.mood)}</p>
-          <p><span className="font-medium">Interpersonal:</span> {safeJoin(report.interpersonal)}</p>
-          <p><span className="font-medium">Safety Issues:</span> {safeJoin(report.safety_issues)}</p>
-          <p><span className="font-medium">Client Has:</span> {safeJoin(report.client_has)}</p>
-          <p><span className="font-medium">Subjective Reports:</span> {safeJoin(report.subjective_reports)}</p>
-          <p><span className="font-medium">Observations:</span> {safeJoin(report.observations)}</p>
-          <p><span className="font-medium">Psychological Testing:</span> {safeJoin(report.psychological_testing)}</p>
-          <p><span className="font-medium">Previous Diagnosis:</span> {report.previous_diagnosis || "—"}</p>
+        <div className="space-y-6">
+          {renderCheckboxGroup("Presentation",
+            ["Oriented/alert", "Disorganized", "Tangential", "Preoccupied", "Circumstantial"],
+            report.presentation, report.presentation_other)}
+
+          {renderCheckboxGroup("Affect",
+            ["Appropriate", "Inappropriate", "Labile", "Constricted", "Blunted", "Flat"],
+            report.affect, report.affect_other)}
+
+          {renderCheckboxGroup("Mood",
+            ["Euthymic", "Depressed", "Dysphoric", "Anxious", "Angry", "Euphoric", "Stable"],
+            report.mood, report.mood_other)}
+
+          {renderCheckboxGroup("Interpersonal",
+            ["Congenial", "Guarded", "Open/candid", "Patient/cooperative", "Friendly/polite", "Quiet/withdrawn", "Distant/disengaged", "Annoyed", "Engaging", "Hostile", "Shy", "Motivated", "Relaxed", "Cautious/defensive", "Irritable"],
+            report.interpersonal, report.interpersonal_other)}
+
+          {renderCheckboxGroup("Safety Issues",
+            ["None", "Suicidal Ideation", "Homicidal Ideation", "Other"],
+            report.safety_issues, report.safety_issues_other, "/images/warning.png")}
+
+          {renderCheckboxGroup("Client Has",
+            ["Intention to act", "Plan to act", "Means to act"],
+            report.client_has, report.client_has_other)}
+
+          {renderCheckboxGroup("Subjective Reports",
+            ["Feels Depressed", "Feeling anxious", "Unmotivated", "Little sleep", "Too much sleep", "Feels overwhelmed", "Feels directionless", "Feels stressed", "Feeling hopeless", "Difficulty breathing", "Heavy chest/chest pain", "Irritability", "Mood Swings", "Loss of appetite", "Overeating", "Conflict with fellow resident", "Conflict with staff"],
+            report.subjective_reports, report.subjective_reports_other)}
+
+          {renderCheckboxGroup("Observations",
+            ["Seems depressed", "Seems anxious", "Lack of motivation", "Sleeping too much", "Issues with partner", "Seems overwhelmed", "Seems better overall", "Seems worse overall", "Seems stressed", "Improved intimacy", "Decreased intimacy", "Communication improved", "Fighting increased", "Fighting less", "Communication worse", "Maintaining progress", "Mood swings better", "Mood swings worse", "Anxiety decreasing", "Seems self-conscious", "Anger issues", "Moving through grief", "Lack of focus/organization", "Seems more secure", "More self-confident", "Increase in motivation", "Defeating self-talk", "Better self-care", "Committed to intervention", "Better time management", "Becoming isolated", "Continues to blame others", "Taking more responsibility for emotions", "More self-aware", "Breaking self-defeating patterns", "Difficulty breaking patterns", "Establishing better boundaries"],
+            report.observations, report.observations_other)}
+
+          {renderCheckboxGroup("Psychological Testing",
+            ["TONI 4", "NEO PI-R", "BPI", "Suicidal Ideation", "Intention to act"],
+            report.psychological_testing, report.psychological_testing_other)}
+
+          {/* Previous Diagnosis */}
+          <div className="bg-white border rounded-lg shadow-sm p-4">
+            <SectionHeader icon="/images/clipboard.png" title="Previous Diagnosis" />
+            <p className="whitespace-pre-wrap bg-gray-50 border rounded-md p-3 text-gray-800">
+              {report.previous_diagnosis || "—"}
+            </p>
+          </div>
+
+          {/* Services Availed */}
+          <div className="bg-white border rounded-lg shadow-sm p-4">
+            <SectionHeader icon="/images/serviced.png" title="Services Availed (Sessions)" />
+            <ul className="list-disc ml-6">
+              {report.individual_sessions?.length > 0
+                ? report.individual_sessions.map((s) => (
+                  <li key={s.sess_id}>
+                    {s.session_type_names?.join(", ") || "—"} —{" "}
+                    {s.sess_date_today
+                      ? new Date(s.sess_date_today).toLocaleDateString("en-US")
+                      : "—"}
+                  </li>
+                ))
+                : "—"}
+            </ul>
+          </div>
+
+          {/* Checkups */}
           <p><span className="font-medium">Latest Check-up (Psychologist):</span> {report.latest_checkup_psychologist || "—"}</p>
           <p><span className="font-medium">Latest Check-up (Psychiatrist):</span> {report.latest_checkup_psychiatrist || "—"}</p>
+
+          {/* Medication */}
           <p><span className="font-medium">On Medication:</span> {report.on_medication ? "Yes" : "No"}</p>
           {report.on_medication && (
             <p><span className="font-medium">Medication:</span> {report.medication_name} ({report.medication_dosage})</p>
           )}
-          <p><span className="font-medium">Summary of Results:</span> {report.summary_of_results || "—"}</p>
-          <p><span className="font-medium">Recommendations:</span> {report.recommendations || "—"}</p>
+
+          {/* Summary of Results */}
+          <div className="bg-white border rounded-lg shadow-sm p-4">
+            <SectionHeader icon="/images/clipboard.png" title="Summary of Results" />
+            <p className="whitespace-pre-wrap bg-gray-50 border rounded-md p-3 text-gray-800">
+              {report.summary_of_results || "—"}
+            </p>
+          </div>
+
+          {/* Recommendations */}
+          <div className="bg-white border rounded-lg shadow-sm p-4">
+            <SectionHeader icon="/images/clipboard.png" title="Recommendations" />
+            <p className="whitespace-pre-wrap bg-gray-50 border rounded-md p-3 text-gray-800">
+              {report.recommendations || "—"}
+            </p>
+          </div>
         </div>
       )}
 

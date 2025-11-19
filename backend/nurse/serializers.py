@@ -835,7 +835,7 @@ class MonthlyProgressReportSerializer(serializers.ModelSerializer):
     # FK display fields
     full_name = serializers.CharField(source="victim.full_name", read_only=True)
     prepared_by_name = serializers.CharField(source="prepared_by.full_name", read_only=True)
-    bmi_category = serializers.CharField(read_only=True)  
+    bmi_category = serializers.CharField(read_only=True)
 
     class Meta:
         model = MonthlyProgressReport
@@ -853,12 +853,12 @@ class MonthlyProgressReportSerializer(serializers.ModelSerializer):
             "victim",
             "incident",
             "report_month",
-            "bmi_category", 
+            "bmi_category",
         ]
 
     def validate(self, data):
         errors = {}
-        for field in ["height", "weight", "bmi", "report_info"]:
+        for field in ["height", "weight", "report_info"]:
             if not data.get(field):
                 errors[field] = f"{field} is required."
         if errors:

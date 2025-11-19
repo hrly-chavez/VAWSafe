@@ -25,7 +25,6 @@ const checkboxGroups = {
         "More self-aware", "Breaking self-defeating patterns", "Difficulty breaking patterns", "Establishing better boundaries"
     ],
     psychological_testing: ["TONI 4", "NEO PI-R", "BPI", "Suicidal Ideation", "Intention to act"],
-    services_availed: ["Counseling", "Group Therapy", "Individual Therapy", "Medication Review", "Other"], // NEW
 };
 
 export default function PsychometricianMonthlyReport({ victim, incident, onSubmit }) {
@@ -138,7 +137,7 @@ export default function PsychometricianMonthlyReport({ victim, incident, onSubmi
 
             {/* 9. On Medication */}
             <div className="bg-white border rounded-lg shadow-sm p-4">
-                <SectionHeader icon="/images/pills.png" title="Medication" />
+                <SectionHeader icon="/images/pill.png" title="Medication" />
                 <label className="flex items-center gap-2 mt-2">
                     <input
                         type="checkbox"
@@ -221,34 +220,9 @@ export default function PsychometricianMonthlyReport({ victim, incident, onSubmi
                 />
             </div>
 
-            {/* 12. Services Availed This Month */}
+            {/* 12. Psychological Testing */}
             <div className="bg-white border rounded-lg shadow-sm p-4">
-                <SectionHeader icon="/images/services.png" title="Services Availed This Month" />
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                    {checkboxGroups.services_availed.map((opt) => (
-                        <label key={opt} className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                checked={formData.services_availed.includes(opt)}
-                                onChange={() => toggleCheckbox("services_availed", opt)}
-                            />
-                            {opt}
-                        </label>
-                    ))}
-                </div>
-                <input
-                    type="text"
-                    name="services_availed_other"
-                    placeholder="Other..."
-                    value={formData.services_availed_other}
-                    onChange={handleChange}
-                    className="mt-2 w-full border rounded-md p-2 text-sm"
-                />
-            </div>
-
-            {/* 13. Psychological Testing */}
-            <div className="bg-white border rounded-lg shadow-sm p-4">
-                <SectionHeader icon="/images/test.png" title="Psychological Testing (if conducted)" />
+                <SectionHeader icon="/images/clipboard.png" title="Psychological Testing (if conducted)" />
                 <div className="grid grid-cols-2 gap-2 mt-2">
                     {checkboxGroups.psychological_testing.map((opt) => (
                         <label key={opt} className="flex items-center gap-2">
@@ -271,7 +245,7 @@ export default function PsychometricianMonthlyReport({ victim, incident, onSubmi
                 />
             </div>
 
-            {/* 14. Summary of Results */}
+            {/* 13. Summary of Results */}
             <div>
                 <p className="text-xs text-gray-500">Summary of Results</p>
                 <textarea
@@ -282,7 +256,7 @@ export default function PsychometricianMonthlyReport({ victim, incident, onSubmi
                 />
             </div>
 
-            {/* 15. Recommendations */}
+            {/* 14. Recommendations */}
             <div>
                 <p className="text-xs text-gray-500">Recommendations</p>
                 <textarea

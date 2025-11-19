@@ -53,15 +53,15 @@ export default function VictimDetailPage() {
       return;
     }
     try {
-      const res = await api.post(`/api/psychometrician/victims/${vic_id}/comprehensive-reports/`, {
+      await api.post(`/api/psychometrician/victims/${vic_id}/comprehensive-reports/`, {
         ...data,
         incident: selectedIncident?.incident_id,
       });
+
+      await fetchReports(); // refresh list
+
       setShowAddReportModal(false);
-      await fetchReports();
       setActiveTab("reports");
-      setSelectedReport(res.data);
-      setShowReportModal(true);
     } catch (err) {
       console.error("Failed to submit comprehensive report", err.response?.data || err);
     }
@@ -69,16 +69,23 @@ export default function VictimDetailPage() {
 
   const handleSubmitMonthlyReport = async (data) => {
     try {
-      const res = await api.post(`/api/psychometrician/victims/${vic_id}/monthly-progress-reports/`, {
+      await api.post(`/api/psychometrician/victims/${vic_id}/monthly-progress-reports/`, {
         ...data,
         incident: selectedIncident?.incident_id,
         report_month: new Date().toISOString().split("T")[0],
       });
+
+      await fetchReports(); // refresh list
+
+      // auto-expand the case section for the incident you just saved
+      setOpenReportsIndex(
+        incidentList.findIndex(i => i.incident_id === selectedIncident.incident_id)
+      );
+
+      // close the add form and go back to reports tab
       setShowAddReportModal(false);
-      await fetchReports();
       setActiveTab("reports");
-      setSelectedReport(res.data);
-      setShowReportModal(true);
+
     } catch (err) {
       console.error("Failed to submit monthly progress report", err.response?.data || err);
     }
@@ -449,7 +456,14 @@ export default function VictimDetailPage() {
                                 className="bg-white border rounded-lg shadow-sm p-4 mt-3 cursor-pointer hover:shadow-md transition"
                               >
                                 <div className="flex items-center justify-between mb-2">
-                                  <h4 className="text-md font-semibold text-[#292D96]">
+                                  <h4
+                                    className={`text-md font-semibold ${report.report_type?.toLowerCase().includes("nurse")
+                                      ? "text-blue-600"
+                                      : report.report_type?.toLowerCase().includes("psychometrician")
+                                        ? "text-red-600"
+                                        : "text-[#292D96]"
+                                      }`}
+                                  >
                                     {report.report_type} Report —{" "}
                                     {new Date(report.report_month).toLocaleDateString("en-US", {
                                       month: "long",

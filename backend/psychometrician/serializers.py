@@ -847,15 +847,55 @@ class ComprehensivePsychReportSerializer(serializers.ModelSerializer):
             "created_at",
         ]
 
+class SessionSummarySerializer(serializers.ModelSerializer):
+    session_type_names = serializers.SerializerMethodField()
 
+    class Meta:
+        model = Session
+        fields = ["sess_id", "sess_date_today", "session_type_names"]
+
+    def get_session_type_names(self, obj):
+        # Return all linked session type names
+        return [st.name for st in obj.sess_type.all()]
+    
 class MonthlyPsychProgressReportSerializer(serializers.ModelSerializer):
     prepared_by_name = serializers.CharField(source="prepared_by.full_name", read_only=True)
     prepared_by_id = serializers.IntegerField(source="prepared_by.pk", read_only=True)
+    individual_sessions = SessionSummarySerializer(many=True, read_only=True)
 
     class Meta:
         model = MonthlyPsychProgressReport
         fields = "__all__"
         read_only_fields = [
             "id", "created_at", "prepared_by",
-            "victim_name", "prepared_by_name"
+            "prepared_by_name", "prepared_by_id",
+            "victim", "incident", "report_month"   
         ]
+        extra_kwargs = {
+            "presentation": {"required": False},
+            "presentation_other": {"required": False},
+            "affect": {"required": False},
+            "affect_other": {"required": False},
+            "mood": {"required": False},
+            "mood_other": {"required": False},
+            "interpersonal": {"required": False},
+            "interpersonal_other": {"required": False},
+            "safety_issues": {"required": False},
+            "safety_issues_other": {"required": False},
+            "client_has": {"required": False},
+            "client_has_other": {"required": False},
+            "subjective_reports": {"required": False},
+            "subjective_reports_other": {"required": False},
+            "observations": {"required": False},
+            "observations_other": {"required": False},
+            "psychological_testing": {"required": False},
+            "psychological_testing_other": {"required": False},
+            "previous_diagnosis": {"required": False},
+            "latest_checkup_psychologist": {"required": False},
+            "latest_checkup_psychiatrist": {"required": False},
+            "on_medication": {"required": False},
+            "medication_name": {"required": False},
+            "medication_dosage": {"required": False},
+            "summary_of_results": {"required": False},
+            "recommendations": {"required": False},
+        }

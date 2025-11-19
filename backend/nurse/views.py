@@ -15,6 +15,10 @@ import time
 from datetime import date, timedelta
 from PIL import Image
 from shared_model.models import *
+from psychometrician.serializers import (
+    ComprehensivePsychReportSerializer,
+    MonthlyPsychProgressReportSerializer,
+)
 from shared_model.permissions import IsRole
 from cryptography.fernet import Fernet
 from shared_model.views import serve_encrypted_file
@@ -1352,24 +1356,52 @@ class NurseMonthlyReportViewSet(viewsets.ModelViewSet):
         ).order_by("-created_at")
 
     def perform_create(self, serializer):
-        official = self.request.user.official
+        official = getattr(self.request.user, "official", None)
         if not official or official.of_role != "Nurse":
             raise PermissionDenied("Only nurses can add nurse reports.")
 
-        # Incident is optional now — pick the first incident if not provided
+        # Incident is optional — pick the first incident if not provided
         incident_id = self.request.data.get("incident")
         incident = None
+        victim = None
         if incident_id:
             try:
                 incident = IncidentInformation.objects.get(pk=incident_id)
+                victim = incident.vic_id
             except IncidentInformation.DoesNotExist:
                 raise NotFound("Incident not found.")
 
         serializer.save(
             prepared_by=official,
             report_type="Nurse",
-            victim=incident.vic_id if incident else None,
+            victim=victim,
             incident=incident,
             report_month=date.today()  # auto-fill with today if not provided
         )
 
+    def perform_update(self, serializer):
+        official = getattr(self.request.user, "official", None)
+        if serializer.instance.prepared_by != official:
+            raise PermissionDenied("You can only edit your own nurse reports.")
+        serializer.save()
+
+# Read-only proxy for psychometrician comprehensive reports
+class PsychometricianComprehensiveReportReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ComprehensivePsychReport.objects.all()
+    serializer_class = ComprehensivePsychReportSerializer
+    permission_classes = [permissions.IsAuthenticated]  # ✅ allow nurses to view
+
+    def get_queryset(self):
+        vic_id = self.kwargs.get("vic_id")
+        return self.queryset.filter(victim__pk=vic_id).order_by("-created_at")
+
+
+# Read-only proxy for psychometrician monthly progress reports
+class PsychometricianMonthlyProgressReportReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = MonthlyPsychProgressReport.objects.all()
+    serializer_class = MonthlyPsychProgressReportSerializer
+    permission_classes = [permissions.IsAuthenticated]  # ✅ allow nurses to view
+
+    def get_queryset(self):
+        vic_id = self.kwargs.get("vic_id")
+        return self.queryset.filter(victim__pk=vic_id).order_by("-created_at")
