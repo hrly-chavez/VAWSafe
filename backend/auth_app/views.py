@@ -192,9 +192,9 @@ def check_dswd_exists(request):
 #                 if os.path.exists(f):
 #                     os.remove(f)
 
-def generate_strong_password(length=12):
-    if length < 12:
-        raise ValueError("Password length must be at least 12 characters.")
+def generate_strong_password(length=16):
+    if length < 16:
+        raise ValueError("Password length must be at least 16 characters.")
 
     # Define character sets
     lowercase = string.ascii_lowercase
@@ -251,7 +251,7 @@ class create_official(APIView):
 
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(12)
+            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
 
             # Ensure unique username
             username = base_username
@@ -260,14 +260,14 @@ class create_official(APIView):
                 counter += 1
                 username = f"{base_username}{counter}"
 
-            generated_password = generate_strong_password(length=12)
+            generated_password = generate_strong_password(length=16)
             user = User.objects.create_user(username=username, password=generated_password)
             status_value = "approved"
 
         elif role == "Social Worker":
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(12)
+            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
 
             username = base_username
             counter = 0
@@ -275,14 +275,14 @@ class create_official(APIView):
                 counter += 1
                 username = f"{base_username}{counter}"
 
-            generated_password = generate_strong_password(length=12)
+            generated_password = generate_strong_password(length=16)
             user = User.objects.create_user(username=username, password=generated_password)
             status_value = "approved"
 
         elif role == "Nurse":
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(12)
+            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
 
             username = base_username
             counter = 0
@@ -290,14 +290,14 @@ class create_official(APIView):
                 counter += 1
                 username = f"{base_username}{counter}"
 
-            generated_password = generate_strong_password(length=12)
+            generated_password = generate_strong_password(length=16)
             user = User.objects.create_user(username=username, password=generated_password)
             status_value = "approved"
 
         elif role == "Psychometrician":
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(12)
+            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
 
             username = base_username
             counter = 0
@@ -305,7 +305,7 @@ class create_official(APIView):
                 counter += 1
                 username = f"{base_username}{counter}"
 
-            generated_password = generate_strong_password(length=12)
+            generated_password = generate_strong_password(length=16)
             user = User.objects.create_user(username=username, password=generated_password)
             status_value = "approved"
         else:

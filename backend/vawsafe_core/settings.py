@@ -154,7 +154,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'vawsafe',
         'USER': 'postgres',
-        'PASSWORD': 'postgres', 
+        'PASSWORD': 'Caratao123', 
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -171,7 +171,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
         'OPTIONS': {
-            'min_length': 12,  # Minimum password length
+            'min_length': 16,  # Minimum password length
         }
     },
     {
@@ -282,3 +282,6 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # settings.py PARA NI SA KATUNG FORGOT PASS
 FRONTEND_URL = "http://localhost:3000"  # or your deployed React frontend URL
 DEFAULT_FROM_EMAIL = "carataojoegie@gmail.com"  # or your system email
+
+# Expiration time in seconds para nis change password sa admin side
+PASSWORD_RESET_TIMEOUT = 300  # 5 minutes

@@ -878,7 +878,7 @@ class PendingOfficials(viewsets.ModelViewSet):
                 username = f"{base_username}{counter}"
 
             # ✅ Generate secure password
-            generated_password = get_random_string(length=12)
+            generated_password = get_random_string(length=16)
 
             # ✅ Create user (password automatically hashed)
             user = User.objects.create_user(username=username, password=generated_password)

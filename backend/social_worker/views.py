@@ -109,11 +109,11 @@ def generate_session_docx(session_data, victim_id):
     """
 
     # Single template path
-    template_path = r"C:\Users\relon\Desktop\Templates\Session_Template.docx"
+    template_path = r"C:\Users\pc\Desktop\Templates\Session_Template.docx"
 
     # CREATE correct directory:
     # victim1/sessions/
-    base_dir = r"C:\Users\relon\Desktop\Templates"
+    base_dir = r"C:\Users\pc\Desktop\Templates"
     victim_folder = os.path.join(base_dir, f"victim{victim_id}")
     session_folder = os.path.join(victim_folder, "sessions")
     os.makedirs(session_folder, exist_ok=True)
@@ -347,7 +347,7 @@ class victim_detail(generics.RetrieveAPIView):
     serializer_class = VictimDetailSerializer
     lookup_field = "vic_id"
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker", "Nurse", "Psychometrician", "Home Life"]
+    allowed_roles = ["Social Worker", "Nurse", "Psychometrician", "Home Life", "DSWD"]
     
     def get_queryset(self):
         """
