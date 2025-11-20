@@ -1,164 +1,224 @@
-import { useState } from "react";
-import { Line, Bar } from "react-chartjs-2";
-
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
-  BarElement,
   Tooltip,
   Legend,
 } from "chart.js";
+import api from "../../../api/axios";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Tooltip,
-  Legend
-);
+// Import Heroicons
+import {
+  UserGroupIcon,
+  CalendarDaysIcon,
+  ExclamationTriangleIcon,
+  ClipboardDocumentListIcon,
+  BellIcon,
+} from "@heroicons/react/24/outline";
 
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
-// Sample dynamic data
-const monthlyVictimData = {
-  2023: [3, 5, 2, 4, 6, 7, 5, 3, 4, 6, 2, 1],
-  2024: [4, 6, 3, 5, 8, 9, 6, 4, 5, 7, 3, 2],
-};
+export default function SocialWorkerDashboard() {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [victimSummary, setVictimSummary] = useState({});
+  const [sessionSummary, setSessionSummary] = useState({});
+  const [monthlyVictimData, setMonthlyVictimData] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-const violenceTypeData = {
-  labels: ["Sexual", "Physical", "Psychological", "Economic"],
-  datasets: [
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const res = await api.get(`/api/social_worker/dashboard/summary/?year=${selectedYear}`);
+        const data = res.data;
+        setVictimSummary(data.victim_summary || {});
+        setSessionSummary(data.session_summary || {});
+        setMonthlyVictimData(data.monthly_report_rows.map((r) => r.totalVictims));
+        setNotifications(data.upcoming_sessions || []);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load dashboard data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, [selectedYear]);
+
+  if (loading) return <div className="p-10 text-center text-gray-500">Loading dashboard...</div>;
+  if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
+
+  const totalVictims = victimSummary.total_victims || 0;
+  const sessionsThisWeek = sessionSummary.sessions_this_week || 0;
+  const overdueSessions = sessionSummary.overdue_sessions || 0;
+  const pendingSessions = sessionSummary.pending_sessions || 0;
+
+  const kpiCards = [
     {
-      label: "Cases",
-      data: [12, 18, 9, 5],
-      backgroundColor: ["#F59E0B", "#EF4444", "#10B981", "#6366F1"],
+      label: "Total Registered Cases",
+      value: totalVictims,
+      bg: "from-blue-400 to-blue-600",
+      icon: <UserGroupIcon className="w-6 h-6 text-white" />,
     },
-  ],
-};
-
-const reportRows = [
-  {
-    month: "January",
-    totalVictims: 6,
-    sexual: 2,
-    physical: 3,
-    psychological: 1,
-    economic: 0,
-  },
-  {
-    month: "February",
-    totalVictims: 5,
-    sexual: 1,
-    physical: 2,
-    psychological: 1,
-    economic: 1,
-  },
-];
-
-export default function Dashboard() {
-  const [selectedYear, setSelectedYear] = useState("2024");
+    {
+      label: "Sessions This Week",
+      value: sessionsThisWeek,
+      bg: "from-green-400 to-emerald-500",
+      icon: <CalendarDaysIcon className="w-6 h-6 text-white" />,
+    },
+    {
+      label: "Ongoing Sessions",   
+      value: sessionSummary.ongoing_sessions || 0,  
+      bg: "from-yellow-400 to-orange-500",          
+      icon: <ExclamationTriangleIcon className="w-6 h-6 text-white" />, 
+    },
+    {
+      label: "Total Pending Sessions",
+      value: pendingSessions,
+      bg: "from-purple-400 to-pink-500",
+      icon: <ClipboardDocumentListIcon className="w-6 h-6 text-white" />,
+    },
+  ];
 
   const lineData = {
-    labels: [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-    ],
+    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     datasets: [
       {
-        label: "Total Victims",
-        data: monthlyVictimData[selectedYear],
-        borderColor: "#3B82F6",
-        backgroundColor: "#93C5FD",
-        pointBackgroundColor: "#1D4ED8",
+        label: "Victims Registered",
+        data: monthlyVictimData,
+        borderColor: "#6366F1",
+        backgroundColor: (context) => {
+          const chart = context.chart;
+          const { ctx, chartArea } = chart;
+          if (!chartArea) return "#6366F1";
+          const gradient = ctx.createLinearGradient(0, 0, 0, chartArea.bottom);
+          gradient.addColorStop(0, "rgba(99,102,241,0.4)");
+          gradient.addColorStop(1, "rgba(99,102,241,0.05)");
+          return gradient;
+        },
+        pointBackgroundColor: "#4338CA",
+        pointRadius: 5,
+        borderWidth: 3,
         fill: true,
-        tension: 0.3,
+        tension: 0.4,
       },
     ],
   };
 
-  const barOptions = {
-    indexAxis: "y",
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: { enabled: true },
-    },
-  };
-
   return (
-    <div className="px-6 py-8 space-y-10 bg-gray-50 font-sans">
-      {/* KPI Cards */}
+    <div className="p-4 md:p-8 space-y-8 font-inter bg-[#f7f9fc]">
+      {/* Header */}
+      <header>
+        <h1 className="text-3xl font-extrabold text-gray-800">Social Worker Dashboard</h1>
+        <p className="text-gray-500 mt-1">Quick overview of pending tasks and monthly performance.</p>
+      </header>
+
+      {/* KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: "Active Cases", value: 28 },
-          { label: "Resolved This Month", value: 6 },
-          { label: "Top Violence Type", value: "Physical (45%)" },
-          { label: "Pending Sessions", value: 3 },
-        ].map((kpi, idx) => (
+        {kpiCards.map((kpi, idx) => (
           <div
             key={idx}
-            className="p-5 rounded-xl bg-white shadow hover:shadow-md transition"
+            className={`p-6 rounded-2xl shadow-md text-white bg-gradient-to-r ${kpi.bg} transform hover:scale-105 transition`}
           >
-            <h3 className="text-2xl font-bold text-blue-800">{kpi.value}</h3>
-            <p className="text-sm mt-2 font-semibold text-blue-700">
-              {kpi.label}
-            </p>
+            <h3 className="text-3xl font-bold flex items-center gap-3">
+              {kpi.icon} {kpi.value}
+            </h3>
+            <p className="text-sm mt-2 font-semibold opacity-90">{kpi.label}</p>
           </div>
         ))}
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Line Chart */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-semibold mb-4 text-[#292D96]">
-            Monthly Victim Reports ({selectedYear})
-          </h2>
-          <div className="h-[300px]">
-            <Line
-              data={lineData}
-              options={{ responsive: true, maintainAspectRatio: false }}
-            />
-          </div>
-        </div>
-
-        {/* Horizontal Bar Chart */}
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-lg font-semibold mb-4 text-[#292D96]">
-            Violence Type Breakdown
-          </h2>
-          <div className="h-[300px]">
-            <Bar data={violenceTypeData} options={barOptions} />
-          </div>
-        </div>
-      </div>
-      {/* Monthly Report Table */}
-      <div className="bg-white rounded-xl shadow-md p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-          <h2 className="text-lg font-bold text-[#292D96]">
-            Monthly Reports – Haven for Women
-          </h2>
-          <div className="mt-2 sm:mt-0">
-            <label htmlFor="year" className="mr-2 text-sm font-medium text-gray-700">
-              Year:
-            </label>
+      {/* Chart + Notifications */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Chart */}
+        <div className="lg:col-span-2 p-6 bg-white rounded-xl card-shadow">
+          {/* Year filter header */}
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-800">
+              Monthly Case Report ({selectedYear})
+            </h2>
             <select
-              id="year"
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-white shadow-sm focus:outline-none focus:ring-1 focus:ring-[#292D96]"
+              className="border border-gray-300 rounded-md px-3 py-1 text-sm"
             >
-              {Object.keys(monthlyVictimData).map((year) => (
+              {[2023, 2024, 2025].map((year) => (
                 <option key={year} value={year}>
                   {year}
                 </option>
               ))}
             </select>
           </div>
+
+          {/* Chart itself */}
+          <div className="h-96">
+            <Line
+              data={lineData}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                  y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                },
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Notifications */}
+        <div className="lg:col-span-1 p-6 bg-amber-50 rounded-xl border-4 border-amber-400 card-shadow transition hover:shadow-lg">
+          <div className="flex items-center mb-4">
+            <BellIcon className="w-6 h-6 text-amber-600 mr-2 animate-pulse" />
+            <h2 className="text-xl font-bold text-amber-800">Upcoming Due Sessions</h2>
+          </div>
+          <p className="text-sm text-amber-700 mb-4 border-b border-amber-200 pb-3">
+            These cases require immediate attention and follow-up to maintain compliance.
+          </p>
+
+          <div className="space-y-4">
+            {notifications.length > 0 ? (
+              notifications.map((n) => (
+                <div
+                  key={n.id}
+                  className="flex justify-between items-center p-3 bg-amber-100 rounded-lg hover:bg-amber-200 transition"
+                >
+                  <div>
+                    <p className="font-semibold text-amber-900">
+                      Session {n.sess_num} - {n.victim}
+                    </p>
+                    <p className="text-xs text-amber-700">{n.type}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-amber-800">
+                      {new Date(n.date).toLocaleDateString("en-US")}
+                    </p>
+                    <Link
+                      to={`/social_worker/sessions/${n.id}`}
+                      className="text-xs text-amber-600 hover:text-amber-800 underline"
+                    >
+                      View
+                    </Link>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-amber-600">No sessions near due date.</p>
+            )}
+          </div>
+
+          <Link
+            to="/social_worker/sessions"
+            className="block mt-6 text-center text-sm font-semibold text-amber-600 hover:text-amber-900 transition"
+          >
+            View All Due Sessions →
+          </Link>
         </div>
       </div>
     </div>

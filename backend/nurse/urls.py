@@ -9,6 +9,9 @@ urlpatterns = [
     path("victims/search_face/", search_victim_facial.as_view(), name="victim-face-search"),
     path("case/<int:vic_id>/", VictimIncidentsView.as_view(), name="socialworker-view-incidents"),
 
+    # --- Nurse Dashboard ---
+    path("dashboard/summary/", NurseDashboardAPIView.as_view(), name="nurse-dashboard-summary"),
+
     #Session1
     path("sessions/pending&Ongoing/", scheduled_session_lists.as_view(), name="my-sessions"),
     path("sessions/<int:pk>/", scheduled_session_detail.as_view(), name="session-detail"),

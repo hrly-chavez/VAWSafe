@@ -27,6 +27,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from dswd.utils.logging import log_change
 from docxtpl import DocxTemplate
+from calendar import month_name
 
 def generate_consent_forms(victim_serializer_data, victim_id, assigned_official=None):
     """
@@ -1711,3 +1712,74 @@ class ServeVictimFacePhotoView(APIView):
         except VictimFaceSample.DoesNotExist:
             raise Http404("Victim face sample not found")
         return serve_encrypted_file(request, sample, sample.photo, content_type='image/jpeg')
+    
+    
+#============================= Social Worker Dashboard ======================================
+class SocialWorkerDashboardAPIView(APIView):
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['Social Worker']
+
+    def get(self, request):
+        today = date.today()
+        official = getattr(request.user, "official", None)
+
+        # Victim Summary
+        total_victims = Victim.objects.count()
+        victim_summary = {"total_victims": total_victims}
+
+        # Session Summary
+        sessions = Session.objects.filter(assigned_official=official)
+        week_ahead = today + timedelta(days=7)
+        sessions_this_week = sessions.filter(sess_next_sched__date__range=[today, week_ahead]).count()
+        ongoing_sessions = sessions.filter(sess_status="Ongoing").count()   
+        pending_sessions = sessions.filter(sess_status="Pending").count()
+        done_sessions = sessions.filter(sess_status="Done").count()       
+
+        session_summary = {
+            "sessions_this_week": sessions_this_week,
+            "ongoing_sessions": ongoing_sessions,
+            "pending_sessions": pending_sessions,
+            "done_sessions": done_sessions,   
+        }
+
+        # Monthly Victim Reports
+        incidents = IncidentInformation.objects.all()
+        report_rows = []
+        for i in range(1, 13):
+            month_incidents = [inc for inc in incidents if inc.incident_date and inc.incident_date.month == i]
+            report_rows.append({
+                "month": month_name[i],
+                "totalVictims": len(month_incidents),
+                "Physical_Violence": sum(1 for inc in month_incidents if inc.violence_type == "Physical Violence"),
+                "Physical_Abused": sum(1 for inc in month_incidents if inc.violence_type == "Physical Abused"),
+                "Psychological_Violence": sum(1 for inc in month_incidents if inc.violence_type == "Psychological Violence"),
+                "Psychological_Abuse": sum(1 for inc in month_incidents if inc.violence_type == "Psychological Abuse"),
+                "Economic_Abused": sum(1 for inc in month_incidents if inc.violence_type == "Economic Abused"),
+                "Strandee": sum(1 for inc in month_incidents if inc.violence_type == "Strandee"),
+                "Sexually_Abused": sum(1 for inc in month_incidents if inc.violence_type == "Sexually Abused"),
+                "Sexually_Exploited": sum(1 for inc in month_incidents if inc.violence_type == "Sexually Exploited"),
+            })
+
+        # Notifications: sessions within 3 days for this official
+        upcoming_sessions = sessions.filter(
+            sess_next_sched__date__range=(today, today + timedelta(days=3))
+        ).filter(
+            Q(progress__official=official, progress__is_done=False) |
+            ~Q(progress__official=official)   # no progress yet for this official
+        ).distinct()
+
+        return Response({
+            "victim_summary": VictimSummarySerializer(victim_summary).data,
+            "session_summary": SessionSummarySerializer(session_summary).data,
+            "monthly_report_rows": MonthlyReportRowSerializer(report_rows, many=True).data,
+            "upcoming_sessions": [
+                {
+                    "id": s.pk,
+                    "sess_num": s.sess_num,
+                    "victim": s.incident_id.vic_id.full_name if s.incident_id and s.incident_id.vic_id else None,
+                    "type": s.sess_type.first().name if s.sess_type.exists() else "N/A",
+                    "date": s.sess_next_sched,
+                }
+                for s in upcoming_sessions
+            ]
+        })

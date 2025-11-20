@@ -30,6 +30,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from dswd.utils.logging import log_change
 from docxtpl import DocxTemplate
+from calendar import month_name
+from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -1389,7 +1391,7 @@ class NurseMonthlyReportViewSet(viewsets.ModelViewSet):
 class PsychometricianComprehensiveReportReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = ComprehensivePsychReport.objects.all()
     serializer_class = ComprehensivePsychReportSerializer
-    permission_classes = [permissions.IsAuthenticated]  # ✅ allow nurses to view
+    permission_classes = [permissions.IsAuthenticated]  
 
     def get_queryset(self):
         vic_id = self.kwargs.get("vic_id")
@@ -1400,8 +1402,78 @@ class PsychometricianComprehensiveReportReadOnlyViewSet(viewsets.ReadOnlyModelVi
 class PsychometricianMonthlyProgressReportReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = MonthlyPsychProgressReport.objects.all()
     serializer_class = MonthlyPsychProgressReportSerializer
-    permission_classes = [permissions.IsAuthenticated]  # ✅ allow nurses to view
+    permission_classes = [permissions.IsAuthenticated]  
 
     def get_queryset(self):
         vic_id = self.kwargs.get("vic_id")
         return self.queryset.filter(victim__pk=vic_id).order_by("-created_at")
+    
+#============================= Nurse Dashboard ======================================
+class NurseDashboardAPIView(APIView):
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['Nurse']
+
+    def get(self, request):
+        today = date.today()
+        official = getattr(request.user, "official", None)
+
+        # Victim Summary: count all victims (no role filter)
+        total_victims = Victim.objects.count()
+        victim_summary = {"total_victims": total_victims}
+
+        # Session Summary: scoped to the logged-in nurse
+        sessions = Session.objects.filter(assigned_official=official)
+        week_ahead = today + timedelta(days=7)
+
+        total_assigned_sessions = sessions.count()
+        sessions_this_week = sessions.filter(
+            sess_next_sched__date__range=[today, week_ahead]
+        ).count()
+        pending_sessions = sessions.filter(sess_status="Pending").count()
+        ongoing_sessions = sessions.filter(sess_status="Ongoing").count()
+
+        session_summary = {
+            "total_assigned_sessions": total_assigned_sessions,
+            "sessions_this_week": sessions_this_week,
+            "pending_sessions": pending_sessions,
+            "ongoing_sessions": ongoing_sessions,
+        }
+
+        # Monthly Victim Reports: loop through ALL incidents (no role filter)
+        incidents = IncidentInformation.objects.all()
+        report_rows = []
+        for i in range(1, 13):
+            month_incidents = [
+                inc for inc in incidents
+                if inc.incident_date and inc.incident_date.month == i
+            ]
+            report_rows.append({
+                "month": month_name[i],
+                "totalVictims": len(month_incidents)
+            })
+
+        monthly_report_data = MonthlyReportRowSerializer(report_rows, many=True).data
+
+        # Notifications: sessions within 3 days for this official
+        upcoming_sessions = sessions.filter(
+            sess_next_sched__date__range=(today, today + timedelta(days=3))
+        ).filter(
+            Q(progress__official=official, progress__is_done=False) |
+            ~Q(progress__official=official)   # no progress yet for this official
+        ).distinct()
+
+        return Response({
+            "victim_summary": VictimSummarySerializer(victim_summary).data,
+            "session_summary": session_summary,  # simplified summary
+            "monthly_report_rows": monthly_report_data,
+            "upcoming_sessions": [
+                {
+                    "id": s.pk,
+                    "sess_num": s.sess_num,
+                    "victim": s.incident_id.vic_id.full_name if s.incident_id and s.incident_id.vic_id else None,
+                    "type": s.sess_type.first().name if s.sess_type.exists() else "N/A",
+                    "date": s.sess_next_sched,
+                }
+                for s in upcoming_sessions
+            ]
+        })

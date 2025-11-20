@@ -864,3 +864,17 @@ class MonthlyProgressReportSerializer(serializers.ModelSerializer):
         if errors:
             raise serializers.ValidationError(errors)
         return data
+    
+# ====================== NURSE DASHBOARD SERIALIZERS ======================
+class VictimSummarySerializer(serializers.Serializer):
+    total_victims = serializers.IntegerField()   
+
+class SessionSummarySerializer(serializers.Serializer):
+    total_assigned_sessions = serializers.IntegerField()
+    sessions_this_week = serializers.IntegerField()
+    pending_sessions = serializers.IntegerField()
+    ongoing_sessions = serializers.IntegerField()   
+
+class MonthlyReportRowSerializer(serializers.Serializer):
+    month = serializers.CharField()
+    totalVictims = serializers.IntegerField()   
