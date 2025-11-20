@@ -21,7 +21,7 @@ export default function LegalAgreement({ setLegalAccepted }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
       <div
         className="bg-white rounded-xl p-8 w-full max-w-3xl shadow-xl max-h-[90vh] overflow-y-scroll"
         style={{

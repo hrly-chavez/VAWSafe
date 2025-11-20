@@ -204,8 +204,8 @@ const LoginPage = () => {
 
     try {
       const blinkRes = await apiFetch(
-        // "http://localhost:8000/api/auth/blink-check/",
-        "http://192.168.254.199:8000/api/auth/blink-check/",
+        "http://localhost:8000/api/auth/blink-check/",
+        // "http://192.168.254.199:8000/api/auth/blink-check/",
         {
           method: "POST",
           body: blinkForm,
@@ -240,8 +240,8 @@ const LoginPage = () => {
       });
 
       const loginRes = await apiFetch(
-        // "http://localhost:8000/api/auth/face-login/",
-        "http://192.168.254.199:8000/api/auth/face-login/",
+        "http://localhost:8000/api/auth/face-login/",
+        // "http://192.168.254.199:8000/api/auth/face-login/",
         {
           method: "POST",
           body: loginForm,
@@ -324,8 +324,8 @@ const LoginPage = () => {
     }
 
     try {
-      // const response = await apiFetch("http://localhost:8000/api/auth/manual-login/", {
-      const response = await apiFetch("http://192.168.254.199:8000/api/auth/manual-login/", {
+      const response = await apiFetch("http://localhost:8000/api/auth/manual-login/", {
+      // const response = await apiFetch("http://192.168.254.199:8000/api/auth/manual-login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -441,8 +441,8 @@ const LoginPage = () => {
   useEffect(() => {
     const checkDSWD = async () => {
       try {
-        // const res = await fetch("http://localhost:8000/api/auth/check-dswd/");
-        const res = await fetch("http://192.168.254.199:8000/api/auth/check-dswd/");
+        const res = await fetch("http://localhost:8000/api/auth/check-dswd/");
+        // const res = await fetch("http://192.168.254.199:8000/api/auth/check-dswd/");
         const data = await res.json();
         if (!data.dswd_exists) {
           // Automatically trigger RegisterUser modal for DSWD

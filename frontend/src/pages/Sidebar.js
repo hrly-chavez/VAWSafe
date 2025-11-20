@@ -110,7 +110,7 @@ export default function Sidebar({ sidebarOpen, toggleSidebar }) {
   const displayName =
     user?.name || `${user?.fname || ""} ${user?.lname || ""}`.trim();
   // Use the correct field for the user's profile photo
-  const profilePhoto = user?.of_photo ? `http://192.168.254.199:8000${user.of_photo}` : "/images/bussiness-man.png"; // Fallback to default if no photo is found
+  const profilePhoto = user?.of_photo ? `http://localhost:8000${user.of_photo}` : "/images/bussiness-man.png"; // Fallback to default if no photo is found
 
   // Handle dynamic redirection based on user role
   const handleProfileClick = () => {

@@ -57,8 +57,8 @@ else:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ['192.168.254.199']
+ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = ['192.168.254.199']
 
 
 
@@ -235,22 +235,22 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# CSRF_TRUSTED_ORIGINS = [
-#     "http://localhost:3000",
-#     "http://127.0.0.1:3000",
-# ]
-
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",
-#     "http://127.0.0.1:3000",
-# ]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://192.168.254.199:3000",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
-CSRF_TRUSTED_ORIGINS = [
-    "http://192.168.254.199:3000",
-]
+
+# CORS_ALLOWED_ORIGINS = [
+#     "http://192.168.254.199:3000",
+# ]
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://192.168.254.199:3000",
+# ]
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -275,7 +275,7 @@ from datetime import timedelta
 #KANI KAY PARA SA HTTPONLY
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),      # short
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),       # or 30/90 days if you want
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),       # or 30/90 days if you want
     "ROTATE_REFRESH_TOKENS": True,                      # optional
     "BLACKLIST_AFTER_ROTATION": True,                   # if using blacklist app
 }
