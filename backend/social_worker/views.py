@@ -572,22 +572,14 @@ class scheduled_session_lists(generics.ListAPIView):
 class scheduled_session_detail(generics.RetrieveUpdateAPIView):  
     """
     GET: Retrieve a single session detail.
-    PATCH: Update session info (e.g., type, description, location).
     this also handles the display for service in the frontend
     """
     serializer_class = SessionDetailSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        official = getattr(user, "official", None)
-        role = getattr(official, "of_role", None)
-        if not role:
-            return Session.objects.none()
-
-        return Session.objects.filter(
-            incident_id__sessions__assigned_official=official
-        ).distinct()
+    # Allow ANY authenticated official to view ANY session.
+        return Session.objects.all()
 
 class SessionTypeListView(generics.ListAPIView):
     """GET: List all available session types for dropdowns."""
@@ -1068,20 +1060,87 @@ def close_case(request, incident_id):
 
     return Response({"message": "Case closed successfully!"}, status=200)
    
+# @api_view(["GET", "POST"])
+# @permission_classes([IsAuthenticated])
+# def schedule_next_session(request):
+#     """
+#     Also supports simplified creation for Session 2+ (no schedule/location).
+#     """
+#     user = request.user
+#     official = getattr(user, "official", None)
+#     role = getattr(official, "of_role", None)
+
+#     if not official or not role:
+#         return Response({"error": "Only registered officials can access this endpoint."},
+#                         status=status.HTTP_403_FORBIDDEN)
+
+#     if request.method == "GET":
+#         sessions = Session.objects.filter(
+#             assigned_official=official,
+#             sess_status__in=["Pending", "Ongoing"]
+#         ).order_by("-sess_next_sched")
+#         serializer = SessionCRUDSerializer(sessions, many=True)
+#         return Response(serializer.data)
+
+#     elif request.method == "POST":
+#         data = request.data.copy()
+
+#         # If frontend sends multiple officials → treat as shared session
+#         assigned_officials = data.get("assigned_official", None)
+
+#         # Ensure assigned_officials is a proper list of IDs
+#         if isinstance(assigned_officials, str):
+#             try:
+#                 import json
+#                 assigned_officials = json.loads(assigned_officials)
+#             except Exception:
+#                 assigned_officials = [assigned_officials]
+
+#         if not assigned_officials:
+#             # fallback for individual sessions (Session 2+)
+#             assigned_officials = [official.pk]
+
+#         data["assigned_official"] = assigned_officials
+
+#         # Serialize and save the session
+#         serializer = SessionCRUDSerializer(data=data, context={"request": request})
+#         serializer.is_valid(raise_exception=True)
+#         session = serializer.save()
+
+#         # Create SessionProgress entries for all assigned officials
+#         for off_id in assigned_officials:
+#             try:
+#                 off_obj = Official.objects.get(pk=off_id)
+#                 SessionProgress.objects.get_or_create(session=session, official=off_obj)
+#             except Official.DoesNotExist:
+#                 continue
+
+#         return Response(
+#             SessionCRUDSerializer(session, context={"request": request}).data,
+#             status=status.HTTP_201_CREATED,
+#         )
+
+
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def schedule_next_session(request):
     """
-    Also supports simplified creation for Session 2+ (no schedule/location).
+    Used for creating sessions.
+    - Session 1 (intake) requires the frontend to provide assigned_official (at least 1).
+      The view will NOT auto-assign the logged-in official for Session 1.
+    - Session 2+ (individual) will auto-assign the logged-in official if none provided.
     """
     user = request.user
     official = getattr(user, "official", None)
     role = getattr(official, "of_role", None)
 
     if not official or not role:
-        return Response({"error": "Only registered officials can access this endpoint."},
-                        status=status.HTTP_403_FORBIDDEN)
+        return Response(
+            {"error": "Only registered officials can access this endpoint."},
+            status=status.HTTP_403_FORBIDDEN
+        )
 
+    # GET: return pending/ongoing sessions for this official
     if request.method == "GET":
         sessions = Session.objects.filter(
             assigned_official=official,
@@ -1090,13 +1149,14 @@ def schedule_next_session(request):
         serializer = SessionCRUDSerializer(sessions, many=True)
         return Response(serializer.data)
 
+    # POST: create a session (used by both Schedule.js and CreateSession.js)
     elif request.method == "POST":
         data = request.data.copy()
 
-        # If frontend sends multiple officials → treat as shared session
-        assigned_officials = data.get("assigned_official", None)
+        # Read assigned_officials from frontend (can be [], or list of IDs, or JSON string)
+        assigned_officials = data.get("assigned_official")
 
-        # Ensure assigned_officials is a proper list of IDs
+        # Normalize string->list if necessary
         if isinstance(assigned_officials, str):
             try:
                 import json
@@ -1104,18 +1164,33 @@ def schedule_next_session(request):
             except Exception:
                 assigned_officials = [assigned_officials]
 
-        if not assigned_officials:
-            # fallback for individual sessions (Session 2+)
-            assigned_officials = [official.pk]
+        # Ensure we have a list if frontend didn't include the key
+        if assigned_officials is None:
+            assigned_officials = []
 
+        # ---- Detect whether this is the FIRST session for the incident (Session 1) ----
+        incident_id = data.get("incident_id")
+        is_first_session = False
+        if incident_id:
+            existing = Session.objects.filter(incident_id=incident_id).count()
+            is_first_session = (existing == 0)
+
+        # ---- Behavior:
+        #   - If first session: DO NOT auto-assign logged-in official (leave assigned_officials as-is)
+        #   - Else (Session 2+): auto-assign logged-in official if none provided
+        if not is_first_session:
+            if not assigned_officials:
+                assigned_officials = [official.pk]
+
+        # Put normalized assigned_officials back into payload
         data["assigned_official"] = assigned_officials
 
-        # Serialize and save the session
+        # Serialize & save (serializer contains the "must pick official for session1" check)
         serializer = SessionCRUDSerializer(data=data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         session = serializer.save()
 
-        # Create SessionProgress entries for all assigned officials
+        # Create SessionProgress entries for assigned officials (if any)
         for off_id in assigned_officials:
             try:
                 off_obj = Official.objects.get(pk=off_id)
