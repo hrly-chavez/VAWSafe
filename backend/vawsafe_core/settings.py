@@ -57,7 +57,9 @@ else:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.254.199']
+
 
 
 # Application definition
@@ -152,7 +154,7 @@ WSGI_APPLICATION = 'vawsafe_core.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'vawsafe',
+        'NAME': 'practice',
         'USER': 'postgres',
         'PASSWORD': 'Caratao123', 
         'HOST': 'localhost',
@@ -210,6 +212,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+# settings.py
+STATICFILES_DIRS = [BASE_DIR / "frontend/build/static"]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -231,14 +235,21 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+# ]
+
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:3000",
+#     "http://127.0.0.1:3000",
+# ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
+    "http://192.168.254.199:3000",
+]
+CSRF_TRUSTED_ORIGINS = [
+    "http://192.168.254.199:3000",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
