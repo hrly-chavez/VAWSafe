@@ -333,6 +333,18 @@ class Victim(models.Model):
     def full_name(self):
         parts = [self.vic_first_name, self.vic_middle_name, self.vic_last_name, self.vic_extension]
         return " ".join(filter(None, parts))
+    
+    @property
+    def age(self):
+        if not self.vic_birth_date:
+            return None
+        
+        today = date.today()
+        return (
+            today.year
+            - self.vic_birth_date.year
+            - ((today.month, today.day) < (self.vic_birth_date.month, self.vic_birth_date.day))
+        )
  
 class VictimFaceSample(models.Model):
     victim = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name="face_samples")
@@ -374,6 +386,18 @@ class Perpetrator(models.Model):
 
     def __str__(self):
         return f"{self.per_last_name}, {self.per_first_name}"
+    
+    @property
+    def age(self):
+        if not self.per_birth_date:
+            return None
+        
+        today = date.today()
+        return (
+            today.year
+            - self.per_birth_date.year
+            - ((today.month, today.day) < (self.per_birth_date.month, self.per_birth_date.day))
+        )
   
 class ContactPerson(models.Model):
     cont_fname = EncryptedCharField(max_length=512, blank=True, null=True)
@@ -395,18 +419,19 @@ class ContactPerson(models.Model):
     # new FK to IncidentInformation
     incident = models.ForeignKey("IncidentInformation", on_delete=models.CASCADE, related_name="contact_persons")
 
+    @property
+    def age(self):
+        if not self.cont_birth_date:
+            return None
+        
+        today = date.today()
+        return (
+            today.year
+            - self.cont_birth_date.year
+            - ((today.month, today.day) < (self.cont_birth_date.month, self.cont_birth_date.day))
+        )
+
 class IncidentInformation(models.Model): #Case in the frontend
-    VIOLENCE_TYPE = [
-        ('Physical Violence', 'Physical Violence'),
-        ('Physical Abused', 'Physical Abused'),
-        ('Psychological Violence', 'Psychological Violence'),
-        ('Psychological Abuse', 'Psychological Abuse'),
-        ('Economic Abused', 'Economic Abused'),
-        ('Strandee', 'Strandee'),
-        ('Sexually Abused', 'Sexually Abused'),
-        ('Sexually Exploited', 'Sexually Exploited'),
-    ]
-    
     INCIDENT_CHOICES = [
         ('Pending','Pending'),
         ('Ongoing','Ongoing'),
@@ -417,7 +442,7 @@ class IncidentInformation(models.Model): #Case in the frontend
     incident_id = models.AutoField(primary_key=True)
     incident_num = EncryptedIntegerField(null=True,blank=True) #case number 1,2,3...
     incident_status= EncryptedCharField(max_length=512, choices=INCIDENT_CHOICES,default='Pending') #case status
-    violence_type = EncryptedCharField(max_length=512, choices=VIOLENCE_TYPE, null=True, blank=True)
+    violence_type = EncryptedCharField(max_length=512, null=True, blank=True)
     violence_subtype = EncryptedCharField(max_length=512, null=True, blank=True)
 
     incident_date = EncryptedDateField(blank=True, null=True)
@@ -534,6 +559,7 @@ class Evidence(models.Model):
         return f"Evidence {self.id} for Incident {self.incident_id}"
     
 #=======================================REPORT================================== 
+# nurse report
 class MonthlyProgressReport(models.Model):
     REPORT_TYPE_CHOICES = [
         ("Nurse", "Nurse"),
