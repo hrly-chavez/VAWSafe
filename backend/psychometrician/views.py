@@ -26,6 +26,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from dswd.utils.logging import log_change
 from docxtpl import DocxTemplate
+from django.shortcuts import get_object_or_404
 
 logger = logging.getLogger(__name__)
 
@@ -279,22 +280,14 @@ class scheduled_session_lists(generics.ListAPIView):
 class scheduled_session_detail(generics.RetrieveUpdateAPIView):  
     """
     GET: Retrieve a single session detail.
-    PATCH: Update session info (e.g., type, description, location).
     this also handles the display for service in the frontend
     """
     serializer_class = SessionDetailSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        official = getattr(user, "official", None)
-        role = getattr(official, "of_role", None)
-        if not role:
-            return Session.objects.none()
-
-        return Session.objects.filter(
-            incident_id__sessions__assigned_official=official
-        ).distinct()
+    # Allow ANY authenticated official to view ANY session.
+        return Session.objects.all()
 
 class SessionTypeListView(generics.ListAPIView):
     """GET: List all available session types for dropdowns."""
@@ -1339,3 +1332,79 @@ class ServeVictimFacePhotoView(APIView):
         except VictimFaceSample.DoesNotExist:
             raise Http404("Victim face sample not found")
         return serve_encrypted_file(request, sample, sample.photo, content_type='image/jpeg')
+    
+# ========================= REPORTS =========================
+class ComprehensivePsychReportViewSet(viewsets.ModelViewSet):
+    queryset = ComprehensivePsychReport.objects.all()
+    serializer_class = ComprehensivePsychReportSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Psychometrician"]
+
+    def get_queryset(self):
+        vic_id = self.kwargs.get("vic_id")
+        return self.queryset.filter(victim_id=vic_id)
+
+    def perform_create(self, serializer):
+        vic_id = self.kwargs.get("vic_id")
+        victim = get_object_or_404(Victim, pk=vic_id)
+
+        official = getattr(self.request.user, "official", None)
+        if not official or official.of_role != "Psychometrician":
+            raise PermissionDenied("Only psychometricians can add comprehensive reports.")
+
+        # Attach incident automatically from request data
+        incident_id = self.request.data.get("incident")
+        incident = get_object_or_404(IncidentInformation, pk=incident_id)
+
+        # Auto-fill report_month with today's date
+        today = date.today()
+
+        serializer.save(
+            victim=victim,
+            prepared_by=official,
+            incident=incident,
+            report_month=today
+        )
+
+class MonthlyPsychProgressReportViewSet(viewsets.ModelViewSet):
+    queryset = MonthlyPsychProgressReport.objects.all()
+    serializer_class = MonthlyPsychProgressReportSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Psychometrician"]
+
+    def get_queryset(self):
+        vic_id = self.kwargs.get("vic_id")
+        return self.queryset.filter(victim_id=vic_id)
+
+    def perform_create(self, serializer):
+        vic_id = self.kwargs.get("vic_id")
+        victim = get_object_or_404(Victim, pk=vic_id)
+
+        official = getattr(self.request.user, "official", None)
+        if not official or official.of_role != "Psychometrician":
+            raise PermissionDenied("Only psychometricians can add monthly progress reports.")
+
+        incident_id = self.request.data.get("incident")
+        incident = get_object_or_404(IncidentInformation, pk=incident_id)
+
+        today = date.today()
+
+        report = serializer.save(
+            victim=victim,
+            prepared_by=official,
+            incident=incident,
+            report_month=today
+        )
+
+        sessions = Session.objects.filter(incident_id=incident, incident_id__vic_id=victim)
+        report.individual_sessions.set(sessions)
+
+    def perform_update(self, serializer):
+        official = self.request.user.official
+        if serializer.instance.prepared_by != official:
+            raise PermissionDenied("You can only edit your own monthly progress reports.")
+        report = serializer.save()
+
+        # Keep sessions in sync on update too
+        sessions = Session.objects.filter(victim=report.victim, incident=report.incident)
+        report.individual_sessions.set(sessions)

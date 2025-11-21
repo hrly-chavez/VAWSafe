@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import api from "../../../api/axios"; 
+import api from "../../../api/axios";
 import EditProfileModal from "./EditProfileModal";
-import ChangePasswordModal from "./ChangePasswordModal"; // We'll create this modal
+import ChangePasswordModal from "./ChangePasswordModal";
 
 export default function NurseProfile() {
   const [officialData, setOfficialData] = useState(null);
@@ -10,12 +10,12 @@ export default function NurseProfile() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
 
-
   useEffect(() => {
     setLoading(true);
     setError("");
 
-    api.get("/api/dswd/profile/retrieve/")
+    api
+      .get("/api/dswd/profile/retrieve/")
       .then((res) => {
         setOfficialData(res.data);
         setLoading(false);
@@ -33,59 +33,80 @@ export default function NurseProfile() {
   const handleSaveProfile = (updatedData) => setOfficialData(updatedData);
 
   return (
-    <div className="p-6 font-sans max-w-5xl mx-auto">
-      <h1 className="text-2xl md:text-3xl font-bold text-[#292D96] mb-8">
+    <div className="p-6 font-sans max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold text-[#292D96] mb-8 text-center md:text-left">
         My Profile
       </h1>
 
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Profile Image */}
-        <div className="flex-shrink-0 w-40 h-40 md:w-48 md:h-48 mx-auto md:mx-0">
-          <img
-            src={`http://localhost:8000${officialData.of_photo || "/media/photos/placeholder.jpg"}`}
-            alt="Profile"
-            className="w-full h-full rounded-full object-cover border-4 border-gray-200 shadow-lg"
-          />
-        </div>
+      {/* Profile Container */}
+      <div className="bg-white rounded-xl shadow-md p-6 md:p-8 border border-gray-200">
+        <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-center md:items-start">
 
-        {/* Profile Details */}
-        <div className="flex-1 flex flex-col justify-between">
-          <div className="space-y-2">
-            <p className="text-2xl font-semibold text-gray-800">{officialData.full_name}</p>
-            <p className="text-sm text-gray-500">{officialData.of_role}</p>
-            <p className="text-sm text-gray-500">{officialData.of_contact || "No contact available"}</p>
-            <p className="text-sm text-gray-500">{officialData.of_email || "No email available"}</p>
-            <p className="text-sm text-gray-500">Date of Birth: {officialData.of_dob}</p>
-            <p className="text-sm text-gray-500">Place of Birth: {officialData.of_pob}</p>
+          {/* Profile Image */}
+          <div className="w-36 h-36 md:w-44 md:h-44 rounded-full overflow-hidden border-4 border-gray-200 shadow-lg">
+            <img
+              src={`http://localhost:8000${officialData.of_photo || "/media/photos/placeholder.jpg"}`}
+              alt="Profile"
+              className="w-full h-full object-cover"
+            />
           </div>
 
-          {/* Address Card */}
-          <div className="mt-4 bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
-            <h3 className="font-semibold text-gray-700 mb-2">Address</h3>
-            <div className="text-sm text-gray-600 space-y-1">
-              <p><strong>Province:</strong> {officialData.address?.province_name || "—"}</p>
-              <p><strong>Municipality:</strong> {officialData.address?.municipality_name || "—"}</p>
-              <p><strong>Barangay:</strong> {officialData.address?.barangay_name || "—"}</p>
-              <p><strong>Sitio:</strong> {officialData.address?.sitio || "—"}</p>
-              <p><strong>Street:</strong> {officialData.address?.street || "—"}</p>
+          {/* Profile Information */}
+          <div className="flex-1 w-full">
+            {/* Basic Info */}
+            <div className="space-y-1 mb-4">
+              <p className="text-2xl font-semibold text-gray-900">
+                {officialData.full_name}
+              </p>
+              <p className="text-sm text-gray-600">{officialData.of_role}</p>
+              <p className="text-sm text-gray-600">{officialData.of_email}</p>
+              <p className="text-sm text-gray-600">
+                {officialData.of_contact || "No contact available"}
+              </p>
             </div>
-          </div>
 
-          {/* Action Buttons */}
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              onClick={() => setShowEditModal(true)}
-              className="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 transition"
-            >
-              Edit Profile
-            </button>
+            {/* Additional Info */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
+                <p className="font-semibold text-gray-700 mb-1">Date of Birth</p>
+                <p className="text-gray-600">{officialData.of_dob || "N/A"}</p>
+              </div>
 
-            <button
-              onClick={() => setShowChangePassword(true)}
-              className="bg-green-500 text-white px-5 py-2 rounded-lg hover:bg-green-600 transition ml-4"
-            >
-              Change Password / Username
-            </button>
+              <div className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
+                <p className="font-semibold text-gray-700 mb-1">Place of Birth</p>
+                <p className="text-gray-600">{officialData.of_pob || "N/A"}</p>
+              </div>
+            </div>
+
+            {/* Address Card */}
+            <div className="mt-5 bg-gray-50 p-5 rounded-lg shadow-sm border border-gray-200">
+              <h3 className="font-semibold text-gray-700 mb-3">Address</h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <p><strong>Province:</strong> {officialData.address?.province_name || "N/A"}</p>
+                <p><strong>Municipality:</strong> {officialData.address?.municipality_name || "N/A"}</p>
+                <p><strong>Barangay:</strong> {officialData.address?.barangay_name || "N/A"}</p>
+                <p><strong>Sitio:</strong> {officialData.address?.sitio || "N/A"}</p>
+                <p><strong>Street:</strong> {officialData.address?.street || "N/A"}</p>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-6 flex flex-wrap gap-3">
+              <button
+                onClick={() => setShowEditModal(true)}
+                className="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm"
+              >
+                Edit Profile
+              </button>
+
+              <button
+                onClick={() => setShowChangePassword(true)}
+                className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition shadow-sm"
+              >
+                Change Password / Username
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -102,7 +123,6 @@ export default function NurseProfile() {
       {showChangePassword && (
         <ChangePasswordModal
           onClose={() => setShowChangePassword(false)}
-          // You can add an onSave function here if needed
         />
       )}
     </div>

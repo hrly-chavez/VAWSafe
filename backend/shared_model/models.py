@@ -602,14 +602,15 @@ class MonthlyProgressReport(models.Model):
                     ((today.month, today.day) < (self.victim.vic_birth_date.month, self.victim.vic_birth_date.day))
                 )
 
-        # Auto-calculate BMI category
+        # Auto-calculate BMI and category
         try:
-            h = float(self.height)
-            w = float(self.weight)
-            if self.height and self.weight and self.bmi:
-                height_m = h / 100 if self.heightUnit == "cm" else h * 0.3048
-                weight_kg = w if self.weightUnit == "kg" else w * 0.453592
+            if self.height and self.weight:
+                h = float(self.height)
+                w = float(self.weight)
+                height_m = h / 100  # assume cm
+                weight_kg = w       # assume kg
                 bmi_val = weight_kg / (height_m * height_m)
+                self.bmi = round(bmi_val, 1)
 
                 if self.age and self.age >= 18:
                     if bmi_val < 18.5:
@@ -627,10 +628,81 @@ class MonthlyProgressReport(models.Model):
 
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return f"{self.report_type} Report for {self.name} - {self.report_month.strftime('%B %Y')}"
+# ======================= PSYCHOMETRICIAN REPORTS =======================
 
+class ComprehensivePsychReport(models.Model):
+    victim = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name="comprehensive_psych_reports")
+    incident = models.ForeignKey(IncidentInformation, on_delete=models.CASCADE, related_name="comprehensive_psych_reports")
+    report_month = models.DateField()
+    prepared_by = models.ForeignKey(Official, on_delete=models.SET_NULL, null=True, blank=True)
+
+    reason_for_referral = models.TextField(blank=True, null=True)
+    brief_history = models.TextField(blank=True, null=True)
+    behavioral_observation = models.TextField(blank=True, null=True)
+    test_results_discussion = models.TextField(blank=True, null=True)
+    recommendations = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comprehensive Psych Report for {self.victim.full_name} - {self.report_month.strftime('%B %Y')}"
     
+class MonthlyPsychProgressReport(models.Model):
+    victim = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name="monthly_psych_progress_reports")
+    incident = models.ForeignKey(IncidentInformation, on_delete=models.CASCADE, related_name="monthly_psych_progress_reports")
+    report_month = models.DateField()
+    prepared_by = models.ForeignKey(Official, on_delete=models.SET_NULL, null=True, blank=True)
+
+    # --- Checkbox groups with "other" text ---
+    presentation = models.JSONField(blank=True, null=True)
+    presentation_other = models.CharField(max_length=255, blank=True, null=True)
+
+    affect = models.JSONField(blank=True, null=True)
+    affect_other = models.CharField(max_length=255, blank=True, null=True)
+
+    mood = models.JSONField(blank=True, null=True)
+    mood_other = models.CharField(max_length=255, blank=True, null=True)
+
+    interpersonal = models.JSONField(blank=True, null=True)
+    interpersonal_other = models.CharField(max_length=255, blank=True, null=True)
+
+    safety_issues = models.JSONField(blank=True, null=True)
+    safety_issues_other = models.CharField(max_length=255, blank=True, null=True)
+
+    client_has = models.JSONField(blank=True, null=True)
+    client_has_other = models.CharField(max_length=255, blank=True, null=True)
+
+    subjective_reports = models.JSONField(blank=True, null=True)
+    subjective_reports_other = models.CharField(max_length=255, blank=True, null=True)
+
+    observations = models.JSONField(blank=True, null=True)
+    observations_other = models.CharField(max_length=255, blank=True, null=True)
+
+    psychological_testing = models.JSONField(blank=True, null=True)
+    psychological_testing_other = models.CharField(max_length=255, blank=True, null=True)
+
+    # --- Text-based optional fields ---
+    previous_diagnosis = models.TextField(blank=True, null=True)
+    latest_checkup_psychologist = models.TextField(blank=True, null=True)
+    latest_checkup_psychiatrist = models.TextField(blank=True, null=True)
+
+    # --- Medication ---
+    on_medication = models.BooleanField(default=False)
+    medication_name = models.CharField(max_length=255, blank=True, null=True)
+    medication_dosage = models.CharField(max_length=255, blank=True, null=True)
+
+    # --- Services availed this month ---
+    individual_sessions = models.ManyToManyField("Session", related_name="psych_progress_reports", blank=True)
+
+    # --- Summary & Recommendations ---
+    summary_of_results = models.TextField(blank=True, null=True)
+    recommendations = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Monthly Psych Progress for {self.victim.full_name} - {self.report_month.strftime('%B %Y')}"
+
 #=======================================SESSSION================================== 
 class SessionType(models.Model):
     SESSION_TYPES = [

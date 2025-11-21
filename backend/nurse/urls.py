@@ -9,6 +9,9 @@ urlpatterns = [
     path("victims/search_face/", search_victim_facial.as_view(), name="victim-face-search"),
     path("case/<int:vic_id>/", VictimIncidentsView.as_view(), name="socialworker-view-incidents"),
 
+    # --- Nurse Dashboard ---
+    path("dashboard/summary/", NurseDashboardAPIView.as_view(), name="nurse-dashboard-summary"),
+
     #Session1
     path("sessions/pending&Ongoing/", scheduled_session_lists.as_view(), name="my-sessions"),
     path("sessions/<int:pk>/", scheduled_session_detail.as_view(), name="session-detail"),
@@ -49,6 +52,7 @@ urlpatterns = [
 
     # --- Report ---
     path("victims/<int:vic_id>/monthly-reports/", NurseMonthlyReportViewSet.as_view({"get": "list", "post": "create"}), name="nurse-monthly-reports"),
-    path("victims/<int:vic_id>/monthly-reports/<int:pk>/", NurseMonthlyReportViewSet.as_view({ "get": "retrieve", "put": "update", "patch": "partial_update"}),name="nurse-monthly-report-detail",
-),
+    path("victims/<int:vic_id>/monthly-reports/<int:pk>/", NurseMonthlyReportViewSet.as_view({ "get": "retrieve", "put": "update", "patch": "partial_update"}),name="nurse-monthly-report-detail"),
+    path("victims/<int:vic_id>/psych-comprehensive-reports/",PsychometricianComprehensiveReportReadOnlyViewSet.as_view({"get": "list"}),name="nurse-psych-comprehensive-reports"),
+    path("victims/<int:vic_id>/psych-monthly-progress-reports/",PsychometricianMonthlyProgressReportReadOnlyViewSet.as_view({"get": "list"}),name="nurse-psych-monthly-progress-reports"),
 ]

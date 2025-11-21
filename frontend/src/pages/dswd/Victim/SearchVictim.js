@@ -42,7 +42,7 @@ export default function SearchVictim({ onClose, onFound }) {
       formData.append("frame", blob, "capture.jpg");
 
       // Use global axios instance
-      const res = await api.post("/api/dswd/victims/search-victim/", formData);
+      const res = await api.post("/api/social_worker/victims/search_face/", formData);
       const data = res.data;
 
       if (data.match) {

@@ -8,7 +8,7 @@ import Contact from "./Contact";
 
 export default function LandingLayout() {
   return (
-    <div className="min-h-screen font-sans bg-white scroll-smooth">
+    <div className="min-h-screen font-sans bg-white scroll-smooth overflow-x-hidden">
       {/* Scrollable Sections */}
       <main>
         <section id="home"><Home /></section>

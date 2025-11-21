@@ -56,6 +56,33 @@ class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
         model = IncidentInformation
         fields = "__all__"
 
+class ContactPersonSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ContactPerson
+        fields = [
+            "__all__"
+        ]
+
+    def get_full_name(self, obj):
+        parts = [obj.cont_fname, obj.cont_mname, obj.cont_lname, obj.cont_ext]
+        return " ".join(filter(None, parts))
+
+
+class FamilyMemberSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FamilyMember
+        fields = [
+            "__all__"
+        ]
+
+    def get_full_name(self, obj):
+        parts = [obj.fam_fname, obj.fam_mname, obj.fam_lname, obj.fam_extension]
+        return " ".join(filter(None, parts))
+    
 class VictimDetailSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
     face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
@@ -73,6 +100,17 @@ class VictimDetailSerializer(serializers.ModelSerializer):
                 - ((today.month, today.day) < (obj.vic_birth_date.month, obj.vic_birth_date.day))
             )
         return None
+    
+    def get_contact_persons(self, obj):
+        # collect all contact persons linked via incidents
+        incident_ids = obj.incidents.values_list("incident_id", flat=True)
+        contacts = ContactPerson.objects.filter(incident_id__in=incident_ids)
+        return ContactPersonSerializer(contacts, many=True).data
+
+    def get_family_members(self, obj):
+        members = FamilyMember.objects.filter(victim=obj)
+        return FamilyMemberSerializer(members, many=True).data
+    
 #=====================================SESSIONS=============================================
 class SessionCRUDSerializer(serializers.ModelSerializer):
     """
@@ -790,3 +828,74 @@ class ChangeLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChangeLog
         fields = "__all__"
+
+# ========================= REPORTS =========================
+class ComprehensivePsychReportSerializer(serializers.ModelSerializer):
+    prepared_by_id = serializers.IntegerField(source="prepared_by.pk", read_only=True)
+    prepared_by_name = serializers.CharField(source="prepared_by.full_name", read_only=True)
+
+    class Meta:
+        model = ComprehensivePsychReport
+        fields = "__all__"
+        read_only_fields = [
+            "id",
+            "victim",
+            "incident",
+            "report_month",
+            "prepared_by",
+            "prepared_by_name",
+            "created_at",
+        ]
+
+class SessionSummarySerializer(serializers.ModelSerializer):
+    session_type_names = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Session
+        fields = ["sess_id", "sess_date_today", "session_type_names"]
+
+    def get_session_type_names(self, obj):
+        # Return all linked session type names
+        return [st.name for st in obj.sess_type.all()]
+    
+class MonthlyPsychProgressReportSerializer(serializers.ModelSerializer):
+    prepared_by_name = serializers.CharField(source="prepared_by.full_name", read_only=True)
+    prepared_by_id = serializers.IntegerField(source="prepared_by.pk", read_only=True)
+    individual_sessions = SessionSummarySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = MonthlyPsychProgressReport
+        fields = "__all__"
+        read_only_fields = [
+            "id", "created_at", "prepared_by",
+            "prepared_by_name", "prepared_by_id",
+            "victim", "incident", "report_month"   
+        ]
+        extra_kwargs = {
+            "presentation": {"required": False},
+            "presentation_other": {"required": False},
+            "affect": {"required": False},
+            "affect_other": {"required": False},
+            "mood": {"required": False},
+            "mood_other": {"required": False},
+            "interpersonal": {"required": False},
+            "interpersonal_other": {"required": False},
+            "safety_issues": {"required": False},
+            "safety_issues_other": {"required": False},
+            "client_has": {"required": False},
+            "client_has_other": {"required": False},
+            "subjective_reports": {"required": False},
+            "subjective_reports_other": {"required": False},
+            "observations": {"required": False},
+            "observations_other": {"required": False},
+            "psychological_testing": {"required": False},
+            "psychological_testing_other": {"required": False},
+            "previous_diagnosis": {"required": False},
+            "latest_checkup_psychologist": {"required": False},
+            "latest_checkup_psychiatrist": {"required": False},
+            "on_medication": {"required": False},
+            "medication_name": {"required": False},
+            "medication_dosage": {"required": False},
+            "summary_of_results": {"required": False},
+            "recommendations": {"required": False},
+        }

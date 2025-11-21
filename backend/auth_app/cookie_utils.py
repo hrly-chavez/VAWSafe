@@ -22,7 +22,7 @@ def set_auth_cookies(response, access, refresh=None):
         response.set_cookie(
             "refresh",
             refresh,
-            max_age=int(timedelta(days=7).total_seconds()),  # align with refresh lifetime
+            max_age=int(timedelta(days=1).total_seconds()),  # align with refresh lifetime
             path="/",
             **COOKIE_COMMON,
         )
