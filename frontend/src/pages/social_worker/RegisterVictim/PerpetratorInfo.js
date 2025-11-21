@@ -192,7 +192,7 @@ export default function PerpetratorInfo({
               handleChange("per_educational_attainment", e.target.value)
             }
           >
-            <option value="" disabled>
+            <option value="">
               Select Educational Level
             </option>
             <option value="No Formal Education">No Formal Education</option>

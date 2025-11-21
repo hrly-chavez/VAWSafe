@@ -8,7 +8,7 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
     "Physical Abused": ["Rape", "Acts of lasciviousness", "Incest"],
     "Psychological Violence": [],
     "Psychological Abuse": [],
-    "Economic Abuse": [
+    "Economic Abused": [
       "withdraw of financial support",
       "deprivation of threat and deprivation of financial resources",
       "destroying household property",

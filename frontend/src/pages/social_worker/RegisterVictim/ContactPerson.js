@@ -86,7 +86,7 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
             className="input w-full"
             onChange={(e) => handleChange("cont_civil_status", e.target.value)}
           >
-            <option value="" disabled>
+            <option>
               Select Civil Status
             </option>
             <option value="SINGLE">Single</option>
