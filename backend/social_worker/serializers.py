@@ -55,11 +55,15 @@ class VictimFaceSampleSerializer(serializers.ModelSerializer):
 
 class VictimSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
+    age = serializers.SerializerMethodField()
     address = AddressSerializer()
 
     class Meta:
         model = Victim
         fields = "__all__"
+
+    def get_age(self, obj):
+        return obj.age
 
     def get_full_name(self, obj):
         return obj.full_name
@@ -71,14 +75,38 @@ class VictimSerializer(serializers.ModelSerializer):
         return victim
 
 class ContactPersonSerializer(serializers.ModelSerializer):
+    age = serializers.SerializerMethodField()
+    
     class Meta:
         model = ContactPerson
         fields = "__all__"
 
+    def get_age(self, obj):
+        if obj.cont_birth_date:
+            today = date.today()
+            return (
+                today.year
+                - obj.cont_birth_date.year
+                - ((today.month, today.day) < (obj.cont_birth_date.month, obj.cont_birth_date.day))
+            )
+        return None
+
 class PerpetratorSerializer(serializers.ModelSerializer):
+    age = serializers.SerializerMethodField()
+
     class Meta:
         model = Perpetrator
         fields = "__all__"
+
+    def get_age(self, obj):
+        if obj.per_birth_date:
+            today = date.today()
+            return (
+                today.year
+                - obj.per_birth_date.year
+                - ((today.month, today.day) < (obj.per_birth_date.month, obj.per_birth_date.day))
+            )
+        return None
         
 class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
     perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)
