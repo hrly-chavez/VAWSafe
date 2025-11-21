@@ -9,7 +9,7 @@ import {
 export default function Cases() {
   return (
     <div
-      className="relative bg-white py-16 px-6 sm:px-12 text-center"
+      className="relative bg-white py-16 px-4 sm:px-8 overflow-x-hidden"
       style={{
         backgroundImage: "url('/images/case_background.png')",
         backgroundRepeat: "no-repeat",
@@ -17,12 +17,10 @@ export default function Cases() {
         backgroundPosition: "center",
       }}
     >
-
-      {/* Content Wrapper */}
-      <div className="relative z-10 w-full flex flex-col lg:flex-row items-center justify-between">
-        {/* Left Illustration */}
-        <div className="w-full lg:w-1/2 flex justify-center mb-10 lg:mb-0">
-         
+      <div className="relative z-10 max-w-7xl mx-auto flex flex-col lg:flex-row items-center lg:justify-between gap-10">
+        {/* Left Illustration - remove empty space if no image */}
+        <div className="w-full lg:w-1/2 flex justify-center">
+          {/* Add an illustration here if needed */}
         </div>
 
         {/* Right Content */}
@@ -32,9 +30,9 @@ export default function Cases() {
           </h2>
           <p className="text-gray-800 leading-relaxed">
             Protective custody shall be provided to women survivors of abuse
-            whose age ranges from <strong>18 to 59 years old</strong> with their
-            dependents as well as those who are in need of immediate protective
-            custody.
+            whose age ranges from <strong>18 to 59 years old</strong> with
+            their dependents as well as those who are in need of immediate
+            protective custody.
           </p>
 
           <h3 className="text-2xl font-semibold text-[#1a1a40] mt-8">
@@ -91,9 +89,7 @@ export default function Cases() {
                 <FaUsers size={20} />
               </div>
               <div>
-                <h4 className="font-semibold text-lg text-black">
-                  Other Clients
-                </h4>
+                <h4 className="font-semibold text-lg text-black">Other Clients</h4>
                 <p className="text-gray-700 text-sm leading-relaxed">
                   Homeless/Vagrant, Strandees, Abandoned
                 </p>

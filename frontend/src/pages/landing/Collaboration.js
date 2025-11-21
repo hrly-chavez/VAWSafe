@@ -5,7 +5,7 @@ import ctuLogo from "../landing/logo/CTU.png";
 export default function Collaboration() {
   return (
     <div
-      className="min-h-screen flex flex-col sm:flex-row items-center justify-between px-0 sm:px-16 py-0 text-black"
+      className="min-h-screen overflow-x-hidden flex flex-col items-center justify-center px-4 sm:px-8 py-16 text-black"
       style={{
         backgroundImage: 'url("/images/collab_background.png")',
         backgroundSize: "cover",
@@ -13,20 +13,20 @@ export default function Collaboration() {
         backgroundRepeat: "no-repeat",
       }}
     >
-      <div className="min-h-screen w-full px-6 py-16 flex flex-col items-center justify-center">
-        <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-center">
+      <div className="max-w-7xl w-full flex flex-col items-center text-center">
+        <h2 className="text-4xl sm:text-5xl font-bold mb-6">
           IN COLLABORATION WITH
         </h2>
 
-        <p className="text-black/80 text-lg mb-12 max-w-4xl text-center">
+        <p className="text-black/80 text-lg mb-12 max-w-4xl">
           The Department of Social Welfare and Development (DSWD) – Region VII is actively collaborating 
           with Cebu Technological University – Main Campus to strengthen VAWC case management, research, 
           and community support through the development of VAWSAFE.
         </p>
 
-        {/* CTU Only */}
-        <div className="flex flex-col items-center text-center w-[260px]">
-          <div className="w-[180px] h-[180px] rounded-full overflow-hidden border-4 border-black">
+        {/* CTU Logo */}
+        <div className="flex flex-col items-center text-center w-full sm:w-auto max-w-xs">
+          <div className="w-48 sm:w-52 h-48 sm:h-52 rounded-full overflow-hidden border-4 border-black">
             <img
               src={ctuLogo}
               alt="CTU Logo"

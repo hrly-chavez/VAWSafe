@@ -243,7 +243,7 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
           type="text"
           rows={3}
           className="input w-full"
-          // onChange={(e) => handleChange("incident_description", e.target.value)}
+          onChange={(e) => handleChange("incident_observations_about_survivor", e.target.value)}
         ></textarea>
       </div>
 
@@ -256,7 +256,7 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
           type="text"
           rows={3}
           className="input w-full"
-          // onChange={(e) => handleChange("incident_description", e.target.value)}
+          onChange={(e) => handleChange("incident_circumstances", e.target.value)}
         ></textarea>
       </div>
 
@@ -269,7 +269,7 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
           type="text"
           rows={3}
           className="input w-full"
-          // onChange={(e) => handleChange("incident_description", e.target.value)}
+          onChange={(e) => handleChange("incident_recommendation", e.target.value)}
         ></textarea>
       </div>
     </div>

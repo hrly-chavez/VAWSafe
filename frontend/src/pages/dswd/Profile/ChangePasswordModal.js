@@ -11,13 +11,13 @@ export default function ChangeUsernamePasswordModal({ onClose, currentUsername }
   const [loading, setLoading] = useState(false);
 
   const validatePassword = (password) => {
-    const minLength = 12;
+    const minLength = 16;
     const uppercaseRegex = /[A-Z]/;
     const numberRegex = /\d/;
     const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
 
     if (password.length < minLength) {
-      return "Password must be at least 12 characters long.";
+      return "Password must be at least 16 characters long.";
     }
     if (!uppercaseRegex.test(password)) {
       return "Password must contain at least 1 uppercase letter.";

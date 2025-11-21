@@ -13,6 +13,7 @@ export default function Schedule({ victim, incident, back, next }) {
   const [time, setTime] = useState(new Date().toTimeString().slice(0, 5));
   const [sessionTypes, setSessionTypes] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
+  const [disableSessionType, setDisableSessionType] = useState(false);
   const [roleFilter, setRoleFilter] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ export default function Schedule({ victim, incident, back, next }) {
 
       const payload = {
         incident_id: incident?.incident_id,
-        sess_next_sched: `${date}T${time}:00Z`,
+        sess_next_sched: `${date}T${time}:00`,
         sess_type: Array.isArray(selectedTypes)
           ? selectedTypes.map((t) => Number(t.value))
           : [],
@@ -103,18 +104,42 @@ export default function Schedule({ victim, incident, back, next }) {
 
 
   // Load session types
-  useEffect(() => {
-    api
-      .get("/api/social_worker/session-types/")
-      .then((res) => {
-        const options = res.data.map((t) => ({
-          value: t.id,
-          label: t.name,
-        }));
-        setSessionTypes(options);
-      })
-      .catch((err) => console.error("Failed to fetch session types", err));
-  }, []);
+  // useEffect(() => {
+  //   api
+  //     .get("/api/social_worker/session-types/")
+  //     .then((res) => {
+  //       const options = res.data.map((t) => ({
+  //         value: t.id,
+  //         label: t.name,
+  //       }));
+  //       setSessionTypes(options);
+  //     })
+  //     .catch((err) => console.error("Failed to fetch session types", err));
+  // }, []);
+
+    useEffect(() => {
+      api
+        .get("/api/social_worker/session-types/")
+        .then((res) => {
+          const options = res.data.map((t) => ({
+            value: t.id,
+            label: t.name,
+          }));
+
+          setSessionTypes(options);
+
+          // Auto-select "Intake / Initial Assessment"
+          const intake = options.find(
+            (t) => t.label === "Intake / Initial Assessment"
+          );
+
+          if (intake) {
+            setSelectedTypes([intake]);
+            setDisableSessionType(true); // Lock the dropdown
+          }
+        })
+        .catch((err) => console.error("Failed to fetch session types", err));
+    }, []);
 
   // Load all Social Workers (with availability)
   const fetchSocialWorkers = async (query = "") => {
@@ -199,13 +224,24 @@ export default function Schedule({ victim, incident, back, next }) {
           <label className="text-xs text-gray-600 block mb-1">
             Type of Session (you can pick multiple)
           </label>
-          <Select
+          {/* <Select
             options={sessionTypes}
             isMulti
             value={selectedTypes}
             onChange={setSelectedTypes}
             placeholder="Select session types..."
+          /> */}
+          <Select
+            options={sessionTypes}
+            isMulti
+            value={selectedTypes}
+            onChange={(val) => {
+              if (!disableSessionType) setSelectedTypes(val);
+            }}
+            isDisabled={disableSessionType}
+            placeholder="Intake / Initial Assessment"
           />
+
         </div>
 
         {/* === Placeholder Filters === */}
@@ -213,6 +249,12 @@ export default function Schedule({ victim, incident, back, next }) {
           <h3 className="text-sm font-semibold text-gray-700 mb-2">
             Assign  Official
           </h3>
+          {/* Warning: Must select at least one official */}
+          {selectedOfficials.length === 0 && (
+            <p className="text-red-600 text-sm mb-2">
+              Please assign at least one official before scheduling the intake session.
+            </p>
+          )}
           <div className="flex flex-wrap gap-3 mb-3">
           
             <input
@@ -235,7 +277,7 @@ export default function Schedule({ victim, incident, back, next }) {
               <option value="Social Worker">Social Worker</option>
               <option value="Nurse">Nurse</option>
               <option value="Psychometrician">Psychometrician</option>
-              <option value="Home Life">Home Life</option>
+              {/* <option value="Home Life">Home Life</option> */}
             </select>
 
           </div>
@@ -266,16 +308,18 @@ export default function Schedule({ victim, incident, back, next }) {
           </button>
         )}
         <button
-          onClick={handleSubmitSchedule}
-          disabled={isSubmitting}
-          className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold shadow transition-all 
-            ${isSubmitting
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
-            }`}>
-          <CheckCircleIcon className="h-5 w-5" />
-          {isSubmitting ? "Submitting..." : "Submit to Schedule Session"}
-        </button>
+        onClick={handleSubmitSchedule}
+        disabled={isSubmitting || selectedOfficials.length === 0}
+        className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold shadow transition-all 
+          ${isSubmitting || selectedOfficials.length === 0
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
+          }`}>
+        <CheckCircleIcon className="h-5 w-5" />
+        {isSubmitting ? "Submitting..." : "Submit to Schedule Session"}
+      </button>
+
+        
       </div>
        {/* Toast container */}
       <ToastContainer />

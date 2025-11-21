@@ -22,7 +22,7 @@ export default function Contact() {
       </div>
 
       {/* Horizontal Footer Grid */}
-      <div className="px-6 sm:px-12 py-12 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-8 items-start text-sm sm:text-base">
+      <div className="px-4 sm:px-6 py-12 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-8 items-start text-sm sm:text-base">
         {/* GOV Logo */}
         <div className="flex justify-center md:justify-start">
           <img

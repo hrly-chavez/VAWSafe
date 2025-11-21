@@ -280,22 +280,14 @@ class scheduled_session_lists(generics.ListAPIView):
 class scheduled_session_detail(generics.RetrieveUpdateAPIView):  
     """
     GET: Retrieve a single session detail.
-    PATCH: Update session info (e.g., type, description, location).
     this also handles the display for service in the frontend
     """
     serializer_class = SessionDetailSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        official = getattr(user, "official", None)
-        role = getattr(official, "of_role", None)
-        if not role:
-            return Session.objects.none()
-
-        return Session.objects.filter(
-            incident_id__sessions__assigned_official=official
-        ).distinct()
+    # Allow ANY authenticated official to view ANY session.
+        return Session.objects.all()
 
 class SessionTypeListView(generics.ListAPIView):
     """GET: List all available session types for dropdowns."""

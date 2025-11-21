@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 
-export default function Sidebar() {
+export default function Sidebar({ sidebarOpen, toggleSidebar }) {
   // AuthContext in the cookie-based setup exposes { user, logout, bootstrapped }
   const { user, logout } = useContext(AuthContext);
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
@@ -134,121 +134,142 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="min-h-screen w-[220px] bg-[#2F2F4F] text-white font-poppins sticky top-[70px] shadow-lg z-10">
-      {/* Profile */}
-      <div className="flex flex-col items-center py-6 px-4 border-b border-[#1F1F35]">
-        <img
-          src={profilePhoto}
-          alt="Profile"
-          className="h-[90px] w-[90px] object-cover rounded-full shadow-md cursor-pointer"  // Added cursor pointer for clickable image
-          onClick={handleProfileClick}  // On click, redirect based on user role
-        />
-        <div className="mt-3 text-center w-full px-2">
-          <h1 className="text-sm font-bold text-white truncate uppercase cursor-pointer" onClick={handleProfileClick}>
-            {displayName || "USER"}
-          </h1>
-          <p className="text-xs text-gray-300 mt-1">{user?.role || ""}</p>
+    <>
+      {/* Overlay for mobile */}
+      <div
+        className={`fixed inset-0 bg-black/50 z-40 transition-opacity sm:hidden ${
+          sidebarOpen ? "opacity-100 visible" : "opacity-0 invisible"
+        }`}
+        onClick={toggleSidebar}
+      ></div>
+
+      <aside
+        className={`
+          w-64 bg-[#2F2F4F] text-white font-poppins transform transition-transform
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          fixed top-[40px] sm:top-[70px] left-0
+          h-[calc(100vh-40px)] sm:h-[calc(100vh-70px)]
+          z-[60] pointer-events-auto
+          sm:translate-x-0
+        `}
+      >
+
+
+        {/* Profile */}
+        <div className="flex flex-col items-center py-6 px-4 border-b border-[#1F1F35]">
+          <img
+            src={profilePhoto}
+            alt="Profile"
+            className="h-[90px] w-[90px] object-cover rounded-full shadow-md cursor-pointer"  // Added cursor pointer for clickable image
+            onClick={handleProfileClick}  // On click, redirect based on user role
+          />
+          <div className="mt-3 text-center w-full px-2">
+            <h1 className="text-sm font-bold text-white truncate uppercase cursor-pointer" onClick={handleProfileClick}>
+              {displayName || "USER"}
+            </h1>
+            <p className="text-xs text-gray-300 mt-1">{user?.role || ""}</p>
+          </div>
         </div>
-      </div>
 
-      {/* Menu */}
-      <nav className="mt-4 space-y-1 px-2 overflow-visible">
-        {sidebarItems.map((item, idx) => {
-          if (item.children) {
-            return (
-              <div key={idx} className="group">
-                <button
-                  onClick={() =>
-                    setOpenDropdownIndex(openDropdownIndex === idx ? null : idx)
-                  }
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-md transition hover:bg-[#3F3F64] hover:scale-[1.02] hover:shadow-md"
-                >
-                  <img
-                    src={item.icon}
-                    alt={item.label}
-                    className="h-[22px] w-[22px] object-contain opacity-80 group-hover:opacity-100 transition"
-                  />
-                  <span className="text-sm font-medium text-white">
-                    {item.label}
-                  </span>
-                  <svg
-                    className={`ml-auto h-4 w-4 transform transition-transform ${
-                      openDropdownIndex === idx ? "rotate-90" : ""
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+        {/* Menu */}
+        <nav className="mt-4 space-y-1 px-2 overflow-visible">
+          {sidebarItems.map((item, idx) => {
+            if (item.children) {
+              return (
+                <div key={idx} className="group">
+                  <button
+                    onClick={() =>
+                      setOpenDropdownIndex(openDropdownIndex === idx ? null : idx)
+                    }
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-md transition hover:bg-[#3F3F64] hover:scale-[1.02] hover:shadow-md"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
+                    <img
+                      src={item.icon}
+                      alt={item.label}
+                      className="h-[22px] w-[22px] object-contain opacity-80 group-hover:opacity-100 transition"
                     />
-                  </svg>
-                </button>
+                    <span className="text-sm font-medium text-white">
+                      {item.label}
+                    </span>
+                    <svg
+                      className={`ml-auto h-4 w-4 transform transition-transform ${
+                        openDropdownIndex === idx ? "rotate-90" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
 
-                {openDropdownIndex === idx && (
-                  <div className="ml-8 mt-1 space-y-1">
-                    {item.children.map((subItem, subIdx) => (
-                      <Link
-                        key={subIdx}
-                        to={subItem.path}
-                        className="group block no-underline"
-                      >
-                        <div className="flex items-center gap-3 px-4 py-3 rounded-md transition hover:bg-[#3F3F64] hover:scale-[1.02] hover:shadow-md">
-                          <div className="h-[22px] w-[22px] flex items-center justify-center bg-[#44446A] rounded-full text-white text-xs font-bold">
-                            {subItem.label.charAt(0)}
+                  {openDropdownIndex === idx && (
+                    <div className="ml-8 mt-1 space-y-1">
+                      {item.children.map((subItem, subIdx) => (
+                        <Link
+                          key={subIdx}
+                          to={subItem.path}
+                          className="group block no-underline"
+                        >
+                          <div className="flex items-center gap-3 px-4 py-3 rounded-md transition hover:bg-[#3F3F64] hover:scale-[1.02] hover:shadow-md">
+                            <div className="h-[22px] w-[22px] flex items-center justify-center bg-[#44446A] rounded-full text-white text-xs font-bold">
+                              {subItem.label.charAt(0)}
+                            </div>
+                            <span className="text-sm font-medium text-white group-hover:text-white">
+                              {subItem.label}
+                            </span>
                           </div>
-                          <span className="text-sm font-medium text-white group-hover:text-white">
-                            {subItem.label}
-                          </span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          }
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
 
-          if (item.isLogout) {
+            if (item.isLogout) {
+              return (
+                <button
+                  key={idx}
+                  onClick={handleLogout}
+                  className="w-full text-left group block no-underline"
+                >
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-md transition hover:bg-[#3F3F64] hover:scale-[1.02] hover:shadow-md">
+                    <img
+                      src={item.icon}
+                      alt={item.label}
+                      className="h-[22px] w-[22px] object-contain opacity-80 group-hover:opacity-100 transition"
+                    />
+                    <span className="text-sm font-medium text-white">
+                      {item.label}
+                    </span>
+                  </div>
+                </button>
+              );
+            }
+
             return (
-              <button
-                key={idx}
-                onClick={handleLogout}
-                className="w-full text-left group block no-underline"
-              >
+              <Link key={idx} to={item.path} className="group block no-underline">
                 <div className="flex items-center gap-3 px-4 py-3 rounded-md transition hover:bg-[#3F3F64] hover:scale-[1.02] hover:shadow-md">
                   <img
                     src={item.icon}
                     alt={item.label}
                     className="h-[22px] w-[22px] object-contain opacity-80 group-hover:opacity-100 transition"
                   />
-                  <span className="text-sm font-medium text-white">
+                  <span className="text-sm font-medium text-white group-hover:text-white">
                     {item.label}
                   </span>
                 </div>
-              </button>
+              </Link>
             );
-          }
-
-          return (
-            <Link key={idx} to={item.path} className="group block no-underline">
-              <div className="flex items-center gap-3 px-4 py-3 rounded-md transition hover:bg-[#3F3F64] hover:scale-[1.02] hover:shadow-md">
-                <img
-                  src={item.icon}
-                  alt={item.label}
-                  className="h-[22px] w-[22px] object-contain opacity-80 group-hover:opacity-100 transition"
-                />
-                <span className="text-sm font-medium text-white group-hover:text-white">
-                  {item.label}
-                </span>
-              </div>
-            </Link>
-          );
-        })}
-      </nav>
-    </aside>
+          })}
+        </nav>
+      </aside>
+    </>
   );
 }
