@@ -205,7 +205,7 @@ def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=
         tpl = DocxTemplate(intake_template)
         tpl.render(context)
 
-        save_path = os.path.join(sw_out, "intake.docx")
+        save_path = os.path.join(sw_out, "Intake-Sheet.docx")
         tpl.save(save_path)
         generated_files.append(save_path)
     else:
