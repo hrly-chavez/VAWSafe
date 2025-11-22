@@ -240,7 +240,8 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
       </div>
 
       {/* Educational Status */}
-      <div>
+      <div className="space-y-4">
+        {/* Educational Attainment */}
         <div className="flex flex-col">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Educational Attainment
@@ -256,23 +257,51 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
               Select Educational Level
             </option>
             <option value="No Formal Education">No Formal Education</option>
-            <option value="Elementary Level/Graduate">
-              Elementary Level/Graduate
-            </option>
-            <option value="Junior High School Level/Graduate">
-              Junior High School Level/Graduate
-            </option>
-            <option value="Senior High School Level/Graduate">
-              Senior High School Level/Graduate
-            </option>
+            <option value="Elementary Level/Graduate">Elementary Level/Graduate</option>
+            <option value="Junior High School Level/Graduate">Junior High School Level/Graduate</option>
+            <option value="Senior High School Level/Graduate">Senior High School Level/Graduate</option>
             <option value="Technical/Vocational">Technical/Vocational</option>
-            <option value="College Level/Graduate">
-              College Level/Graduate
-            </option>
+            <option value="College Level/Graduate">College Level/Graduate</option>
             <option value="Post graduate">Post graduate</option>
           </select>
         </div>
+
+        {/* OS/OSY and School Years in a single row */}
+        <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+          {/* OS/OSY */}
+          <div className="flex-1 flex flex-col">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              OS/OSY Status
+            </label>
+            <select
+              className="input w-full"
+              value={formDataState.vic_school_type || ""}
+              onChange={(e) => handleChange("vic_school_type", e.target.value)}
+            >
+              <option value="" disabled>
+                Select Status
+              </option>
+              <option value="SY">SY</option>
+              <option value="OSY">OSY</option>
+            </select>
+          </div>
+
+          {/* School Years */}
+          <div className="flex-1 flex flex-col">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              School Years
+            </label>
+            <input
+              type="text"
+              className="input w-full"
+              placeholder="Enter School Years"
+              value={formDataState.vic_school_years || ""}
+              onChange={(e) => handleChange("vic_school_years", e.target.value)}
+            />
+          </div>
+        </div>
       </div>
+
 
       {/* last school name and address */}
       <div className="flex flex-col mb-4">

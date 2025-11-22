@@ -296,6 +296,11 @@ class Victim(models.Model):
         ('Others', 'Others'),
     ]
     
+    SCHOOL_TYPE_CHOICES = [
+        ('SY', 'School Youth'),
+        ('OSY', 'Out of School Youth'),
+    ]
+    
     # user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="victim", null=True, blank=True)
     vic_id = models.AutoField(primary_key=True)
     vic_first_name = EncryptedCharField(max_length=512)
@@ -310,6 +315,8 @@ class Victim(models.Model):
     vic_civil_status = EncryptedCharField(max_length=512, choices=CIVIL_STATUS_CHOICES, default='SINGLE')
     vic_religion = EncryptedCharField(max_length=512, choices=RELIGION_CHOICES, default='Roman Catholic')
     vic_educational_attainment = EncryptedCharField(max_length=512, choices=EDUCATIONAL_ATTAINMENT_CHOICES, default='No Formal Education')
+    vic_school_type = EncryptedCharField(max_length=3, choices=SCHOOL_TYPE_CHOICES, null=True, blank=True)
+    vic_school_years = models.PositiveSmallIntegerField(null=True, blank=True)
     vic_last_school_attended = EncryptedCharField(max_length=512, null=True, blank=True)
     vic_last_school_address = EncryptedCharField(max_length=512, null=True, blank=True)
     vic_occupation = EncryptedCharField(max_length=512, blank=True, null=True)

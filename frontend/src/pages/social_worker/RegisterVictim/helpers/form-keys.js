@@ -11,6 +11,8 @@ export const VICTIM_FIELDS = [
   "vic_civil_status",
   "vic_religion",
   "vic_educational_attainment",
+  "vic_school_type",
+  "vic_school_years",
   "vic_last_school_attended",
   "vic_last_school_address",
   "vic_occupation",
