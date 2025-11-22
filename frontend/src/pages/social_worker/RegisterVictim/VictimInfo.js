@@ -3,28 +3,6 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function VictimInfo({ formDataState, setFormDataState }) {
-  // Utility to calculate if victim is minor
-  function isMinor(birthDate) {
-    if (!birthDate) return false;
-    const today = new Date();
-    const birth = new Date(birthDate);
-    const age =
-      today.getFullYear() -
-      birth.getFullYear() -
-      (today.getMonth() < birth.getMonth() ||
-      (today.getMonth() === birth.getMonth() &&
-        today.getDate() < birth.getDate())
-        ? 1
-        : 0);
-    return age < 18;
-  }
-
-  // Auto-update is_minor when birth date changes
-  useEffect(() => {
-    const minor = isMinor(formDataState.vic_birth_date);
-    setShowGuardian(minor); // show guardian section if minor
-  }, [formDataState.vic_birth_date]);
-
   const handleChange = (key, value) => {
     if (key.includes(".")) {
       const [outerKey, innerKey] = key.split(".");
