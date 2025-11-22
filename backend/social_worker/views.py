@@ -134,7 +134,7 @@ def format_physical_observation(data):
 
     return "\n".join(lines)
 
-def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=None, incident_data=None, perpetrator_data=None, contact_person_data=None):
+def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=None, incident_data=None, perpetrator_data=None, contact_person_data=None, family_members=None):
     """
     Generates:
     - All .docx inside Templates/Consent Forms → victim<id>/consent forms/
@@ -177,7 +177,8 @@ def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=
         "incident": incident_data,
         "assigned_official": assigned_official,
         "victim_id": victim_id,
-        "current_date": datetime.today().strftime("%B %d, %Y")
+        "current_date": datetime.today().strftime("%B %d, %Y"),
+        "family_members": family_members or []
     }
 
     context["abuse_checklist"] = format_abuse_checklist(incident_data)
@@ -259,6 +260,22 @@ def register_victim(request):
             return Response({"success": False, "errors": v_ser.errors},
                             status=status.HTTP_400_BAD_REQUEST)
         victim = v_ser.save()  # PK available via victim.pk or victim.vic_id
+
+        # 1b) Family Members (optional)
+        family_members_data = parse_json_field("familyMembers")  # must match FormData key
+        saved_family_members = []
+        if family_members_data:
+            for idx, fam_data in enumerate(family_members_data, start=1):
+                fam_data["victim"] = victim.pk  # set FK to Victim
+                fam_ser = FamilyMemberSerializer(data=fam_data)
+                if not fam_ser.is_valid():
+                    print(f"[family_member #{idx}] errors:", fam_ser.errors)
+                    transaction.set_rollback(True)
+                    return Response(
+                        {"success": False, "errors": fam_ser.errors},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                saved_family_members.append(fam_ser.save())
 
         # 2) Photos + Face Samples
         photo_files = request.FILES.getlist("photos")
@@ -370,6 +387,7 @@ def register_victim(request):
         assigned_official = incident.of_id if incident and incident.of_id else None
         perpetrator_data = PerpetratorSerializer(perpetrator).data if perpetrator else None
         contact_person_data = ContactPersonSerializer(contact_person).data if contact_person else None
+        family_members = FamilyMemberSerializer(saved_family_members, many=True).data
 
         generate_initial_forms(
             victim_serializer_data,
@@ -378,6 +396,7 @@ def register_victim(request):
             incident_serializer_data,
             perpetrator_data,
             contact_person_data,
+            family_members=family_members
         )
 
         return Response({
@@ -386,6 +405,7 @@ def register_victim(request):
             "incident": IncidentInformationSerializer(incident).data if incident else None,
             "contact_person": ContactPersonSerializer(contact_person).data if contact_person else None,
             "perpetrator": PerpetratorSerializer(perpetrator).data if perpetrator else None,
+            "family_members": FamilyMemberSerializer(saved_family_members, many=True).data
         }, status=status.HTTP_201_CREATED)
 
     except Exception as e:

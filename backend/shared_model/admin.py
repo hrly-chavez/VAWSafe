@@ -184,6 +184,7 @@ class OfficialFaceSampleAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Victim)
+admin.site.register(FamilyMember)
 admin.site.register(IncidentInformation)
 admin.site.register(Address)
 

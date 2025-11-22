@@ -74,6 +74,26 @@ class VictimSerializer(serializers.ModelSerializer):
         victim = Victim.objects.create(address=address, **validated_data)
         return victim
 
+class FamilyMemberSerializer(serializers.ModelSerializer):
+    age = serializers.SerializerMethodField()
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FamilyMember
+        fields = "__all__"  # or list all fields explicitly
+
+    def get_age(self, obj):
+        if obj.fam_birth_date:
+            today = date.today()
+            born = obj.fam_birth_date
+            return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+        return None
+    
+    def get_full_name(self, obj):
+        parts = [obj.fam_fname, obj.fam_mname, obj.fam_lname, obj.fam_extension]
+        # Join non-empty parts with space
+        return " ".join(filter(None, parts))
+
 class ContactPersonSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
     

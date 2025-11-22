@@ -531,9 +531,6 @@ class IncidentInformation(models.Model): #Case in the frontend
     def __str__(self):
         return f"Incident {self.incident_id}"
 
-class PhysicalDescription(models.Model):
-    pass
-
 class FamilyMember(models.Model):
     fam_fname = models.CharField(max_length=50, blank=True, null=True)
     fam_mname = models.CharField(max_length=50, blank=True, null=True)
@@ -545,10 +542,19 @@ class FamilyMember(models.Model):
     fam_civil_status = models.CharField(max_length=50, null=True, blank=True)
     fam_educational_attainment = models.CharField(max_length=50, null=True, blank=True)
     fam_occupation = models.CharField(max_length=50, null=True, blank=True)
-    fam_income = models.CharField(max_length=50, null=True, blank=True)
+    fam_income = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     # foreign key
-    victim = models.ForeignKey(Victim, on_delete=models.CASCADE, blank=True, null=True) 
+    victim = models.ForeignKey(Victim, on_delete=models.CASCADE, blank=True, null=True, related_name="family_members")
+
+    @property
+    def age(self):
+        if not self.fam_birth_date:
+            return None
+        today = date.today()
+        birth = self.fam_birth_date
+        # calculate age in years
+        return today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day)) 
 
 class Evidence(models.Model):
     incident = models.ForeignKey(
