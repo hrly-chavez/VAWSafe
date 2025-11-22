@@ -331,7 +331,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             Province
           </label>
           <select
-            value={formDataState.address.province}
+            value={formDataState.address.province || ""}
             onChange={(e) => handleChange("address.province", e.target.value)}
             className={inputStyle}
           >
@@ -349,7 +349,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             Municipality
           </label>
           <select
-            value={formDataState.address.municipality}
+            value={formDataState.address.municipality || ""}
             onChange={(e) =>
               handleChange("address.municipality", e.target.value)
             }
@@ -370,7 +370,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             Barangay
           </label>
           <select
-            value={formDataState.address.barangay}
+            value={formDataState.address.barangay || ""}
             onChange={(e) => handleChange("address.barangay", e.target.value)}
             className={inputStyle}
             disabled={!formDataState.address.municipality}
