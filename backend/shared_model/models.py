@@ -467,6 +467,9 @@ class IncidentInformation(models.Model): #Case in the frontend
 
     physical_description = models.JSONField(null=True, blank=True)
     physical_description_other = EncryptedCharField(max_length=512, null=True, blank=True)
+    
+    manner_towards_worker = models.JSONField(null=True, blank=True)
+    manner_towards_worker_other = EncryptedCharField(max_length=512, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Auto-assign case number if not already set

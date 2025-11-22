@@ -39,6 +39,8 @@ export const INCIDENT_KEYS = [
   "is_calamity_area",
   "physical_description",
   "physical_description_other",
+  "manner_towards_worker",
+  "manner_towards_worker_other",
 ];
 
 export const PERP_KEYS = [

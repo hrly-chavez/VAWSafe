@@ -14,6 +14,18 @@ export const PHYSICAL_DESCRIPTION_OPTIONS = [
     { key: "obese", label: "Obese" },
   ];
 
+export const MANNER_TOWARDS_WORKER_OPTIONS = [
+  { key: "friendly", label: "Friendly and easily relates" },
+  { key: "aggressive", label: "Aggressive" },
+  { key: "keeps_to_herself", label: "Keeps to herself" },
+  { key: "happy_disposition", label: "Happy disposition" },
+  { key: "shy", label: "Shy" },
+  { key: "energetic", label: "Energetic" },
+  { key: "crying", label: "Crying" },
+  { key: "apathetic", label: "Apathetic" },
+  { key: "aloof", label: "Aloof" },
+];
+
 export default function IncidentInfo({ formDataState, setFormDataState }) {
   const VIOLENCE_OPTIONS = {
     "Physical Violence": [],
@@ -47,7 +59,9 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
     setFormDataState(prev => ({
       ...prev,
       physical_description: prev.physical_description || {},
-      physical_description_other: prev.physical_description_other || ""
+      physical_description_other: prev.physical_description_other || "",
+      manner_towards_worker: prev.manner_towards_worker || {},
+      manner_towards_worker_other: prev.manner_towards_worker_other || ""
     }));
   }, []);
 
@@ -249,6 +263,47 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
         </div>
       </div>
 
+      {/* manner towards worker */}
+      <div className="mt-6">
+        <h2 className="font-semibold text-lg">Manner of relating to Social Worker</h2>
+
+        {MANNER_TOWARDS_WORKER_OPTIONS.map(item => (
+          <label key={item.key} className="flex items-center gap-2 mt-1">
+            <input
+              type="checkbox"
+              checked={formDataState.manner_towards_worker?.[item.key] || false}
+              onChange={(e) => {
+                const checked = e.target.checked;
+
+                setFormDataState(prev => ({
+                  ...prev,
+                  manner_towards_worker: {
+                    ...prev.manner_towards_worker,
+                    [item.key]: checked,
+                  }
+                }));
+              }}
+            />
+            {item.label}
+          </label>
+        ))}
+
+        {/* OTHER FIELD */}
+        <div className="mt-3">
+          <label className="block">Others (specify):</label>
+          <input
+            type="text"
+            className="border rounded p-2 w-full"
+            value={formDataState.manner_towards_worker_other || ""}
+            onChange={(e) =>
+              setFormDataState(prev => ({
+                ...prev,
+                manner_towards_worker_other: e.target.value
+              }))
+            }
+          />
+        </div>
+      </div>
 
       {/* Date & Time */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
