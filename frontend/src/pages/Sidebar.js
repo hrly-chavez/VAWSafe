@@ -57,7 +57,7 @@ export default function Sidebar({ sidebarOpen, toggleSidebar }) {
         { icon: "/images/meeting.png", label: "Scheduled Sessions",path: "/psychometrician/sessions",},
         // { icon: "/images/calendar.png", label: "My Schedule",path: "/psychometrician/schedule",},
         { icon: "/images/peace.png", label: "Services",path: "/psychometrician/services",},
-        { icon: "/images/calendar.png", label: "Questions", path: "/psychometrician/questions" },
+        { icon: "/images/question_mark.png", label: "Questions", path: "/psychometrician/questions" },
         { icon: "/images/logout.png", label: "Log Out", path: "/login",isLogout: true,},
       ];
     }
@@ -69,7 +69,7 @@ export default function Sidebar({ sidebarOpen, toggleSidebar }) {
         { icon: "/images/heart.png", label: "VAWC Victims",path: "/social_worker/victims",},
         { icon: "/images/case.png", label: "Case Records",path: "/social_worker/case-records",},
         { icon: "/images/meeting.png",label: "Scheduled Sessions",path: "/social_worker/sessions",},
-        { icon: "/images/calendar.png", label: "Questions", path: "/social_worker/questions" },
+        { icon: "/images/question_mark.png", label: "Questions", path: "/social_worker/questions" },
         { icon: "/images/logout.png", label: "Log Out", path: "/login",isLogout: true,},
         
         // { icon: "/images/calendar.png", label: "My Schedule",path: "/social_worker/schedule",},
@@ -79,11 +79,11 @@ export default function Sidebar({ sidebarOpen, toggleSidebar }) {
 
     if (role === "nurse") {
       return [
+        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/nurse",},
         { icon: "/images/heart.png", label: "VAWC Victims",path: "/nurse/victims",},
         { icon: "/images/meeting.png",label: "Scheduled Sessions",path: "/nurse/sessions",},
-        { icon: "/images/calendar.png", label: "Questions", path: "/nurse/questions" },
+        { icon: "/images/question_mark.png", label: "Questions", path: "/nurse/questions" },
         { icon: "/images/logout.png", label: "Log Out",path: "/login",isLogout: true,},
-        // { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/nurse",},
         // { icon: "/images/case.png", label: "Case Records",path: "/nurse/case-records",},
         // { icon: "/images/peace.png",label: "Services", path: "/nurse/services",},
         // { icon: "/images/calendar.png", label: "My Schedule", path: "/nurse/schedule",},

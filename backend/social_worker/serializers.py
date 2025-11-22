@@ -902,3 +902,27 @@ class ChangeLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChangeLog
         fields = "__all__"
+
+
+
+#============================= Social Worker Dashboard ======================================
+class VictimSummarySerializer(serializers.Serializer):
+    total_victims = serializers.IntegerField()
+
+class SessionSummarySerializer(serializers.Serializer):
+    sessions_this_week = serializers.IntegerField()
+    pending_sessions = serializers.IntegerField()
+    ongoing_sessions = serializers.IntegerField()   
+    done_sessions = serializers.IntegerField()      
+
+class MonthlyReportRowSerializer(serializers.Serializer):
+    month = serializers.CharField()
+    totalVictims = serializers.IntegerField()
+    Physical_Violence = serializers.IntegerField()
+    Physical_Abused = serializers.IntegerField()
+    Psychological_Violence = serializers.IntegerField()
+    Psychological_Abuse = serializers.IntegerField()
+    Economic_Abused = serializers.IntegerField()
+    Strandee = serializers.IntegerField()
+    Sexually_Abused = serializers.IntegerField()
+    Sexually_Exploited = serializers.IntegerField()

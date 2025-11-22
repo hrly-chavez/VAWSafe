@@ -379,7 +379,7 @@ const LoginPage = () => {
 
         const role = (data.role || "").toLowerCase();
         if (role === "social worker") navigate("/social_worker");
-        else if (role === "nurse") navigate("/nurse/sessions/");
+        else if (role === "nurse") navigate("/nurse");
         else if (role === "psychometrician") navigate("/psychometrician");
         else if (role === "dswd") navigate("/dswd");
       } else {
