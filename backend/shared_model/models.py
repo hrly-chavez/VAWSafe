@@ -387,7 +387,7 @@ class Perpetrator(models.Model):
     per_religion = EncryptedCharField(max_length=255, blank=True, null=True)
     per_victim_relationship = EncryptedCharField(max_length=255, blank=True, null=True)
     per_educational_attainment = EncryptedCharField(max_length=512, choices=EDUCATIONAL_ATTAINMENT_CHOICES, default='No Formal Education')
-    # per_known_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
+    per_known_address = EncryptedCharField(max_length=512, blank=True, null=True)
     per_contact_number = EncryptedCharField(max_length=512, blank=True, null=True)
     per_occupation = EncryptedCharField(max_length=512, blank=True, null=True)
 

@@ -57,6 +57,7 @@ export const PERP_KEYS = [
   "per_religion",
   "per_victim_relationship",
   "per_educational_attainment",
+  "per_known_address",
   "per_contact_number",
   "per_occupation",
 ];

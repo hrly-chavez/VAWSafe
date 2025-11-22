@@ -53,7 +53,7 @@ def format_abuse_checklist(incident_data):
             "withdraw of financial support",
             "deprivation of threat and deprivation of financial resources",
             "destroying household property",
-            "controlling the victim's own money",
+            "controlling the victims own money",
             "Others"
         ],
         "Sexually Abused": [

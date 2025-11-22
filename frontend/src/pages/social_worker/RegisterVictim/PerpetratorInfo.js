@@ -192,9 +192,7 @@ export default function PerpetratorInfo({
               handleChange("per_educational_attainment", e.target.value)
             }
           >
-            <option value="">
-              Select Educational Level
-            </option>
+            <option value="">Select Educational Level</option>
             <option value="No Formal Education">No Formal Education</option>
             <option value="Elementary Level/Graduate">
               Elementary Level/Graduate
@@ -211,6 +209,20 @@ export default function PerpetratorInfo({
             </option>
             <option value="Post graduate">Post graduate</option>
           </select>
+        </div>
+      </div>
+
+      {/* Known Address */}
+      <div>
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Known Address
+          </label>
+          <input
+            className="input"
+            type="text"
+            onChange={(e) => handleChange("per_known_address", e.target.value)}
+          />
         </div>
       </div>
 
