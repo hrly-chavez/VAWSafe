@@ -72,4 +72,6 @@ export const CONTACT_PERSON_FIELDS = [
   "cont_civil_status",
   "cont_victim_relationship",
   "cont_contact_number",
+  "cont_prov_address",
+  "cont_work_address",
 ];

@@ -420,8 +420,8 @@ class ContactPerson(models.Model):
     cont_civil_status = EncryptedCharField(max_length=512, choices=CIVIL_STATUS_CHOICES, default='SINGLE')
     cont_victim_relationship = EncryptedCharField(max_length=255, blank=True, null=True)
     cont_contact_number = EncryptedCharField(max_length=512, blank=True, null=True)
-    # cont_prov_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
-    # cont_work_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
+    cont_prov_address = EncryptedCharField(max_length=512, blank=True, null=True)
+    cont_work_address = EncryptedCharField(max_length=512, blank=True, null=True)
 
     # new FK to IncidentInformation
     incident = models.ForeignKey("IncidentInformation", on_delete=models.CASCADE, related_name="contact_persons")
