@@ -37,6 +37,8 @@ export const INCIDENT_KEYS = [
   "is_conflict_area",
   "conflict_area",
   "is_calamity_area",
+  "physical_description",
+  "physical_description_other",
 ];
 
 export const PERP_KEYS = [

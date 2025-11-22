@@ -465,6 +465,8 @@ class IncidentInformation(models.Model): #Case in the frontend
     sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
     street = models.ForeignKey("Street", on_delete=models.SET_NULL, related_name="incidents", null=True, blank=True)
 
+    physical_description = models.JSONField(null=True, blank=True)
+    physical_description_other = EncryptedCharField(max_length=512, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Auto-assign case number if not already set

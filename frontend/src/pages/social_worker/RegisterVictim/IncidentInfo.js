@@ -2,6 +2,18 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+export const PHYSICAL_DESCRIPTION_OPTIONS = [
+    { key: "dirty_looking", label: "Dirty looking" },
+    { key: "skin_disease", label: "With skin disease" },
+    { key: "light_skin", label: "Light skin" },
+    { key: "small_build", label: "Small in build" },
+    { key: "medium_build", label: "Medium build" },
+    { key: "big_build", label: "Big build" },
+    { key: "thin", label: "Thin" },
+    { key: "average_weight", label: "Average in weight" },
+    { key: "obese", label: "Obese" },
+  ];
+
 export default function IncidentInfo({ formDataState, setFormDataState }) {
   const VIOLENCE_OPTIONS = {
     "Physical Violence": [],
@@ -30,6 +42,15 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
       "Others",
     ],
   };
+
+  useEffect(() => {
+    setFormDataState(prev => ({
+      ...prev,
+      physical_description: prev.physical_description || {},
+      physical_description_other: prev.physical_description_other || ""
+    }));
+  }, []);
+
 
   const handleChange = (field, value) => {
     setFormDataState((prev) => ({
@@ -187,12 +208,47 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
         )}
 
       {/* physical description */}
-      <div>
-        <b>PLEASE CHECK THE RELEVANT PHYSICAL DESCRIPTION:</b>
-        <div>Physical Description</div>
-        <input type="checkbox" value={true}></input>
-        <div>Manner of relating to Social Worker</div>
+      <div className="mt-6">
+        <h2 className="font-semibold text-lg">Physical Description</h2>
+
+        {PHYSICAL_DESCRIPTION_OPTIONS.map(item => (
+          <label key={item.key} className="flex items-center gap-2 mt-1">
+            <input
+              type="checkbox"
+              checked={formDataState.physical_description?.[item.key] || false}
+              onChange={(e) => {
+                const checked = e.target.checked;
+
+                setFormDataState(prev => ({
+                  ...prev,
+                  physical_description: {
+                    ...prev.physical_description,
+                    [item.key]: checked,
+                  }
+                }));
+              }}
+            />
+            {item.label}
+          </label>
+        ))}
+
+        {/* OTHER FIELD */}
+        <div className="mt-3">
+          <label className="block">Others (specify):</label>
+          <input
+            type="text"
+            className="border rounded p-2 w-full"
+            value={formDataState.physical_description_other || ""}
+            onChange={(e) =>
+              setFormDataState(prev => ({
+                ...prev,
+                physical_description_other: e.target.value
+              }))
+            }
+          />
+        </div>
       </div>
+
 
       {/* Date & Time */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
