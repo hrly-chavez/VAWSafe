@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.db import transaction
 from django.http import Http404
 from deepface import DeepFace
@@ -32,6 +32,7 @@ from dswd.utils.logging import log_change
 from docxtpl import DocxTemplate
 from calendar import month_name
 from collections import defaultdict
+from collections import Counter
 
 logger = logging.getLogger(__name__)
 
@@ -1417,30 +1418,38 @@ class NurseDashboardAPIView(APIView):
         today = date.today()
         official = getattr(request.user, "official", None)
 
-        # Victim Summary: count all victims (no role filter)
+        # Victim Summary
         total_victims = Victim.objects.count()
         victim_summary = {"total_victims": total_victims}
 
-        # Session Summary: scoped to the logged-in nurse
+        # Session Summary
         sessions = Session.objects.filter(assigned_official=official)
         week_ahead = today + timedelta(days=7)
 
-        total_assigned_sessions = sessions.count()
-        sessions_this_week = sessions.filter(
-            sess_next_sched__date__range=[today, week_ahead]
-        ).count()
-        pending_sessions = sessions.filter(sess_status="Pending").count()
-        ongoing_sessions = sessions.filter(sess_status="Ongoing").count()
-
         session_summary = {
-            "total_assigned_sessions": total_assigned_sessions,
-            "sessions_this_week": sessions_this_week,
-            "pending_sessions": pending_sessions,
-            "ongoing_sessions": ongoing_sessions,
+            "total_assigned_sessions": sessions.count(),
+            "sessions_this_week": sessions.filter(sess_next_sched__date__range=[today, week_ahead]).count(),
+            "pending_sessions": sessions.filter(sess_status="Pending").count(),
+            "ongoing_sessions": sessions.filter(sess_status="Ongoing").count(),
         }
 
-        # Monthly Victim Reports: loop through ALL incidents (no role filter)
+        # Incident Summary (violence types + status counts)
         incidents = IncidentInformation.objects.all()
+        violence_types = Counter(i.violence_type for i in incidents if i.violence_type)
+        violence_types_dict = dict(violence_types)
+
+        status_counts = (
+            incidents.values("incident_status")
+            .annotate(count=Count("incident_status"))
+        )
+        status_types = {s["incident_status"]: s["count"] for s in status_counts}
+
+        incident_summary = {
+            "violence_types": violence_types_dict,
+            "status_types": status_types,
+        }
+
+        # Monthly Report Rows (with violence type breakdown)
         report_rows = []
         for i in range(1, 13):
             month_incidents = [
@@ -1449,22 +1458,35 @@ class NurseDashboardAPIView(APIView):
             ]
             report_rows.append({
                 "month": month_name[i],
-                "totalVictims": len(month_incidents)
+                "totalVictims": len(month_incidents),
+                "Physical Violence": sum(1 for inc in month_incidents if inc.violence_type == "Physical Violence"),
+                "Psychological Violence": sum(1 for inc in month_incidents if inc.violence_type == "Psychological Violence"),
+                "Economic Abused": sum(1 for inc in month_incidents if inc.violence_type == "Economic Abused"),
+                "Sexually Abused": sum(1 for inc in month_incidents if inc.violence_type == "Sexually Abused"),
+                "Sexually Exploited": sum(1 for inc in month_incidents if inc.violence_type == "Sexually Exploited"),
             })
 
         monthly_report_data = MonthlyReportRowSerializer(report_rows, many=True).data
 
-        # Notifications: sessions within 3 days for this official
+        # Notifications
         upcoming_sessions = sessions.filter(
             sess_next_sched__date__range=(today, today + timedelta(days=3))
         ).filter(
             Q(progress__official=official, progress__is_done=False) |
-            ~Q(progress__official=official)   # no progress yet for this official
+            ~Q(progress__official=official)
+        ).distinct()
+
+        overdue_sessions = sessions.filter(
+            sess_next_sched__date__lt=today
+        ).filter(
+            Q(progress__official=official, progress__is_done=False) |
+            ~Q(progress__official=official)
         ).distinct()
 
         return Response({
             "victim_summary": VictimSummarySerializer(victim_summary).data,
-            "session_summary": session_summary,  # simplified summary
+            "session_summary": session_summary,
+            "incident_summary": incident_summary,  
             "monthly_report_rows": monthly_report_data,
             "upcoming_sessions": [
                 {
@@ -1475,5 +1497,15 @@ class NurseDashboardAPIView(APIView):
                     "date": s.sess_next_sched,
                 }
                 for s in upcoming_sessions
+            ],
+            "overdue_sessions": [
+                {
+                    "id": s.pk,
+                    "sess_num": s.sess_num,
+                    "victim": s.incident_id.vic_id.full_name if s.incident_id and s.incident_id.vic_id else None,
+                    "type": s.sess_type.first().name if s.sess_type.exists() else "N/A",
+                    "date": s.sess_next_sched,
+                }
+                for s in overdue_sessions
             ]
         })

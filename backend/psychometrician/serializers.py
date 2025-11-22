@@ -899,3 +899,88 @@ class MonthlyPsychProgressReportSerializer(serializers.ModelSerializer):
             "summary_of_results": {"required": False},
             "recommendations": {"required": False},
         }
+
+# ========================= DASHBOARD =========================
+
+# --- Victim Summary ---
+class VictimSummarySerializer(serializers.Serializer):
+    total_victims = serializers.IntegerField()
+
+
+# --- Session Summary ---
+class SessionSummarySerializer(serializers.Serializer):
+    total_assigned_sessions = serializers.IntegerField()
+    sessions_this_week = serializers.IntegerField()
+    pending_sessions = serializers.IntegerField()
+    ongoing_sessions = serializers.IntegerField()
+
+
+# --- Monthly Report Row ---
+class MonthlyReportRowSerializer(serializers.Serializer):
+    month = serializers.CharField()
+    totalVictims = serializers.IntegerField()
+    # Add violence type breakdowns (optional, mirrors DSWD/Nurse)
+    Physical_Violence = serializers.IntegerField(source="Physical Violence", required=False)
+    Physical_Abused = serializers.IntegerField(source="Physical Abused", required=False)
+    Psychological_Violence = serializers.IntegerField(source="Psychological Violence", required=False)
+    Psychological_Abuse = serializers.IntegerField(source="Psychological Abuse", required=False)
+    Economic_Abused = serializers.IntegerField(source="Economic Abused", required=False)
+    Strandee = serializers.IntegerField(required=False)
+    Sexually_Abused = serializers.IntegerField(source="Sexually Abused", required=False)
+    Sexually_Exploited = serializers.IntegerField(source="Sexually Exploited", required=False)
+
+
+# --- Upcoming Sessions ---
+class UpcomingSessionSerializer(serializers.ModelSerializer):
+    victim_name = serializers.SerializerMethodField()
+    session_type = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Session
+        fields = [
+            "sess_id",
+            "sess_num",
+            "sess_status",
+            "sess_next_sched",
+            "victim_name",
+            "session_type",
+        ]
+
+    def get_victim_name(self, obj):
+        if obj.incident_id and obj.incident_id.vic_id:
+            return obj.incident_id.vic_id.full_name
+        return None
+
+    def get_session_type(self, obj):
+        return obj.sess_type.first().name if obj.sess_type.exists() else None
+
+
+# --- Overdue Sessions (same structure as Upcoming) ---
+class OverdueSessionSerializer(serializers.ModelSerializer):
+    victim_name = serializers.SerializerMethodField()
+    session_type = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Session
+        fields = [
+            "sess_id",
+            "sess_num",
+            "sess_status",
+            "sess_next_sched",
+            "victim_name",
+            "session_type",
+        ]
+
+    def get_victim_name(self, obj):
+        if obj.incident_id and obj.incident_id.vic_id:
+            return obj.incident_id.vic_id.full_name
+        return None
+
+    def get_session_type(self, obj):
+        return obj.sess_type.first().name if obj.sess_type.exists() else None
+
+
+# --- Violence Type Summary ---
+class ViolenceTypeSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    count = serializers.IntegerField()

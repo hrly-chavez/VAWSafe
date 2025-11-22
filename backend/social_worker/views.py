@@ -29,6 +29,7 @@ from dswd.utils.logging import log_change
 from docxtpl import DocxTemplate
 from calendar import month_name
 from pathlib import Path
+from collections import Counter
 
 def generate_consent_forms(victim_serializer_data, victim_id, assigned_official=None):
     """
@@ -1821,7 +1822,7 @@ class SocialWorkerDashboardAPIView(APIView):
             "done_sessions": done_sessions,   
         }
 
-        # Monthly Victim Reports
+        # Monthly Victim Reports (with violence type breakdown)
         incidents = IncidentInformation.objects.all()
         report_rows = []
         for i in range(1, 13):
@@ -1839,18 +1840,33 @@ class SocialWorkerDashboardAPIView(APIView):
                 "Sexually_Exploited": sum(1 for inc in month_incidents if inc.violence_type == "Sexually Exploited"),
             })
 
-        # Notifications: sessions within 3 days for this official
+        monthly_report_data = MonthlyReportRowSerializer(report_rows, many=True).data
+
+        # Violence Type Aggregation (overall counts)
+        violence_counts = Counter(i.violence_type for i in incidents if i.violence_type)
+        violence_types_dict = dict(violence_counts)
+
+        # Notifications: upcoming sessions
         upcoming_sessions = sessions.filter(
             sess_next_sched__date__range=(today, today + timedelta(days=3))
         ).filter(
             Q(progress__official=official, progress__is_done=False) |
-            ~Q(progress__official=official)   # no progress yet for this official
+            ~Q(progress__official=official)
+        ).distinct()
+
+        # Overdue Sessions: past due date and not completed
+        overdue_sessions = sessions.filter(
+            sess_next_sched__date__lt=today
+        ).filter(
+            Q(progress__official=official, progress__is_done=False) |
+            ~Q(progress__official=official)
         ).distinct()
 
         return Response({
             "victim_summary": VictimSummarySerializer(victim_summary).data,
             "session_summary": SessionSummarySerializer(session_summary).data,
-            "monthly_report_rows": MonthlyReportRowSerializer(report_rows, many=True).data,
+            "monthly_report_rows": monthly_report_data,
+            "violence_types": violence_types_dict,   
             "upcoming_sessions": [
                 {
                     "id": s.pk,
@@ -1860,5 +1876,90 @@ class SocialWorkerDashboardAPIView(APIView):
                     "date": s.sess_next_sched,
                 }
                 for s in upcoming_sessions
+            ],
+            "overdue_sessions": [
+                {
+                    "id": s.pk,
+                    "sess_num": s.sess_num,
+                    "victim": s.incident_id.vic_id.full_name if s.incident_id and s.incident_id.vic_id else None,
+                    "type": s.sess_type.first().name if s.sess_type.exists() else "N/A",
+                    "date": s.sess_next_sched,
+                }
+                for s in overdue_sessions
             ]
         })
+
+#=======================================REPORTS==============================================================
+
+# --- Social Worker Monthly Reports (Full CRUD) ---
+class SocialWorkerMonthlyReportViewSet(viewsets.ModelViewSet):
+    serializer_class = SocialWorkerMonthlyReportSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Social Worker"]
+
+    def get_queryset(self):
+        vic_id = self.kwargs["vic_id"]
+        return MonthlyProgressReport.objects.filter(
+            victim__vic_id=vic_id,
+            report_type="Social Worker"
+        ).order_by("-report_month")
+
+    def perform_create(self, serializer):
+        official = getattr(self.request.user, "official", None)
+        vic_id = self.kwargs.get("vic_id")
+
+        victim = Victim.objects.get(vic_id=vic_id)
+        incident = (
+            IncidentInformation.objects.filter(vic_id=victim)
+            .order_by("-incident_num")
+            .first()
+        )
+
+        serializer.save(
+            victim=victim,
+            incident=incident,
+            report_month=date.today(),
+            prepared_by=official,
+            report_type="Social Worker"
+        )
+
+
+# Nurse Monthly Reports (read-only)
+class NurseMonthlyReportListView(generics.ListAPIView):
+    serializer_class = NurseMonthlyReportSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Social Worker", "Nurse"]
+
+    def get_queryset(self):
+        vic_id = self.kwargs["vic_id"]
+        return MonthlyProgressReport.objects.filter(
+            victim__vic_id=vic_id,
+            report_type="Nurse"
+        ).order_by("-report_month")
+
+
+# Psychometrician Comprehensive Reports (read-only)
+class PsychComprehensiveReportListView(generics.ListAPIView):
+    serializer_class = ComprehensivePsychReportSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Social Worker", "Psychometrician"]
+
+    def get_queryset(self):
+        vic_id = self.kwargs["vic_id"]
+        return ComprehensivePsychReport.objects.filter(
+            victim__vic_id=vic_id
+        ).order_by("-report_month")
+
+
+# Psychometrician Monthly Progress Reports (read-only)
+class PsychMonthlyProgressReportListView(generics.ListAPIView):
+    serializer_class = MonthlyPsychProgressReportSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Social Worker", "Psychometrician"]
+
+    def get_queryset(self):
+        vic_id = self.kwargs["vic_id"]
+        return MonthlyPsychProgressReport.objects.filter(
+            victim__vic_id=vic_id
+        ).order_by("-report_month")
+
