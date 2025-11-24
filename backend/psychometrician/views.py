@@ -1618,7 +1618,9 @@ def generate_monthly_psych_report_forms(report_instance):
     tpl = DocxTemplate(template_path)
     tpl.render(psych_report_data)
 
-    output_file = os.path.join(output_folder, "MONTHLY-PROGRESS-RHW.docx")
+    now = datetime.now()
+    timestamp = now.strftime("%d-%b-%Y_%H-%M")
+    output_file = os.path.join(output_folder, f"MONTHLY-PROGRESS-RHW_{timestamp}.docx")
     tpl.save(output_file)
 
     return [output_file]
