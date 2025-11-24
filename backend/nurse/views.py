@@ -523,9 +523,7 @@ def generate_session_docx(session, current_official=None):
         Desktop/Templates/victim<victim_id>/psychometrician/<filename>.docx
     """
 
-    # -----------------------------
     # 1. Resolve Victim via Incident
-    # -----------------------------
     if not session.incident_id:
         raise ValueError("Session is not linked to any IncidentInformation.")
 
@@ -537,18 +535,14 @@ def generate_session_docx(session, current_official=None):
     victim = incident.vic_id
     victim_id = victim.vic_id
 
-    # -----------------------------
     # 2. Paths
-    # -----------------------------
     desktop = os.path.join(os.path.expanduser("~"), "Desktop")
     root_templates = os.path.join(desktop, "Templates")
 
     out_dir = os.path.join(root_templates, f"victim{victim_id}", "nurse")
     os.makedirs(out_dir, exist_ok=True)
 
-    # -----------------------------
     # 3. Determine template based on session number
-    # -----------------------------
     is_first_session = (session.sess_num or 1) == 1  # Use sess_num from model
 
     if is_first_session:
@@ -562,9 +556,7 @@ def generate_session_docx(session, current_official=None):
     if not os.path.exists(template_path):
         raise FileNotFoundError(f"Missing template: {template_path}")
 
-    # -----------------------------
     # 4. Fetch session Q&A
-    # -----------------------------
     sqs = (
         SessionQuestion.objects
         .filter(session=session)
@@ -588,9 +580,7 @@ def generate_session_docx(session, current_official=None):
             "answered_by": sq.answered_by.full_name if sq.answered_by else "",
         })
 
-    # -----------------------------
     # 5. Context for docx
-    # -----------------------------
     context = {
         "session": session,
         "created_at": datetime.now().strftime("%B %d, %Y"),
@@ -599,9 +589,7 @@ def generate_session_docx(session, current_official=None):
         "incident": incident,
     }
 
-    # -----------------------------
     # 6. Render and save
-    # -----------------------------
     doc = DocxTemplate(template_path)
     doc.render(context)
 
@@ -1485,13 +1473,13 @@ def generate_nurse_monthly_report(report_instance):
         "created_at": report_instance.created_at.strftime("%B %d, %Y"),
     }
 
-    # -----------------------------
     # 4. Generate output folder & filename
-    # -----------------------------
     output_folder = os.path.join(root_templates, f"victim{victim_id}", "nurse", "reports", "monthly")
     os.makedirs(output_folder, exist_ok=True)
 
-    output_file = os.path.join(output_folder, f"Monthly-Medical-Report-for-Residents-{report_instance.report_month}.docx")
+    now = datetime.now()
+    timestamp = now.strftime("%d-%b-%Y_%H-%M")
+    output_file = os.path.join(output_folder, f"Monthly-Medical-Report-for-Residents-{timestamp}.docx")
 
     # 5. Render and save
     doc.render(context)
