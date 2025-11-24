@@ -1454,18 +1454,14 @@ def generate_nurse_monthly_report(report_instance):
         Desktop/Templates/victim<victim_id>/nurse/reports/monthly/<template_name>.docx
     """
 
-    # -----------------------------
     # 1. Resolve victim and report
-    # -----------------------------
     victim = report_instance.victim
     victim_id = victim.vic_id
 
     # Auto-fill report month as Month Year
     report_month_str = report_instance.report_month.strftime("%B %Y")
 
-    # -----------------------------
     # 2. Define template path
-    # -----------------------------
     root_templates = os.path.join(os.path.expanduser("~"), "Desktop", "Templates")
     template_path = os.path.join(root_templates, "nurse", "Monthly-Medical-Report-for-Residents.docx")
 
@@ -1474,9 +1470,7 @@ def generate_nurse_monthly_report(report_instance):
 
     doc = DocxTemplate(template_path)
 
-    # -----------------------------
     # 3. Prepare context
-    # -----------------------------
     context = {
         "victim": victim,
         "age": report_instance.age,
@@ -1499,9 +1493,7 @@ def generate_nurse_monthly_report(report_instance):
 
     output_file = os.path.join(output_folder, f"Monthly-Medical-Report-for-Residents-{report_instance.report_month}.docx")
 
-    # -----------------------------
     # 5. Render and save
-    # -----------------------------
     doc.render(context)
     doc.save(output_file)
 
