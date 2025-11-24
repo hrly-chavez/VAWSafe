@@ -1433,6 +1433,73 @@ class ServeVictimFacePhotoView(APIView):
         return serve_encrypted_file(request, sample, sample.photo, content_type='image/jpeg')
     
 # ========================= REPORTS =========================
+def generate_comprehensive_psych_report(report_instance):
+    """
+    Generates ONE .docx file for a ComprehensivePsychReport instance.
+
+    Save path:
+        Desktop/Templates/victim<victim_id>/psychometrician/reports/comprehensive/<template_name>.docx
+    """
+
+    # -----------------------------
+    # 1. Resolve victim
+    # -----------------------------
+    victim = report_instance.victim
+    victim_id = victim.vic_id
+
+    # -----------------------------
+    # 2. Paths
+    # -----------------------------
+    desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+    root_templates = os.path.join(desktop, "Templates")
+
+    # Output folder for comprehensive reports
+    output_folder = os.path.join(
+        root_templates,
+        f"victim{victim_id}",
+        "psychometrician",
+        "reports",
+        "comprehensive"
+    )
+    os.makedirs(output_folder, exist_ok=True)
+
+    # -----------------------------
+    # 2A. Template path
+    # -----------------------------
+    template_path = os.path.join(root_templates, "psychometrician", "Comprehensive-Psych-Report-RHW.docx")
+
+    # -----------------------------
+    # 3. Prepare context
+    # -----------------------------
+    incident = report_instance.incident
+
+    comp_report_data = {
+        "victim": victim,
+        "incident": incident,
+        "prepared_by": report_instance.prepared_by.full_name if report_instance.prepared_by else "",
+        "report_month": report_instance.report_month.strftime("%B %Y") if report_instance.report_month else "",
+        "reason_for_referral": report_instance.reason_for_referral or "",
+        "brief_history": report_instance.brief_history or "",
+        "behavioral_observation": report_instance.behavioral_observation or "",
+        "test_results_discussion": report_instance.test_results_discussion or "",
+        "recommendations": report_instance.recommendations or "",
+        "current_date": datetime.now().strftime("%B %d, %Y"),
+        "current_year": datetime.now().strftime("%Y"),
+    }
+
+    # -----------------------------
+    # 4. Render and save
+    # -----------------------------
+    tpl = DocxTemplate(template_path)
+    tpl.render(comp_report_data)
+    
+    now = datetime.now()
+    timestamp = now.strftime("%d-%b-%Y_%H-%M")
+    output_file = os.path.join(output_folder, f"Comprehensive-Psych-Report-RHW_{timestamp}.docx")
+    tpl.save(output_file)
+
+    return [output_file]
+
 class ComprehensivePsychReportViewSet(viewsets.ModelViewSet):
     queryset = ComprehensivePsychReport.objects.all()
     serializer_class = ComprehensivePsychReportSerializer
@@ -1458,12 +1525,17 @@ class ComprehensivePsychReportViewSet(viewsets.ModelViewSet):
         # Auto-fill report_month with today's date
         today = date.today()
 
-        serializer.save(
+        report_instance = serializer.save(
             victim=victim,
             prepared_by=official,
             incident=incident,
             report_month=today
         )
+
+        # -----------------------------
+        # Generate DOCX immediately
+        # -----------------------------
+        output_files = generate_comprehensive_psych_report(report_instance)
 
 def generate_monthly_psych_report_forms(report_instance):
     """
