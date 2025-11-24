@@ -2,13 +2,37 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+export const PHYSICAL_DESCRIPTION_OPTIONS = [
+    { key: "dirty_looking", label: "Dirty looking" },
+    { key: "skin_disease", label: "With skin disease" },
+    { key: "light_skin", label: "Light skin" },
+    { key: "small_build", label: "Small in build" },
+    { key: "medium_build", label: "Medium build" },
+    { key: "big_build", label: "Big build" },
+    { key: "thin", label: "Thin" },
+    { key: "average_weight", label: "Average in weight" },
+    { key: "obese", label: "Obese" },
+  ];
+
+export const MANNER_TOWARDS_WORKER_OPTIONS = [
+  { key: "friendly", label: "Friendly and easily relates" },
+  { key: "aggressive", label: "Aggressive" },
+  { key: "keeps_to_herself", label: "Keeps to herself" },
+  { key: "happy_disposition", label: "Happy disposition" },
+  { key: "shy", label: "Shy" },
+  { key: "energetic", label: "Energetic" },
+  { key: "crying", label: "Crying" },
+  { key: "apathetic", label: "Apathetic" },
+  { key: "aloof", label: "Aloof" },
+];
+
 export default function IncidentInfo({ formDataState, setFormDataState }) {
   const VIOLENCE_OPTIONS = {
     "Physical Violence": [],
     "Physical Abused": ["Rape", "Acts of lasciviousness", "Incest"],
     "Psychological Violence": [],
     "Psychological Abuse": [],
-    "Economic Abuse": [
+    "Economic Abused": [
       "withdraw of financial support",
       "deprivation of threat and deprivation of financial resources",
       "destroying household property",
@@ -30,6 +54,17 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
       "Others",
     ],
   };
+
+  useEffect(() => {
+    setFormDataState(prev => ({
+      ...prev,
+      physical_description: prev.physical_description || {},
+      physical_description_other: prev.physical_description_other || "",
+      manner_towards_worker: prev.manner_towards_worker || {},
+      manner_towards_worker_other: prev.manner_towards_worker_other || ""
+    }));
+  }, []);
+
 
   const handleChange = (field, value) => {
     setFormDataState((prev) => ({
@@ -187,11 +222,87 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
         )}
 
       {/* physical description */}
-      <div>
-        <b>PLEASE CHECK THE RELEVANT PHYSICAL DESCRIPTION:</b>
-        <div>Physical Description</div>
-        <input type="checkbox" value={true}></input>
-        <div>Manner of relating to Social Worker</div>
+      <div className="mt-6">
+        <h2 className="font-semibold text-lg">Physical Description</h2>
+
+        {PHYSICAL_DESCRIPTION_OPTIONS.map(item => (
+          <label key={item.key} className="flex items-center gap-2 mt-1">
+            <input
+              type="checkbox"
+              checked={formDataState.physical_description?.[item.key] || false}
+              onChange={(e) => {
+                const checked = e.target.checked;
+
+                setFormDataState(prev => ({
+                  ...prev,
+                  physical_description: {
+                    ...prev.physical_description,
+                    [item.key]: checked,
+                  }
+                }));
+              }}
+            />
+            {item.label}
+          </label>
+        ))}
+
+        {/* OTHER FIELD */}
+        <div className="mt-3">
+          <label className="block">Others (specify):</label>
+          <input
+            type="text"
+            className="border rounded p-2 w-full"
+            value={formDataState.physical_description_other || ""}
+            onChange={(e) =>
+              setFormDataState(prev => ({
+                ...prev,
+                physical_description_other: e.target.value
+              }))
+            }
+          />
+        </div>
+      </div>
+
+      {/* manner towards worker */}
+      <div className="mt-6">
+        <h2 className="font-semibold text-lg">Manner of relating to Social Worker</h2>
+
+        {MANNER_TOWARDS_WORKER_OPTIONS.map(item => (
+          <label key={item.key} className="flex items-center gap-2 mt-1">
+            <input
+              type="checkbox"
+              checked={formDataState.manner_towards_worker?.[item.key] || false}
+              onChange={(e) => {
+                const checked = e.target.checked;
+
+                setFormDataState(prev => ({
+                  ...prev,
+                  manner_towards_worker: {
+                    ...prev.manner_towards_worker,
+                    [item.key]: checked,
+                  }
+                }));
+              }}
+            />
+            {item.label}
+          </label>
+        ))}
+
+        {/* OTHER FIELD */}
+        <div className="mt-3">
+          <label className="block">Others (specify):</label>
+          <input
+            type="text"
+            className="border rounded p-2 w-full"
+            value={formDataState.manner_towards_worker_other || ""}
+            onChange={(e) =>
+              setFormDataState(prev => ({
+                ...prev,
+                manner_towards_worker_other: e.target.value
+              }))
+            }
+          />
+        </div>
       </div>
 
       {/* Date & Time */}

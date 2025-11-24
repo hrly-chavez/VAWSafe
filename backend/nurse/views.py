@@ -32,6 +32,7 @@ from dswd.utils.logging import log_change
 from docxtpl import DocxTemplate
 from calendar import month_name
 from collections import defaultdict
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -514,6 +515,93 @@ def add_custom_question(request, sess_id):
 
     return Response(SessionQuestionSerializer(created, many=True).data, status=201)
 
+def generate_session_docx(session, current_official=None):
+    """
+    Creates a DOCX file summarizing all Q&A for a session.
+    - First session uses IPA-FORMAT-RHW.docx
+    - Subsequent sessions use a different template (e.g., IPA-FORMAT-NEXT.docx)
+    Output is saved to:
+        Desktop/Templates/victim<victim_id>/psychometrician/<filename>.docx
+    """
+
+    # 1. Resolve Victim via Incident
+    if not session.incident_id:
+        raise ValueError("Session is not linked to any IncidentInformation.")
+
+    incident = session.incident_id
+
+    if not incident.vic_id:
+        raise ValueError("Incident does not contain a victim record.")
+
+    victim = incident.vic_id
+    victim_id = victim.vic_id
+
+    # 2. Paths
+    desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+    root_templates = os.path.join(desktop, "Templates")
+
+    # Build safe victim folder name
+    safe_full_name = re.sub(r'[\\/*?:"<>|]', "", victim.full_name)
+
+    out_dir = os.path.join(root_templates, safe_full_name, "nurse")
+    os.makedirs(out_dir, exist_ok=True)
+
+    # 3. Determine template based on session number
+    is_first_session = (session.sess_num or 1) == 1  # Use sess_num from model
+
+    if is_first_session:
+        template_file = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
+        output_file_name = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
+    else:
+        template_file = "Individual-Sessions-Report-RHW.docx"  # Your second session template
+        output_file_name = f"Individual-Sessions-Report-RHW-{session.sess_num}.docx"
+
+    template_path = os.path.join(root_templates, "nurse", template_file)
+    if not os.path.exists(template_path):
+        raise FileNotFoundError(f"Missing template: {template_path}")
+
+    # 4. Fetch session Q&A
+    sqs = (
+        SessionQuestion.objects
+        .filter(session=session)
+        .select_related("question", "answered_by")
+        .order_by("pk")
+    )
+
+    if current_official:
+        sqs = sqs.filter(answered_by__of_role=current_official.of_role)
+
+    answers = []
+    for sq in sqs:
+        if current_official and sq.answered_by != current_official:
+            continue
+
+        answers.append({
+            "question": sq.sq_question_text_snapshot or (sq.question.ques_question_text if sq.question else ""),
+            "value": sq.sq_value or "",
+            "note": sq.sq_note or "",
+            "role": sq.answered_by.of_role if sq.answered_by else "",
+            "answered_by": sq.answered_by.full_name if sq.answered_by else "",
+        })
+
+    # 5. Context for docx
+    context = {
+        "session": session,
+        "created_at": datetime.now().strftime("%B %d, %Y"),
+        "answers": answers,
+        "victim": victim,
+        "incident": incident,
+    }
+
+    # 6. Render and save
+    doc = DocxTemplate(template_path)
+    doc.render(context)
+
+    output_path = os.path.join(out_dir, output_file_name)
+    doc.save(output_path)
+
+    return output_path
+
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def finish_session(request, sess_id):
@@ -639,6 +727,9 @@ def finish_session(request, sess_id):
         session.save()
 
     all_finished = session.all_officials_done()
+
+    if user.official.of_role == "Nurse":
+        output_doc = generate_session_docx(session, current_official=user.official)
 
     return Response({
         "message": "Your session progress has been marked as done.",
@@ -1347,6 +1438,62 @@ class ServeVictimFacePhotoView(APIView):
         return serve_encrypted_file(request, sample, sample.photo, content_type='image/jpeg')
     
 #============================REPORTS==============================================
+def generate_nurse_monthly_report(report_instance):
+    """
+    Generates a .docx file for a Nurse Monthly Progress Report.
+
+    Save path:
+        Desktop/Templates/victim<victim_id>/nurse/reports/monthly/<template_name>.docx
+    """
+
+    # 1. Resolve victim and report
+    victim = report_instance.victim
+    victim_id = victim.vic_id
+
+    # Build victim folder name
+    safe_full_name = re.sub(r'[\\/*?:"<>|]', "", victim.full_name)
+
+    # Auto-fill report month as Month Year
+    report_month_str = report_instance.report_month.strftime("%B %Y")
+
+    # 2. Define template path
+    root_templates = os.path.join(os.path.expanduser("~"), "Desktop", "Templates")
+    template_path = os.path.join(root_templates, "nurse", "Monthly-Medical-Report-for-Residents.docx")
+
+    if not os.path.exists(template_path):
+        raise FileNotFoundError(f"Template not found: {template_path}")
+
+    doc = DocxTemplate(template_path)
+
+    # 3. Prepare context
+    context = {
+        "victim": victim,
+        "age": report_instance.age,
+        "date_of_birth": report_instance.date_of_birth.strftime("%B %d, %Y") if report_instance.date_of_birth else "",
+        "report_month": report_month_str,
+        "height": report_instance.height or "",
+        "weight": report_instance.weight or "",
+        "bmi": report_instance.bmi or "",
+        "bmi_category": report_instance.bmi_category or "",
+        "report_info": report_instance.report_info or "",
+        "prepared_by": report_instance.prepared_by.full_name if report_instance.prepared_by else "",
+        "created_at": report_instance.created_at.strftime("%B %d, %Y"),
+    }
+
+    # 4. Generate output folder & filename
+    output_folder = os.path.join(root_templates, safe_full_name, "nurse", "reports", "monthly")
+    os.makedirs(output_folder, exist_ok=True)
+
+    now = datetime.now()
+    timestamp = now.strftime("%d-%b-%Y_%H-%M")
+    output_file = os.path.join(output_folder, f"Monthly-Medical-Report-for-Residents-{timestamp}.docx")
+
+    # 5. Render and save
+    doc.render(context)
+    doc.save(output_file)
+
+    return output_file
+
 class NurseMonthlyReportViewSet(viewsets.ModelViewSet):
     serializer_class = MonthlyProgressReportSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -1373,13 +1520,20 @@ class NurseMonthlyReportViewSet(viewsets.ModelViewSet):
             except IncidentInformation.DoesNotExist:
                 raise NotFound("Incident not found.")
 
-        serializer.save(
+        report_instance = serializer.save(
             prepared_by=official,
             report_type="Nurse",
             victim=victim,
             incident=incident,
             report_month=date.today()  # auto-fill with today if not provided
         )
+
+        # Generate the DOCX after creation
+        try:
+            file_path = generate_nurse_monthly_report(report_instance)
+            print(f"Nurse report generated: {file_path}")
+        except Exception as e:
+            print(f"Failed to generate nurse report DOCX: {e}")
 
     def perform_update(self, serializer):
         official = getattr(self.request.user, "official", None)

@@ -3,28 +3,6 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 
 export default function VictimInfo({ formDataState, setFormDataState }) {
-  // Utility to calculate if victim is minor
-  function isMinor(birthDate) {
-    if (!birthDate) return false;
-    const today = new Date();
-    const birth = new Date(birthDate);
-    const age =
-      today.getFullYear() -
-      birth.getFullYear() -
-      (today.getMonth() < birth.getMonth() ||
-      (today.getMonth() === birth.getMonth() &&
-        today.getDate() < birth.getDate())
-        ? 1
-        : 0);
-    return age < 18;
-  }
-
-  // Auto-update is_minor when birth date changes
-  useEffect(() => {
-    const minor = isMinor(formDataState.vic_birth_date);
-    setShowGuardian(minor); // show guardian section if minor
-  }, [formDataState.vic_birth_date]);
-
   const handleChange = (key, value) => {
     if (key.includes(".")) {
       const [outerKey, innerKey] = key.split(".");
@@ -262,7 +240,8 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
       </div>
 
       {/* Educational Status */}
-      <div>
+      <div className="space-y-4">
+        {/* Educational Attainment */}
         <div className="flex flex-col">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Educational Attainment
@@ -278,23 +257,51 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
               Select Educational Level
             </option>
             <option value="No Formal Education">No Formal Education</option>
-            <option value="Elementary Level/Graduate">
-              Elementary Level/Graduate
-            </option>
-            <option value="Junior High School Level/Graduate">
-              Junior High School Level/Graduate
-            </option>
-            <option value="Senior High School Level/Graduate">
-              Senior High School Level/Graduate
-            </option>
+            <option value="Elementary Level/Graduate">Elementary Level/Graduate</option>
+            <option value="Junior High School Level/Graduate">Junior High School Level/Graduate</option>
+            <option value="Senior High School Level/Graduate">Senior High School Level/Graduate</option>
             <option value="Technical/Vocational">Technical/Vocational</option>
-            <option value="College Level/Graduate">
-              College Level/Graduate
-            </option>
+            <option value="College Level/Graduate">College Level/Graduate</option>
             <option value="Post graduate">Post graduate</option>
           </select>
         </div>
+
+        {/* OS/OSY and School Years in a single row */}
+        <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
+          {/* OS/OSY */}
+          <div className="flex-1 flex flex-col">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              OS/OSY Status
+            </label>
+            <select
+              className="input w-full"
+              value={formDataState.vic_school_type || ""}
+              onChange={(e) => handleChange("vic_school_type", e.target.value)}
+            >
+              <option value="" disabled>
+                Select Status
+              </option>
+              <option value="SY">SY</option>
+              <option value="OSY">OSY</option>
+            </select>
+          </div>
+
+          {/* School Years */}
+          <div className="flex-1 flex flex-col">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              School Years
+            </label>
+            <input
+              type="text"
+              className="input w-full"
+              placeholder="Enter School Years"
+              value={formDataState.vic_school_years || ""}
+              onChange={(e) => handleChange("vic_school_years", e.target.value)}
+            />
+          </div>
+        </div>
       </div>
+
 
       {/* last school name and address */}
       <div className="flex flex-col mb-4">
@@ -353,7 +360,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             Province
           </label>
           <select
-            value={formDataState.address.province}
+            value={formDataState.address.province || ""}
             onChange={(e) => handleChange("address.province", e.target.value)}
             className={inputStyle}
           >
@@ -371,7 +378,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             Municipality
           </label>
           <select
-            value={formDataState.address.municipality}
+            value={formDataState.address.municipality || ""}
             onChange={(e) =>
               handleChange("address.municipality", e.target.value)
             }
@@ -392,7 +399,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             Barangay
           </label>
           <select
-            value={formDataState.address.barangay}
+            value={formDataState.address.barangay || ""}
             onChange={(e) => handleChange("address.barangay", e.target.value)}
             className={inputStyle}
             disabled={!formDataState.address.municipality}

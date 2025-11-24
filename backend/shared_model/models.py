@@ -296,6 +296,11 @@ class Victim(models.Model):
         ('Others', 'Others'),
     ]
     
+    SCHOOL_TYPE_CHOICES = [
+        ('SY', 'School Youth'),
+        ('OSY', 'Out of School Youth'),
+    ]
+    
     # user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="victim", null=True, blank=True)
     vic_id = models.AutoField(primary_key=True)
     vic_first_name = EncryptedCharField(max_length=512)
@@ -310,6 +315,8 @@ class Victim(models.Model):
     vic_civil_status = EncryptedCharField(max_length=512, choices=CIVIL_STATUS_CHOICES, default='SINGLE')
     vic_religion = EncryptedCharField(max_length=512, choices=RELIGION_CHOICES, default='Roman Catholic')
     vic_educational_attainment = EncryptedCharField(max_length=512, choices=EDUCATIONAL_ATTAINMENT_CHOICES, default='No Formal Education')
+    vic_school_type = EncryptedCharField(max_length=3, choices=SCHOOL_TYPE_CHOICES, null=True, blank=True)
+    vic_school_years = models.PositiveSmallIntegerField(null=True, blank=True)
     vic_last_school_attended = EncryptedCharField(max_length=512, null=True, blank=True)
     vic_last_school_address = EncryptedCharField(max_length=512, null=True, blank=True)
     vic_occupation = EncryptedCharField(max_length=512, blank=True, null=True)
@@ -333,6 +340,18 @@ class Victim(models.Model):
     def full_name(self):
         parts = [self.vic_first_name, self.vic_middle_name, self.vic_last_name, self.vic_extension]
         return " ".join(filter(None, parts))
+    
+    @property
+    def age(self):
+        if not self.vic_birth_date:
+            return None
+        
+        today = date.today()
+        return (
+            today.year
+            - self.vic_birth_date.year
+            - ((today.month, today.day) < (self.vic_birth_date.month, self.vic_birth_date.day))
+        )
  
 class VictimFaceSample(models.Model):
     victim = models.ForeignKey(Victim, on_delete=models.CASCADE, related_name="face_samples")
@@ -368,12 +387,24 @@ class Perpetrator(models.Model):
     per_religion = EncryptedCharField(max_length=255, blank=True, null=True)
     per_victim_relationship = EncryptedCharField(max_length=255, blank=True, null=True)
     per_educational_attainment = EncryptedCharField(max_length=512, choices=EDUCATIONAL_ATTAINMENT_CHOICES, default='No Formal Education')
-    # per_known_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
+    per_known_address = EncryptedCharField(max_length=512, blank=True, null=True)
     per_contact_number = EncryptedCharField(max_length=512, blank=True, null=True)
     per_occupation = EncryptedCharField(max_length=512, blank=True, null=True)
 
     def __str__(self):
         return f"{self.per_last_name}, {self.per_first_name}"
+    
+    @property
+    def age(self):
+        if not self.per_birth_date:
+            return None
+        
+        today = date.today()
+        return (
+            today.year
+            - self.per_birth_date.year
+            - ((today.month, today.day) < (self.per_birth_date.month, self.per_birth_date.day))
+        )
   
 class ContactPerson(models.Model):
     cont_fname = EncryptedCharField(max_length=512, blank=True, null=True)
@@ -389,24 +420,25 @@ class ContactPerson(models.Model):
     cont_civil_status = EncryptedCharField(max_length=512, choices=CIVIL_STATUS_CHOICES, default='SINGLE')
     cont_victim_relationship = EncryptedCharField(max_length=255, blank=True, null=True)
     cont_contact_number = EncryptedCharField(max_length=512, blank=True, null=True)
-    # cont_prov_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
-    # cont_work_address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True)
+    cont_prov_address = EncryptedCharField(max_length=512, blank=True, null=True)
+    cont_work_address = EncryptedCharField(max_length=512, blank=True, null=True)
 
     # new FK to IncidentInformation
     incident = models.ForeignKey("IncidentInformation", on_delete=models.CASCADE, related_name="contact_persons")
 
+    @property
+    def age(self):
+        if not self.cont_birth_date:
+            return None
+        
+        today = date.today()
+        return (
+            today.year
+            - self.cont_birth_date.year
+            - ((today.month, today.day) < (self.cont_birth_date.month, self.cont_birth_date.day))
+        )
+
 class IncidentInformation(models.Model): #Case in the frontend
-    VIOLENCE_TYPE = [
-        ('Physical Violence', 'Physical Violence'),
-        ('Physical Abused', 'Physical Abused'),
-        ('Psychological Violence', 'Psychological Violence'),
-        ('Psychological Abuse', 'Psychological Abuse'),
-        ('Economic Abused', 'Economic Abused'),
-        ('Strandee', 'Strandee'),
-        ('Sexually Abused', 'Sexually Abused'),
-        ('Sexually Exploited', 'Sexually Exploited'),
-    ]
-    
     INCIDENT_CHOICES = [
         ('Pending','Pending'),
         ('Ongoing','Ongoing'),
@@ -417,7 +449,7 @@ class IncidentInformation(models.Model): #Case in the frontend
     incident_id = models.AutoField(primary_key=True)
     incident_num = EncryptedIntegerField(null=True,blank=True) #case number 1,2,3...
     incident_status= EncryptedCharField(max_length=512, choices=INCIDENT_CHOICES,default='Pending') #case status
-    violence_type = EncryptedCharField(max_length=512, choices=VIOLENCE_TYPE, null=True, blank=True)
+    violence_type = EncryptedCharField(max_length=512, null=True, blank=True)
     violence_subtype = EncryptedCharField(max_length=512, null=True, blank=True)
 
     incident_date = EncryptedDateField(blank=True, null=True)
@@ -440,6 +472,11 @@ class IncidentInformation(models.Model): #Case in the frontend
     sitio = models.ForeignKey("Sitio", on_delete=models.PROTECT, related_name="incidents", blank=True, null=True)
     street = models.ForeignKey("Street", on_delete=models.SET_NULL, related_name="incidents", null=True, blank=True)
 
+    physical_description = models.JSONField(null=True, blank=True)
+    physical_description_other = EncryptedCharField(max_length=512, null=True, blank=True)
+    
+    manner_towards_worker = models.JSONField(null=True, blank=True)
+    manner_towards_worker_other = EncryptedCharField(max_length=512, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Auto-assign case number if not already set
@@ -501,9 +538,6 @@ class IncidentInformation(models.Model): #Case in the frontend
     def __str__(self):
         return f"Incident {self.incident_id}"
 
-class PhysicalDescription(models.Model):
-    pass
-
 class FamilyMember(models.Model):
     fam_fname = models.CharField(max_length=50, blank=True, null=True)
     fam_mname = models.CharField(max_length=50, blank=True, null=True)
@@ -515,10 +549,19 @@ class FamilyMember(models.Model):
     fam_civil_status = models.CharField(max_length=50, null=True, blank=True)
     fam_educational_attainment = models.CharField(max_length=50, null=True, blank=True)
     fam_occupation = models.CharField(max_length=50, null=True, blank=True)
-    fam_income = models.CharField(max_length=50, null=True, blank=True)
+    fam_income = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     # foreign key
-    victim = models.ForeignKey(Victim, on_delete=models.CASCADE, blank=True, null=True) 
+    victim = models.ForeignKey(Victim, on_delete=models.CASCADE, blank=True, null=True, related_name="family_members")
+
+    @property
+    def age(self):
+        if not self.fam_birth_date:
+            return None
+        today = date.today()
+        birth = self.fam_birth_date
+        # calculate age in years
+        return today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day)) 
 
 class Evidence(models.Model):
     incident = models.ForeignKey(
@@ -534,6 +577,7 @@ class Evidence(models.Model):
         return f"Evidence {self.id} for Incident {self.incident_id}"
     
 #=======================================REPORT================================== 
+# nurse report
 class MonthlyProgressReport(models.Model):
     REPORT_TYPE_CHOICES = [
         ("Nurse", "Nurse"),
