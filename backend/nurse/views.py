@@ -1446,6 +1446,67 @@ class ServeVictimFacePhotoView(APIView):
         return serve_encrypted_file(request, sample, sample.photo, content_type='image/jpeg')
     
 #============================REPORTS==============================================
+def generate_nurse_monthly_report(report_instance):
+    """
+    Generates a .docx file for a Nurse Monthly Progress Report.
+
+    Save path:
+        Desktop/Templates/victim<victim_id>/nurse/reports/monthly/<template_name>.docx
+    """
+
+    # -----------------------------
+    # 1. Resolve victim and report
+    # -----------------------------
+    victim = report_instance.victim
+    victim_id = victim.vic_id
+
+    # Auto-fill report month as Month Year
+    report_month_str = report_instance.report_month.strftime("%B %Y")
+
+    # -----------------------------
+    # 2. Define template path
+    # -----------------------------
+    root_templates = os.path.join(os.path.expanduser("~"), "Desktop", "Templates")
+    template_path = os.path.join(root_templates, "nurse", "Monthly-Medical-Report-for-Residents.docx")
+
+    if not os.path.exists(template_path):
+        raise FileNotFoundError(f"Template not found: {template_path}")
+
+    doc = DocxTemplate(template_path)
+
+    # -----------------------------
+    # 3. Prepare context
+    # -----------------------------
+    context = {
+        "victim": victim,
+        "age": report_instance.age,
+        "date_of_birth": report_instance.date_of_birth.strftime("%B %d, %Y") if report_instance.date_of_birth else "",
+        "report_month": report_month_str,
+        "height": report_instance.height or "",
+        "weight": report_instance.weight or "",
+        "bmi": report_instance.bmi or "",
+        "bmi_category": report_instance.bmi_category or "",
+        "report_info": report_instance.report_info or "",
+        "prepared_by": report_instance.prepared_by.full_name if report_instance.prepared_by else "",
+        "created_at": report_instance.created_at.strftime("%B %d, %Y"),
+    }
+
+    # -----------------------------
+    # 4. Generate output folder & filename
+    # -----------------------------
+    output_folder = os.path.join(root_templates, f"victim{victim_id}", "nurse", "reports", "monthly")
+    os.makedirs(output_folder, exist_ok=True)
+
+    output_file = os.path.join(output_folder, f"Monthly-Medical-Report-for-Residents-{report_instance.report_month}.docx")
+
+    # -----------------------------
+    # 5. Render and save
+    # -----------------------------
+    doc.render(context)
+    doc.save(output_file)
+
+    return output_file
+
 class NurseMonthlyReportViewSet(viewsets.ModelViewSet):
     serializer_class = MonthlyProgressReportSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -1472,13 +1533,20 @@ class NurseMonthlyReportViewSet(viewsets.ModelViewSet):
             except IncidentInformation.DoesNotExist:
                 raise NotFound("Incident not found.")
 
-        serializer.save(
+        report_instance = serializer.save(
             prepared_by=official,
             report_type="Nurse",
             victim=victim,
             incident=incident,
             report_month=date.today()  # auto-fill with today if not provided
         )
+
+        # Generate the DOCX after creation
+        try:
+            file_path = generate_nurse_monthly_report(report_instance)
+            print(f"Nurse report generated: {file_path}")
+        except Exception as e:
+            print(f"Failed to generate nurse report DOCX: {e}")
 
     def perform_update(self, serializer):
         official = getattr(self.request.user, "official", None)
