@@ -736,7 +736,7 @@ def start_session(request, sess_id):
                 session=session,
                 question=m.question,
                 defaults={
-                    "sq_is_required": False,
+                    "sq_is_required": m.question.ques_is_required,   # NEW
                     "sq_question_text_snapshot": m.question.ques_question_text,
                     "sq_answer_type_snapshot": m.question.ques_answer_type,
                 },
@@ -793,118 +793,6 @@ def add_custom_question(request, sess_id):
         created.append(sq)
 
     return Response(SessionQuestionSerializer(created, many=True).data, status=201)
-
-# @api_view(["POST"])
-# @permission_classes([IsAuthenticated])
-# def finish_session(request, sess_id):
-#     """
-#     POST: Marks current official's session progress as Done.
-#     - Saves provided answers and records who answered them (answered_by, answered_at)
-#     - Enforces that an official can only answer questions matching their role (if mapped)
-#     - Marks SessionProgress for this official as done, and marks the overall session Done only
-#       when all assigned officials finished.
-#     """
-#     user = request.user
-#     if not hasattr(user, "official"):
-#         return Response({"error": "User is not an official"}, status=403)
-
-#     try:
-#         session = Session.objects.get(pk=sess_id, assigned_official=user.official)
-#     except Session.DoesNotExist:
-#         return Response({"error": "Session not found or not assigned to you"}, status=404)
-
-#     answers = request.data.get("answers", [])
-#     skipped = []  # collect any skipped answers due to role mismatch or missing sq
-#     saved = 0
-
-#     # Save answers inside a transaction to keep data consistent
-#     with transaction.atomic():
-#         for ans in answers:
-#             sq_id = ans.get("sq_id")
-#             if not sq_id:
-#                 continue
-#             try:
-#                 sq = SessionQuestion.objects.select_related("question").get(pk=sq_id, session=session)
-#             except SessionQuestion.DoesNotExist:
-#                 skipped.append({"sq_id": sq_id, "reason": "not_found"})
-#                 continue
-
-#             # Server-side role enforcement:
-#             q_role = None
-#             if sq.question:
-#                 # prefer question.role (string), fallback to question.ques_category.role
-#                 q_role = sq.question.role or getattr(sq.question.ques_category, "role", None)
-
-#             if q_role and user.official.of_role and q_role != user.official.of_role:
-#                 # skip saving - not allowed for this official
-#                 skipped.append({"sq_id": sq_id, "reason": "role_mismatch", "question_role": q_role})
-#                 continue
-
-#             # Save the provided answer
-#             new_value = ans.get("value")
-#             new_note = ans.get("note")
-
-#             # Only update fields if they changed (optional optimization)
-#             changed = False
-#             if new_value is not None and new_value != sq.sq_value:
-#                 sq.sq_value = new_value
-#                 changed = True
-#             if new_note is not None and new_note != sq.sq_note:
-#                 sq.sq_note = new_note
-#                 changed = True
-
-#             # Always set who answered (even if they edited their previous answer)
-#             sq.answered_by = user.official
-#             sq.answered_at = timezone.now()
-
-#             # Save
-#             if changed or True:
-#                 sq.save(update_fields=["sq_value", "sq_note", "answered_by", "answered_at"])
-#                 saved += 1
-
-#         # Save description (if updated)
-#         description = request.data.get("sess_description")
-#         if description is not None:
-#             session.sess_description = description
-
-#         # Save selected services
-#         service_ids = request.data.get("services", [])
-#         if isinstance(service_ids, list):
-#             session.services_given.all().delete()
-#             for sid in service_ids:
-#                 ServiceGiven.objects.create(
-#                     session=session,
-#                     serv_id_id=sid,
-#                     of_id=user.official
-#                 )
-
-#         # Update this official’s progress
-#         progress, _ = SessionProgress.objects.get_or_create(
-#             session=session,
-#             official=user.official,
-#         )
-#         progress.is_done = True
-#         progress.finished_at = timezone.now()
-#         progress.save()
-
-#         # Update session status only after saving progress
-#         if session.all_officials_done():
-#             session.sess_status = "Done"
-#         else:
-#             session.sess_status = "Ongoing"
-#         session.save()
-
-#     all_finished = session.all_officials_done()
-
-#     # Return details including warnings about skipped answers
-#     return Response({
-#         "message": "Your session progress has been marked as done.",
-#         "saved_answers": saved,
-#         "skipped_answers": skipped,
-#         "session_completed": all_finished,
-#         "all_finished": all_finished,
-#         "session": SessionDetailSerializer(session, context={"request": request}).data
-#     }, status=200)
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -993,6 +881,28 @@ def finish_session(request, sess_id):
         )
 
         progress.notes = my_feedback
+        required_questions = session.session_questions.filter(
+            question__role=user.official.of_role,
+            sq_is_required=True
+        )
+        
+        unanswered = required_questions.filter(
+            Q(sq_value__isnull=True) | Q(sq_value__exact="")
+        )
+        if unanswered.exists():
+            return Response(
+                {
+                    "error": "You must answer all required questions before finishing this session.",
+                    "missing_required_questions": [
+                        {
+                            "sq_id": q.sq_id,
+                            "question_text": q.sq_question_text_snapshot
+                        }
+                        for q in unanswered
+                    ]
+                },
+                status=400
+            )
         progress.finished_at = timezone.now()
         progress.is_done = True
         progress.save()
@@ -1060,67 +970,7 @@ def close_case(request, incident_id):
     serializer.save()
 
     return Response({"message": "Case closed successfully!"}, status=200)
-   
-# @api_view(["GET", "POST"])
-# @permission_classes([IsAuthenticated])
-# def schedule_next_session(request):
-#     """
-#     Also supports simplified creation for Session 2+ (no schedule/location).
-#     """
-#     user = request.user
-#     official = getattr(user, "official", None)
-#     role = getattr(official, "of_role", None)
-
-#     if not official or not role:
-#         return Response({"error": "Only registered officials can access this endpoint."},
-#                         status=status.HTTP_403_FORBIDDEN)
-
-#     if request.method == "GET":
-#         sessions = Session.objects.filter(
-#             assigned_official=official,
-#             sess_status__in=["Pending", "Ongoing"]
-#         ).order_by("-sess_next_sched")
-#         serializer = SessionCRUDSerializer(sessions, many=True)
-#         return Response(serializer.data)
-
-#     elif request.method == "POST":
-#         data = request.data.copy()
-
-#         # If frontend sends multiple officials → treat as shared session
-#         assigned_officials = data.get("assigned_official", None)
-
-#         # Ensure assigned_officials is a proper list of IDs
-#         if isinstance(assigned_officials, str):
-#             try:
-#                 import json
-#                 assigned_officials = json.loads(assigned_officials)
-#             except Exception:
-#                 assigned_officials = [assigned_officials]
-
-#         if not assigned_officials:
-#             # fallback for individual sessions (Session 2+)
-#             assigned_officials = [official.pk]
-
-#         data["assigned_official"] = assigned_officials
-
-#         # Serialize and save the session
-#         serializer = SessionCRUDSerializer(data=data, context={"request": request})
-#         serializer.is_valid(raise_exception=True)
-#         session = serializer.save()
-
-#         # Create SessionProgress entries for all assigned officials
-#         for off_id in assigned_officials:
-#             try:
-#                 off_obj = Official.objects.get(pk=off_id)
-#                 SessionProgress.objects.get_or_create(session=session, official=off_obj)
-#             except Official.DoesNotExist:
-#                 continue
-
-#         return Response(
-#             SessionCRUDSerializer(session, context={"request": request}).data,
-#             status=status.HTTP_201_CREATED,
-#         )
-
+  
 
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])

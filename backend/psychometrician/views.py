@@ -443,7 +443,7 @@ def start_session(request, sess_id):
                 session=session,
                 question=m.question,
                 defaults={
-                    "sq_is_required": False,
+                    "sq_is_required": m.question.ques_is_required,   #
                     "sq_question_text_snapshot": m.question.ques_question_text,
                     "sq_answer_type_snapshot": m.question.ques_answer_type,
                 },
@@ -588,6 +588,28 @@ def finish_session(request, sess_id):
         )
 
         progress.notes = my_feedback
+        required_questions = session.session_questions.filter(
+            question__role=user.official.of_role,
+            sq_is_required=True
+        )
+        
+        unanswered = required_questions.filter(
+            Q(sq_value__isnull=True) | Q(sq_value__exact="")
+        )
+        if unanswered.exists():
+            return Response(
+                {
+                    "error": "You must answer all required questions before finishing this session.",
+                    "missing_required_questions": [
+                        {
+                            "sq_id": q.sq_id,
+                            "question_text": q.sq_question_text_snapshot
+                        }
+                        for q in unanswered
+                    ]
+                },
+                status=400
+            )
         progress.finished_at = timezone.now()
         progress.is_done = True
         progress.save()
@@ -635,6 +657,7 @@ def finish_session(request, sess_id):
         "all_finished": all_finished,
         "session": SessionDetailSerializer(session, context={"request": request}).data
     }, status=200)
+
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])

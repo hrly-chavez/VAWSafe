@@ -19,6 +19,10 @@ const CreateSession = () => {
   const [fetchingQuestions, setFetchingQuestions] = useState(false);
   const [error, setError] = useState("");
   const [starting, setStarting] = useState(false); 
+  
+  const forbiddenForSocialWorker = [
+  "Pyschological Evaluation"  
+  ];
   // Load top summary & session types
   useEffect(() => {
     const fetchData = async () => {
@@ -29,11 +33,14 @@ const CreateSession = () => {
         ]);
 
         setSummary(summaryRes.data);
+        
         setSessionTypes(
-          typeRes.data.map((t) => ({
-            value: t.id,
-            label: t.name,
-          }))
+          typeRes.data
+            .filter((t) => !forbiddenForSocialWorker.includes(t.name))
+            .map((t) => ({
+              value: t.id,
+              label: t.name,
+            }))
         );
       } catch (err) {
         console.error("Failed to load data", err);

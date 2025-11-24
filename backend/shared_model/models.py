@@ -772,14 +772,16 @@ class Question(models.Model):
     ques_category = models.ForeignKey(QuestionCategory,on_delete=models.SET_NULL,null=True,blank=True,related_name="questions")
     ques_question_text = models.TextField(null=True, blank=True)
     ques_answer_type = models.CharField(max_length=512, choices=ANSWER_TYPES, null=True, blank=True)
+    ques_is_required = models.BooleanField(default=True)
     ques_is_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=now)
     created_by = models.ForeignKey("Official",on_delete=models.SET_NULL,null=True,blank=True,related_name="created_questions")
 
     def __str__(self):
-        category_name = self.ques_category.name if self.ques_category else "Uncategorized"
-        text = (self.ques_question_text or "")[:50]
-        return f"[{category_name}] {text}"
+        category = self.ques_category.name if self.ques_category else "Uncategorized"
+        text = (self.ques_question_text or "").strip()[:50]
+        required_label = "Required" if self.ques_is_required else "Optional"
+        return f"[{category}] {text} ({required_label})"
 
 class SessionTypeQuestion(models.Model):
     session_number = models.IntegerField()  # 1, 2, 3, 4, 5...
@@ -793,8 +795,6 @@ class SessionTypeQuestion(models.Model):
 class SessionQuestion(models.Model):
     sq_id = models.AutoField(primary_key=True)
     sq_is_required = models.BooleanField(default=False)
-
-    
 
      # For ad-hoc custom questions
     sq_custom_text = models.TextField(null=True, blank=True)

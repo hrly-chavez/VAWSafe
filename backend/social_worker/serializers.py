@@ -850,6 +850,7 @@ class BulkQuestionCreateSerializer(serializers.Serializer):
                 ques_category_id=category_id,
                 ques_question_text=q.get("ques_question_text"),
                 ques_answer_type=q.get("ques_answer_type"),
+                ques_is_required=q.get("ques_is_required", True),
                 ques_is_active=True,
                 created_by=official,
                 role=official.of_role if official else "Unknown",
