@@ -512,9 +512,7 @@ def generate_session_docx(session, current_official=None):
         Desktop/Templates/victim<victim_id>/psychometrician/<filename>.docx
     """
 
-    # -----------------------------
     # 1. Resolve Victim via Incident
-    # -----------------------------
     if not session.incident_id:
         raise ValueError("Session is not linked to any IncidentInformation.")
 
@@ -526,18 +524,14 @@ def generate_session_docx(session, current_official=None):
     victim = incident.vic_id
     victim_id = victim.vic_id
 
-    # -----------------------------
     # 2. Paths
-    # -----------------------------
     desktop = os.path.join(os.path.expanduser("~"), "Desktop")
     root_templates = os.path.join(desktop, "Templates")
 
     out_dir = os.path.join(root_templates, f"victim{victim_id}", "psychometrician")
     os.makedirs(out_dir, exist_ok=True)
 
-    # -----------------------------
     # 3. Determine template based on session number
-    # -----------------------------
     is_first_session = (session.sess_num or 1) == 1  # Use sess_num from model
 
     if is_first_session:
@@ -551,9 +545,7 @@ def generate_session_docx(session, current_official=None):
     if not os.path.exists(template_path):
         raise FileNotFoundError(f"Missing template: {template_path}")
 
-    # -----------------------------
     # 4. Fetch session Q&A
-    # -----------------------------
     sqs = (
         SessionQuestion.objects
         .filter(session=session)
@@ -577,9 +569,7 @@ def generate_session_docx(session, current_official=None):
             "answered_by": sq.answered_by.full_name if sq.answered_by else "",
         })
 
-    # -----------------------------
     # 5. Context for docx
-    # -----------------------------
     context = {
         "session": session,
         "created_at": datetime.now().strftime("%B %d, %Y"),
@@ -588,9 +578,7 @@ def generate_session_docx(session, current_official=None):
         "incident": incident,
     }
 
-    # -----------------------------
     # 6. Render and save
-    # -----------------------------
     doc = DocxTemplate(template_path)
     doc.render(context)
 
@@ -1441,15 +1429,11 @@ def generate_comprehensive_psych_report(report_instance):
         Desktop/Templates/victim<victim_id>/psychometrician/reports/comprehensive/<template_name>.docx
     """
 
-    # -----------------------------
     # 1. Resolve victim
-    # -----------------------------
     victim = report_instance.victim
     victim_id = victim.vic_id
 
-    # -----------------------------
     # 2. Paths
-    # -----------------------------
     desktop = os.path.join(os.path.expanduser("~"), "Desktop")
     root_templates = os.path.join(desktop, "Templates")
 
@@ -1463,14 +1447,10 @@ def generate_comprehensive_psych_report(report_instance):
     )
     os.makedirs(output_folder, exist_ok=True)
 
-    # -----------------------------
     # 2A. Template path
-    # -----------------------------
     template_path = os.path.join(root_templates, "psychometrician", "Comprehensive-Psych-Report-RHW.docx")
 
-    # -----------------------------
     # 3. Prepare context
-    # -----------------------------
     incident = report_instance.incident
 
     comp_report_data = {
@@ -1487,9 +1467,7 @@ def generate_comprehensive_psych_report(report_instance):
         "current_year": datetime.now().strftime("%Y"),
     }
 
-    # -----------------------------
     # 4. Render and save
-    # -----------------------------
     tpl = DocxTemplate(template_path)
     tpl.render(comp_report_data)
     
@@ -1532,9 +1510,7 @@ class ComprehensivePsychReportViewSet(viewsets.ModelViewSet):
             report_month=today
         )
 
-        # -----------------------------
         # Generate DOCX immediately
-        # -----------------------------
         output_files = generate_comprehensive_psych_report(report_instance)
 
 def generate_monthly_psych_report_forms(report_instance):
@@ -1545,15 +1521,11 @@ def generate_monthly_psych_report_forms(report_instance):
         Desktop/Templates/victim<victim_id>/psychometrician/reports/monthly/<template_name>.docx
     """
 
-    # -----------------------------
     # 1. Resolve victim
-    # -----------------------------
     victim = report_instance.victim
     victim_id = victim.vic_id
 
-    # -----------------------------
     # 2. Paths
-    # -----------------------------
     desktop = os.path.join(os.path.expanduser("~"), "Desktop")
     root_templates = os.path.join(desktop, "Templates")
 
@@ -1567,14 +1539,10 @@ def generate_monthly_psych_report_forms(report_instance):
     )
     os.makedirs(output_folder, exist_ok=True)
 
-    # -----------------------------
     # 2A. Specify ONE template file
-    # -----------------------------
     template_path = os.path.join(root_templates, "psychometrician", "MONTHLY-PROGRESS-RHW.docx")
 
-    # -----------------------------
     # 3. Prepare context
-    # -----------------------------
     psych_report_data = {
         "victim": victim,
         "prepared_by": report_instance.prepared_by.full_name if report_instance.prepared_by else "",
@@ -1612,9 +1580,7 @@ def generate_monthly_psych_report_forms(report_instance):
 
     psych_report_data["current_date"] = datetime.now().strftime("%B %d, %Y")
 
-    # -----------------------------
     # 4. Render and save the ONE template
-    # -----------------------------
     tpl = DocxTemplate(template_path)
     tpl.render(psych_report_data)
 
