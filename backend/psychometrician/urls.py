@@ -51,4 +51,10 @@ urlpatterns = [
 
     # --- Schedule Overview ---
     path("schedule-overview/week/", OfficialScheduleOverviewViewSet.as_view({"get": "week"}),name="schedule-overview-week"),
+
+    #Reports
+    path("victims/<int:vic_id>/comprehensive-reports/", ComprehensivePsychReportViewSet.as_view({"get": "list", "post": "create"}),name="comprehensive-report-list-create"),
+    path("victims/<int:vic_id>/comprehensive-reports/<int:pk>/",ComprehensivePsychReportViewSet.as_view({"get": "retrieve", "put": "update", "delete": "destroy"}),name="comprehensive-report-detail"),
+    path("victims/<int:vic_id>/monthly-progress-reports/",MonthlyPsychProgressReportViewSet.as_view({"get": "list", "post": "create"}),name="monthly-progress-report-list-create"),
+    path("victims/<int:vic_id>/monthly-progress-reports/<int:pk>/",MonthlyPsychProgressReportViewSet.as_view({"get": "retrieve", "put": "update", "delete": "destroy"}),name="monthly-progress-report-detail"),
 ]

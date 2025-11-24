@@ -26,6 +26,9 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from dswd.utils.logging import log_change
 from docxtpl import DocxTemplate
+from django.shortcuts import get_object_or_404
+from io import BytesIO
+from django.forms.models import model_to_dict
 
 logger = logging.getLogger(__name__)
 
@@ -442,7 +445,7 @@ def start_session(request, sess_id):
                 session=session,
                 question=m.question,
                 defaults={
-                    "sq_is_required": False,
+                    "sq_is_required": m.question.ques_is_required,   #
                     "sq_question_text_snapshot": m.question.ques_question_text,
                     "sq_answer_type_snapshot": m.question.ques_answer_type,
                 },
@@ -499,6 +502,96 @@ def add_custom_question(request, sess_id):
         created.append(sq)
 
     return Response(SessionQuestionSerializer(created, many=True).data, status=201)
+
+def generate_session_docx(session, current_official=None):
+    """
+    Creates a DOCX file summarizing all Q&A for a session.
+    - First session uses IPA-FORMAT-RHW.docx
+    - Subsequent sessions use a different template (e.g., IPA-FORMAT-NEXT.docx)
+    Output is saved to:
+        Desktop/Templates/victim<victim_id>/psychometrician/<filename>.docx
+    """
+
+    # 1. Resolve Victim via Incident
+    if not session.incident_id:
+        raise ValueError("Session is not linked to any IncidentInformation.")
+
+    incident = session.incident_id
+
+    if not incident.vic_id:
+        raise ValueError("Incident does not contain a victim record.")
+
+    victim = incident.vic_id
+    victim_id = victim.vic_id
+
+    # 2. Build victim folder name
+    full_name = victim.full_name
+
+    # Make safe folder name (remove illegal characters)
+    safe_full_name = "".join(c for c in full_name if c.isalnum() or c in (" ", "-")).strip()
+
+    # 3. Paths
+    desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+    root_templates = os.path.join(desktop, "Templates")
+
+    out_dir = os.path.join(root_templates, safe_full_name, "psychometrician")
+    os.makedirs(out_dir, exist_ok=True)
+
+    # 4. Determine template based on session number
+    is_first_session = (session.sess_num or 1) == 1  # Use sess_num from model
+
+    if is_first_session:
+        template_file = "IPA-FORMAT-RHW.docx"
+        output_file_name = "IPA-FORMAT-RHW.docx"
+    else:
+        template_file = "Individual-Sessions-Report-RHW.docx"  # Your second session template
+        output_file_name = f"Individual-Sessions-Report-RHW-{session.sess_num}.docx"
+
+    template_path = os.path.join(root_templates, "psychometrician", template_file)
+    if not os.path.exists(template_path):
+        raise FileNotFoundError(f"Missing template: {template_path}")
+
+    # 5. Fetch session Q&A
+    sqs = (
+        SessionQuestion.objects
+        .filter(session=session)
+        .select_related("question", "answered_by")
+        .order_by("pk")
+    )
+
+    if current_official:
+        sqs = sqs.filter(answered_by__of_role=current_official.of_role)
+
+    answers = []
+    for sq in sqs:
+        if current_official and sq.answered_by != current_official:
+            continue
+
+        answers.append({
+            "question": sq.sq_question_text_snapshot or (sq.question.ques_question_text if sq.question else ""),
+            "value": sq.sq_value or "",
+            "note": sq.sq_note or "",
+            "role": sq.answered_by.of_role if sq.answered_by else "",
+            "answered_by": sq.answered_by.full_name if sq.answered_by else "",
+        })
+
+    # 6. Context for docx
+    context = {
+        "session": session,
+        "created_at": datetime.now().strftime("%B %d, %Y"),
+        "answers": answers,
+        "victim": victim,
+        "incident": incident,
+    }
+
+    # 7. Render and save
+    doc = DocxTemplate(template_path)
+    doc.render(context)
+
+    output_path = os.path.join(out_dir, output_file_name)
+    doc.save(output_path)
+
+    return output_path
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -587,6 +680,28 @@ def finish_session(request, sess_id):
         )
 
         progress.notes = my_feedback
+        required_questions = session.session_questions.filter(
+            question__role=user.official.of_role,
+            sq_is_required=True
+        )
+        
+        unanswered = required_questions.filter(
+            Q(sq_value__isnull=True) | Q(sq_value__exact="")
+        )
+        if unanswered.exists():
+            return Response(
+                {
+                    "error": "You must answer all required questions before finishing this session.",
+                    "missing_required_questions": [
+                        {
+                            "sq_id": q.sq_id,
+                            "question_text": q.sq_question_text_snapshot
+                        }
+                        for q in unanswered
+                    ]
+                },
+                status=400
+            )
         progress.finished_at = timezone.now()
         progress.is_done = True
         progress.save()
@@ -625,6 +740,7 @@ def finish_session(request, sess_id):
         session.save()
 
     all_finished = session.all_officials_done()
+    output_doc = generate_session_docx(session, current_official=user.official)
 
     return Response({
         "message": "Your session progress has been marked as done.",
@@ -634,6 +750,7 @@ def finish_session(request, sess_id):
         "all_finished": all_finished,
         "session": SessionDetailSerializer(session, context={"request": request}).data
     }, status=200)
+
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -1331,3 +1448,233 @@ class ServeVictimFacePhotoView(APIView):
         except VictimFaceSample.DoesNotExist:
             raise Http404("Victim face sample not found")
         return serve_encrypted_file(request, sample, sample.photo, content_type='image/jpeg')
+    
+# ========================= REPORTS =========================
+def generate_comprehensive_psych_report(report_instance):
+    """
+    Generates ONE .docx file for a ComprehensivePsychReport instance.
+
+    Save path:
+        Desktop/Templates/victim<victim_id>/psychometrician/reports/comprehensive/<template_name>.docx
+    """
+
+    # 1. Resolve victim
+    victim = report_instance.victim
+    victim_id = victim.vic_id
+
+    # 2. Paths
+    desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+    root_templates = os.path.join(desktop, "Templates")
+
+    # Build victim name for folder: First Middle Last
+    full_name = victim.full_name
+
+    # Safe folder name (remove illegal characters)
+    safe_full_name = "".join(c for c in full_name if c.isalnum() or c in (" ", "-")).strip()
+
+    # Output folder for comprehensive reports
+    output_folder = os.path.join(
+        root_templates,
+        safe_full_name,
+        "psychometrician",
+        "reports",
+        "comprehensive"
+    )
+    os.makedirs(output_folder, exist_ok=True)
+
+    # 2A. Template path
+    template_path = os.path.join(root_templates, "psychometrician", "Comprehensive-Psych-Report-RHW.docx")
+
+    # 3. Prepare context
+    incident = report_instance.incident
+
+    comp_report_data = {
+        "victim": victim,
+        "incident": incident,
+        "prepared_by": report_instance.prepared_by.full_name if report_instance.prepared_by else "",
+        "report_month": report_instance.report_month.strftime("%B %Y") if report_instance.report_month else "",
+        "reason_for_referral": report_instance.reason_for_referral or "",
+        "brief_history": report_instance.brief_history or "",
+        "behavioral_observation": report_instance.behavioral_observation or "",
+        "test_results_discussion": report_instance.test_results_discussion or "",
+        "recommendations": report_instance.recommendations or "",
+        "current_date": datetime.now().strftime("%B %d, %Y"),
+        "current_year": datetime.now().strftime("%Y"),
+    }
+
+    # 4. Render and save
+    tpl = DocxTemplate(template_path)
+    tpl.render(comp_report_data)
+    
+    now = datetime.now()
+    timestamp = now.strftime("%d-%b-%Y_%H-%M")
+    output_file = os.path.join(output_folder, f"Comprehensive-Psych-Report-RHW_{timestamp}.docx")
+    tpl.save(output_file)
+
+    return [output_file]
+
+class ComprehensivePsychReportViewSet(viewsets.ModelViewSet):
+    queryset = ComprehensivePsychReport.objects.all()
+    serializer_class = ComprehensivePsychReportSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Psychometrician"]
+
+    def get_queryset(self):
+        vic_id = self.kwargs.get("vic_id")
+        return self.queryset.filter(victim_id=vic_id)
+
+    def perform_create(self, serializer):
+        vic_id = self.kwargs.get("vic_id")
+        victim = get_object_or_404(Victim, pk=vic_id)
+
+        official = getattr(self.request.user, "official", None)
+        if not official or official.of_role != "Psychometrician":
+            raise PermissionDenied("Only psychometricians can add comprehensive reports.")
+
+        # Attach incident automatically from request data
+        incident_id = self.request.data.get("incident")
+        incident = get_object_or_404(IncidentInformation, pk=incident_id)
+
+        # Auto-fill report_month with today's date
+        today = date.today()
+
+        report_instance = serializer.save(
+            victim=victim,
+            prepared_by=official,
+            incident=incident,
+            report_month=today
+        )
+
+        # Generate DOCX immediately
+        output_files = generate_comprehensive_psych_report(report_instance)
+
+def generate_monthly_psych_report_forms(report_instance):
+    """
+    Generates ONE .docx file for a MonthlyPsychProgressReport instance.
+
+    Save path:
+        Desktop/Templates/victim<victim_id>/psychometrician/reports/monthly/<template_name>.docx
+    """
+
+    # 1. Resolve victim
+    victim = report_instance.victim
+    victim_id = victim.vic_id
+
+    # Build victim name for folder: First Middle Last
+    full_name = victim.full_name
+
+    # Safe folder name (remove illegal characters)
+    safe_full_name = "".join(c for c in full_name if c.isalnum() or c in (" ", "-")).strip()
+
+    # 2. Paths
+    desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+    root_templates = os.path.join(desktop, "Templates")
+
+    # Output folder for monthly reports
+    output_folder = os.path.join(
+        root_templates,
+        safe_full_name,
+        "psychometrician",
+        "reports",
+        "monthly"
+    )
+    os.makedirs(output_folder, exist_ok=True)
+
+    # 2A. Specify ONE template file
+    template_path = os.path.join(root_templates, "psychometrician", "MONTHLY-PROGRESS-RHW.docx")
+
+    # 3. Prepare context
+    psych_report_data = {
+        "victim": victim,
+        "prepared_by": report_instance.prepared_by.full_name if report_instance.prepared_by else "",
+        "report_month": report_instance.report_month.strftime("%B %Y") if report_instance.report_month else "",
+        "previous_diagnosis": report_instance.previous_diagnosis,
+        "latest_checkup_psychologist": report_instance.latest_checkup_psychologist,
+        "latest_checkup_psychiatrist": report_instance.latest_checkup_psychiatrist,
+        "on_medication": report_instance.on_medication,
+        "medication_name": report_instance.medication_name,
+        "medication_dosage": report_instance.medication_dosage,
+        "summary_of_results": report_instance.summary_of_results,
+        "recommendations": report_instance.recommendations,
+    }
+
+    json_fields = [
+        "presentation", "affect", "mood", "interpersonal",
+        "safety_issues", "client_has", "subjective_reports",
+        "observations", "psychological_testing"
+    ]
+
+    for field in json_fields:
+        value = getattr(report_instance, field) or []
+        psych_report_data[field] = value
+        psych_report_data[f"{field}_str"] = ", ".join(value)
+        psych_report_data[f"{field}_other"] = getattr(report_instance, f"{field}_other", "")
+
+    psych_report_data["sessions_list"] = [
+        {
+            "session_date": s.sess_date_today.strftime("%B %d, %Y") if s.sess_date_today else "",
+            "notes": s.sess_description or ""
+        }
+        for s in report_instance.individual_sessions.all()
+    ]
+
+
+    psych_report_data["current_date"] = datetime.now().strftime("%B %d, %Y")
+
+    # 4. Render and save the ONE template
+    tpl = DocxTemplate(template_path)
+    tpl.render(psych_report_data)
+
+    now = datetime.now()
+    timestamp = now.strftime("%d-%b-%Y_%H-%M")
+    output_file = os.path.join(output_folder, f"MONTHLY-PROGRESS-RHW_{timestamp}.docx")
+    tpl.save(output_file)
+
+    return [output_file]
+
+class MonthlyPsychProgressReportViewSet(viewsets.ModelViewSet):
+    queryset = MonthlyPsychProgressReport.objects.all()
+    serializer_class = MonthlyPsychProgressReportSerializer
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["Psychometrician"]
+
+    def get_queryset(self):
+        vic_id = self.kwargs.get("vic_id")
+        return self.queryset.filter(victim_id=vic_id)
+
+    def perform_create(self, serializer):
+        vic_id = self.kwargs.get("vic_id")
+        victim = get_object_or_404(Victim, pk=vic_id)
+
+        official = getattr(self.request.user, "official", None)
+        if not official or official.of_role != "Psychometrician":
+            raise PermissionDenied("Only psychometricians can add monthly progress reports.")
+
+        incident_id = self.request.data.get("incident")
+        incident = get_object_or_404(IncidentInformation, pk=incident_id)
+
+        today = date.today()
+
+        report = serializer.save(
+            victim=victim,
+            prepared_by=official,
+            incident=incident,
+            report_month=today
+        )
+
+        sessions = Session.objects.filter(incident_id=incident, incident_id__vic_id=victim)
+        report.individual_sessions.set(sessions)
+
+        # Generate docx reports
+        generated_files = generate_monthly_psych_report_forms(report)
+        # report.generated_files = generated_files  # optional, if you store this in model
+
+    def perform_update(self, serializer):
+        official = self.request.user.official
+        if serializer.instance.prepared_by != official:
+            raise PermissionDenied("You can only edit your own monthly progress reports.")
+        report = serializer.save()
+
+        # Keep sessions in sync on update too
+        sessions = Session.objects.filter(victim=report.victim, incident=report.incident)
+        report.individual_sessions.set(sessions)

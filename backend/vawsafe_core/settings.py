@@ -58,6 +58,8 @@ else:
 DEBUG = True
 
 ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = ['192.168.254.199']
+
 
 
 # Application definition
@@ -121,10 +123,18 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_THROTTLE_CLASSES': [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
         'rest_framework.throttling.ScopedRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'face_login': '5/minute',
+        # global
+        "anon": "20/minute",        # anonymous clients (not logged in)
+        "user": "200/minute",       # per authenticated user
+        # per-scope (names you pick in view.throttle_scope)
+        "manual_login": "20/minute",  # manual username/password
+        'face_login': '20/minute',
+        'safe_read': '1000/day',       # non-sensitive
     }
 }
 
@@ -154,7 +164,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'vawsafe',
         'USER': 'postgres',
-        'PASSWORD': '123456', 
+        'PASSWORD': 'postgres', 
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -171,7 +181,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
         'OPTIONS': {
-            'min_length': 12,  # Minimum password length
+            'min_length': 16,  # Minimum password length
         }
     },
     {
@@ -210,6 +220,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+# settings.py
+STATICFILES_DIRS = [BASE_DIR / "frontend/build/static"]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -241,6 +253,13 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
+# CORS_ALLOWED_ORIGINS = [
+#     "http://192.168.254.199:3000",
+# ]
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://192.168.254.199:3000",
+# ]
+
 CORS_ALLOW_CREDENTIALS = True
 
 # Dev cookie flags (switch to Secure/None in prod cross-site)
@@ -264,7 +283,7 @@ from datetime import timedelta
 #KANI KAY PARA SA HTTPONLY
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),      # short
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),       # or 30/90 days if you want
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),       # or 30/90 days if you want
     "ROTATE_REFRESH_TOKENS": True,                      # optional
     "BLACKLIST_AFTER_ROTATION": True,                   # if using blacklist app
 }
@@ -282,3 +301,6 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # settings.py PARA NI SA KATUNG FORGOT PASS
 FRONTEND_URL = "http://localhost:3000"  # or your deployed React frontend URL
 DEFAULT_FROM_EMAIL = "carataojoegie@gmail.com"  # or your system email
+
+# Expiration time in seconds para nis change password sa admin side
+PASSWORD_RESET_TIMEOUT = 300  # 5 minutes

@@ -56,7 +56,6 @@ export default function ProgramsServices() {
   const [expanded, setExpanded] = useState(false);
   const controls = useAnimation();
 
-  // Function to start the auto-scroll animation
   const startAutoScroll = () => {
     controls.set({ x: "0%" });
     controls.start({
@@ -92,7 +91,7 @@ export default function ProgramsServices() {
 
   return (
     <div
-      className="relative bg-white py-16 px-6 sm:px-12 text-center"
+      className="relative bg-white py-16 px-4 sm:px-8 overflow-x-hidden"
       style={{
         backgroundImage: "url('/images/service_background.png')",
         backgroundRepeat: "no-repeat",
@@ -100,9 +99,7 @@ export default function ProgramsServices() {
         backgroundPosition: "center",
       }}
     >
-      {/* Content */}
-      <div className="relative z-10 max-w-7xl mx-auto">
-        {/* Header */}
+      <div className="relative z-10 max-w-7xl mx-auto text-center">
         <div className="mb-12">
           <p className="text-sm font-semibold tracking-widest text-[#1a1a40]/70 uppercase">
             Category
@@ -112,26 +109,25 @@ export default function ProgramsServices() {
           </h2>
         </div>
 
-        {/* Services Section */}
         <div className="relative w-full overflow-hidden py-4">
           {!expanded ? (
             <motion.div
               animate={controls}
-              className="flex gap-8 w-[200%] items-stretch"
+              className="flex gap-8 w-[max-content] items-stretch"
             >
               {[...services, ...services].map((service, idx) => (
                 <div
                   key={idx}
-                  className="min-w-[250px] bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 flex flex-col items-center text-center"
+                  className="min-w-[200px] sm:min-w-[250px] max-w-xs bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 p-6 flex flex-col items-center text-center"
                 >
-                  <div className="w-16 h-16 mb-4 flex items-center justify-center rounded-xl overflow-hidden">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 mb-4 flex items-center justify-center rounded-xl overflow-hidden">
                     <img
                       src={service.icon}
                       alt={service.title}
                       className="object-cover w-full h-full"
                     />
                   </div>
-                  <h3 className="text-lg font-semibold text-black mb-2">
+                  <h3 className="text-base sm:text-lg font-semibold text-black mb-2">
                     {service.title}
                   </h3>
                   <p className="text-sm text-black leading-relaxed">
@@ -166,7 +162,6 @@ export default function ProgramsServices() {
           )}
         </div>
 
-        {/* Expand/Collapse Button */}
         <div className="mt-10">
           <button
             onClick={handleToggle}

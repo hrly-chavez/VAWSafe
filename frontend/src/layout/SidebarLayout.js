@@ -1,23 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 import Sidebar from "../pages/Sidebar";
 import Navbar from "../pages/Navbar";
 import { Outlet } from "react-router-dom";
 
 export default function SidebarLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Fixed Navbar */}
-      <div className="fixed top-0 left-0 w-full z-50">
-        <Navbar />
-      </div>
+      <Navbar toggleSidebar={toggleSidebar} />
 
-      {/* Content below Navbar */}
-      <div className="pt-[70px] flex">
-        {/* Sidebar (scrolls with page) */}
-        <Sidebar />
+      {/* Sidebar + Content */}
+      <div className="flex flex-1 pt-[70px]">
+        {/* Sidebar */}
+        <Sidebar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
 
-        {/* Main Content (scrolls with sidebar) */}
-        <main className="flex-1 px-6 py-4">
+
+        {/* Main content */}
+        <main className="flex-1 px-4 sm:px-6 py-4 overflow-auto sm:ml-64">
           <Outlet />
         </main>
       </div>

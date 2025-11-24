@@ -10,10 +10,11 @@ from django.contrib.auth import authenticate
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.throttling import ScopedRateThrottle
+from rest_framework.exceptions import Throttled
 from rest_framework_simplejwt.tokens import RefreshToken
 from shared_model.models import Official, OfficialFaceSample, LoginTracker
 from .serializers import OfficialSerializer, LoginTrackerSerializer
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from django.core.mail import send_mail
 from django.conf import settings
 from .cookie_utils import set_auth_cookies, clear_auth_cookies
@@ -22,6 +23,23 @@ from rest_framework import viewsets
 from .signals import get_client_ip
 from django.http import Http404
 from shared_model.views import serve_encrypted_file
+
+from .login_protection import (
+    increment_ip_fail,
+    increment_user_fail,
+    reset_ip_failures,
+    reset_user_failures,
+    is_ip_blocked,
+    is_user_locked,
+    block_ip,
+    lockout_user,
+    get_user_fails,
+    get_ip_fails,
+    MAX_FAILED_PER_IP,
+    MAX_FAILED_PER_USERNAME,
+)
+
+import logging
 
 from deepface import DeepFace
 from PIL import Image
@@ -33,8 +51,10 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, Toke
 # 1) Whoami (used by frontend to restore session)
 @api_view(["GET"])
 @permission_classes([permissions.AllowAny])
+@throttle_classes([ScopedRateThrottle])
 @ensure_csrf_cookie
 def me(request):
+    request.throttle_scope = 'safe_read'
     user = request.user if request.user.is_authenticated else None
     if not user:
         return Response({"authenticated": False}, status=200)
@@ -72,10 +92,11 @@ def me(request):
 #para sa dswd check if naa ba user sa dswd or official
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@throttle_classes([ScopedRateThrottle])
 def check_dswd_exists(request):
-    exists = Official.objects.filter(of_role="DSWD").exists()  # use your field name
+    request.throttle_scope = 'safe_read'
+    exists = Official.objects.filter(of_role="DSWD").exists()
     return Response({"dswd_exists": exists})
-
 
 #========================================================
 
@@ -192,9 +213,9 @@ def check_dswd_exists(request):
 #                 if os.path.exists(f):
 #                     os.remove(f)
 
-def generate_strong_password(length=12):
-    if length < 12:
-        raise ValueError("Password length must be at least 12 characters.")
+def generate_strong_password(length=16):
+    if length < 16:
+        raise ValueError("Password length must be at least 16 characters.")
 
     # Define character sets
     lowercase = string.ascii_lowercase
@@ -251,7 +272,7 @@ class create_official(APIView):
 
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(12)
+            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
 
             # Ensure unique username
             username = base_username
@@ -260,14 +281,14 @@ class create_official(APIView):
                 counter += 1
                 username = f"{base_username}{counter}"
 
-            generated_password = generate_strong_password(length=12)
+            generated_password = generate_strong_password(length=16)
             user = User.objects.create_user(username=username, password=generated_password)
             status_value = "approved"
 
         elif role == "Social Worker":
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(12)
+            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
 
             username = base_username
             counter = 0
@@ -275,14 +296,14 @@ class create_official(APIView):
                 counter += 1
                 username = f"{base_username}{counter}"
 
-            generated_password = generate_strong_password(length=12)
+            generated_password = generate_strong_password(length=16)
             user = User.objects.create_user(username=username, password=generated_password)
             status_value = "approved"
 
         elif role == "Nurse":
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(12)
+            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
 
             username = base_username
             counter = 0
@@ -290,14 +311,14 @@ class create_official(APIView):
                 counter += 1
                 username = f"{base_username}{counter}"
 
-            generated_password = generate_strong_password(length=12)
+            generated_password = generate_strong_password(length=16)
             user = User.objects.create_user(username=username, password=generated_password)
             status_value = "approved"
 
         elif role == "Psychometrician":
             fname = request.data.get("of_fname", "").strip().lower()
             lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(12)
+            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
 
             username = base_username
             counter = 0
@@ -305,7 +326,7 @@ class create_official(APIView):
                 counter += 1
                 username = f"{base_username}{counter}"
 
-            generated_password = generate_strong_password(length=12)
+            generated_password = generate_strong_password(length=16)
             user = User.objects.create_user(username=username, password=generated_password)
             status_value = "approved"
         else:
@@ -417,6 +438,173 @@ class create_official(APIView):
 
 
 
+# class face_login(APIView):
+#     parser_classes = [MultiPartParser, FormParser]
+#     throttle_classes = [ScopedRateThrottle]
+#     throttle_scope = 'face_login'
+#     permission_classes = [AllowAny]
+
+#     SIMILARITY_THRESHOLD = 0.65  # adjust based on testing
+
+#     @method_decorator(csrf_protect)  # require CSRF for POST (cookies auth)
+#     def post(self, request):
+#         uploaded_frames = [file for name, file in request.FILES.items() if name.startswith("frame")]
+#         if not uploaded_frames:
+#             return Response({"error": "No frame(s) provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         best_match = None
+#         best_sample = None
+#         best_score = -1.0  # cosine similarity (higher = better)
+
+#         try:
+#             for file in uploaded_frames:
+#                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+#                 image = Image.open(file).convert("RGB")
+#                 image.save(temp_image, format="JPEG")
+#                 temp_image.flush()
+#                 temp_image.close()
+
+#                 try:
+#                     # Generate embedding for uploaded frame
+#                     embeddings = DeepFace.represent(
+#                         img_path=temp_image.name,
+#                         model_name="ArcFace",
+#                         enforce_detection=True
+#                     )
+
+#                     # Handle different DeepFace.represent() return types
+#                     frame_embedding = None
+#                     if isinstance(embeddings, list):
+#                         if len(embeddings) > 0 and isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
+#                             frame_embedding = embeddings[0]["embedding"]
+#                         elif all(isinstance(x, (int, float)) for x in embeddings):
+#                             frame_embedding = embeddings
+#                     elif isinstance(embeddings, dict) and "embedding" in embeddings:
+#                         frame_embedding = embeddings["embedding"]
+
+#                     if frame_embedding is None:
+#                         print(f"[WARN] No usable embedding from {file}")
+#                         continue
+
+#                     frame_embedding = np.array(frame_embedding).reshape(1, -1)
+
+#                     # Compare with stored samples
+#                     for sample in OfficialFaceSample.objects.select_related("official"):
+#                         official = sample.official
+#                         embedding = sample.embedding
+
+#                         if embedding:
+#                             sample_embedding = np.array(embedding).reshape(1, -1)
+#                             score = cosine_similarity(frame_embedding, sample_embedding)[0][0]
+#                             accuracy = score * 100
+#                             is_match = "TRUE" if score >= self.SIMILARITY_THRESHOLD else "FALSE"
+#                             print(
+#                                 f"[FACE LOGIN] Verifying {official.full_name} | "
+#                                 f"Score: {score:.4f} | Accuracy: {accuracy:.2f}% | "
+#                                 f"Threshold: {self.SIMILARITY_THRESHOLD} | Result: {is_match}"
+#                             )
+#                             if score > best_score:
+#                                 best_score = score
+#                                 best_match = official
+#                                 best_sample = sample
+#                         else:
+#                             # Fallback to DeepFace.verify
+#                             try:
+#                                 result = DeepFace.verify(
+#                                     img1_path=temp_image.name,
+#                                     img2_path=sample.photo.path,
+#                                     model_name="ArcFace",
+#                                     enforce_detection=True
+#                                 )
+#                                 if result.get("verified"):
+#                                     score = 1.0 / (1.0 + result["distance"])
+#                                     if score > best_score:
+#                                         best_score = score
+#                                         best_match = official
+#                                         best_sample = sample
+#                             except Exception as ve:
+#                                 print(f"[WARN] Fallback failed for {official.full_name}: {ve}")
+#                                 continue
+
+#                 finally:
+#                     if os.path.exists(temp_image.name):
+#                         os.remove(temp_image.name)
+
+#             # Apply similarity threshold
+#             if best_match and best_score >= self.SIMILARITY_THRESHOLD:
+#                 accuracy = best_score * 100
+#                 print(
+#                     f"[FACE LOGIN]  MATCH FOUND | Name: {best_match.full_name} | "
+#                     f"Similarity: {best_score:.4f} | Accuracy: {accuracy:.2f}% | "
+#                     f"Threshold: {self.SIMILARITY_THRESHOLD} | Result: TRUE"
+#                 )
+
+#                 # ⬇️ Instead of returning tokens in body, mint tokens and set HttpOnly cookies
+#                 refresh = RefreshToken.for_user(best_match.user)
+#                 access = str(refresh.access_token)
+
+#                 # Build profile photo URL (same as before)
+#                 if getattr(best_match, "of_photo", None) and best_match.of_photo:
+#                     rel_url = best_match.of_photo.url
+#                 elif best_sample and best_sample.photo:
+#                     rel_url = best_sample.photo.url
+#                 else:
+#                     rel_url = None
+#                 profile_photo_url = request.build_absolute_uri(rel_url) if rel_url else None
+
+#                 resp = Response({
+#                     "match": True,
+#                     "official_id": best_match.of_id,
+#                     "name": best_match.full_name,
+#                     "fname": best_match.of_fname,
+#                     "lname": best_match.of_lname,
+#                     "username": best_match.user.username,
+#                     "role": best_match.of_role,
+#                     "profile_photo_url": profile_photo_url,
+#                     "similarity_score": float(best_score),
+#                     "threshold": self.SIMILARITY_THRESHOLD
+#                 }, status=status.HTTP_200_OK)
+
+#                 # Log successful facial login
+#                 ip = get_client_ip(request)
+#                 user_agent = request.META.get('HTTP_USER_AGENT', '')
+
+#                 LoginTracker.objects.create(
+#                     user=best_match.user,
+#                     role=best_match.of_role,
+#                     ip_address=ip,
+#                     user_agent=user_agent,
+#                     status="Success"
+#                 )
+
+#                 # 👉 Set HttpOnly cookies
+#                 set_auth_cookies(resp, access, str(refresh))
+#                 return resp
+            
+                
+
+#             accuracy = best_score * 100 if best_score > 0 else 0
+#             print(
+#                 f"[FACE LOGIN]  NO MATCH | Best Score: {best_score:.4f} | "
+#                 f"Accuracy: {accuracy:.2f}% | "
+#                 f"Threshold: {self.SIMILARITY_THRESHOLD} | Result: FALSE"
+#             )
+
+#             LoginTracker.objects.create(
+#                 user=None,
+#                 role=None,
+#                 ip_address=get_client_ip(request),
+#                 user_agent=request.META.get('HTTP_USER_AGENT', ''),
+#                 status="Failed"
+#             )
+
+#             return Response({"match": False, "message": "No matching face found."}, status=status.HTTP_404_NOT_FOUND)
+
+#         except Exception as e:
+#             traceback.print_exc()
+#             return Response({"match": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+logger = logging.getLogger(__name__)
+
 class face_login(APIView):
     parser_classes = [MultiPartParser, FormParser]
     throttle_classes = [ScopedRateThrottle]
@@ -427,8 +615,27 @@ class face_login(APIView):
 
     @method_decorator(csrf_protect)  # require CSRF for POST (cookies auth)
     def post(self, request):
+        # --- RATE LIMITING SECTION (added at the top) ---
+        ip = get_client_ip(request)
+
+        # 1. Block if too many failures from this IP
+        if is_ip_blocked(ip):
+            return Response(
+                {"detail": "Too many attempts from this IP. Try again later."},
+                status=429
+            )
+
+        # 2. DRF Scoped Throttle (face_login scope)
+        try:
+            self.check_throttles(request)
+        except Throttled as t:
+            logger.warning(f"Throttled face login attempt from IP {ip}: {t.detail}")
+            return Response({"detail": "Too many requests. Try again later."},
+                            status=status.HTTP_429_TOO_MANY_REQUESTS)
+        
         uploaded_frames = [file for name, file in request.FILES.items() if name.startswith("frame")]
         if not uploaded_frames:
+            increment_ip_fail(ip)
             return Response({"error": "No frame(s) provided"}, status=status.HTTP_400_BAD_REQUEST)
 
         best_match = None
@@ -522,6 +729,9 @@ class face_login(APIView):
                 refresh = RefreshToken.for_user(best_match.user)
                 access = str(refresh.access_token)
 
+                # SUCCESS → RESET failure count
+                reset_ip_failures(ip)
+
                 # Build profile photo URL (same as before)
                 if getattr(best_match, "of_photo", None) and best_match.of_photo:
                     rel_url = best_match.of_photo.url
@@ -544,15 +754,16 @@ class face_login(APIView):
                     "threshold": self.SIMILARITY_THRESHOLD
                 }, status=status.HTTP_200_OK)
 
+                # Success path: reset IP fails
+                reset_ip_failures(ip)
+
                 # Log successful facial login
-                ip = get_client_ip(request)
-                user_agent = request.META.get('HTTP_USER_AGENT', '')
 
                 LoginTracker.objects.create(
                     user=best_match.user,
                     role=best_match.of_role,
                     ip_address=ip,
-                    user_agent=user_agent,
+                    user_agent=request.META.get('HTTP_USER_AGENT', ''),
                     status="Success"
                 )
 
@@ -560,7 +771,16 @@ class face_login(APIView):
                 set_auth_cookies(resp, access, str(refresh))
                 return resp
             
-                
+            # --- NO MATCH FOUND ---
+            ip_fails = increment_ip_fail(ip)
+
+            # Debug print
+            print("FAILED ATTEMPTS (IP):", ip_fails)
+
+            # Block IP if threshold exceeded
+            if ip_fails >= MAX_FAILED_PER_IP:
+                block_ip(ip)
+                logger.warning(f"IP {ip} blocked due to {ip_fails} failed login attempts")
 
             accuracy = best_score * 100 if best_score > 0 else 0
             print(
@@ -580,9 +800,20 @@ class face_login(APIView):
             return Response({"match": False, "message": "No matching face found."}, status=status.HTTP_404_NOT_FOUND)
 
         except Exception as e:
-            traceback.print_exc()
-            return Response({"match": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+            # --- ANY ERROR COUNTS AS FAILED ATTEMPT ---
+            increment_ip_fail(ip)
+
+            # SAVE FAILURE EVENT
+            LoginTracker.objects.create(
+                user=None,
+                role=None,
+                ip_address=ip,
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                status="Failed"
+            )
+
+            return Response({"match": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class blick_check(APIView):
     parser_classes = [MultiPartParser, FormParser]
@@ -632,22 +863,85 @@ class blick_check(APIView):
 
     
 #manual login ni sya para sa cookie instead of localstorage
+logger = logging.getLogger(__name__)
+
 class CookieTokenObtainPairView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'manual_login'
 
     @method_decorator(csrf_protect)
     def post(self, request):
+        ip = get_client_ip(request)
+        username = request.data.get("username", "").lower().strip()
+
+        # immediate block checks
+        if is_ip_blocked(ip):
+            return Response({"detail": "Too many attempts from this IP. Try later."}, status=429)
+        if username and is_user_locked(username):
+            return Response({"detail": "Account temporarily locked due to failed attempts."}, status=423)
+
+        # DRF scoped throttle check - will raise Throttled if over the configured rate
+        try:
+            self.check_throttles(request)
+        except Throttled as t:
+            logger.warning(f"Throttled login attempt from IP {ip}: {t.detail}")
+            return Response({"detail": "Too many requests. Try again later."},
+                            status=status.HTTP_429_TOO_MANY_REQUESTS)
+
         serializer = TokenObtainPairSerializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
         except Exception:
+            # record failed login
+            user_obj = User.objects.filter(username__iexact=username).first()
+
+            # increment IP fails for all attempts
+            ip_fails = increment_ip_fail(ip)
+
+            # increment user fails only if the user exists
+            user_fails = 0
+            if user_obj:
+                user_fails = increment_user_fail(username)
+
+            # optional: track unknown usernames separately (analytics only)
+            if not user_obj and username:
+                increment_user_fail(f"anon:{username}")  # separate counter, does not lock
+
+            # 🔍 DEBUG: print the actual counter value being stored
+            print("FAILED ATTEMPTS (USER):", get_user_fails(username))
+            print("FAILED ATTEMPTS (IP):", get_ip_fails(ip))
+
+            # optional: block when threshold exceeded
+            if ip_fails >= MAX_FAILED_PER_IP:
+                block_ip(ip)
+                logger.warning(f"IP {ip} blocked due to {ip_fails} failed login attempts")
+
+            if user_fails >= MAX_FAILED_PER_USERNAME:
+                lockout_user(username)
+                logger.warning(f"User {username} locked out due to {user_fails} failed attempts")
+
+            # log the failed attempt
+            LoginTracker.objects.create(
+                user=user_obj,
+                role=getattr(user_obj, "official", None) and getattr(user_obj.official, "of_role", None),
+                ip_address=ip,
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                status="Failed"
+            )
+
             return Response(
                 {"match": False, "message": "Incorrect username or password."},
                 status=status.HTTP_401_UNAUTHORIZED
             )
 
+        # success path
         tokens = serializer.validated_data
         user = serializer.user
+
+        # Reset failure counters and unlock if needed
+        reset_ip_failures(ip)
+        reset_user_failures(user.username.lower())
 
         official = getattr(user, "official", None)
         role = getattr(official, "of_role", None)
@@ -667,8 +961,7 @@ class CookieTokenObtainPairView(APIView):
         # Set cookies
         set_auth_cookies(resp, tokens["access"], tokens.get("refresh"))
 
-        #Track successful login
-        ip = get_client_ip(request)
+        # Track successful login
         user_agent = request.META.get('HTTP_USER_AGENT', '')
         LoginTracker.objects.create(
             user=user,
@@ -679,25 +972,25 @@ class CookieTokenObtainPairView(APIView):
         )
 
         return resp
-
-# class CookieTokenObtainPairView(views.APIView):
+    
+    
+# class CookieTokenObtainPairView(APIView):
 #     permission_classes = [permissions.AllowAny]
 
 #     @method_decorator(csrf_protect)
 #     def post(self, request):
-#         """
-#         Manual login using SimpleJWT serializer.
-#         - Validates username/password
-#         - Issues access/refresh as HttpOnly cookies
-#         - Returns ONLY user info in body (no tokens)
-#         """
 #         serializer = TokenObtainPairSerializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
+#         try:
+#             serializer.is_valid(raise_exception=True)
+#         except Exception:
+#             return Response(
+#                 {"match": False, "message": "Incorrect username or password."},
+#                 status=status.HTTP_401_UNAUTHORIZED
+#             )
 
-#         tokens = serializer.validated_data  # {"access": "...", "refresh": "..."}
+#         tokens = serializer.validated_data
 #         user = serializer.user
 
-#         # Pull any fields you were returning before
 #         official = getattr(user, "official", None)
 #         role = getattr(official, "of_role", None)
 #         name = getattr(official, "full_name", f"{getattr(official, 'of_fname', '')} {getattr(official, 'of_lname', '')}".strip())
@@ -713,10 +1006,10 @@ class CookieTokenObtainPairView(APIView):
 #             "profile_photo_url": photo_url,
 #         }, status=status.HTTP_200_OK)
 
-#         # 👉 Set HttpOnly cookies (access + refresh)
+#         # Set cookies
 #         set_auth_cookies(resp, tokens["access"], tokens.get("refresh"))
 
-#         # Track successful login
+#         #Track successful login
 #         ip = get_client_ip(request)
 #         user_agent = request.META.get('HTTP_USER_AGENT', '')
 #         LoginTracker.objects.create(
@@ -726,6 +1019,7 @@ class CookieTokenObtainPairView(APIView):
 #             user_agent=user_agent,
 #             status="Success"
 #         )
+
 #         return resp
 
 #=================================Login Tracker=====================================

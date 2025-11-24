@@ -111,10 +111,26 @@ const StartMoreSession = () => {
         services: selectedServices.map((s) => s.value),
       };
 
+      // =============================
+      // REQUIRED QUESTIONS CHECK
+      // =============================
+      const missingRequired = (questions || []).filter(
+        (q) =>
+          q.sq_is_required &&
+          (!q.sq_value || q.sq_value.trim() === "")
+      );
+
+      if (missingRequired.length > 0) {
+        alert("Please answer all REQUIRED questions before finishing this session.");
+        setFinishing(false);
+        return;
+      }
+
+      // Proceed with API call
       const response = await api.post(`/api/psychometrician/sessions/${sess_id}/finish/`, payload);
 
       alert("Session completed successfully!");
-      // SAFELY extract victim ID (same as Session 1)
+
       const victimId =
         response?.data?.session?.incident?.vic_id?.vic_id ||
         response?.data?.session?.incident?.vic_id ||
@@ -129,7 +145,12 @@ const StartMoreSession = () => {
 
     } catch (err) {
       console.error("Failed to finish session", err);
-      alert("Failed to finish session. Please try again.");
+
+      const msg =
+        err?.response?.data?.error ||
+        "Failed to finish session. Please ensure all required questions are answered.";
+
+      alert(msg);
     } finally {
       setFinishing(false);
     }
@@ -170,9 +191,17 @@ const StartMoreSession = () => {
                         transition={{ duration: 0.22, delay: index * 0.04 }}
                         className="p-3 border rounded mb-3 bg-gray-50"
                       >
-                        <p className="font-medium text-gray-800 mb-2">
-                          {q.sq_question_text_snapshot || q.question_text || q.sq_custom_text}
-                        </p>
+                        <div className="flex items-center gap-2 mb-2">
+                          <p className="font-medium text-gray-800">
+                            {q.sq_question_text_snapshot || q.question_text || q.sq_custom_text}
+                          </p>
+
+                          {q.sq_is_required && (
+                            <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">
+                              REQUIRED
+                            </span>
+                          )}
+                        </div>
 
                         {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Yes/No" && (
                           <select

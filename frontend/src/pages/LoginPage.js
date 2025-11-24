@@ -205,6 +205,7 @@ const LoginPage = () => {
     try {
       const blinkRes = await apiFetch(
         "http://localhost:8000/api/auth/blink-check/",
+        // "http://192.168.254.199:8000/api/auth/blink-check/",
         {
           method: "POST",
           body: blinkForm,
@@ -240,6 +241,7 @@ const LoginPage = () => {
 
       const loginRes = await apiFetch(
         "http://localhost:8000/api/auth/face-login/",
+        // "http://192.168.254.199:8000/api/auth/face-login/",
         {
           method: "POST",
           body: loginForm,
@@ -247,8 +249,22 @@ const LoginPage = () => {
           // headers: { "X-CSRFToken": getCookie("csrftoken") } // CSRF for POST
         }
       );
+
+      // 🔹 Handle blocked IP or locked user
+      if (loginRes.status === 429) {
+        setMessage("Too many attempts. Please wait and try again.");
+        setLoading(false);
+        return;
+      }
+      if (loginRes.status === 423) {
+        setMessage("Account temporarily locked. Contact administrator.");
+        setLoading(false);
+        return;
+      }
+
       if (loginCancelledRef.current) return;
 
+      // Only parse JSON if not blocked
       const loginData = await loginRes.json();
       console.log("Face login response:", loginData);
       setLoading(false);
@@ -323,11 +339,25 @@ const LoginPage = () => {
 
     try {
       const response = await apiFetch("http://localhost:8000/api/auth/manual-login/", {
+      // const response = await apiFetch("http://192.168.254.199:8000/api/auth/manual-login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
 
+      // 🔹 Handle blocked IP or locked user
+      if (response.status === 429) {
+        setMessage("Too many attempts. Please wait and try again.");
+        setLoading(false);
+        return;
+      }
+      if (response.status === 423) {
+        setMessage("Account temporarily locked. Contact administrator.");
+        setLoading(false);
+        return;
+      }
+
+      // Only parse JSON if not blocked
       const data = await response.json();
 
       if (response.ok && data.match) {
@@ -349,7 +379,7 @@ const LoginPage = () => {
 
         const role = (data.role || "").toLowerCase();
         if (role === "social worker") navigate("/social_worker");
-        else if (role === "nurse") navigate("/nurse/sessions/");
+        else if (role === "nurse") navigate("/nurse");
         else if (role === "psychometrician") navigate("/psychometrician");
         else if (role === "dswd") navigate("/dswd");
       } else {
@@ -365,80 +395,11 @@ const LoginPage = () => {
   };
 
 
-
-  // const handleManualLogin = async () => {
-  //   const newErrors = { username: "", password: "" };
-  //   let hasError = false;
-
-  //   if (!username.trim()) {
-  //     newErrors.username = "Username is required.";
-  //     hasError = true;
-  //   }
-  //   if (!password.trim()) {
-  //     newErrors.password = "Password is required.";
-  //     hasError = true;
-  //   }
-
-  //   setLoginErrors(newErrors);
-  //   if (hasError) return;
-
-  //   setMessage("Logging in...");
-
-  //   try {
-  //     const response = await apiFetch(
-  //       "http://localhost:8000/api/auth/manual-login/",
-  //       {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         // credentials: "include", // ⬅️ send/receive cookies
-  //         body: JSON.stringify({ username, password }),
-  //       }
-  //     );
-
-  //     const data = await response.json();
-
-  //     if (response.ok && data.match) {
-  //       // Step 1: optionally set basic info. Tokens are in HttpOnly cookies; just store user in context
-  //       authLogin({
-  //         username: data.username,
-  //         role: data.role,
-  //         name: data.name,
-  //         official_id: data.official_id,
-  //       });
-
-  //       // Step 2: fetch the full user info including profile photo
-  //       try {
-  //         const meRes = await api.get("/api/auth/me/"); // Ensure CSRF cookie is set if needed
-  //         if (meRes.data?.authenticated && meRes.data.user) {
-  //           authLogin(meRes.data.user); // update context with full user object including of_photo
-  //         }
-  //       } catch (err) {
-  //         console.error("Failed to fetch full user info:", err);
-  //       }
-
-  //       setMessage(`Welcome, ${data.name} (${data.role})`);
-
-  //       const role = (data.role || "").toLowerCase();
-  //       if (role === "social worker") navigate("/social_worker");
-  //       else if (role === "nurse") navigate("/nurse");
-  //       else if (role === "psychometrician") navigate("/psychometrician");
-  //       else if (role === "dswd") navigate("/dswd");
-  //     } else {
-  //       setBackendErrors({
-  //       username: "Incorrect username",
-  //       password: "Incorrect password",
-  //   });
-  //     }
-  //   } catch (err) {
-  //     console.error(err);
-  //     setMessage("Server error. Try again later.");
-  //   }
-  // };
-
   useEffect(() => {
     const checkDSWD = async () => {
       try {
         const res = await fetch("http://localhost:8000/api/auth/check-dswd/");
+        // const res = await fetch("http://192.168.254.199:8000/api/auth/check-dswd/");
         const data = await res.json();
         if (!data.dswd_exists) {
           // Automatically trigger RegisterUser modal for DSWD

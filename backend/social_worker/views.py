@@ -27,118 +27,189 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from dswd.utils.logging import log_change
 from docxtpl import DocxTemplate
+from calendar import month_name
 from pathlib import Path
 
-def generate_consent_forms(victim_serializer_data, victim_id, assigned_official=None):
-    """
-    Will generate:
-    Desktop/Templates/victim<id>/consent forms/Referrals.docx
-    Desktop/Templates/victim<id>/consent forms/Data Privacy.docx
-    Desktop/Templates/victim<id>/consent forms/Informed Consent.docx
-    """
+# helpers
+def format_abuse_checklist(incident_data):
+    lines = []
 
-    # ---- AUTO-DETECT DESKTOP ----
-    desktop = Path.home() / "Desktop"
-    base_dir = desktop / "Templates"
+    violence_type = incident_data.get("violence_type", "")
+    violence_subtype = incident_data.get("violence_subtype", "")
 
-    # Template file paths inside Desktop/Templates/Consent Forms/
-    consent_template_dir = base_dir / "Consent Forms"
-
-    templates = [
-        consent_template_dir / "Referrals.docx",
-        consent_template_dir / "Data Privacy.docx",
-        consent_template_dir / "Informed Consent.docx"
+    categories = [
+        "Physical Violence",
+        "Physical Abused",
+        "Psychological Violence",
+        "Psychological Abuse",
+        "Economic Abused",
+        "Strandee",
+        "Sexually Abused",
+        "Sexually Exploited"
     ]
 
-    # ---- Create Output Folder ----
-    victim_folder = base_dir / f"victim{victim_id}"
-    consent_folder = victim_folder / "consent forms"
-
-    consent_folder.mkdir(parents=True, exist_ok=True)
-
-    output_files = []
-
-    # ---- Age computation ----
-    birth_date_str = victim_serializer_data.get("vic_birth_date")
-    age = "N/A"
-    if birth_date_str:
-        try:
-            birth_date = date.fromisoformat(birth_date_str)
-            today = date.today()
-            age = (
-                today.year
-                - birth_date.year
-                - ((today.month, today.day) < (birth_date.month, birth_date.day))
-            )
-        except:
-            pass
-
-    # ---- Social worker ----
-    social_worker = assigned_official.full_name if assigned_official else "N/A"
-
-    # ---- Context ----
-    context = {
-        "full_name": victim_serializer_data.get("full_name", "N/A"),
-        "age": age,
-        "current_date": date.today().strftime("%B %d, %Y"),
-        "assigned_social_worker": social_worker,
+    subitems_map = {
+        "Economic Abused": [
+            "withdraw of financial support",
+            "deprivation of threat and deprivation of financial resources",
+            "destroying household property",
+            "controlling the victims own money",
+            "Others"
+        ],
+        "Sexually Abused": [
+            "Incest",
+            "Rape",
+            "Acts of Lasciviousness",
+            "Sexual Harassment",
+            "Others"
+        ],
+        "Sexually Exploited": [
+            "Prostituted",
+            "Illegally Recruited",
+            "Pornography",
+            "Victim of Human Trafficking",
+            "Others"
+        ]
     }
 
-    # ---- Generate forms ----
-    for template_path in templates:
-        if not template_path.exists():
-            print(f"Template missing: {template_path}")
-            continue
+    # Normalize subtype(s) into a list
+    if isinstance(violence_subtype, str):
+        selected_subs = [violence_subtype]
+    elif isinstance(violence_subtype, list):
+        selected_subs = violence_subtype
+    else:
+        selected_subs = []
 
-        template_name = template_path.stem  # filename without extension
-        output_path = consent_folder / f"{template_name}.docx"
+    for category in categories:
+        checked = (violence_type == category)
+        lines.append(f"{'☑' if checked else '☐'} {category}")
 
-        doc = DocxTemplate(str(template_path))
-        doc.render(context)
-        doc.save(str(output_path))
+        # Always show subitems if category has them
+        if category in subitems_map:
+            predefined = subitems_map[category]
 
-        output_files.append(str(output_path))
+            for item in predefined:
+                mark = "☑" if item in selected_subs else "☐"
+                if item == "Others":
+                    # Always show "Others" line, but leave blank unless you provided text
+                    other_text = incident_data.get(f"{category}_others", "")
+                    if other_text:
+                        lines.append(f"   {mark} Others, specify: {other_text}")
+                    else:
+                        lines.append(f"   {mark} Others, specify: ________")
+                else:
+                    lines.append(f"   {mark} {item}")
 
-    return output_files
+    return "\n".join(lines)
 
-def generate_session_docx(session_data, victim_id):
+def format_physical_observation(data):
+    lines = []
+
+    physical = data.get("physical_description", [])
+    physical_others = data.get("physical_description_others", "")
+    social = data.get("social_worker_interaction", [])
+    social_others = data.get("social_worker_interaction_others", "")
+
+    lines.append("PHYSICAL DESCRIPTION:")
+    for item in [
+        "Dirty Looking", "With Skin Disease", "Light Skin", "Small in Build",
+        "Medium – Build", "Big Build", "Thin", "Average in Weight", "Obese", "Other"
+    ]:
+        mark = "☑" if item in physical else "☐"
+        if item == "Other":
+            lines.append(f"  {mark} Other: {physical_others or '__________'}")
+        else:
+            lines.append(f"  {mark} {item}")
+
+    lines.append("\nMANNER OF RELATING TO SOCIAL WORKER:")
+    for item in [
+        "Friendly and Easily Relates", "Aggressive", "Keeps to herself", "Happy disposition",
+        "Shy", "Energetic", "Crying", "Apathetic", "Aloof", "Others"
+    ]:
+        mark = "☑" if item in social else "☐"
+        if item == "Others":
+            lines.append(f"  {mark} Others: {social_others or '__________'}")
+        else:
+            lines.append(f"  {mark} {item}")
+
+    return "\n".join(lines)
+
+def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=None, incident_data=None, perpetrator_data=None, contact_person_data=None, family_members=None):
     """
-    Generate a Word document for a session with all answers and feedback.
-    session_data: the JSON returned by your session_answers_docx endpoint
-    victim_id: the victim's ID
+    Generates:
+    - All .docx inside Templates/Consent Forms → victim<id>/consent forms/
+    - intake.docx inside Templates/Social Worker → victim<id>/social worker/
     """
 
-    # Single template path
-    template_path = r"C:\Users\relon\Desktop\Templates\Session_Template.docx"
+    desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+    root_templates = os.path.join(desktop, "Templates")
 
-    # CREATE correct directory:
-    # victim1/sessions/
-    base_dir = r"C:\Users\relon\Desktop\Templates"
-    victim_folder = os.path.join(base_dir, f"victim{victim_id}")
-    session_folder = os.path.join(victim_folder, "sessions")
-    os.makedirs(session_folder, exist_ok=True)
+    # Construct full name for folder
+    first_name = victim_serializer_data.get("vic_first_name", "")
+    middle_name = victim_serializer_data.get("vic_middle_name", "")
+    last_name = victim_serializer_data.get("vic_last_name", "")
+    
+    full_name = " ".join(part for part in [first_name, middle_name, last_name] if part).strip()
 
-    # Build context
+    # Make folder name safe
+    safe_full_name = "".join(c for c in full_name if c.isalnum() or c in (" ", "-")).strip()
+
+    # 1. Output folders for victim
+    consent_out = os.path.join(root_templates, safe_full_name, "consent forms")
+    sw_out = os.path.join(root_templates, safe_full_name, "social worker")
+
+    os.makedirs(consent_out, exist_ok=True)
+    os.makedirs(sw_out, exist_ok=True)
+
+    # 2. Detect consent form templates
+    consent_templates_dir = os.path.join(root_templates, "Consent Forms")
+    consent_template_files = [
+        f for f in os.listdir(consent_templates_dir)
+        if f.lower().endswith(".docx")
+    ]
+
+    # 3. Social worker intake template
+    intake_template = os.path.join(root_templates, "social worker", "Intake-Sheet.docx")
+
+    # 4. Context
     context = {
-        "session_num": session_data.get("session_num", "N/A"),
-        "victim_name": session_data.get("victim_name", "N/A"),
-        "current_date": date.today().strftime("%B %d, %Y"),
-        "answers": session_data.get("answers", []),  # list of dicts with question/answer/note/role
-        "feedback": session_data.get("my_feedback", "")
+        "victim": victim_serializer_data,
+        "perpetrator": perpetrator_data,
+        "contact_person": contact_person_data,
+        "incident": incident_data,
+        "assigned_official": assigned_official,
+        "victim_id": victim_id,
+        "current_date": datetime.today().strftime("%B %d, %Y"),
+        "family_members": family_members or []
     }
 
-    # Output file
-    output_path = os.path.join(session_folder, f"Session_{session_data.get('session_num', 'N/A')}.docx")
+    context["abuse_checklist"] = format_abuse_checklist(incident_data)
 
-    if not os.path.exists(template_path):
-        print(f"⚠ Template missing: {template_path}")
-        return None
+    generated_files = []
 
-    doc = DocxTemplate(template_path)
-    doc.render(context)
-    doc.save(output_path)
+    # 5. Render ALL consent forms
+    for template_file in consent_template_files:
+        template_path = os.path.join(consent_templates_dir, template_file)
 
-    return output_path
+        tpl = DocxTemplate(template_path)
+        tpl.render(context)
+
+        save_path = os.path.join(consent_out, template_file)
+        tpl.save(save_path)
+        generated_files.append(save_path)
+
+    # 6. Render intake form (separate folder)
+    if os.path.exists(intake_template):
+        tpl = DocxTemplate(intake_template)
+        tpl.render(context)
+
+        save_path = os.path.join(sw_out, "Intake-Sheet.docx")
+        tpl.save(save_path)
+        generated_files.append(save_path)
+    else:
+        print(f"Intake template not found: {intake_template}")
+
+    return generated_files
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
@@ -188,6 +259,22 @@ def register_victim(request):
                             status=status.HTTP_400_BAD_REQUEST)
         victim = v_ser.save()  # PK available via victim.pk or victim.vic_id
 
+        # 1b) Family Members (optional)
+        family_members_data = parse_json_field("familyMembers")  # must match FormData key
+        saved_family_members = []
+        if family_members_data:
+            for idx, fam_data in enumerate(family_members_data, start=1):
+                fam_data["victim"] = victim.pk  # set FK to Victim
+                fam_ser = FamilyMemberSerializer(data=fam_data)
+                if not fam_ser.is_valid():
+                    print(f"[family_member #{idx}] errors:", fam_ser.errors)
+                    transaction.set_rollback(True)
+                    return Response(
+                        {"success": False, "errors": fam_ser.errors},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                saved_family_members.append(fam_ser.save())
+
         # 2) Photos + Face Samples
         photo_files = request.FILES.getlist("photos")
         if photo_files:
@@ -233,7 +320,7 @@ def register_victim(request):
                 return Response({"success": False, "error": "No photos could be saved."},
                                 status=status.HTTP_400_BAD_REQUEST)
 
-        # 4) Perpetrator (optional)
+        # 3) Perpetrator (optional)
         perpetrator = None
         perpetrator_data = parse_json_field("perpetrator")
         if perpetrator_data:
@@ -244,7 +331,7 @@ def register_victim(request):
                                 status=status.HTTP_400_BAD_REQUEST)
             perpetrator = p_ser.save()
 
-        # 5) IncidentInformation (optional)
+        # 4) IncidentInformation (optional)
         incident = None
         incident_data = parse_json_field("incident")
         if incident_data:
@@ -271,7 +358,7 @@ def register_victim(request):
                                 status=status.HTTP_400_BAD_REQUEST)
             incident = i_ser.save()
 
-        # 5.5) Evidences (optional)
+        # 5) Evidences (optional)
         evidence_files = request.FILES.getlist("evidences")  # matches frontend FormData key
         if incident and evidence_files:
             for file in evidence_files:
@@ -280,7 +367,7 @@ def register_victim(request):
                     file=file
                 )
 
-        # 5.6) Contact Person (optional, after incident exists)
+        # 6) Contact Person (optional, after incident exists)
         contact_person = None
         contact_data = parse_json_field("contact_person")
         if contact_data and incident:
@@ -294,8 +381,21 @@ def register_victim(request):
 
         # 7) Generate Consent Form AFTER incident creation
         victim_serializer_data = VictimSerializer(victim).data
+        incident_serializer_data = IncidentInformationSerializer(incident).data if incident else None
         assigned_official = incident.of_id if incident and incident.of_id else None
-        generated_file_path = generate_consent_forms(victim_serializer_data, victim.vic_id, assigned_official)
+        perpetrator_data = PerpetratorSerializer(perpetrator).data if perpetrator else None
+        contact_person_data = ContactPersonSerializer(contact_person).data if contact_person else None
+        family_members = FamilyMemberSerializer(saved_family_members, many=True).data
+
+        generate_initial_forms(
+            victim_serializer_data,
+            victim.vic_id,
+            assigned_official,
+            incident_serializer_data,
+            perpetrator_data,
+            contact_person_data,
+            family_members=family_members
+        )
 
         return Response({
             "success": True,
@@ -303,6 +403,7 @@ def register_victim(request):
             "incident": IncidentInformationSerializer(incident).data if incident else None,
             "contact_person": ContactPersonSerializer(contact_person).data if contact_person else None,
             "perpetrator": PerpetratorSerializer(perpetrator).data if perpetrator else None,
+            "family_members": FamilyMemberSerializer(saved_family_members, many=True).data
         }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
@@ -347,7 +448,7 @@ class victim_detail(generics.RetrieveAPIView):
     serializer_class = VictimDetailSerializer
     lookup_field = "vic_id"
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker", "Nurse", "Psychometrician", "Home Life"]
+    allowed_roles = ["Social Worker", "Nurse", "Psychometrician", "Home Life", "DSWD"]
     
     def get_queryset(self):
         """
@@ -735,7 +836,7 @@ def start_session(request, sess_id):
                 session=session,
                 question=m.question,
                 defaults={
-                    "sq_is_required": False,
+                    "sq_is_required": m.question.ques_is_required,   # NEW
                     "sq_question_text_snapshot": m.question.ques_question_text,
                     "sq_answer_type_snapshot": m.question.ques_answer_type,
                 },
@@ -792,118 +893,6 @@ def add_custom_question(request, sess_id):
         created.append(sq)
 
     return Response(SessionQuestionSerializer(created, many=True).data, status=201)
-
-# @api_view(["POST"])
-# @permission_classes([IsAuthenticated])
-# def finish_session(request, sess_id):
-#     """
-#     POST: Marks current official's session progress as Done.
-#     - Saves provided answers and records who answered them (answered_by, answered_at)
-#     - Enforces that an official can only answer questions matching their role (if mapped)
-#     - Marks SessionProgress for this official as done, and marks the overall session Done only
-#       when all assigned officials finished.
-#     """
-#     user = request.user
-#     if not hasattr(user, "official"):
-#         return Response({"error": "User is not an official"}, status=403)
-
-#     try:
-#         session = Session.objects.get(pk=sess_id, assigned_official=user.official)
-#     except Session.DoesNotExist:
-#         return Response({"error": "Session not found or not assigned to you"}, status=404)
-
-#     answers = request.data.get("answers", [])
-#     skipped = []  # collect any skipped answers due to role mismatch or missing sq
-#     saved = 0
-
-#     # Save answers inside a transaction to keep data consistent
-#     with transaction.atomic():
-#         for ans in answers:
-#             sq_id = ans.get("sq_id")
-#             if not sq_id:
-#                 continue
-#             try:
-#                 sq = SessionQuestion.objects.select_related("question").get(pk=sq_id, session=session)
-#             except SessionQuestion.DoesNotExist:
-#                 skipped.append({"sq_id": sq_id, "reason": "not_found"})
-#                 continue
-
-#             # Server-side role enforcement:
-#             q_role = None
-#             if sq.question:
-#                 # prefer question.role (string), fallback to question.ques_category.role
-#                 q_role = sq.question.role or getattr(sq.question.ques_category, "role", None)
-
-#             if q_role and user.official.of_role and q_role != user.official.of_role:
-#                 # skip saving - not allowed for this official
-#                 skipped.append({"sq_id": sq_id, "reason": "role_mismatch", "question_role": q_role})
-#                 continue
-
-#             # Save the provided answer
-#             new_value = ans.get("value")
-#             new_note = ans.get("note")
-
-#             # Only update fields if they changed (optional optimization)
-#             changed = False
-#             if new_value is not None and new_value != sq.sq_value:
-#                 sq.sq_value = new_value
-#                 changed = True
-#             if new_note is not None and new_note != sq.sq_note:
-#                 sq.sq_note = new_note
-#                 changed = True
-
-#             # Always set who answered (even if they edited their previous answer)
-#             sq.answered_by = user.official
-#             sq.answered_at = timezone.now()
-
-#             # Save
-#             if changed or True:
-#                 sq.save(update_fields=["sq_value", "sq_note", "answered_by", "answered_at"])
-#                 saved += 1
-
-#         # Save description (if updated)
-#         description = request.data.get("sess_description")
-#         if description is not None:
-#             session.sess_description = description
-
-#         # Save selected services
-#         service_ids = request.data.get("services", [])
-#         if isinstance(service_ids, list):
-#             session.services_given.all().delete()
-#             for sid in service_ids:
-#                 ServiceGiven.objects.create(
-#                     session=session,
-#                     serv_id_id=sid,
-#                     of_id=user.official
-#                 )
-
-#         # Update this official’s progress
-#         progress, _ = SessionProgress.objects.get_or_create(
-#             session=session,
-#             official=user.official,
-#         )
-#         progress.is_done = True
-#         progress.finished_at = timezone.now()
-#         progress.save()
-
-#         # Update session status only after saving progress
-#         if session.all_officials_done():
-#             session.sess_status = "Done"
-#         else:
-#             session.sess_status = "Ongoing"
-#         session.save()
-
-#     all_finished = session.all_officials_done()
-
-#     # Return details including warnings about skipped answers
-#     return Response({
-#         "message": "Your session progress has been marked as done.",
-#         "saved_answers": saved,
-#         "skipped_answers": skipped,
-#         "session_completed": all_finished,
-#         "all_finished": all_finished,
-#         "session": SessionDetailSerializer(session, context={"request": request}).data
-#     }, status=200)
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -992,6 +981,28 @@ def finish_session(request, sess_id):
         )
 
         progress.notes = my_feedback
+        required_questions = session.session_questions.filter(
+            question__role=user.official.of_role,
+            sq_is_required=True
+        )
+        
+        unanswered = required_questions.filter(
+            Q(sq_value__isnull=True) | Q(sq_value__exact="")
+        )
+        if unanswered.exists():
+            return Response(
+                {
+                    "error": "You must answer all required questions before finishing this session.",
+                    "missing_required_questions": [
+                        {
+                            "sq_id": q.sq_id,
+                            "question_text": q.sq_question_text_snapshot
+                        }
+                        for q in unanswered
+                    ]
+                },
+                status=400
+            )
         progress.finished_at = timezone.now()
         progress.is_done = True
         progress.save()
@@ -1059,67 +1070,7 @@ def close_case(request, incident_id):
     serializer.save()
 
     return Response({"message": "Case closed successfully!"}, status=200)
-   
-# @api_view(["GET", "POST"])
-# @permission_classes([IsAuthenticated])
-# def schedule_next_session(request):
-#     """
-#     Also supports simplified creation for Session 2+ (no schedule/location).
-#     """
-#     user = request.user
-#     official = getattr(user, "official", None)
-#     role = getattr(official, "of_role", None)
-
-#     if not official or not role:
-#         return Response({"error": "Only registered officials can access this endpoint."},
-#                         status=status.HTTP_403_FORBIDDEN)
-
-#     if request.method == "GET":
-#         sessions = Session.objects.filter(
-#             assigned_official=official,
-#             sess_status__in=["Pending", "Ongoing"]
-#         ).order_by("-sess_next_sched")
-#         serializer = SessionCRUDSerializer(sessions, many=True)
-#         return Response(serializer.data)
-
-#     elif request.method == "POST":
-#         data = request.data.copy()
-
-#         # If frontend sends multiple officials → treat as shared session
-#         assigned_officials = data.get("assigned_official", None)
-
-#         # Ensure assigned_officials is a proper list of IDs
-#         if isinstance(assigned_officials, str):
-#             try:
-#                 import json
-#                 assigned_officials = json.loads(assigned_officials)
-#             except Exception:
-#                 assigned_officials = [assigned_officials]
-
-#         if not assigned_officials:
-#             # fallback for individual sessions (Session 2+)
-#             assigned_officials = [official.pk]
-
-#         data["assigned_official"] = assigned_officials
-
-#         # Serialize and save the session
-#         serializer = SessionCRUDSerializer(data=data, context={"request": request})
-#         serializer.is_valid(raise_exception=True)
-#         session = serializer.save()
-
-#         # Create SessionProgress entries for all assigned officials
-#         for off_id in assigned_officials:
-#             try:
-#                 off_obj = Official.objects.get(pk=off_id)
-#                 SessionProgress.objects.get_or_create(session=session, official=off_obj)
-#             except Official.DoesNotExist:
-#                 continue
-
-#         return Response(
-#             SessionCRUDSerializer(session, context={"request": request}).data,
-#             status=status.HTTP_201_CREATED,
-#         )
-
+  
 
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
@@ -1790,3 +1741,74 @@ class ServeVictimFacePhotoView(APIView):
         except VictimFaceSample.DoesNotExist:
             raise Http404("Victim face sample not found")
         return serve_encrypted_file(request, sample, sample.photo, content_type='image/jpeg')
+    
+    
+#============================= Social Worker Dashboard ======================================
+class SocialWorkerDashboardAPIView(APIView):
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['Social Worker']
+
+    def get(self, request):
+        today = date.today()
+        official = getattr(request.user, "official", None)
+
+        # Victim Summary
+        total_victims = Victim.objects.count()
+        victim_summary = {"total_victims": total_victims}
+
+        # Session Summary
+        sessions = Session.objects.filter(assigned_official=official)
+        week_ahead = today + timedelta(days=7)
+        sessions_this_week = sessions.filter(sess_next_sched__date__range=[today, week_ahead]).count()
+        ongoing_sessions = sessions.filter(sess_status="Ongoing").count()   
+        pending_sessions = sessions.filter(sess_status="Pending").count()
+        done_sessions = sessions.filter(sess_status="Done").count()       
+
+        session_summary = {
+            "sessions_this_week": sessions_this_week,
+            "ongoing_sessions": ongoing_sessions,
+            "pending_sessions": pending_sessions,
+            "done_sessions": done_sessions,   
+        }
+
+        # Monthly Victim Reports
+        incidents = IncidentInformation.objects.all()
+        report_rows = []
+        for i in range(1, 13):
+            month_incidents = [inc for inc in incidents if inc.incident_date and inc.incident_date.month == i]
+            report_rows.append({
+                "month": month_name[i],
+                "totalVictims": len(month_incidents),
+                "Physical_Violence": sum(1 for inc in month_incidents if inc.violence_type == "Physical Violence"),
+                "Physical_Abused": sum(1 for inc in month_incidents if inc.violence_type == "Physical Abused"),
+                "Psychological_Violence": sum(1 for inc in month_incidents if inc.violence_type == "Psychological Violence"),
+                "Psychological_Abuse": sum(1 for inc in month_incidents if inc.violence_type == "Psychological Abuse"),
+                "Economic_Abused": sum(1 for inc in month_incidents if inc.violence_type == "Economic Abused"),
+                "Strandee": sum(1 for inc in month_incidents if inc.violence_type == "Strandee"),
+                "Sexually_Abused": sum(1 for inc in month_incidents if inc.violence_type == "Sexually Abused"),
+                "Sexually_Exploited": sum(1 for inc in month_incidents if inc.violence_type == "Sexually Exploited"),
+            })
+
+        # Notifications: sessions within 3 days for this official
+        upcoming_sessions = sessions.filter(
+            sess_next_sched__date__range=(today, today + timedelta(days=3))
+        ).filter(
+            Q(progress__official=official, progress__is_done=False) |
+            ~Q(progress__official=official)   # no progress yet for this official
+        ).distinct()
+
+        return Response({
+            "victim_summary": VictimSummarySerializer(victim_summary).data,
+            "session_summary": SessionSummarySerializer(session_summary).data,
+            "monthly_report_rows": MonthlyReportRowSerializer(report_rows, many=True).data,
+            "upcoming_sessions": [
+                {
+                    "id": s.pk,
+                    "sess_num": s.sess_num,
+                    "victim": s.incident_id.vic_id.full_name if s.incident_id and s.incident_id.vic_id else None,
+                    "type": s.sess_type.first().name if s.sess_type.exists() else "N/A",
+                    "date": s.sess_next_sched,
+                }
+                for s in upcoming_sessions
+            ]
+        })

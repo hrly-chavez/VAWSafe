@@ -55,11 +55,15 @@ class VictimFaceSampleSerializer(serializers.ModelSerializer):
 
 class VictimSerializer(serializers.ModelSerializer):
     full_name = serializers.SerializerMethodField()
+    age = serializers.SerializerMethodField()
     address = AddressSerializer()
 
     class Meta:
         model = Victim
         fields = "__all__"
+
+    def get_age(self, obj):
+        return obj.age
 
     def get_full_name(self, obj):
         return obj.full_name
@@ -70,15 +74,59 @@ class VictimSerializer(serializers.ModelSerializer):
         victim = Victim.objects.create(address=address, **validated_data)
         return victim
 
+class FamilyMemberSerializer(serializers.ModelSerializer):
+    age = serializers.SerializerMethodField()
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FamilyMember
+        fields = "__all__"  # or list all fields explicitly
+
+    def get_age(self, obj):
+        if obj.fam_birth_date:
+            today = date.today()
+            born = obj.fam_birth_date
+            return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+        return None
+    
+    def get_full_name(self, obj):
+        parts = [obj.fam_fname, obj.fam_mname, obj.fam_lname, obj.fam_extension]
+        # Join non-empty parts with space
+        return " ".join(filter(None, parts))
+
 class ContactPersonSerializer(serializers.ModelSerializer):
+    age = serializers.SerializerMethodField()
+    
     class Meta:
         model = ContactPerson
         fields = "__all__"
 
+    def get_age(self, obj):
+        if obj.cont_birth_date:
+            today = date.today()
+            return (
+                today.year
+                - obj.cont_birth_date.year
+                - ((today.month, today.day) < (obj.cont_birth_date.month, obj.cont_birth_date.day))
+            )
+        return None
+
 class PerpetratorSerializer(serializers.ModelSerializer):
+    age = serializers.SerializerMethodField()
+
     class Meta:
         model = Perpetrator
         fields = "__all__"
+
+    def get_age(self, obj):
+        if obj.per_birth_date:
+            today = date.today()
+            return (
+                today.year
+                - obj.per_birth_date.year
+                - ((today.month, today.day) < (obj.per_birth_date.month, obj.per_birth_date.day))
+            )
+        return None
         
 class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
     perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)
@@ -850,6 +898,7 @@ class BulkQuestionCreateSerializer(serializers.Serializer):
                 ques_category_id=category_id,
                 ques_question_text=q.get("ques_question_text"),
                 ques_answer_type=q.get("ques_answer_type"),
+                ques_is_required=q.get("ques_is_required", True),
                 ques_is_active=True,
                 created_by=official,
                 role=official.of_role if official else "Unknown",
@@ -902,3 +951,27 @@ class ChangeLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = ChangeLog
         fields = "__all__"
+
+
+
+#============================= Social Worker Dashboard ======================================
+class VictimSummarySerializer(serializers.Serializer):
+    total_victims = serializers.IntegerField()
+
+class SessionSummarySerializer(serializers.Serializer):
+    sessions_this_week = serializers.IntegerField()
+    pending_sessions = serializers.IntegerField()
+    ongoing_sessions = serializers.IntegerField()   
+    done_sessions = serializers.IntegerField()      
+
+class MonthlyReportRowSerializer(serializers.Serializer):
+    month = serializers.CharField()
+    totalVictims = serializers.IntegerField()
+    Physical_Violence = serializers.IntegerField()
+    Physical_Abused = serializers.IntegerField()
+    Psychological_Violence = serializers.IntegerField()
+    Psychological_Abuse = serializers.IntegerField()
+    Economic_Abused = serializers.IntegerField()
+    Strandee = serializers.IntegerField()
+    Sexually_Abused = serializers.IntegerField()
+    Sexually_Exploited = serializers.IntegerField()

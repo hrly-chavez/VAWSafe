@@ -86,9 +86,7 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
             className="input w-full"
             onChange={(e) => handleChange("cont_civil_status", e.target.value)}
           >
-            <option value="" disabled>
-              Select Civil Status
-            </option>
+            <option>Select Civil Status</option>
             <option value="SINGLE">Single</option>
             <option value="MARRIED">Married</option>
             <option value="WIDOWED">Widowed</option>
@@ -128,6 +126,36 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
             onChange={(e) =>
               handleChange("cont_contact_number", e.target.value)
             }
+          />
+        </div>
+      </div>
+
+      {/* provincial address */}
+      <div>
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Provincial Address
+          </label>
+          <input
+            className="input"
+            type="text"
+            placeholder="e.g. Samar Leyte"
+            onChange={(e) => handleChange("cont_prov_address", e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* work address */}
+      <div>
+        <div className="flex flex-col">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Work Address
+          </label>
+          <input
+            className="input"
+            type="text"
+            placeholder="e.g. IT Park"
+            onChange={(e) => handleChange("cont_work_address", e.target.value)}
           />
         </div>
       </div>

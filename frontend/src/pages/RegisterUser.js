@@ -48,6 +48,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
     const checkDSWD = async () => {
       try {
         const res = await axios.get("http://localhost:8000/api/auth/check-dswd/");
+        // const res = await axios.get("http://192.168.254.199:8000/api/auth/check-dswd/");
         if (!res.data.dswd_exists) {
           setRole("DSWD");
           setDswdExists(false);
@@ -64,6 +65,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
   // Fetch provinces
 useEffect(() => {
   axios.get("http://localhost:8000/api/desk_officer/provinces/")
+  // axios.get("http://192.168.254.199:8000/api/desk_officer/provinces/")
     .then((res) => setProvinces(res.data))   // <-- store provinces
     .catch((err) => console.error("Failed to load provinces:", err));
 }, []);
@@ -72,6 +74,7 @@ useEffect(() => {
   useEffect(() => {
     if (selectedProvince) {
       axios.get(`http://localhost:8000/api/desk_officer/provinces/${selectedProvince}/municipalities/`)
+      // axios.get(`http://192.168.254.199:8000/api/desk_officer/provinces/${selectedProvince}/municipalities/`)
         .then((res) => setMunicipalities(res.data))
         .catch((err) => console.error("Failed to load municipalities:", err));
     } else {
@@ -84,6 +87,7 @@ useEffect(() => {
   useEffect(() => {
     if (selectedMunicipality) {
       axios.get(`http://localhost:8000/api/desk_officer/municipalities/${selectedMunicipality}/barangays/`)
+      // axios.get(`http://192.168.254.199:8000/api/desk_officer/municipalities/${selectedMunicipality}/barangays/`)
         .then((res) => setBarangays(res.data))
         .catch((err) => console.error("Failed to load barangays:", err));
     } else {
@@ -200,6 +204,7 @@ useEffect(() => {
 
       // Step 2: Proceed to register the user if no match is found
       const response = await fetch("http://localhost:8000/api/auth/add-user/", {
+      // const response = await fetch("http://192.168.254.199:8000/api/auth/add-user/", {
         method: "POST",
         body: formData,
       });
@@ -257,7 +262,7 @@ useEffect(() => {
 
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
       <div className="relative w-full max-w-[1000px] h-[90%] overflow-hidden px-6 py-6 rounded-2xl bg-white text-black shadow-2xl border border-gray-200 transition-all duration-300 scale-100 animate-fade-in">
         {/* Close Button */}
         <button
