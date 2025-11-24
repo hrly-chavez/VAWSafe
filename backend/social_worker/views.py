@@ -144,32 +144,34 @@ def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=
     desktop = os.path.join(os.path.expanduser("~"), "Desktop")
     root_templates = os.path.join(desktop, "Templates")
 
-    # -----------------------------
+    # Construct full name for folder
+    first_name = victim_serializer_data.get("vic_first_name", "")
+    middle_name = victim_serializer_data.get("vic_middle_name", "")
+    last_name = victim_serializer_data.get("vic_last_name", "")
+    
+    full_name = " ".join(part for part in [first_name, middle_name, last_name] if part).strip()
+
+    # Make folder name safe
+    safe_full_name = "".join(c for c in full_name if c.isalnum() or c in (" ", "-")).strip()
+
     # 1. Output folders for victim
-    # -----------------------------
-    consent_out = os.path.join(root_templates, f"victim{victim_id}", "consent forms")
-    sw_out = os.path.join(root_templates, f"victim{victim_id}", "social worker")
+    consent_out = os.path.join(root_templates, safe_full_name, "consent forms")
+    sw_out = os.path.join(root_templates, safe_full_name, "social worker")
 
     os.makedirs(consent_out, exist_ok=True)
     os.makedirs(sw_out, exist_ok=True)
 
-    # -----------------------------
     # 2. Detect consent form templates
-    # -----------------------------
     consent_templates_dir = os.path.join(root_templates, "Consent Forms")
     consent_template_files = [
         f for f in os.listdir(consent_templates_dir)
         if f.lower().endswith(".docx")
     ]
 
-    # -----------------------------
     # 3. Social worker intake template
-    # -----------------------------
     intake_template = os.path.join(root_templates, "social worker", "Intake-Sheet.docx")
 
-    # -----------------------------
     # 4. Context
-    # -----------------------------
     context = {
         "victim": victim_serializer_data,
         "perpetrator": perpetrator_data,
@@ -185,9 +187,7 @@ def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=
 
     generated_files = []
 
-    # -----------------------------
     # 5. Render ALL consent forms
-    # -----------------------------
     for template_file in consent_template_files:
         template_path = os.path.join(consent_templates_dir, template_file)
 
@@ -198,9 +198,7 @@ def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=
         tpl.save(save_path)
         generated_files.append(save_path)
 
-    # -----------------------------
     # 6. Render intake form (separate folder)
-    # -----------------------------
     if os.path.exists(intake_template):
         tpl = DocxTemplate(intake_template)
         tpl.render(context)

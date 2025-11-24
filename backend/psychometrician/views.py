@@ -524,14 +524,20 @@ def generate_session_docx(session, current_official=None):
     victim = incident.vic_id
     victim_id = victim.vic_id
 
-    # 2. Paths
+    # 2. Build victim folder name
+    full_name = victim.full_name
+
+    # Make safe folder name (remove illegal characters)
+    safe_full_name = "".join(c for c in full_name if c.isalnum() or c in (" ", "-")).strip()
+
+    # 3. Paths
     desktop = os.path.join(os.path.expanduser("~"), "Desktop")
     root_templates = os.path.join(desktop, "Templates")
 
-    out_dir = os.path.join(root_templates, f"victim{victim_id}", "psychometrician")
+    out_dir = os.path.join(root_templates, safe_full_name, "psychometrician")
     os.makedirs(out_dir, exist_ok=True)
 
-    # 3. Determine template based on session number
+    # 4. Determine template based on session number
     is_first_session = (session.sess_num or 1) == 1  # Use sess_num from model
 
     if is_first_session:
@@ -545,7 +551,7 @@ def generate_session_docx(session, current_official=None):
     if not os.path.exists(template_path):
         raise FileNotFoundError(f"Missing template: {template_path}")
 
-    # 4. Fetch session Q&A
+    # 5. Fetch session Q&A
     sqs = (
         SessionQuestion.objects
         .filter(session=session)
@@ -569,7 +575,7 @@ def generate_session_docx(session, current_official=None):
             "answered_by": sq.answered_by.full_name if sq.answered_by else "",
         })
 
-    # 5. Context for docx
+    # 6. Context for docx
     context = {
         "session": session,
         "created_at": datetime.now().strftime("%B %d, %Y"),
@@ -578,7 +584,7 @@ def generate_session_docx(session, current_official=None):
         "incident": incident,
     }
 
-    # 6. Render and save
+    # 7. Render and save
     doc = DocxTemplate(template_path)
     doc.render(context)
 
@@ -1437,10 +1443,16 @@ def generate_comprehensive_psych_report(report_instance):
     desktop = os.path.join(os.path.expanduser("~"), "Desktop")
     root_templates = os.path.join(desktop, "Templates")
 
+    # Build victim name for folder: First Middle Last
+    full_name = victim.full_name
+
+    # Safe folder name (remove illegal characters)
+    safe_full_name = "".join(c for c in full_name if c.isalnum() or c in (" ", "-")).strip()
+
     # Output folder for comprehensive reports
     output_folder = os.path.join(
         root_templates,
-        f"victim{victim_id}",
+        safe_full_name,
         "psychometrician",
         "reports",
         "comprehensive"
@@ -1525,6 +1537,12 @@ def generate_monthly_psych_report_forms(report_instance):
     victim = report_instance.victim
     victim_id = victim.vic_id
 
+    # Build victim name for folder: First Middle Last
+    full_name = victim.full_name
+
+    # Safe folder name (remove illegal characters)
+    safe_full_name = "".join(c for c in full_name if c.isalnum() or c in (" ", "-")).strip()
+
     # 2. Paths
     desktop = os.path.join(os.path.expanduser("~"), "Desktop")
     root_templates = os.path.join(desktop, "Templates")
@@ -1532,7 +1550,7 @@ def generate_monthly_psych_report_forms(report_instance):
     # Output folder for monthly reports
     output_folder = os.path.join(
         root_templates,
-        f"victim{victim_id}",
+        safe_full_name,
         "psychometrician",
         "reports",
         "monthly"

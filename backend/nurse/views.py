@@ -32,6 +32,7 @@ from dswd.utils.logging import log_change
 from docxtpl import DocxTemplate
 from calendar import month_name
 from collections import defaultdict
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -539,7 +540,10 @@ def generate_session_docx(session, current_official=None):
     desktop = os.path.join(os.path.expanduser("~"), "Desktop")
     root_templates = os.path.join(desktop, "Templates")
 
-    out_dir = os.path.join(root_templates, f"victim{victim_id}", "nurse")
+    # Build safe victim folder name
+    safe_full_name = re.sub(r'[\\/*?:"<>|]', "", victim.full_name)
+
+    out_dir = os.path.join(root_templates, safe_full_name, "nurse")
     os.makedirs(out_dir, exist_ok=True)
 
     # 3. Determine template based on session number
@@ -1446,6 +1450,9 @@ def generate_nurse_monthly_report(report_instance):
     victim = report_instance.victim
     victim_id = victim.vic_id
 
+    # Build victim folder name
+    safe_full_name = re.sub(r'[\\/*?:"<>|]', "", victim.full_name)
+
     # Auto-fill report month as Month Year
     report_month_str = report_instance.report_month.strftime("%B %Y")
 
@@ -1474,7 +1481,7 @@ def generate_nurse_monthly_report(report_instance):
     }
 
     # 4. Generate output folder & filename
-    output_folder = os.path.join(root_templates, f"victim{victim_id}", "nurse", "reports", "monthly")
+    output_folder = os.path.join(root_templates, safe_full_name, "nurse", "reports", "monthly")
     os.makedirs(output_folder, exist_ok=True)
 
     now = datetime.now()
