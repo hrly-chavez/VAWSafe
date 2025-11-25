@@ -27,6 +27,8 @@ from rest_framework.decorators import action
 from dswd.utils.logging import log_change
 from docxtpl import DocxTemplate
 from django.shortcuts import get_object_or_404
+from calendar import month_name
+from collections import Counter
 from io import BytesIO
 from django.forms.models import model_to_dict
 
@@ -1678,3 +1680,99 @@ class MonthlyPsychProgressReportViewSet(viewsets.ModelViewSet):
         # Keep sessions in sync on update too
         sessions = Session.objects.filter(victim=report.victim, incident=report.incident)
         report.individual_sessions.set(sessions)
+
+# ============================= Psychometrician Dashboard ======================================
+class PsychometricianDashboardAPIView(APIView):
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ['Psychometrician']
+
+    def get(self, request):
+        today = date.today()
+        official = getattr(request.user, "official", None)
+
+        # Victim Summary
+        total_victims = Victim.objects.count()
+        victim_summary = {"total_victims": total_victims}
+
+        # Session Summary
+        sessions = Session.objects.filter(assigned_official=official)
+        week_ahead = today + timedelta(days=7)
+
+        session_summary = {
+            "total_assigned_sessions": sessions.count(),
+            "sessions_this_week": sessions.filter(sess_next_sched__date__range=[today, week_ahead]).count(),
+            "pending_sessions": sessions.filter(sess_status="Pending").count(),
+            "ongoing_sessions": sessions.filter(sess_status="Ongoing").count(),
+        }
+
+        # Monthly Victim Reports (with violence type breakdown)
+        incidents = IncidentInformation.objects.all()
+        report_rows = []
+        for i in range(1, 13):
+            month_incidents = [
+                inc for inc in incidents
+                if inc.incident_date and inc.incident_date.month == i
+            ]
+            report_rows.append({
+                "month": month_name[i],
+                "totalVictims": len(month_incidents),
+                "Physical Violence": sum(1 for inc in month_incidents if inc.violence_type == "Physical Violence"),
+                "Physical Abused": sum(1 for inc in month_incidents if inc.violence_type == "Physical Abused"),
+                "Psychological Violence": sum(1 for inc in month_incidents if inc.violence_type == "Psychological Violence"),
+                "Psychological Abuse": sum(1 for inc in month_incidents if inc.violence_type == "Psychological Abuse"),
+                "Economic Abused": sum(1 for inc in month_incidents if inc.violence_type == "Economic Abused"),
+                "Strandee": sum(1 for inc in month_incidents if inc.violence_type == "Strandee"),
+                "Sexually Abused": sum(1 for inc in month_incidents if inc.violence_type == "Sexually Abused"),
+                "Sexually Exploited": sum(1 for inc in month_incidents if inc.violence_type == "Sexually Exploited"),
+            })
+
+        monthly_report_data = MonthlyReportRowSerializer(report_rows, many=True).data
+
+        # Violence Type Aggregation (overall counts)
+        violence_counts = Counter(i.violence_type for i in incidents if i.violence_type)
+        violence_types_dict = dict(violence_counts)
+
+        # Notifications: upcoming sessions
+        upcoming_sessions = sessions.filter(
+            sess_next_sched__date__range=(today, today + timedelta(days=3)),
+            sess_status__in=["Pending", "Ongoing"]
+        ).filter(
+            Q(progress__official=official, progress__is_done=False) |
+            ~Q(progress__official=official)
+        ).distinct()
+
+        # Overdue Sessions: past due date and not completed
+        overdue_sessions = sessions.filter(
+            sess_next_sched__date__lt=today,
+            sess_status__in=["Pending", "Ongoing"]
+        ).filter(
+            Q(progress__official=official, progress__is_done=False) |
+            ~Q(progress__official=official)
+        ).distinct()
+
+        return Response({
+            "victim_summary": VictimSummarySerializer(victim_summary).data,
+            "session_summary": SessionSummarySerializer(session_summary).data,
+            "monthly_report_rows": monthly_report_data,
+            "violence_types": violence_types_dict,  
+            "upcoming_sessions": [
+                {
+                    "id": s.pk,
+                    "sess_num": s.sess_num,
+                    "victim": s.incident_id.vic_id.full_name if s.incident_id and s.incident_id.vic_id else None,
+                    "type": s.sess_type.first().name if s.sess_type.exists() else "N/A",
+                    "date": s.sess_next_sched,
+                }
+                for s in upcoming_sessions
+            ],
+            "overdue_sessions": [
+                {
+                    "id": s.pk,
+                    "sess_num": s.sess_num,
+                    "victim": s.incident_id.vic_id.full_name if s.incident_id and s.incident_id.vic_id else None,
+                    "type": s.sess_type.first().name if s.sess_type.exists() else "N/A",
+                    "date": s.sess_next_sched,
+                }
+                for s in overdue_sessions
+            ]
+        })

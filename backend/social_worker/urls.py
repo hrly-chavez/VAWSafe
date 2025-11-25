@@ -63,4 +63,11 @@ urlpatterns = [
 
     # --- Dashboard ---
     path("dashboard/summary/", SocialWorkerDashboardAPIView.as_view(), name="socialworker-dashboard-summary"),
+
+    # --- Reports ---
+    path("victims/<int:vic_id>/reports/", SocialWorkerMonthlyReportViewSet.as_view({"get": "list", "post": "create"}), name="socialworker-report-list-create"),
+    path("victims/<int:vic_id>/reports/<int:pk>/", SocialWorkerMonthlyReportViewSet.as_view({"get": "retrieve", "put": "update", "delete": "destroy"}), name="socialworker-report-detail"),
+    path("victims/<int:vic_id>/nurse-reports/", NurseMonthlyReportListView.as_view(), name="nurse-report-list"),
+    path("victims/<int:vic_id>/psych-comprehensive-reports/", PsychComprehensiveReportListView.as_view(), name="psych-comprehensive-report-list"),
+    path("victims/<int:vic_id>/psych-monthly-progress-reports/", PsychMonthlyProgressReportListView.as_view(), name="psych-monthly-report-list"),
 ]

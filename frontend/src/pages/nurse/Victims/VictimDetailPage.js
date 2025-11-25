@@ -99,6 +99,9 @@ export default function VictimDetailPage() {
         ...psychMonthlyData.map(r => normalize(r, "Psychometrician Monthly")),
       ];
 
+      // Sort by report_month descending (true chronological order)
+      combined.sort((a, b) => new Date(b.report_month) - new Date(a.report_month));
+
       setReportsList(combined);
     } catch (err) {
       console.error("Unexpected error in fetchReports", err);
@@ -490,9 +493,11 @@ export default function VictimDetailPage() {
                               >
                                 <h4
                                   className={`text-md font-semibold ${report.report_type?.toLowerCase().includes("nurse")
-                                      ? "text-blue-600"
-                                      : report.report_type?.toLowerCase().includes("psychometrician")
-                                        ? "text-red-600"
+                                    ? "text-blue-600"
+                                    : report.report_type?.toLowerCase().includes("psychometrician")
+                                      ? "text-red-600"
+                                      : report.report_type?.toLowerCase().includes("social worker")
+                                        ? "text-yellow-500"
                                         : "text-[#292D96]"
                                     }`}
                                 >
