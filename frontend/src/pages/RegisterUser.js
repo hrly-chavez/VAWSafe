@@ -131,29 +131,77 @@ useEffect(() => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const newErrors = { of_fname: "", of_lname: "", of_role: "", of_email: "", photos: "" };
+    const newErrors = {
+      of_fname: "",
+      of_lname: "",
+      of_email: "",
+      sex: "",
+      of_dob: "",
+      of_pob: "",
+      of_contact: "",
+      address: "",
+      photos: "",
+    };
     let hasError = false;
 
+    // First name
     if (!of_fname.trim()) {
-      newErrors.of_fname = "Please fill out this field.";
+      newErrors.of_fname = "Required";
       hasError = true;
     }
 
+    // Last name
     if (!of_lname.trim()) {
-      newErrors.of_lname = "Please fill out this field.";
+      newErrors.of_lname = "Required";
       hasError = true;
     }
 
+    // Email
     if (!of_email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(of_email)) {
-      newErrors.of_email = "Please provide a valid email address.";
+      newErrors.of_email = "Please provide a valid email.";
       hasError = true;
     }
 
-    if (!of_role.trim()) {
-      newErrors.of_role = "Please choose a role.";
+    // Sex
+    if (!sex.trim()) {
+      newErrors.sex = "Required";
       hasError = true;
     }
 
+    // Date of Birth
+    if (!of_dob.trim()) {
+      newErrors.of_dob = "Required";
+      hasError = true;
+    }
+
+    // Place of Birth
+    if (!of_pob.trim()) {
+      newErrors.of_pob = "Required";
+      hasError = true;
+    }
+
+    // Contact Number
+    if (!of_contact.trim()) {
+      newErrors.of_contact = "Required";
+      hasError = true;
+    } else if (!/^\d{11}$/.test(of_contact)) {
+      newErrors.of_contact = "Contact number must be exactly 11 digits.";
+      hasError = true;
+    }
+
+    // Address validation
+    if (
+      !selectedProvince ||
+      !selectedMunicipality ||
+      !selectedBarangay ||
+      !sitio.trim() ||
+      !street.trim()
+    ) {
+      newErrors.address = "Please complete all address fields.";
+      hasError = true;
+    }
+
+    // Photos
     if (photos.length < MAX_PHOTOS || photos.some((p) => !p)) {
       newErrors.photos = `Please capture all ${MAX_PHOTOS} face photos.`;
       hasError = true;
@@ -291,6 +339,7 @@ useEffect(() => {
                   onChange={(e) => setFname(e.target.value)}
                   className={inputStyle}
                 />
+                {regErrors.of_fname && <p className="text-red-500 text-sm">{regErrors.of_fname}</p>}
               </div>
 
               <div className="flex flex-col">
@@ -302,6 +351,7 @@ useEffect(() => {
                   onChange={(e) => setLname(e.target.value)}
                   className={inputStyle}
                 />
+                {regErrors.of_lname && <p className="text-red-500 text-sm">{regErrors.of_lname}</p>}
               </div>
 
               {/* Email */}
@@ -350,6 +400,7 @@ useEffect(() => {
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                 </select>
+                {regErrors.sex && <p className="text-red-500 text-sm">{regErrors.sex}</p>}
               </div>
 
               <div className="flex flex-col">
@@ -360,6 +411,7 @@ useEffect(() => {
                   onChange={(e) => setDob(e.target.value)}
                   className={inputStyle} 
                 />
+                {regErrors.of_dob && <p className="text-red-500 text-sm">{regErrors.of_dob}</p>}
               </div>
 
               <div className="flex flex-col">
@@ -371,6 +423,7 @@ useEffect(() => {
                   onChange={(e) => setPob(e.target.value)}
                   className={inputStyle} 
                 />
+                {regErrors.of_pob && <p className="text-red-500 text-sm">{regErrors.of_pob}</p>}
               </div>
 
               {/* Contact & Role */}
@@ -382,6 +435,7 @@ useEffect(() => {
                   value={of_contact}
                   onChange={(e) => setContact(e.target.value)}
                   className={inputStyle} />
+                  {regErrors.of_contact && <p className="text-red-500 text-sm">{regErrors.of_contact}</p>}
               </div>
 
               {showRole && (
@@ -434,6 +488,7 @@ useEffect(() => {
                         <option value="Social Worker">Social Worker</option>
                         <option value="Psychometrician">Psychometrician</option>
                       </select>
+                      {regErrors.of_role && <p className="text-red-500 text-sm">{regErrors.of_role}</p>}
                     </div>
                   )
                 ) : (
@@ -450,11 +505,6 @@ useEffect(() => {
                 )
               )}
 
-              <div className="flex flex-col">
-                <label className="font-medium text-sm mb-1">Specialization</label>
-                <input type="text" placeholder="Case Management, Trauma Support" className={inputStyle} />
-              </div>
-
               {/* Address */}
               <div className="flex flex-col">
                 <label className="font-medium text-sm mb-1">Province</label>
@@ -468,6 +518,7 @@ useEffect(() => {
                     <option key={province.id} value={province.id}>{province.name}</option>
                   ))}
                 </select>
+                {regErrors.address && <p className="text-red-500 text-sm">{regErrors.address}</p>}
               </div>
 
               <div className="flex flex-col">
@@ -483,6 +534,7 @@ useEffect(() => {
                     <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
                 </select>
+                {regErrors.address && <p className="text-red-500 text-sm">{regErrors.address}</p>}
               </div>
 
               <div className="flex flex-col">
@@ -498,6 +550,7 @@ useEffect(() => {
                     <option key={b.id} value={b.id}>{b.name}</option>
                   ))}
                 </select>
+                {regErrors.address && <p className="text-red-500 text-sm">{regErrors.address}</p>}
               </div>
 
               <div className="flex flex-col">
@@ -509,6 +562,7 @@ useEffect(() => {
                   onChange={(e) => setSitio(e.target.value)}
                   className={inputStyle}
                 />
+                {regErrors.address && <p className="text-red-500 text-sm">{regErrors.address}</p>}
               </div>
 
               <div className="flex flex-col">
@@ -520,6 +574,7 @@ useEffect(() => {
                   onChange={(e) => setStreet(e.target.value)}
                   className={inputStyle}
                 />
+                {regErrors.address && <p className="text-red-500 text-sm">{regErrors.address}</p>}
               </div>
 
             </div>
