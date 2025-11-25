@@ -837,7 +837,7 @@ def start_session(request, sess_id):
                 session=session,
                 question=m.question,
                 defaults={
-                    "sq_is_required": m.question.ques_is_required,   # NEW
+                    "sq_is_required": m.question.ques_is_required,  
                     "sq_question_text_snapshot": m.question.ques_question_text,
                     "sq_answer_type_snapshot": m.question.ques_answer_type,
                 },

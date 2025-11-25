@@ -93,7 +93,6 @@ class Official(models.Model):
         ('Nurse', 'Nurse'),
         ('Psychometrician', 'Psychometrician'),
         ('Home Life', 'Home Life'),
-
     ]   
 
     STATUS_CHOICES = [

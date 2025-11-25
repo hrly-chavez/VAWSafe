@@ -507,93 +507,104 @@ def add_custom_question(request, sess_id):
 
 def generate_session_docx(session, current_official=None):
     """
-    Creates a DOCX file summarizing all Q&A for a session.
-    - First session uses IPA-FORMAT-RHW.docx
-    - Subsequent sessions use a different template (e.g., IPA-FORMAT-NEXT.docx)
-    Output is saved to:
-        Desktop/Templates/victim<victim_id>/psychometrician/<filename>.docx
+    Safe version:
+    - Never crashes even if templates are missing
+    - Logs warnings instead of raising exceptions
+    - Still generates docx if templates exist
     """
 
-    # 1. Resolve Victim via Incident
-    if not session.incident_id:
-        raise ValueError("Session is not linked to any IncidentInformation.")
+    try:
+        # -----------------------------
+        # 1. Resolve Victim
+        # -----------------------------
+        if not session.incident_id or not session.incident_id.vic_id:
+            return None  # Do not block session finish
 
-    incident = session.incident_id
+        incident = session.incident_id
+        victim = incident.vic_id
+        victim_id = victim.vic_id
 
-    if not incident.vic_id:
-        raise ValueError("Incident does not contain a victim record.")
+        # Build safe output folder
+        full_name = victim.full_name
+        safe_full_name = "".join(c for c in full_name if c.isalnum() or c in (" ", "-")).strip()
 
-    victim = incident.vic_id
-    victim_id = victim.vic_id
+        desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+        root_templates = os.path.join(desktop, "Templates")
 
-    # 2. Build victim folder name
-    full_name = victim.full_name
+        # Output directory
+        out_dir = os.path.join(root_templates, safe_full_name, "psychometrician")
+        os.makedirs(out_dir, exist_ok=True)
 
-    # Make safe folder name (remove illegal characters)
-    safe_full_name = "".join(c for c in full_name if c.isalnum() or c in (" ", "-")).strip()
+        # -----------------------------
+        # 2. Choose Template
+        # -----------------------------
+        is_first_session = (session.sess_num or 1) == 1
 
-    # 3. Paths
-    desktop = os.path.join(os.path.expanduser("~"), "Desktop")
-    root_templates = os.path.join(desktop, "Templates")
+        if is_first_session:
+            template_file = "IPA-FORMAT-RHW.docx"
+            output_file_name = "IPA-FORMAT-RHW.docx"
+        else:
+            template_file = "Individual-Sessions-Report-RHW.docx"
+            output_file_name = f"Individual-Sessions-Report-RHW-{session.sess_num}.docx"
 
-    out_dir = os.path.join(root_templates, safe_full_name, "psychometrician")
-    os.makedirs(out_dir, exist_ok=True)
+        template_path = os.path.join(root_templates, "psychometrician", template_file)
 
-    # 4. Determine template based on session number
-    is_first_session = (session.sess_num or 1) == 1  # Use sess_num from model
+        # -----------------------------
+        # 3. If TEMPLATE MISSING: Skip gracefully
+        # -----------------------------
+        if not os.path.exists(template_path):
+            print(f"[WARNING] Missing Psychometrician template: {template_path}")
+            return None  # do not block finish_session
 
-    if is_first_session:
-        template_file = "IPA-FORMAT-RHW.docx"
-        output_file_name = "IPA-FORMAT-RHW.docx"
-    else:
-        template_file = "Individual-Sessions-Report-RHW.docx"  # Your second session template
-        output_file_name = f"Individual-Sessions-Report-RHW-{session.sess_num}.docx"
+        # -----------------------------
+        # 4. Fetch Q&A
+        # -----------------------------
+        sqs = (
+            SessionQuestion.objects
+            .filter(session=session)
+            .select_related("question", "answered_by")
+            .order_by("pk")
+        )
 
-    template_path = os.path.join(root_templates, "psychometrician", template_file)
-    if not os.path.exists(template_path):
-        raise FileNotFoundError(f"Missing template: {template_path}")
+        if current_official:
+            sqs = sqs.filter(answered_by__of_role=current_official.of_role)
 
-    # 5. Fetch session Q&A
-    sqs = (
-        SessionQuestion.objects
-        .filter(session=session)
-        .select_related("question", "answered_by")
-        .order_by("pk")
-    )
+        answers = []
+        for sq in sqs:
+            if current_official and sq.answered_by != current_official:
+                continue
 
-    if current_official:
-        sqs = sqs.filter(answered_by__of_role=current_official.of_role)
+            answers.append({
+                "question": sq.sq_question_text_snapshot or (sq.question.ques_question_text if sq.question else ""),
+                "value": sq.sq_value or "",
+                "note": sq.sq_note or "",
+                "role": sq.answered_by.of_role if sq.answered_by else "",
+                "answered_by": sq.answered_by.full_name if sq.answered_by else "",
+            })
 
-    answers = []
-    for sq in sqs:
-        if current_official and sq.answered_by != current_official:
-            continue
+        # -----------------------------
+        # 5. Render DOCX safely
+        # -----------------------------
+        context = {
+            "session": session,
+            "created_at": datetime.now().strftime("%B %d, %Y"),
+            "answers": answers,
+            "victim": victim,
+            "incident": incident,
+        }
 
-        answers.append({
-            "question": sq.sq_question_text_snapshot or (sq.question.ques_question_text if sq.question else ""),
-            "value": sq.sq_value or "",
-            "note": sq.sq_note or "",
-            "role": sq.answered_by.of_role if sq.answered_by else "",
-            "answered_by": sq.answered_by.full_name if sq.answered_by else "",
-        })
+        doc = DocxTemplate(template_path)
+        doc.render(context)
 
-    # 6. Context for docx
-    context = {
-        "session": session,
-        "created_at": datetime.now().strftime("%B %d, %Y"),
-        "answers": answers,
-        "victim": victim,
-        "incident": incident,
-    }
+        output_path = os.path.join(out_dir, output_file_name)
+        doc.save(output_path)
 
-    # 7. Render and save
-    doc = DocxTemplate(template_path)
-    doc.render(context)
+        return output_path
 
-    output_path = os.path.join(out_dir, output_file_name)
-    doc.save(output_path)
-
-    return output_path
+    except Exception as e:
+        # GLOBAL CATCH — never block user
+        print(f"[ERROR] Psychometrician docx generation failed: {e}")
+        return None  # Always allow session to succeed
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
