@@ -866,15 +866,35 @@ class MonthlyProgressReportSerializer(serializers.ModelSerializer):
         return data
     
 # ====================== NURSE DASHBOARD SERIALIZERS ======================
+
 class VictimSummarySerializer(serializers.Serializer):
-    total_victims = serializers.IntegerField()   
+    total_victims = serializers.IntegerField()
 
 class SessionSummarySerializer(serializers.Serializer):
     total_assigned_sessions = serializers.IntegerField()
     sessions_this_week = serializers.IntegerField()
     pending_sessions = serializers.IntegerField()
-    ongoing_sessions = serializers.IntegerField()   
+    ongoing_sessions = serializers.IntegerField()
+
+class IncidentSummarySerializer(serializers.Serializer):
+    # Mirrors DSWD IncidentSummarySerializer but simplified for Nurse
+    violence_types = serializers.DictField(child=serializers.IntegerField())
+    status_types = serializers.DictField(child=serializers.IntegerField())
 
 class MonthlyReportRowSerializer(serializers.Serializer):
     month = serializers.CharField()
-    totalVictims = serializers.IntegerField()   
+    totalVictims = serializers.IntegerField()
+
+    # Add violence type breakdowns like DSWD
+    Physical_Violence = serializers.IntegerField(source="Physical Violence", required=False)
+    Physical_Abused = serializers.IntegerField(source="Physical Abused", required=False)
+    Psychological_Violence = serializers.IntegerField(source="Psychological Violence", required=False)
+    Psychological_Abuse = serializers.IntegerField(source="Psychological Abuse", required=False)
+    Economic_Abused = serializers.IntegerField(source="Economic Abused", required=False)
+    Strandee = serializers.IntegerField(required=False)
+    Sexually_Abused = serializers.IntegerField(source="Sexually Abused", required=False)
+    Sexually_Exploited = serializers.IntegerField(source="Sexually Exploited", required=False)
+
+class ViolenceTypeSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    count = serializers.IntegerField() 

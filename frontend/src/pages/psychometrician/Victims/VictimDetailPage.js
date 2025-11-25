@@ -117,6 +117,9 @@ export default function VictimDetailPage() {
         ...(Array.isArray(psychMonthlyRes.data) ? psychMonthlyRes.data.map(r => normalize(r, "Psychometrician Monthly")) : []),
       ];
 
+      // Sort by report_month descending (true chronological order)
+      combined.sort((a, b) => new Date(b.report_month) - new Date(a.report_month));
+
       setReportsList(combined);
     } catch (err) {
       console.error("Failed to fetch reports", err);
@@ -461,7 +464,9 @@ export default function VictimDetailPage() {
                                       ? "text-blue-600"
                                       : report.report_type?.toLowerCase().includes("psychometrician")
                                         ? "text-red-600"
-                                        : "text-[#292D96]"
+                                        : report.report_type?.toLowerCase().includes("social worker")
+                                          ? "text-yellow-500"
+                                          : "text-[#292D96]"
                                       }`}
                                   >
                                     {report.report_type} Report —{" "}
@@ -490,7 +495,7 @@ export default function VictimDetailPage() {
               <Modal title="View Report" onClose={() => setShowReportModal(false)}>
                 <ReportModal
                   report={selectedReport}
-                  userRole={userRole}                 // ✅ now ReportModal knows the role
+                  userRole={userRole}
                   currentOfficialId={currentOfficialId}
                   onClose={() => setShowReportModal(false)}
                   onEdit={() => {

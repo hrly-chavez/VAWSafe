@@ -955,15 +955,21 @@ class ChangeLogSerializer(serializers.ModelSerializer):
 
 
 #============================= Social Worker Dashboard ======================================
+
+# --- Victim Summary ---
 class VictimSummarySerializer(serializers.Serializer):
     total_victims = serializers.IntegerField()
 
+
+# --- Session Summary ---
 class SessionSummarySerializer(serializers.Serializer):
     sessions_this_week = serializers.IntegerField()
     pending_sessions = serializers.IntegerField()
     ongoing_sessions = serializers.IntegerField()   
     done_sessions = serializers.IntegerField()      
 
+
+# --- Monthly Report Row ---
 class MonthlyReportRowSerializer(serializers.Serializer):
     month = serializers.CharField()
     totalVictims = serializers.IntegerField()
@@ -975,3 +981,126 @@ class MonthlyReportRowSerializer(serializers.Serializer):
     Strandee = serializers.IntegerField()
     Sexually_Abused = serializers.IntegerField()
     Sexually_Exploited = serializers.IntegerField()
+
+
+# --- Upcoming Sessions ---
+class UpcomingSessionSerializer(serializers.ModelSerializer):
+    victim_name = serializers.SerializerMethodField()
+    session_type = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Session
+        fields = [
+            "sess_id",
+            "sess_num",
+            "sess_status",
+            "sess_next_sched",
+            "victim_name",
+            "session_type",
+        ]
+
+    def get_victim_name(self, obj):
+        if obj.incident_id and obj.incident_id.vic_id:
+            return obj.incident_id.vic_id.full_name
+        return None
+
+    def get_session_type(self, obj):
+        return obj.sess_type.first().name if obj.sess_type.exists() else None
+
+
+# --- Overdue Sessions (same structure as Upcoming) ---
+class OverdueSessionSerializer(serializers.ModelSerializer):
+    victim_name = serializers.SerializerMethodField()
+    session_type = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Session
+        fields = [
+            "sess_id",
+            "sess_num",
+            "sess_status",
+            "sess_next_sched",
+            "victim_name",
+            "session_type",
+        ]
+
+    def get_victim_name(self, obj):
+        if obj.incident_id and obj.incident_id.vic_id:
+            return obj.incident_id.vic_id.full_name
+        return None
+
+    def get_session_type(self, obj):
+        return obj.sess_type.first().name if obj.sess_type.exists() else None
+
+
+# --- Violence Type Summary ---
+class ViolenceTypeSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    count = serializers.IntegerField()
+
+# ========================= REPORTS =========================
+
+# --- Social Worker Monthly Report (full CRUD) ---
+# --- Social Worker Monthly Report (full CRUD) ---
+class SocialWorkerMonthlyReportSerializer(serializers.ModelSerializer):
+    prepared_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MonthlyProgressReport
+        fields = "__all__"
+        # ✅ Auto-set fields are read-only
+        read_only_fields = [
+            "victim",
+            "incident",
+            "report_month",
+            "report_type",
+            "prepared_by",
+            "name",
+            "sex",
+            "age",
+            "date_of_birth",
+            "height",
+            "weight",
+            "bmi",
+            "bmi_category",
+            "created_at",
+        ]
+
+    def get_prepared_by_name(self, obj):
+        return getattr(obj.prepared_by, "full_name", "—")
+
+
+# --- Nurse Monthly Report (read-only) ---
+class NurseMonthlyReportSerializer(serializers.ModelSerializer):
+    prepared_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MonthlyProgressReport
+        fields = "__all__"
+
+    def get_prepared_by_name(self, obj):
+        return getattr(obj.prepared_by, "full_name", "—")
+
+
+# --- Psychometrician Comprehensive Report (read-only) ---
+class ComprehensivePsychReportSerializer(serializers.ModelSerializer):
+    prepared_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ComprehensivePsychReport
+        fields = "__all__"
+
+    def get_prepared_by_name(self, obj):
+        return getattr(obj.prepared_by, "full_name", "—")
+
+
+# --- Psychometrician Monthly Progress Report (read-only) ---
+class MonthlyPsychProgressReportSerializer(serializers.ModelSerializer):
+    prepared_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MonthlyPsychProgressReport
+        fields = "__all__"
+
+    def get_prepared_by_name(self, obj):
+        return getattr(obj.prepared_by, "full_name", "—")

@@ -2,6 +2,9 @@ from django.urls import path
 from .views import *
 from . import views
 urlpatterns = [
+    # --- Dashboard ---
+    path("dashboard/summary/", PsychometricianDashboardAPIView.as_view(), name="psychometrician-dashboard-summary"),
+    
     # --- Existing endpoints ---
     path("victims/", victim_list.as_view(), name="victim-list"),
     path("victims/<int:vic_id>/", victim_detail.as_view(), name="victim-detail"),

@@ -606,6 +606,12 @@ class MonthlyProgressReport(models.Model):
     # Unified medical summary
     report_info = models.TextField(blank=True, null=True)
 
+    # Social Worker-specific service blocks
+    social_service = models.TextField(blank=True, null=True)
+    medical_service = models.TextField(blank=True, null=True)
+    psychological_service = models.TextField(blank=True, null=True)
+    homelife_service = models.TextField(blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):

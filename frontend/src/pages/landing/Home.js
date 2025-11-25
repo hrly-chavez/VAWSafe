@@ -1,9 +1,23 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 
 export default function Home() {
   const [mobileNav, setMobileNav] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setScrolled(true);
+      } else {
+        setScrolled(false); // reset when back at top
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <div
@@ -12,19 +26,37 @@ export default function Home() {
         backgroundImage: "url('/images/landing_background.png')",
       }}
     >
+      <style>
+        {`
+        .animate-in {
+          animation: fadeSlide 0.6s ease forwards;
+        }
+        @keyframes fadeSlide {
+          from { opacity: 0.6; transform: translateY(-15px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}
+      </style>
+
       {/* NAV */}
-      <header className="w-full flex justify-between items-center px-4 md:px-10 py-5">
-        <h1 className="text-xl md:text-2xl font-extrabold tracking-wide">
+      <header
+        className={`fixed top-0 left-0 w-full flex justify-between items-center px-4 md:px-10 py-5 z-50 bg-white shadow ${scrolled ? "animate-in" : ""
+          }`}
+        style={{
+          transition: "all 0.6s ease",
+        }}
+      >
+        <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-wide text-[#292D96]">
           VAWSAFE
         </h1>
 
         {/* DESKTOP NAV */}
         <nav className="hidden lg:flex gap-8 items-center text-base font-medium text-gray-700">
-          <a href="#home" className="hover:text-white transition">About</a>
-          <a href="#programs" className="hover:text-white transition">Services</a>
-          <a href="#cases" className="hover:text-white transition">Cases</a>
-          <a href="#collaboration" className="hover:text-white transition">Collaboration</a>
-          <a href="#contact" className="hover:text-white transition">Contacts</a>
+          <a href="#home" className="hover:text-[#292D96] transition">About</a>
+          <a href="#programs" className="hover:text-[#292D96] transition">Services</a>
+          <a href="#cases" className="hover:text-[#292D96] transition">Cases</a>
+          <a href="#collaboration" className="hover:text-[#292D96] transition">Collaboration</a>
+          <a href="#contact" className="hover:text-[#292D96] transition">Contacts</a>
 
           <Link
             to="/login"
@@ -44,17 +76,28 @@ export default function Home() {
       </header>
 
       {/* MOBILE NAV */}
+      {/* MOBILE NAV */}
       {mobileNav && (
-        <div className="lg:hidden bg-white/95 backdrop-blur-md px-6 py-4 flex flex-col gap-4 text-gray-700 font-medium shadow-md">
-          <a href="#home" className="hover:text-[#292D96]">About</a>
-          <a href="#programs" className="hover:text-[#292D96]">Services</a>
-          <a href="#cases" className="hover:text-[#292D96]">Cases</a>
-          <a href="#collaboration" className="hover:text-[#292D96]">Collaboration</a>
-          <a href="#contact" className="hover:text-[#292D96]">Contacts</a>
+        <div
+          className="lg:hidden bg-white/95 backdrop-blur-md px-6 py-4 flex flex-col gap-4 text-gray-700 font-medium shadow-md"
+          style={{
+            position: "fixed",   // stays pinned while scrolling
+            top: "80px",         // just below the header
+            left: 0,
+            right: 0,
+            zIndex: 40,
+          }}
+        >
+          <a href="#home" className="hover:text-[#292D96]" onClick={() => setMobileNav(false)}>About</a>
+          <a href="#programs" className="hover:text-[#292D96]" onClick={() => setMobileNav(false)}>Services</a>
+          <a href="#cases" className="hover:text-[#292D96]" onClick={() => setMobileNav(false)}>Cases</a>
+          <a href="#collaboration" className="hover:text-[#292D96]" onClick={() => setMobileNav(false)}>Collaboration</a>
+          <a href="#contact" className="hover:text-[#292D96]" onClick={() => setMobileNav(false)}>Contacts</a>
 
           <Link
             to="/login"
             className="px-4 py-2 w-max rounded-full border border-[#292D96] text-[#292D96] hover:bg-[#292D96] hover:text-white transition font-semibold"
+            onClick={() => setMobileNav(false)}
           >
             Log in
           </Link>
@@ -64,7 +107,6 @@ export default function Home() {
       {/* HERO SECTION */}
       <section className="flex flex-col items-start justify-center px-4 md:px-10 lg:px-20 py-20 overflow-x-hidden">
         <div className="max-w-xl space-y-6 mt-10">
-
           <p className="uppercase text-sm md:text-base font-bold text-orange-600 tracking-widest">
             BEST CARE FOR WOMEN IN NEED
           </p>

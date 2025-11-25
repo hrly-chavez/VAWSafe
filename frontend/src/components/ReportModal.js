@@ -241,6 +241,39 @@ export default function ReportModal({ report, userRole, currentOfficialId, onClo
         </div>
       )}
 
+      {/* Social Worker Monthly Report */}
+      {report.report_type?.toLowerCase().includes("social worker") && (
+        <div className="space-y-6">
+          <div className="bg-gray-50 border rounded-lg p-4">
+            <h3 className="text-md font-semibold text-[#292D96] mb-2">Social Service</h3>
+            <p className="whitespace-pre-wrap bg-white border rounded-md p-3 text-gray-800">
+              {report.social_service || "—"}
+            </p>
+          </div>
+
+          <div className="bg-gray-50 border rounded-lg p-4">
+            <h3 className="text-md font-semibold text-[#292D96] mb-2">Medical Service</h3>
+            <p className="whitespace-pre-wrap bg-white border rounded-md p-3 text-gray-800">
+              {report.medical_service || "—"}
+            </p>
+          </div>
+
+          <div className="bg-gray-50 border rounded-lg p-4">
+            <h3 className="text-md font-semibold text-[#292D96] mb-2">Psychological Service</h3>
+            <p className="whitespace-pre-wrap bg-white border rounded-md p-3 text-gray-800">
+              {report.psychological_service || "—"}
+            </p>
+          </div>
+
+          <div className="bg-gray-50 border rounded-lg p-4">
+            <h3 className="text-md font-semibold text-[#292D96] mb-2">Homelife Service</h3>
+            <p className="whitespace-pre-wrap bg-white border rounded-md p-3 text-gray-800">
+              {report.homelife_service || "—"}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons */}
       <div className="flex justify-end gap-3 mt-6">
         {userRole === "nurse" &&
@@ -259,6 +292,16 @@ export default function ReportModal({ report, userRole, currentOfficialId, onClo
             <button
               onClick={onEdit}
               className="px-4 py-2 text-sm font-medium border border-[#292D96] text-[#292D96] rounded-md hover:bg-[#292D96] hover:text-white transition"
+            >
+              Edit Report
+            </button>
+          )}
+
+        {userRole === "social worker" &&
+          String(report.prepared_by_id) === String(currentOfficialId) && (
+            <button
+              onClick={onEdit}
+              className="px-4 py-2 text-sm font-medium border border-green-600 text-green-600 rounded-md hover:bg-green-600 hover:text-white transition"
             >
               Edit Report
             </button>
