@@ -1,5 +1,5 @@
 import tempfile, os, traceback, json
-from rest_framework.decorators import api_view, parser_classes
+from rest_framework.decorators import api_view, parser_classes, throttle_classes
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status, generics
@@ -19,6 +19,9 @@ from shared_model.views import serve_encrypted_file
 from django.utils.crypto import get_random_string
 from django.contrib.auth.models import User
 
+from rest_framework.throttling import ScopedRateThrottle
+
+
 from shared_model.models import *
 from .serializers import *
 
@@ -26,6 +29,8 @@ class ProvinceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Province.objects.all()
     serializer_class = ProvinceSerializer
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'safe_read'
 
     @action(detail=True, methods=["get"])
     def municipalities(self, request, pk=None):

@@ -44,6 +44,7 @@ export default function RegisterVictim() {
     evidences: [],
     vic_sex: "Female",
     address: { province: "", municipality: "", barangay: "" },
+    familyMembers: [],
   });
 
   const victimPhotos = formDataState.victimPhotos || [];
@@ -152,6 +153,10 @@ export default function RegisterVictim() {
       if (incidentPayload) fd.append("incident", JSON.stringify(incidentPayload));
       if (perpetratorPayload) fd.append("perpetrator", JSON.stringify(perpetratorPayload));
       if (contactPersonPayload) fd.append("contact_person", JSON.stringify(contactPersonPayload));
+
+      if (formDataState.familyMembers?.length) {
+        fd.append("familyMembers", JSON.stringify(formDataState.familyMembers));
+      }
 
       victimPhotos.forEach((file) => fd.append("photos", file));
       evidenceFiles.forEach((f) => fd.append("evidences", f.file));

@@ -123,10 +123,18 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_THROTTLE_CLASSES': [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
         'rest_framework.throttling.ScopedRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'face_login': '5/minute',
+        # global
+        "anon": "20/minute",        # anonymous clients (not logged in)
+        "user": "200/minute",       # per authenticated user
+        # per-scope (names you pick in view.throttle_scope)
+        "manual_login": "20/minute",  # manual username/password
+        'face_login': '20/minute',
+        'safe_read': '1000/day',       # non-sensitive
     }
 }
 

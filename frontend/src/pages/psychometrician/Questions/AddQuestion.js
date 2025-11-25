@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import api from "../../../api/axios";
 
 export default function AddQuestion({ onClose }) {
-    const [step, setStep] = useState(1);
+  const [step, setStep] = useState(1);
 
   // Step 1: category
   const [categories, setCategories] = useState([]);
@@ -13,8 +13,14 @@ export default function AddQuestion({ onClose }) {
 
   // Step 2: questions
   const [questions, setQuestions] = useState([
-    { ques_question_text: "", ques_answer_type: "", ques_is_active: true },
+    {
+      ques_question_text: "",
+      ques_answer_type: "",
+      ques_is_required: true,   
+      ques_is_active: true,
+    },
   ]);
+
   const [answerTypes, setAnswerTypes] = useState([]);
 
   // Step 3: session assignment
@@ -45,9 +51,25 @@ export default function AddQuestion({ onClose }) {
       setSessionNumbers(nums);
 
       // Load session types
-      api.get("/api/psychometrician/session-types/").then((res) =>
-        setSessionTypes(res.data.map((t) => ({ value: t.id, label: t.name })))
-      );
+      api.get("/api/psychometrician/session-types/").then((res) => {
+      const forbiddenForPsychometrician = [
+      "Termination / Discharge Planning",
+      "Legal Assistance Session",
+      "Intervention Planning / Case Conference",
+      "Case Study / Psychosocial Assessment",
+      "Family Counseling / Reintegration",
+      ];
+
+      const filtered = res.data
+        .filter((t) => !forbiddenForPsychometrician.includes(t.name))
+        .map((t) => ({
+          value: t.id,
+          label: t.name,
+        }));
+
+      setSessionTypes(filtered);
+    });
+
     }
   }, [step]);
 
@@ -78,7 +100,15 @@ export default function AddQuestion({ onClose }) {
 
   // Add/Remove question field
   const addQuestionField = () => {
-    setQuestions([...questions, { ques_question_text: "", ques_answer_type: "", ques_is_active: true }]);
+   setQuestions([
+      ...questions,
+      {
+        ques_question_text: "",
+        ques_answer_type: "",
+        ques_is_required: true,   // NEW
+        ques_is_active: true
+      }
+    ]);
   };
 
   const removeQuestionField = (index) => {
@@ -121,6 +151,7 @@ export default function AddQuestion({ onClose }) {
         questions: questions.map((q) => ({
           ques_question_text: q.ques_question_text,
           ques_answer_type: q.ques_answer_type,
+          ques_is_required: q.ques_is_required,
         })),
         session_numbers: finalSessionNumbers, // <= already unrolled
         session_types: selectedTypes.map((t) => t.value),
@@ -134,7 +165,6 @@ export default function AddQuestion({ onClose }) {
       alert("Error creating and assigning questions.");
     }
   };
-
 
 
   return (
@@ -247,6 +277,19 @@ export default function AddQuestion({ onClose }) {
                         </option>
                       ))}
                     </select>
+                    
+                    <div className="mt-2 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={q.ques_is_required}
+                      onChange={(e) =>
+                        handleQuestionChange(idx, "ques_is_required", e.target.checked)
+                      }
+                    />
+                    <label className="text-sm text-gray-700">
+                      Required Question?
+                    </label>
+                  </div>
                   </div>
                 ))}
               </form>

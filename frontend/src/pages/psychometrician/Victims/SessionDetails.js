@@ -225,33 +225,31 @@ return (
                               </h4>
                               <div className="space-y-3">
                                 {qs.map((q) => (
-                                  <div
+                                                                    <div
                                     key={q.sq_id}
-                                    className="p-3 border rounded-md bg-gray-50"
+                                    className="p-4 border rounded-lg bg-white shadow-sm space-y-2"
                                   >
-                                    <p className="text-sm font-medium text-gray-800">
+                                    {/* Question */}
+                                    <p className="text-base font-semibold text-gray-900 leading-snug">
                                       {q.question_text}
                                     </p>
 
-                                    <p className="text-sm text-gray-600">
-                                      <span className="font-semibold">Answer:</span>{" "}
+                                    {/* Answer */}
+                                    <p className="text-sm text-gray-700">
+                                      <span className="font-semibold text-gray-800">Answer:</span>{" "}
                                       {q.sq_value || "—"}
                                     </p>
 
+                                    {/* Note */}
                                     {q.sq_note && (
-                                      <p className="text-sm text-gray-500 italic">
-                                        Note: {q.sq_note}
+                                      <p className="text-sm text-gray-600 italic border-l-4 border-gray-300 pl-3">
+                                        {q.sq_note}
                                       </p>
                                     )}
-
-                                    {/* {q.answered_by_name && (
-                                      <p className="text-xs text-gray-400 italic">
-                                        Answered by {q.answered_by_name}
-                                      </p>
-                                    )} */}
                                   </div>
                                 ))}
                               </div>
+
                             </div>
                           ))}
 

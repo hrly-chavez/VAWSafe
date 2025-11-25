@@ -11,6 +11,8 @@ export const VICTIM_FIELDS = [
   "vic_civil_status",
   "vic_religion",
   "vic_educational_attainment",
+  "vic_school_type",
+  "vic_school_years",
   "vic_last_school_attended",
   "vic_last_school_address",
   "vic_occupation",
@@ -37,6 +39,10 @@ export const INCIDENT_KEYS = [
   "is_conflict_area",
   "conflict_area",
   "is_calamity_area",
+  "physical_description",
+  "physical_description_other",
+  "manner_towards_worker",
+  "manner_towards_worker_other",
 ];
 
 export const PERP_KEYS = [
@@ -51,6 +57,7 @@ export const PERP_KEYS = [
   "per_religion",
   "per_victim_relationship",
   "per_educational_attainment",
+  "per_known_address",
   "per_contact_number",
   "per_occupation",
 ];
@@ -66,4 +73,6 @@ export const CONTACT_PERSON_FIELDS = [
   "cont_civil_status",
   "cont_victim_relationship",
   "cont_contact_number",
+  "cont_prov_address",
+  "cont_work_address",
 ];

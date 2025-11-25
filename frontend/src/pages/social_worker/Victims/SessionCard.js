@@ -41,7 +41,7 @@ const orderedRoles = roleOrder.filter((r) => grouped[r] && grouped[r].length > 0
 
 // Show how many sessions each group has
 const roleTitles = {
-  Shared: `👥 Shared Session(s)`,
+  Shared: `👥 Shared Session`,
   "Social Worker": `Social Worker Session(s) — Total: ${grouped["Social Worker"]?.length || 0}`,
   Psychometrician: `Psychometrician Session(s) — Total: ${grouped["Psychometrician"]?.length || 0}`,
   Nurse: `Nurse Session(s) — Total: ${grouped["Nurse"]?.length || 0}`,
