@@ -553,6 +553,7 @@ def generate_session_docx(session, current_official=None):
     if is_first_session:
         template_file = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
         output_file_name = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
+    # else part can be removed since nurse doesnt have individual sessions forms but visits regarding health
     else:
         template_file = "Individual-Sessions-Report-RHW.docx"  # Your second session template
         output_file_name = f"Individual-Sessions-Report-RHW-{session.sess_num}.docx"
