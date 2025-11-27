@@ -53,7 +53,8 @@ export default function AddQuestion({ onClose }) {
       // Load session types
       api.get("/api/social_worker/session-types/").then((res) => {
           const forbiddenForSocialWorker = [
-            "Pyschological Evaluation"   
+            "Pyschological Evaluation",
+            "Intervention Planning / Case Conference",
           ];
 
           const filtered = res.data

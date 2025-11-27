@@ -1,36 +1,58 @@
-// src/pages/social_worker/Questions/Questions.js
+// src/pages/nurse/Questions/Questions.js
 import { useState, useEffect } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import api from "../../../api/axios";
 import AddQuestion from "./AddQuestion";
 import EditQuestion from "./EditQuestion";
 import ChangeLogModal from "./ChangeLogModal";
+import ViewQuestion from "./ViewQuestion";
+import Select from "react-select";
 
 export default function Questions() {
   const [questions, setQuestions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showLogModal, setShowLogModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [selectedLogId, setSelectedLogId] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedQuestionId, setSelectedQuestionId] = useState(null);
 
-  const fetchQuestions = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get("/api/nurse/questions/");
-      setQuestions(res.data);
+  const fetchCategories = async () => {
+  try {
+    const res = await api.get("/api/nurse/question-categories/");
+    setCategories(res.data.map(c => ({ value: c.id, label: c.name })));
     } catch (err) {
-      console.error("Failed to load questions:", err.response?.data || err);
-    } finally {
-      setLoading(false);
+      console.error("Failed to load categories:", err.response?.data || err);
     }
   };
 
+  const fetchQuestions = async (categoryId = null) => {
+  try {
+    setLoading(true);
+    let url = "/api/nurse/questions/";
+    if (categoryId) url += `?category=${categoryId}`;
+    const res = await api.get(url);
+    setQuestions(res.data);
+  } catch (err) {
+    console.error("Failed to load questions:", err.response?.data || err);
+  } finally {
+    setLoading(false);
+  }
+};
+
   useEffect(() => {
+    fetchCategories();
     fetchQuestions();
   }, []);
+
+  useEffect(() => {
+  fetchQuestions(selectedCategory?.value || null);
+}, [selectedCategory]);
 
   const filteredQuestions = questions.filter((q) => {
     const query = searchQuery.toLowerCase();
@@ -49,6 +71,10 @@ export default function Questions() {
     setSelectedLogId(questionId);
     setShowLogModal(true);
   };
+  const handleViewDetailClick = (questionId) => {
+    setSelectedQuestionId(questionId);
+    setShowViewModal(true);
+  };
   const handleToggleActive = async (id, isActive) => {
     const actionText = isActive ? "deactivate" : "activate";
     const confirmed = window.confirm(
@@ -61,10 +87,7 @@ export default function Questions() {
       alert(`Question ${isActive ? "deactivated" : "activated"} successfully.`);
       fetchQuestions(); // Refresh table
     } catch (err) {
-      console.error(
-        "Failed to toggle question state:",
-        err.response?.data || err
-      );
+      console.error("Failed to toggle question state:", err.response?.data || err);
       alert("Error updating question state.");
     }
   };
@@ -76,23 +99,34 @@ export default function Questions() {
           Q&amp;A Library
         </h1>
         <p className="text-sm text-gray-600 mt-1">
-          VAWSAFE | Nurse | Role-specific question library
+          VAWSAFE | Pyschometrician | Role-specific question library
         </p>
       </div>
 
       {/* Search & Add */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6 items-center">
-        <div className="flex items-center col-span-3">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-3 mb-6 items-center">
+        <div className="flex items-center col-span-2">
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-500 mr-2" />
           <input
             type="text"
-            placeholder="Filter by Category(Coming Soon)"
+            placeholder="Search question..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full border border-gray-300 rounded-md px-4 py-2 text-sm"
           />
         </div>
-        <div className="flex justify-end">
+
+        <div className="col-span-2">
+          <Select
+            options={categories}
+            value={selectedCategory}
+            onChange={setSelectedCategory}
+            isClearable
+            placeholder="Filter by Category"
+          />
+        </div>
+
+        <div className="flex justify-end col-span-2">
           <button
             onClick={() => setShowAddModal(true)}
             className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition"
@@ -103,9 +137,9 @@ export default function Questions() {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto shadow border rounded-lg">
-        <table className="min-w-full border-collapse bg-white">
-          <thead className="bg-gray-100 text-gray-700 text-sm">
+      <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+      <table className="min-w-full text-sm text-left">
+        <thead className="bg-blue-50 text-gray-700 uppercase text-xs font-semibold">
             <tr>
               <th className="border p-3 text-left">Category</th>
               <th className="border p-3 text-left">Question</th>
@@ -125,8 +159,8 @@ export default function Questions() {
               filteredQuestions.map((q) => (
                 <tr
                   key={q.ques_id}
-                  className={`hover:bg-gray-50 ${
-                    !q.ques_is_active ? "opacity-60 bg-gray-100" : ""
+                  className={`hover:bg-blue-50 border-b transition ${
+                    !q.ques_is_active ? "opacity-60 bg-gray-100" : "bg-white"
                   }`}
                 >
                   <td className="border p-3">
@@ -139,33 +173,43 @@ export default function Questions() {
                   </td>
                   {/* Action Button */}
                   <td className="border p-3 text-center">
-                    <button
-                      onClick={() => handleEditClick(q.ques_id)}
-                      className="px-2 py-1 bg-yellow-400 text-white rounded hover:bg-yellow-500 mr-2"
-                    >
-                      Edit
-                    </button>
+              <div className="grid grid-cols-2 gap-2 justify-items-center">
 
-                    <button
-                      onClick={() =>
-                        handleToggleActive(q.ques_id, q.ques_is_active)
-                      }
-                      className={`px-2 py-1 rounded text-white ${
-                        q.ques_is_active
-                          ? "bg-red-500 hover:bg-red-600"
-                          : "bg-green-500 hover:bg-green-600"
-                      } mr-2`}
-                    >
-                      {q.ques_is_active ? "Deactivate" : "Activate"}
-                    </button>
+                <button
+                  onClick={() => handleEditClick(q.ques_id)}
+                  className="w-28 px-3 py-2 bg-yellow-400 text-white rounded-md hover:bg-yellow-500 text-sm font-medium"
+                >
+                  Edit
+                </button>
 
-                    <button
-                      onClick={() => handleViewLogsClick(q.ques_id)}
-                      className="px-2 py-1 bg-gray-600 text-white rounded hover:bg-gray-700"
-                    >
-                      Logs
-                    </button>
-                  </td>
+                <button
+                  onClick={() => handleToggleActive(q.ques_id, q.ques_is_active)}
+                  className={`w-28 px-3 py-2 rounded-md text-white text-sm font-medium ${
+                    q.ques_is_active
+                      ? "bg-red-500 hover:bg-red-600"
+                      : "bg-green-500 hover:bg-green-600"
+                  }`}
+                >
+                  {q.ques_is_active ? "Deactivate" : "Activate"}
+                </button>
+
+                <button
+                  onClick={() => handleViewDetailClick(q.ques_id)}
+                  className="w-28 px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium">
+                  View Detail
+                </button>
+
+
+                <button
+                  onClick={() => handleViewLogsClick(q.ques_id)}
+                  className="w-28 px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 text-sm font-medium"
+                >
+                  Logs
+                </button>
+              </div>
+            </td>
+
+
                 </tr>
               ))
             ) : (
@@ -209,6 +253,13 @@ export default function Questions() {
           onClose={() => setShowLogModal(false)}
         />
       )}
+      {/* View Detail */}
+      {showViewModal && (
+      <ViewQuestion
+        questionId={selectedQuestionId}
+        onClose={() => setShowViewModal(false)}
+      />
+    )}
     </div>
   );
 }

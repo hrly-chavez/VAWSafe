@@ -81,7 +81,7 @@ export default function Sidebar({ sidebarOpen, toggleSidebar }) {
       return [
         { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/nurse",},
         { icon: "/images/heart.png", label: "VAWC Victims",path: "/nurse/victims",},
-        { icon: "/images/meeting.png",label: "Scheduled Sessions",path: "/nurse/sessions",},
+        { icon: "/images/meeting.png",label: "Scheduled Consultations",path: "/nurse/sessions",},
         { icon: "/images/question_mark.png", label: "Questions", path: "/nurse/questions" },
         { icon: "/images/logout.png", label: "Log Out",path: "/login",isLogout: true,},
         // { icon: "/images/case.png", label: "Case Records",path: "/nurse/case-records",},

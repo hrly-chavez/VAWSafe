@@ -35,8 +35,8 @@ const StartMoreSession = () => {
         setFeedback(sessData?.my_progress?.notes || sessData.sess_description || "");
         setServiceCategories(catRes.data);
       } catch (err) {
-        console.error("Failed to load session data", err);
-        setError("Failed to load session information.");
+        console.error("Failed to load consultation data", err);
+        setError("Failed to load consultation information.");
       } finally {
         setLoading(false);
       }
@@ -111,10 +111,26 @@ const StartMoreSession = () => {
         services: selectedServices.map((s) => s.value),
       };
 
+      // =============================
+      // REQUIRED QUESTIONS CHECK
+      // =============================
+      const missingRequired = (questions || []).filter(
+        (q) =>
+          q.sq_is_required &&
+          (!q.sq_value || q.sq_value.trim() === "")
+      );
+
+      if (missingRequired.length > 0) {
+        alert("Please answer all REQUIRED questions before finishing this consultation.");
+        setFinishing(false);
+        return;
+      }
+
+      // Proceed with API call
       const response = await api.post(`/api/nurse/sessions/${sess_id}/finish/`, payload);
 
-      alert("Session completed successfully!");
-      // SAFELY extract victim ID (same as Session 1)
+      alert("consultation completed successfully!");
+
       const victimId =
         response?.data?.session?.incident?.vic_id?.vic_id ||
         response?.data?.session?.incident?.vic_id ||
@@ -128,16 +144,21 @@ const StartMoreSession = () => {
       }
 
     } catch (err) {
-      console.error("Failed to finish session", err);
-      alert("Failed to finish session. Please try again.");
+      console.error("Failed to finish consultation", err);
+
+      const msg =
+        err?.response?.data?.error ||
+        "Failed to finish consultation. Please ensure all required questions are answered.";
+
+      alert(msg);
     } finally {
       setFinishing(false);
     }
   };
 
-  if (loading) return <p className="p-6 text-gray-600">Loading session...</p>;
+  if (loading) return <p className="p-6 text-gray-600">Loading consultation...</p>;
   if (error) return <p className="p-6 text-red-600">{error}</p>;
-  if (!session) return <p className="p-6">No session found.</p>;
+  if (!session) return <p className="p-6">No consultation found.</p>;
 
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-8">
@@ -170,9 +191,17 @@ const StartMoreSession = () => {
                         transition={{ duration: 0.22, delay: index * 0.04 }}
                         className="p-3 border rounded mb-3 bg-gray-50"
                       >
-                        <p className="font-medium text-gray-800 mb-2">
-                          {q.sq_question_text_snapshot || q.question_text || q.sq_custom_text}
-                        </p>
+                        <div className="flex items-center gap-2 mb-2">
+                          <p className="font-medium text-gray-800">
+                            {q.sq_question_text_snapshot || q.question_text || q.sq_custom_text}
+                          </p>
+
+                          {q.sq_is_required && (
+                            <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">
+                              REQUIRED
+                            </span>
+                          )}
+                        </div>
 
                         {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Yes/No" && (
                           <select
@@ -249,7 +278,7 @@ const StartMoreSession = () => {
             finishing ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
           }`}
         >
-          {finishing ? "Finishing..." : "Finish Session"}
+          {finishing ? "Finishing..." : "Finish consultation"}
         </button>
       </div>
     </div>

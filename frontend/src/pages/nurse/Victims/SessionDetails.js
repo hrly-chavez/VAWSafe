@@ -15,6 +15,8 @@ export default function SessionDetails({ sessionId, onClose }) {
     const fetchSession = async () => {
       try {
         const res = await api.get(`/api/nurse/sessions/${sessionId}/`);
+        console.log("[DEBUG] Payload:", res.data);
+        console.log("[DEBUG] Total Questions:", res.data?.questions?.length);
         setSession(res.data);
       } catch (err) {
         setError("Failed to load session details");
@@ -132,9 +134,13 @@ return (
 
             {/* Grouped Questions by Role → Category */}        
             <div>
-              <h3 className="text-lg font-semibold text-[#292D96] mt-6 mb-3">
-                Questions by Role
-              </h3>
+              <h3 className="text-lg font-semibold text-[#292D96] mt-6 mb-3 flex items-center justify-between">
+              <span>Questions by Role</span>
+              <span className="text-sm text-gray-600">
+                Total: {session?.questions?.length || 0}
+              </span>
+            </h3>
+
 
               {(() => {
                 const questions = session.questions || [];
@@ -212,7 +218,7 @@ return (
                       <div
                         className={`overflow-hidden transition-all duration-500 ease-in-out ${
                           openRole.includes(role)
-                            ? "max-h-[2000px] opacity-100"
+                            ? "max-h-none opacity-100"
                             : "max-h-0 opacity-0"
                         }`}
                       >
@@ -224,34 +230,29 @@ return (
                                 {category}
                               </h4>
                               <div className="space-y-3">
-                                {qs.map((q) => (
-                                  <div
-                                    key={q.sq_id}
-                                    className="p-3 border rounded-md bg-gray-50"
-                                  >
-                                    <p className="text-sm font-medium text-gray-800">
+                                {qs.map((q, idx) => (
+                                   <div key={q.sq_id ?? `${category}-${idx}`} className="p-4 border rounded-lg">
+                                    {/* Question */}
+                                    <p className="text-base font-semibold text-gray-900 leading-snug">
                                       {q.question_text}
                                     </p>
 
-                                    <p className="text-sm text-gray-600">
-                                      <span className="font-semibold">Answer:</span>{" "}
+                                    {/* Answer */}
+                                    <p className="text-sm text-gray-700">
+                                      <span className="font-semibold text-gray-800">Answer:</span>{" "}
                                       {q.sq_value || "—"}
                                     </p>
 
+                                    {/* Note */}
                                     {q.sq_note && (
-                                      <p className="text-sm text-gray-500 italic">
-                                        Note: {q.sq_note}
+                                      <p className="text-sm text-gray-600 italic border-l-4 border-gray-300 pl-3">
+                                        {q.sq_note}
                                       </p>
                                     )}
-
-                                    {/* {q.answered_by_name && (
-                                      <p className="text-xs text-gray-400 italic">
-                                        Answered by {q.answered_by_name}
-                                      </p>
-                                    )} */}
                                   </div>
                                 ))}
                               </div>
+
                             </div>
                           ))}
 
