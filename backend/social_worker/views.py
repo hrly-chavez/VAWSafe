@@ -1965,7 +1965,7 @@ def generate_monthly_consolidated_report(report_instance):
 
     # 2. Define template path
     root_templates = os.path.join(os.path.expanduser("~"), "Desktop", "Templates")
-    template_path = os.path.join(root_templates, "nurse", "Monthly-Consolidated-Report.docx")
+    template_path = os.path.join(root_templates, "social worker", "Monthly-Consolidated-Report.docx")
 
     if not os.path.exists(template_path):
         raise FileNotFoundError(f"Template not found: {template_path}")
