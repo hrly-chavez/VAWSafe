@@ -473,8 +473,7 @@ class OfficialSerializer(serializers.ModelSerializer):
         model = Official
         fields = [
             "of_id", "full_name", "of_role", "of_contact", "of_email", "of_photo", "of_dob", "of_pob", "of_fname", "of_lname", "of_m_initial", "of_sex",
-            "address", "status",
-            "user_is_active", "deleted_at"
+            "address", "user_is_active", "deleted_at"
         ]
 
     def get_user_is_active(self, obj):
