@@ -710,40 +710,50 @@ class OfficialViewSet(ModelViewSet):
     queryset = Official.objects.all()
     serializer_class = OfficialSerializer
     parser_classes = (MultiPartParser, FormParser, JSONParser)
-    permission_classes = [IsAuthenticated]  # default for safe methods
+    permission_classes = [IsAuthenticated]
+
+    allowed_roles = ["DSWD"]  # for IsRole
 
     def get_queryset(self):
         qs = Official.objects.filter(
             of_role__in=["Social Worker", "Nurse", "Psychometrician"]
         )
 
-        # include_archived=1 to see archived in lists
         include_archived = self.request.query_params.get("include_archived") in {"1", "true", "True"}
 
-        # Hide archived by default for list, BUT allow them for retrieve AND unarchive
-        if self.action not in {"retrieve", "unarchive"} and not include_archived:
+        # Combined actions must be allowed to see archived records
+        if self.action not in {
+            "retrieve",
+            "archive_or_deactivate",
+            "unarchive_or_reactivate",
+        } and not include_archived:
             qs = qs.filter(deleted_at__isnull=True)
 
         return qs.order_by("of_lname", "of_fname")
 
-    # ---- permissions per action ----
     def get_permissions(self):
-        if self.action in {"deactivate","reactivate","archive","unarchive","partial_update","update"}:
-            # DSWD only for state changes and edits
+        # Only DSWD can modify state or update
+        if self.action in {
+            "archive_or_deactivate",
+            "unarchive_or_reactivate",
+            "partial_update",
+            "update",
+        }:
             return [IsAuthenticated(), IsRole()]
         return super().get_permissions()
 
-    # Make IsRole check this
-    allowed_roles = ["DSWD"]
-
+    # ---------------------------------------------------
+    #  UPDATE (with audit + immutable field protection)
+    # ---------------------------------------------------
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop("partial", False)
         instance = self.get_object()
-
         reason = request.data.get("reason") or request.headers.get("X-Reason")
 
         incoming = request.data.copy()
         stripped = {}
+
+        # prevent immutable edits
         for f in IMMUTABLE_FIELDS:
             if f in incoming:
                 stripped[f] = incoming.pop(f)
@@ -751,84 +761,108 @@ class OfficialViewSet(ModelViewSet):
         serializer = self.get_serializer(instance, data=incoming, partial=partial)
         serializer.is_valid(raise_exception=True)
 
-        # compute diff BEFORE saving
         changes = _diff(instance, serializer.validated_data)
 
-        # save
         self.perform_update(serializer)
 
         if getattr(instance, "_prefetched_objects_cache", None):
             instance._prefetched_objects_cache = {}
 
-        # sanitize for JSONField
         if changes or stripped:
             if stripped:
                 changes["_immutable_rejected"] = {k: v for k, v in stripped.items()}
-            safe_changes = _audit_safe(changes)
-            _audit(request.user, "update", serializer.instance, reason=reason, changes=safe_changes)
+            _audit(
+                request.user,
+                "update",
+                serializer.instance,
+                reason=reason,
+                changes=_audit_safe(changes),
+            )
 
         return Response(serializer.data)
 
-
-    # ---- custom actions ----
+    # ---------------------------------------------------
+    #  COMBINED ACTION 1 — ARCHIVE + DEACTIVATE
+    # ---------------------------------------------------
     @action(detail=True, methods=["post"])
-    def deactivate(self, request, pk=None):
+    def archive_or_deactivate(self, request, pk=None):
         official = self.get_object()
-        if not official.user_id:
-            return Response({"detail": "No linked user to deactivate."}, status=400)
-        official.user.is_active = False
-        official.user.save(update_fields=["is_active"])
-        _audit(request.user, "deactivate", official, reason=request.data.get("reason"))
-        return Response({"status": "deactivated"})
+        reason = request.data.get("reason")
 
-    @action(detail=True, methods=["post"])
-    def reactivate(self, request, pk=None):
-        official = self.get_object()
-        if not official.user_id:
-            return Response({"detail": "No linked user to reactivate."}, status=400)
-        official.user.is_active = True
-        official.user.save(update_fields=["is_active"])
-        _audit(request.user, "reactivate", official, reason=request.data.get("reason"))
-        return Response({"status": "reactivated"})
+        # CASE A — archive + deactivate
+        if not official.deleted_at:
+            official.deleted_at = timezone.now()
+            official.save(update_fields=["deleted_at"])
 
-    @action(detail=True, methods=["post"])
-    def archive(self, request, pk=None):
-        official = self.get_object()
-        if official.deleted_at:
-            return Response({"detail": "Already archived."}, status=400)
+            if official.user_id and official.user.is_active:
+                official.user.is_active = False
+                official.user.save(update_fields=["is_active"])
 
-        # 1) Mark archived
-        official.deleted_at = timezone.now()
-        official.save(update_fields=["deleted_at"])
+            _audit(request.user, "archive", official, reason=reason)
+            return Response({
+                "status": "archived_and_deactivated",
+                "deleted_at": official.deleted_at
+            })
 
-        # 2) Optional safety: also deactivate their user so they cannot log in
+        # CASE B — archived already → deactivate only
         if official.user_id and official.user.is_active:
             official.user.is_active = False
             official.user.save(update_fields=["is_active"])
 
-        _audit(request.user, "archive", official, reason=request.data.get("reason"))
-        return Response({"status": "archived", "deleted_at": official.deleted_at})
-    
+            _audit(request.user, "deactivate", official, reason=reason)
+            return Response({"status": "deactivated"})
+
+        return Response({"detail": "Already archived & deactivated."}, status=400)
+
+    # ---------------------------------------------------
+    #  COMBINED ACTION 2 — UNARCHIVE + REACTIVATE
+    # ---------------------------------------------------
     @action(detail=True, methods=["post"])
-    def unarchive(self, request, pk=None):
+    def unarchive_or_reactivate(self, request, pk=None):
         official = self.get_object()
-        if not official.deleted_at:
-            return Response({"detail": "Not archived."}, status=400)
+        reason = request.data.get("reason")
 
-        before = official.deleted_at
-        official.deleted_at = None
-        official.save(update_fields=["deleted_at"])
+        # CASE A — unarchive + reactivate
+        if official.deleted_at:
+            before = official.deleted_at
+            official.deleted_at = None
+            official.save(update_fields=["deleted_at"])
 
-        # Do NOT auto-reactivate login; require an explicit "reactivate" click
-        _audit(request.user, "update", official, reason=request.data.get("reason"),
-            changes={"deleted_at": [str(before), None]})
-        return Response({"status": "unarchived"})
+            if official.user_id and not official.user.is_active:
+                official.user.is_active = True
+                official.user.save(update_fields=["is_active"])
 
+            _audit(
+                request.user,
+                "unarchive",
+                official,
+                reason=reason,
+                changes={"deleted_at": [str(before), None]},
+            )
+            return Response({"status": "unarchived_and_reactivated"})
+
+        # CASE B — reactivate only
+        if official.user_id and not official.user.is_active:
+            official.user.is_active = True
+            official.user.save(update_fields=["is_active"])
+
+            _audit(request.user, "reactivate", official, reason=reason)
+            return Response({"status": "reactivated"})
+
+        return Response({"detail": "Already active and not archived."}, status=400)
+
+    # ---------------------------------------------------
+    #  AUDITS LIST
+    # ---------------------------------------------------
     @action(detail=True, methods=["get"])
     def audits(self, request, pk=None):
-        qs = AuditLog.objects.filter(target_model="Official", target_id=str(pk)).order_by("-created_at")[:50]
-        from .serializers import AuditLogSerializer
+        qs = AuditLog.objects.filter(
+            target_model="Official",
+            target_id=str(pk)
+        ).order_by("-created_at")[:50]
+
         return Response(AuditLogSerializer(qs, many=True).data)
+
     
 # class OfficialViewSet(ModelViewSet):
 #    queryset = Official.objects.all()

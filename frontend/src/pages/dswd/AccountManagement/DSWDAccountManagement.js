@@ -181,8 +181,13 @@ export default function AccountManagement() {
                               if (reason === null) return;
 
                               try {
-                                await api.post(`/api/dswd/officials/${official.of_id}/unarchive/`, { reason });
+                                // SINGLE REQUEST ONLY 🚀
+                                await api.post(
+                                  `/api/dswd/officials/${official.of_id}/unarchive_or_reactivate/`,
+                                  { reason }
+                                );
 
+                                // Refresh list
                                 const includeArchived = filter !== "active";
                                 const url = includeArchived
                                   ? "/api/dswd/officials/?include_archived=1"
@@ -195,10 +200,11 @@ export default function AccountManagement() {
                                 if (filter === "archived") data = data.filter(o => !!o.deleted_at);
 
                                 setOfficials(data);
-                                alert("Unarchived. Use 'Reactivate' on the details page to allow login again.");
+
+                                alert("Official successfully unarchived and reactivated.");
                               } catch (e) {
                                 console.error(e);
-                                alert("Failed to unarchive.");
+                                alert("Failed to unarchive/reactivate.");
                               }
                             }}
                             className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded text-sm shadow"
@@ -206,6 +212,7 @@ export default function AccountManagement() {
                             Unarchive
                           </button>
                         )}
+
                       </div>
                     </td>
                   </tr>
@@ -252,13 +259,17 @@ export default function AccountManagement() {
                   <button
                     onClick={async () => {
                       const reason = window.prompt("Reason for unarchive?");
-                      if (reason !== null) {
-                        try {
-                          await api.post(`/api/dswd/officials/${official.of_id}/unarchive/`, { reason });
-                          alert("Unarchived.");
-                        } catch {
-                          alert("Failed to unarchive.");
-                        }
+                      if (reason === null) return;
+
+                      try {
+                        await api.post(`/api/dswd/officials/${official.of_id}/unarchive/`, { reason });
+                        await api.post(`/api/dswd/officials/${official.of_id}/reactivate/`, { reason: "Auto-reactivate after unarchive" });
+
+                        alert("Unarchived and reactivated.");
+                        const res = await api.get("/api/dswd/officials/?include_archived=1");
+                        setOfficials(res.data.filter(o => !!o.deleted_at));
+                      } catch {
+                        alert("Failed to unarchive.");
                       }
                     }}
                     className="bg-gray-700 text-white px-3 py-1 rounded text-sm"

@@ -271,53 +271,25 @@ export default function ViewOfficials() {
 
         {/* Action buttons */}
         <div className="mt-6 flex flex-wrap gap-3 border-t pt-4">
-          <button
-            onClick={async () => {
-              const reason = window.prompt("Reason for deactivation?");
-              try {
-                await api.post(`/api/dswd/officials/${official.of_id}/deactivate/`, { reason });
-                alert("Official deactivated.");
-                const refreshed = await api.get(`/api/dswd/officials/${of_id}/`);
-                setOfficial(refreshed.data);
-              } catch (err) {
-                console.error(err);
-                alert("Failed to deactivate.");
-              }
-            }}
-            className="bg-red-600 hover:bg-red-700 text-white text-sm px-4 py-2 rounded shadow disabled:opacity-50"
-            disabled={official.user_is_active === false || official.deleted_at}
-          >
-            Deactivate
-          </button>
-
-          <button
-            onClick={async () => {
-              const reason = window.prompt("Reason for reactivation?");
-              try {
-                await api.post(`/api/dswd/officials/${official.of_id}/reactivate/`, { reason });
-                alert("Official reactivated.");
-                const refreshed = await api.get(`/api/dswd/officials/${of_id}/`);
-                setOfficial(refreshed.data);
-              } catch (err) {
-                console.error(err);
-                alert("Failed to reactivate.");
-              }
-            }}
-            className="bg-green-600 hover:bg-green-700 text-white text-sm px-4 py-2 rounded shadow disabled:opacity-50"
-            disabled={official.user_is_active !== false || official.deleted_at}
-          >
-            Reactivate
-          </button>
 
           <button
             onClick={async () => {
               const reason = window.prompt("Reason for archive?");
               if (!reason) return;
+
               try {
-                await api.post(`/api/dswd/officials/${official.of_id}/archive/`, { reason });
-                alert("Official archived.");
-                const refreshed = await api.get(`/api/dswd/officials/${of_id}/`);
+                // SINGLE REQUEST ONLY 🚀
+                await api.post(
+                  `/api/dswd/officials/${official.of_id}/archive_or_deactivate/`,
+                  { reason }
+                );
+
+                alert("Official archived and login deactivated.");
+
+                // Refresh individual official data
+                const refreshed = await api.get(`/api/dswd/officials/${official.of_id}/`);
                 setOfficial(refreshed.data);
+
               } catch (err) {
                 console.error(err);
                 alert("Failed to archive.");
@@ -328,6 +300,7 @@ export default function ViewOfficials() {
           >
             Archive
           </button>
+
 
           <button
             onClick={() => setEditOpen(true)}
