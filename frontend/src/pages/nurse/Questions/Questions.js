@@ -56,7 +56,7 @@ export default function Questions() {
   fetchQuestions(selectedCategory?.value || null);
 }, [selectedCategory]);
 
-  const filteredQuestions = questions
+ const filteredQuestions = questions
   .filter((q) => {
     const query = searchQuery.toLowerCase();
     return (
@@ -64,24 +64,20 @@ export default function Questions() {
       (q.category_name || "").toLowerCase().includes(query)
     );
   })
-  // Filter Required Only / Not Required
   .filter((q) => {
     if (!requiredFilter || requiredFilter === "all") return true;
     if (requiredFilter === "required") return q.ques_is_required === true;
     if (requiredFilter === "not_required") return q.ques_is_required === false;
     return true;
   })
-  // Filter by session number
   .filter((q) => {
     if (!sessionFilter) return true;
     const sessionNumbers = q.mappings?.map((m) => m.session_number) || [];
-
-    if (sessionFilter === "4plus") {
-      return sessionNumbers.some((n) => n >= 4);
-    }
-
+    if (sessionFilter === "4plus") return sessionNumbers.some((n) => n >= 4);
     return sessionNumbers.includes(sessionFilter);
-  });
+  })
+  
+  .sort((a, b) => b.ques_id - a.ques_id);
 
 
   const handleEditClick = (questionId) => {
