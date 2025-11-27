@@ -93,7 +93,6 @@ class Official(models.Model):
         ('Nurse', 'Nurse'),
         ('Psychometrician', 'Psychometrician'),
         ('Home Life', 'Home Life'),
-
     ]   
 
     STATUS_CHOICES = [
@@ -733,13 +732,11 @@ class SessionType(models.Model):
         ('Intake / Initial Assessment', 'Intake / Initial Assessment'),
         ('Case Study / Psychosocial Assessment', 'Case Study / Psychosocial Assessment'),
         ('Intervention Planning / Case Conference', 'Intervention Planning / Case Conference'),
-        ('Family Counseling / Reintegration', 'Family Counseling / Reintegration'),
         ('Pyschological Evaluation', 'Pyschological Evaluation'),
         ('Legal Assistance Session', 'Legal Assistance Session'),
         ('Counseling', 'Counseling'),
-        ('Follow-up / After Care', 'Follow-up / After Care'),
+        ('Follow-up', 'Follow-up'),
         ('Termination / Discharge Planning', 'Termination / Discharge Planning'),
-        ('Others', 'Others'),
     ]
 
     name = models.CharField(max_length=100, choices=SESSION_TYPES)
