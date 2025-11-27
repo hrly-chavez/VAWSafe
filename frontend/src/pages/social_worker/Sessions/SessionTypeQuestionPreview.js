@@ -2,10 +2,12 @@
 import { useEffect, useState } from "react";
 import api from "../../../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRef } from "react";
 
 export default function SessionTypeQuestionPreview({ sessionNum, selectedTypes }) {
   const [questions, setQuestions] = useState([]);
   const [openRoles, setOpenRoles] = useState([]); // collapse by role only
+  const roleRefs = useRef({});
 
   useEffect(() => {
     if (!sessionNum || !selectedTypes || selectedTypes.length === 0) {
@@ -59,10 +61,10 @@ export default function SessionTypeQuestionPreview({ sessionNum, selectedTypes }
 
   return (
     <div className="mt-6">
-      <h4 className="text-lg font-semibold text-blue-700 mb-4">Mapped Questions</h4>
+      <h4 className="text-lg font-semibold text-blue-700 mb-4">Questions Included in This Session</h4>
 
       {Object.keys(groupedByRole).length === 0 && (
-        <p className="text-sm text-gray-500">No mapped questions found for this session.</p>
+        <p className="text-sm text-gray-500">No Questions found for this session.</p>
       )}
 
       {Object.entries(groupedByRole).map(([role, categories]) => (
@@ -89,12 +91,16 @@ export default function SessionTypeQuestionPreview({ sessionNum, selectedTypes }
 
           {/* Collapsible content */}
           <div
-            className={`overflow-hidden transition-all duration-500 ease-in-out ${
-              openRoles.includes(role)
-                ? "max-h-[5000px] opacity-100"
-                : "max-h-0 opacity-0"
-            }`}
+            ref={(el) => (roleRefs.current[role] = el)}
+            style={{
+              height: openRoles.includes(role)
+                ? roleRefs.current[role]?.scrollHeight + "px"
+                : "0px",
+              opacity: openRoles.includes(role) ? 1 : 0,
+            }}
+            className="overflow-hidden transition-all duration-500 ease-in-out"
           >
+            
             <div className="p-4 bg-white space-y-5">
               {Object.entries(categories).map(([category, qs]) => (
                 <div key={category} className="mb-4">

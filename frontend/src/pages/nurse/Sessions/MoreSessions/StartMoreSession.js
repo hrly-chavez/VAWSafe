@@ -159,130 +159,277 @@ const StartMoreSession = () => {
   if (loading) return <p className="p-6 text-gray-600">Loading consultation...</p>;
   if (error) return <p className="p-6 text-red-600">{error}</p>;
   if (!session) return <p className="p-6">No consultation found.</p>;
-
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-8">
-      <h2 className="text-2xl font-bold text-green-700 border-b pb-2">
-        Wako kaybaw sakong I butang ari
-      </h2>
+  <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-8">
 
-      {/* Render role sections (even if only one role exists) */}
-      {roles.map((role) => {
-        const grouped = questionsByRole[role] || {};
-        return (
-          <div key={role} className="mb-6">
-            <div className="bg-green-50 border-l-4 border-green-600 px-4 py-2 rounded-t-md">
-              <h5 className="text-md font-semibold text-green-800">{role} Section</h5>
-            </div>
+    {/* SESSION TITLE */}
+    <h2 className="text-2xl font-bold text-blue-800 border-b pb-2">
+      {session?.sess_type_display?.[0]?.name} Session
+    </h2>
 
-            <div className="border border-t-0 rounded-b-md p-3 bg-white shadow-sm">
-              <AnimatePresence>
-                {Object.entries(grouped).map(([category, qs]) => (
-                  <div key={category} className="mb-4">
-                    <div className="mb-2">
-                      <h6 className="font-semibold text-gray-700">{category}</h6>
-                    </div>
-                    {qs.map((q, index) => (
-                      <motion.div
-                        key={q.sq_id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        transition={{ duration: 0.22, delay: index * 0.04 }}
-                        className="p-3 border rounded mb-3 bg-gray-50"
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <p className="font-medium text-gray-800">
-                            {q.sq_question_text_snapshot || q.question_text || q.sq_custom_text}
-                          </p>
+    {/* QUESTIONS GROUPED BY CATEGORY */}
+    <div className="space-y-8">
+      {Object.entries(
+        (questions || []).reduce((acc, q) => {
+          const category = q.question_category_name || "Uncategorized";
+          if (!acc[category]) acc[category] = [];
+          acc[category].push(q);
+          return acc;
+        }, {})
+      ).map(([category, qs]) => (
+        <div key={category} className="mb-6">
 
-                          {q.sq_is_required && (
-                            <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">
-                              REQUIRED
-                            </span>
-                          )}
-                        </div>
-
-                        {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Yes/No" && (
-                          <select
-                            value={q.sq_value || ""}
-                            onChange={(e) =>
-                              handleAnswerChange(q.sq_id, "sq_value", e.target.value)
-                            }
-                            className="w-full border rounded p-2"
-                          >
-                            <option value="">Select...</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                          </select>
-                        )}
-
-                        {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Text" && (
-                          <textarea
-                            value={q.sq_value || ""}
-                            onChange={(e) =>
-                              handleAnswerChange(q.sq_id, "sq_value", e.target.value)
-                            }
-                            className="w-full border rounded p-2"
-                            rows={3}
-                            placeholder="Enter your answer..."
-                          />
-                        )}
-
-                        {/* Show notes only if the question type is not Text */}
-                        {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) !== "Text" && (
-                          <input
-                            type="text"
-                            value={q.sq_note || ""}
-                            onChange={(e) =>
-                              handleAnswerChange(q.sq_id, "sq_note", e.target.value)
-                            }
-                            className="w-full border rounded p-2 mt-2"
-                            placeholder="Additional notes (if any)..."
-                          />
-                        )}
-                      </motion.div>
-                    ))}
-                  </div>
-                ))}
-              </AnimatePresence>
-            </div>
-
-            {/* Per-role feedback box */}
-            <div className="p-4 bg-gray-50 border rounded-md shadow-sm mt-3">
-              <h3 className="text-lg font-semibold text-green-800">{role} Feedback</h3>
-              <textarea
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                className="w-full border rounded-md p-3 text-sm text-gray-800"
-                rows={4}
-                placeholder="Write your feedback about this role's part..."
-              />
-            </div>
+          {/* CATEGORY HEADER */}
+          <div className="px-4 py-2 rounded-t-md border-l-4 border-blue-600 bg-blue-50 shadow-sm">
+            <h5 className="text-md font-semibold text-blue-800 tracking-wide">
+              {category}
+            </h5>
           </div>
-        );
-      })}
 
-      {/* Finish Button */}
-      <div className="flex justify-end gap-4 mt-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="px-6 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
-        >
-          Back
-        </button>
-        <button
-          onClick={handleFinishSession}
-          disabled={finishing}
-          className={`px-6 py-2 rounded-md font-semibold text-white flex items-center justify-center gap-2 transition ${
-            finishing ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
-          }`}
-        >
-          {finishing ? "Finishing..." : "Finish consultation"}
-        </button>
-      </div>
+          {/* CATEGORY QUESTION LIST */}
+          <div className="border border-t-0 rounded-b-md p-4 bg-white shadow-sm">
+            <AnimatePresence>
+              {qs.map((q, index) => (
+                <motion.div
+                  key={q.sq_id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.22, delay: index * 0.04 }}
+                  className="p-4 border border-gray-200 bg-gray-50 rounded-md mb-3"
+                >
+                  {/* QUESTION TEXT */}
+                  <div className="flex items-start justify-between mb-2">
+                    <p className="font-medium text-gray-900">
+                      {q.sq_question_text_snapshot ||
+                        q.question_text ||
+                        q.sq_custom_text}
+                    </p>
+
+                    {q.sq_is_required && (
+                      <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">
+                        REQUIRED
+                      </span>
+                    )}
+                  </div>
+
+                  {/* YES/NO */}
+                  {(q.sq_answer_type_snapshot ||
+                    q.question_answer_type ||
+                    q.sq_custom_answer_type) === "Yes/No" && (
+                    <select
+                      value={q.sq_value || ""}
+                      onChange={(e) =>
+                        handleAnswerChange(q.sq_id, "sq_value", e.target.value)
+                      }
+                      className="w-full border rounded p-2"
+                    >
+                      <option value="">Select…</option>
+                      <option value="Yes">Yes</option>
+                      <option value="No">No</option>
+                    </select>
+                  )}
+
+                  {/* TEXT */}
+                  {(q.sq_answer_type_snapshot ||
+                    q.question_answer_type ||
+                    q.sq_custom_answer_type) === "Text" && (
+                    <textarea
+                      value={q.sq_value || ""}
+                      onChange={(e) =>
+                        handleAnswerChange(q.sq_id, "sq_value", e.target.value)
+                      }
+                      className="w-full border rounded p-2"
+                      rows={3}
+                      placeholder="Enter your answer…"
+                    />
+                  )}
+
+                  {/* NOTES */}
+                  {(q.sq_answer_type_snapshot ||
+                    q.question_answer_type ||
+                    q.sq_custom_answer_type) !== "Text" && (
+                    <input
+                      type="text"
+                      value={q.sq_note || ""}
+                      onChange={(e) =>
+                        handleAnswerChange(q.sq_id, "sq_note", e.target.value)
+                      }
+                      className="w-full border rounded p-2 mt-2"
+                      placeholder="Additional notes (if any)…"
+                    />
+                  )}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        </div>
+      ))}
     </div>
-  );
+
+    {/* FEEDBACK SECTION */}
+    <div className="p-4 bg-gray-50 border rounded-md shadow-sm">
+      <h3 className="text-lg font-semibold text-gray-800 mb-2">
+        Feedback
+      </h3>
+
+      <textarea
+        value={feedback}
+        onChange={(e) => setFeedback(e.target.value)}
+        className="w-full border rounded-md p-3 text-sm text-gray-800"
+        rows={4}
+        placeholder="Write your feedback about this session..."
+      />
+    </div>
+
+    {/* ACTION BUTTONS */}
+    <div className="flex justify-end gap-4 mt-6">
+      <button
+        onClick={() => navigate(-1)}
+        className="px-6 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+      >
+        Back
+      </button>
+
+      <button
+        onClick={handleFinishSession}
+        disabled={finishing}
+        className={`px-6 py-2 rounded-md font-semibold text-white flex items-center justify-center gap-2 transition ${
+          finishing
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-green-600 hover:bg-green-700"
+        }`}
+      >
+        {finishing ? "Finishing..." : "Finish Session"}
+      </button>
+    </div>
+  </div>
+);
+
+  // return (
+  //   <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-8">
+  //     <h2 className="text-2xl font-bold text-blue-800 border-b pb-2">
+  //       {session?.sess_type_display?.[0]?.name} Session
+  //     </h2>
+
+
+  //     {/* Render role sections (even if only one role exists) */}
+  //     {roles.map((role) => {
+  //       const grouped = questionsByRole[role] || {};
+  //       return (
+  //         <div key={role} className="mb-6">
+  //           <div className="bg-green-50 border-l-4 border-green-600 px-4 py-2 rounded-t-md">
+  //             <h5 className="text-md font-semibold text-green-800">{role} Section</h5>
+  //           </div>
+
+  //           <div className="border border-t-0 rounded-b-md p-3 bg-white shadow-sm">
+  //             <AnimatePresence>
+  //               {Object.entries(grouped).map(([category, qs]) => (
+  //                 <div key={category} className="mb-4">
+  //                   <div className="mb-2">
+  //                     <h6 className="font-semibold text-gray-700">{category}</h6>
+  //                   </div>
+  //                   {qs.map((q, index) => (
+  //                     <motion.div
+  //                       key={q.sq_id}
+  //                       initial={{ opacity: 0, x: -20 }}
+  //                       animate={{ opacity: 1, x: 0 }}
+  //                       exit={{ opacity: 0, x: 20 }}
+  //                       transition={{ duration: 0.22, delay: index * 0.04 }}
+  //                       className="p-3 border rounded mb-3 bg-gray-50"
+  //                     >
+  //                       <div className="flex items-center gap-2 mb-2">
+  //                         <p className="font-medium text-gray-800">
+  //                           {q.sq_question_text_snapshot || q.question_text || q.sq_custom_text}
+  //                         </p>
+
+  //                         {q.sq_is_required && (
+  //                           <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">
+  //                             REQUIRED
+  //                           </span>
+  //                         )}
+  //                       </div>
+
+  //                       {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Yes/No" && (
+  //                         <select
+  //                           value={q.sq_value || ""}
+  //                           onChange={(e) =>
+  //                             handleAnswerChange(q.sq_id, "sq_value", e.target.value)
+  //                           }
+  //                           className="w-full border rounded p-2"
+  //                         >
+  //                           <option value="">Select...</option>
+  //                           <option value="Yes">Yes</option>
+  //                           <option value="No">No</option>
+  //                         </select>
+  //                       )}
+
+  //                       {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Text" && (
+  //                         <textarea
+  //                           value={q.sq_value || ""}
+  //                           onChange={(e) =>
+  //                             handleAnswerChange(q.sq_id, "sq_value", e.target.value)
+  //                           }
+  //                           className="w-full border rounded p-2"
+  //                           rows={3}
+  //                           placeholder="Enter your answer..."
+  //                         />
+  //                       )}
+
+  //                       {/* Show notes only if the question type is not Text */}
+  //                       {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) !== "Text" && (
+  //                         <input
+  //                           type="text"
+  //                           value={q.sq_note || ""}
+  //                           onChange={(e) =>
+  //                             handleAnswerChange(q.sq_id, "sq_note", e.target.value)
+  //                           }
+  //                           className="w-full border rounded p-2 mt-2"
+  //                           placeholder="Additional notes (if any)..."
+  //                         />
+  //                       )}
+  //                     </motion.div>
+  //                   ))}
+  //                 </div>
+  //               ))}
+  //             </AnimatePresence>
+  //           </div>
+
+  //           {/* Per-role feedback box */}
+  //           <div className="p-4 bg-gray-50 border rounded-md shadow-sm mt-3">
+  //             <h3 className="text-lg font-semibold text-green-800">{role} Feedback</h3>
+  //             <textarea
+  //               value={feedback}
+  //               onChange={(e) => setFeedback(e.target.value)}
+  //               className="w-full border rounded-md p-3 text-sm text-gray-800"
+  //               rows={4}
+  //               placeholder="Write your feedback about this role's part..."
+  //             />
+  //           </div>
+  //         </div>
+  //       );
+  //     })}
+
+  //     {/* Finish Button */}
+  //     <div className="flex justify-end gap-4 mt-6">
+  //       <button
+  //         onClick={() => navigate(-1)}
+  //         className="px-6 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
+  //       >
+  //         Back
+  //       </button>
+  //       <button
+  //         onClick={handleFinishSession}
+  //         disabled={finishing}
+  //         className={`px-6 py-2 rounded-md font-semibold text-white flex items-center justify-center gap-2 transition ${
+  //           finishing ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+  //         }`}
+  //       >
+  //         {finishing ? "Finishing..." : "Finish consultation"}
+  //       </button>
+  //     </div>
+  //   </div>
+  // );
 };
 
 export default StartMoreSession;
