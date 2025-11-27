@@ -1,4 +1,4 @@
-// src/pages/psychometrician/Sessions/StartSession.js
+// src/pages/nurse/Sessions/StartSession.js
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
@@ -52,12 +52,12 @@ export default function StartSession() {
           setRole(myRole || "");
           setIsDone(Boolean(sess?.my_progress?.is_done));
         } else {
-          alert("This session is already finished.");
+          alert("This consultation is already finished.");
           navigate(-1);
         }
       } catch (err) {
-        console.error("Failed to load session", err);
-        alert("Could not load session.");
+        console.error("Failed to load consultation", err);
+        alert("Could not load consultation.");
       } finally {
         setLoading(false);
       }
@@ -102,6 +102,21 @@ export default function StartSession() {
       services: selectedServices.map((s) => s.value),
     };
 
+    // =============================
+    // REQUIRED QUESTIONS CHECK
+    // =============================
+    const missingRequired = questions.filter(
+      (q) =>
+        q.sq_is_required &&
+        isQuestionEditable(q) &&
+        (!q.sq_value || q.sq_value.trim() === "")
+    );
+
+    if (missingRequired.length > 0) {
+      alert("Please answer all REQUIRED questions before finishing this session.");
+      return; // stop finish flow
+    }
+
 
     const response = await api.post(`/api/nurse/sessions/${sess_id}/finish/`, payload);
     const { session_completed, all_finished } = response.data;
@@ -116,13 +131,13 @@ export default function StartSession() {
     //  Unified redirect behavior (always go to victim page)
     if (all_finished || session_completed) {
       alert(
-        "All assigned officials have completed this session.\n" +
-        "The session is now marked as done.\n" +
+        "All assigned officials have completed this consultation.\n" +
+        "The consultation is now marked as done.\n" +
         "Redirecting to the victim’s profile..."
       );
     } else {
       alert(
-        "Your part of this shared session has been completed.\n" +
+        "Your part of this shared consultation has been completed.\n" +
         "You’ll now be redirected to the victim’s profile."
       );
     }
@@ -136,8 +151,14 @@ export default function StartSession() {
       navigate("/nurse/victims");
     }
   } catch (err) {
-    console.error("Failed to finish session", err);
-    alert("Failed to finish session.");
+    console.error("Failed to finish consultation", err);
+
+      // Show backend error message if available
+      const msg =
+        err?.response?.data?.error ||
+        "Failed to finish consultation. Please ensure all required questions are answered.";
+
+      alert(msg);
   }
 };
 
@@ -196,7 +217,7 @@ useEffect(() => {
       {/* HEADER */}
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold text-green-700 mb-2">
-          Session {session?.sess_num || ""} — {session?.sess_status}
+          Consultation {session?.sess_num || ""} — {session?.sess_status}
         </h2>
         {role && (
           <p className="text-gray-700">
@@ -204,7 +225,7 @@ useEffect(() => {
           </p>
         )}
         <p className="text-gray-500 text-sm mt-1">
-          Complete your part of this session below. Other officials’ answers are shown for
+          Complete your part of this consultation below. Other officials’ answers are shown for
           review only.
         </p>
       </div>
@@ -262,22 +283,23 @@ useEffect(() => {
                     <div key={category} className="mb-6">
                       {/* Category Header */}
                     <div
-                      className={`px-4 py-2 rounded-t-md border-l-4 shadow-sm ${
-                        r === "Social Worker"
-                          ? "bg-gradient-to-r from-green-100 to-green-50 border-green-600"
-                          : r === "Nurse"
-                          ? "bg-gradient-to-r from-blue-100 to-blue-50 border-blue-600"
-                          : r === "Psychometrician"
-                          ? "bg-gradient-to-r from-purple-100 to-purple-50 border-purple-600"
-                          : r === "Home Life"
-                          ? "bg-gradient-to-r from-orange-100 to-orange-50 border-orange-600"
-                          : "bg-gradient-to-r from-gray-100 to-gray-50 border-gray-400"
-                      }`}
-                    >
-                      <h5 className="text-md font-semibold text-gray-800 tracking-wide drop-shadow-sm">
-                        {category}
-                      </h5>
-                    </div>
+                    className={`px-4 py-2 rounded-t-md border-l-4 shadow-sm ${
+                      r === "Social Worker"
+                        ? "bg-gradient-to-r from-green-100 to-green-50 border-green-600"
+                        : r === "Nurse"
+                        ? "bg-gradient-to-r from-blue-100 to-blue-50 border-blue-600"
+                        : r === "Psychometrician"
+                        ? "bg-gradient-to-r from-purple-100 to-purple-50 border-purple-600"
+                        : r === "Home Life"
+                        ? "bg-gradient-to-r from-orange-100 to-orange-50 border-orange-600"
+                        : "bg-gradient-to-r from-gray-100 to-gray-50 border-gray-400"
+                    }`}
+                  >
+                    <h5 className="text-md font-semibold text-gray-800 tracking-wide drop-shadow-sm">
+                      {category}
+                    </h5>
+                  </div>
+
 
                       {/* Category Question List */}
                       <div className="border border-t-0 rounded-b-md p-3 bg-white shadow-sm">
@@ -294,13 +316,23 @@ useEffect(() => {
                                 className="p-4 border border-gray-200 bg-white rounded-md mb-4"
                               >
                                 <div className="flex items-start justify-between">
-                                  <p className="font-medium text-gray-900 mb-2">
-                                    {q.sq_question_text_snapshot || q.question_text || q.sq_custom_text}
-                                  </p>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <p className="font-medium text-gray-900">
+                                      {q.sq_question_text_snapshot || q.question_text || q.sq_custom_text}
+                                    </p>
+
+                                    {q.sq_is_required && (
+                                      <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">
+                                        REQUIRED
+                                      </span>
+                                    )}
+                                  </div>
+
                                   {!editable && (
                                     <span className="text-xs text-gray-500 italic ml-4">Read-only</span>
                                   )}
-                                </div>
+                              </div>
+
 
                                 {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Yes/No" && (
                                   <select
@@ -442,12 +474,12 @@ useEffect(() => {
             onClick={handleFinishSession}
             className="px-6 py-2 rounded-md bg-green-600 text-white font-semibold hover:bg-green-700"
           >
-            Finish Session
+            Finish Consultation
           </button>
         )}
         {isDone && (
           <p className="text-gray-600 italic mt-2 text-sm">
-            You’ve already completed your part of this session.
+            You’ve already completed your part of this consultation.
           </p>
         )}
         <button

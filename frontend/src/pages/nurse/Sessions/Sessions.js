@@ -40,8 +40,8 @@ export default function Sessions() {
       <div className="flex min-h-screen bg-white">
         <div className="sw-sessions-page">
           <div className="sw-sessions-card">
-            <h2 className="sessionstext">Sessions</h2>
-            <p className="list-text">List of Scheduled Sessions</p>
+            <h2 className="sessionstext">Consultations</h2>
+            <p className="list-text">List of Scheduled Consultations</p>
 
               {/* Status filter */}
               <select
@@ -62,7 +62,7 @@ export default function Sessions() {
                   <tr>
                     <th>Victim Name</th>
                     <th>Case No.</th>
-                    <th>Session No.</th>
+                    <th>Consultation No.</th>
                     <th>Schedule Date</th>
                     <th>Status</th>
                     <th>Assigned Official(s)</th>
@@ -116,7 +116,7 @@ export default function Sessions() {
                         colSpan="8"
                         className="text-center text-gray-500 py-4"
                       >
-                        No sessions found.
+                        No consultation found.
                       </td>
                     </tr>
                   )}

@@ -595,7 +595,7 @@ class IncidentSerializer(serializers.ModelSerializer): #For case Column & Rows o
 
     def get_location(self, obj):
         return obj.incident_location or None
-    
+     
 # ===================================== SCHEDULING =====================================
 
 class OfficialAvailabilitySerializer(serializers.ModelSerializer):
@@ -729,22 +729,6 @@ class SessionTypeSerializer(serializers.ModelSerializer):
         model = SessionType
         fields = ["id", "name"]
 
-# SESSION TYPE QUESTION (assignment link) 
-# class SessionTypeQuestionSerializer(serializers.ModelSerializer):
-#     question_text = serializers.CharField(source="question.ques_question_text", read_only=True)
-#     session_type_name = serializers.CharField(source="session_type.name", read_only=True)
-
-#     class Meta:
-#         model = SessionTypeQuestion
-#         fields = [
-#             "id",
-#             "session_number",
-#             "session_type",
-#             "session_type_name",
-#             "question",
-#             "question_text",
-#         ]
-
 class BulkQuestionCreateSerializer(serializers.Serializer):
     """
     Bulk creation of multiple questions under one chosen category.
@@ -776,6 +760,7 @@ class BulkQuestionCreateSerializer(serializers.Serializer):
                 ques_category_id=category_id,
                 ques_question_text=q.get("ques_question_text"),
                 ques_answer_type=q.get("ques_answer_type"),
+                ques_is_required=q.get("ques_is_required", True),
                 ques_is_active=True,
                 created_by=official,
                 role=official.of_role if official else "Unknown",

@@ -231,7 +231,7 @@ return (
                       <div
                         className={`overflow-hidden transition-all duration-500 ease-in-out ${
                           openRole.includes(role)
-                            ? "max-h-[2000px] opacity-100"
+                            ? "max-h-none opacity-100"
                             : "max-h-0 opacity-0"
                         }`}
                       >

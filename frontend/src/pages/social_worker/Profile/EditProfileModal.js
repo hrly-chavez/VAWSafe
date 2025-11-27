@@ -3,7 +3,6 @@ import api from "../../../api/axios"; // Assuming your api.js is correctly set u
 
 export default function EditProfileModal({ officialData, onClose, onSave }) {
   const [formPhoto, setFormPhoto] = useState(null);
-  const [formReason, setFormReason] = useState("");
   const [formData, setFormData] = useState({
     of_fname: "",
     of_lname: "",
@@ -503,20 +502,6 @@ export default function EditProfileModal({ officialData, onClose, onSave }) {
                   <p className="text-sm text-gray-600">Drag & Drop a file</p>
                 </div>
               </div>
-            </div>
-
-            {/* Reason for Change */}
-            <div className="mt-4 sm:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Reason for Change</label>
-              <textarea
-                name="reason"
-                value={formReason}
-                onChange={(e) => setFormReason(e.target.value)}
-                className="w-full border rounded px-3 py-2 text-sm"
-                rows={3}
-                placeholder="Why are you changing this?"
-                required
-              />
             </div>
 
             {/* Action Buttons */}
