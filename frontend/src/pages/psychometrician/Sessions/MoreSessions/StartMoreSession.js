@@ -284,12 +284,7 @@ const StartMoreSession = () => {
 
     {/* ACTION BUTTONS */}
     <div className="flex justify-end gap-4 mt-6">
-      <button
-        onClick={() => navigate(-1)}
-        className="px-6 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
-      >
-        Back
-      </button>
+      
 
       <button
         onClick={handleFinishSession}

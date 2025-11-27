@@ -139,10 +139,18 @@ const CreateSession = () => {
             }`}
             onClick={async () => {
               if (!selectedType || !summary) return;
+
+              //  Confirmation prompt
+              const confirmed = window.confirm(
+                "Are you sure you want to start this session?"
+              );
+
+              if (!confirmed) return;
+
               setStarting(true);
               try {
                 // Step 1: Create a new session
-                const createRes = await api.post("/api/nurse/more-sessions/", {
+                const createRes = await api.post("/api/social_worker/more-sessions/", {
                   incident_id: summary.incident_id,
                   sess_type: [selectedType.value],
                 });
@@ -151,17 +159,18 @@ const CreateSession = () => {
                 const sessId = newSession.sess_id;
 
                 // Step 2: Start the session (hydrate role-based questions)
-                await api.post(`/api/nurse/sessions/${sessId}/start/`);
+                await api.post(`/api/social_worker/sessions/${sessId}/start/`);
 
                 // Step 3: Redirect to StartMoreSession
-                navigate(`/nurse/more-sessions/${sessId}/start`);
+                navigate(`/social_worker/more-sessions/${sessId}/start`);
               } catch (err) {
-                console.error("Failed to start consultation", err);
-                alert("Failed to start consultation. Please try again.");
+                console.error("Failed to start session", err);
+                alert("Failed to start session. Please try again.");
               } finally {
                 setStarting(false);
               }
             }}
+
           >
             {starting && (
               <svg
