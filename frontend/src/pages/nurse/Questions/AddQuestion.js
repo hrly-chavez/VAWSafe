@@ -13,8 +13,14 @@ export default function AddQuestion({ onClose }) {
 
   // Step 2: questions
   const [questions, setQuestions] = useState([
-    { ques_question_text: "", ques_answer_type: "", ques_is_active: true },
+    {
+      ques_question_text: "",
+      ques_answer_type: "",
+      ques_is_required: true,   
+      ques_is_active: true,
+    },
   ]);
+
   const [answerTypes, setAnswerTypes] = useState([]);
 
   // Step 3: session assignment
@@ -31,20 +37,61 @@ export default function AddQuestion({ onClose }) {
     });
   }, []);
 
-  // Load session types when step 3
+  // ========= NEW SESSION NUMBER LOGIC =========
+  // Load session numbers + session types when step === 3
   useEffect(() => {
     if (step === 3) {
-      const nums = Array.from({ length: 10 }, (_, i) => ({
-        value: i + 1,
-        label: `Session ${i + 1}`,
-      }));
+      // Only show 1, 2, 3, and 4+ (auto expands to 4..15)
+      const nums = [
+        { value: 1, label: "Consultation 1" },
+        { value: 2, label: "Consultation 2" },
+        { value: 3, label: "Consultation 3" },
+        { value: "4+", label: "Consultation 4+" }, // special option
+      ];
       setSessionNumbers(nums);
 
-      api.get("/api/nurse/session-types/").then((res) =>
-        setSessionTypes(res.data.map((t) => ({ value: t.id, label: t.name })))
-      );
+      // Load session types
+      api.get("/api/nurse/session-types/").then((res) => {
+      const forbiddenFornurse = [
+      "Termination / Discharge Planning",
+      "Legal Assistance Session",
+      "Intervention Planning / Case Conference",
+      "Case Study / Psychosocial Assessment",
+      "Family Counseling / Reintegration",
+      "Pyschological Evaluation",
+      "Counseling",
+      ];
+
+      const filtered = res.data
+        .filter((t) => !forbiddenFornurse.includes(t.name))
+        .map((t) => ({
+          value: t.id,
+          label: t.name,
+        }));
+
+      setSessionTypes(filtered);
+    });
+
     }
   }, [step]);
+
+  // Helper: expand "4+" into integers [4..15]
+  const expandSessionNumbers = (selectedNumbers) => {
+    const OUT = new Set();
+
+    (selectedNumbers || []).forEach((n) => {
+      const sessionValue = typeof n === "object" ? n.value : n;
+
+      if (sessionValue === "4+") {
+        for (let i = 4; i <= 15; i++) OUT.add(i);
+      } else {
+        const iv = Number(sessionValue);
+        if (!isNaN(iv)) OUT.add(iv);
+      }
+    });
+
+    return Array.from(OUT).sort((a, b) => a - b);
+  };
 
   // Handle question change
   const handleQuestionChange = (index, field, value) => {
@@ -55,7 +102,15 @@ export default function AddQuestion({ onClose }) {
 
   // Add/Remove question field
   const addQuestionField = () => {
-    setQuestions([...questions, { ques_question_text: "", ques_answer_type: "", ques_is_active: true }]);
+   setQuestions([
+      ...questions,
+      {
+        ques_question_text: "",
+        ques_answer_type: "",
+        ques_is_required: true,   // NEW
+        ques_is_active: true
+      }
+    ]);
   };
 
   const removeQuestionField = (index) => {
@@ -64,7 +119,7 @@ export default function AddQuestion({ onClose }) {
     setQuestions(newQuestions);
   };
 
-  // Step 1 → Step 2 (choose category)
+  // Step 1 → Step 2
   const handleCategoryContinue = () => {
     if (!selectedCategory) {
       alert("Please select a category first.");
@@ -73,7 +128,7 @@ export default function AddQuestion({ onClose }) {
     setStep(2);
   };
 
-  // Step 2 → Step 3 (after adding questions)
+  // Step 2 → Step 3
   const handleQuestionsContinue = () => {
     if (questions.some((q) => !q.ques_question_text || !q.ques_answer_type)) {
       alert("Please fill in all question fields.");
@@ -82,21 +137,25 @@ export default function AddQuestion({ onClose }) {
     setStep(3);
   };
 
-  // Step 3 (bulk create + assign)
+  // Step 3: bulk create + assign
   const handleBulkSubmit = async () => {
     if (!selectedNumbers.length || !selectedTypes.length) {
-      alert("Please select session numbers and session types.");
+      alert("Please select consultation numbers and consultation types.");
       return;
     }
 
     try {
+      // Expand "4+" into [4..15]
+      const finalSessionNumbers = expandSessionNumbers(selectedNumbers);
+
       const payload = {
         category_id: selectedCategory.value,
         questions: questions.map((q) => ({
           ques_question_text: q.ques_question_text,
           ques_answer_type: q.ques_answer_type,
+          ques_is_required: q.ques_is_required,
         })),
-        session_numbers: selectedNumbers.map((n) => n.value),
+        session_numbers: finalSessionNumbers, // <= already unrolled
         session_types: selectedTypes.map((t) => t.value),
       };
 
@@ -108,6 +167,7 @@ export default function AddQuestion({ onClose }) {
       alert("Error creating and assigning questions.");
     }
   };
+
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
@@ -219,6 +279,19 @@ export default function AddQuestion({ onClose }) {
                         </option>
                       ))}
                     </select>
+                    
+                    <div className="mt-2 flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={q.ques_is_required}
+                      onChange={(e) =>
+                        handleQuestionChange(idx, "ques_is_required", e.target.checked)
+                      }
+                    />
+                    <label className="text-sm text-gray-700">
+                      Required Question?
+                    </label>
+                  </div>
                   </div>
                 ))}
               </form>
@@ -259,13 +332,13 @@ export default function AddQuestion({ onClose }) {
               transition={{ duration: 0.3 }}
             >
               <h2 className="text-xl font-bold text-green-700 mb-4">
-                Assign to Sessions
+                Assign to Consultations
               </h2>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm text-gray-600">
-                    Session Numbers
+                    Consultation Numbers
                   </label>
                   <Select
                     isMulti
@@ -278,7 +351,7 @@ export default function AddQuestion({ onClose }) {
 
                 <div>
                   <label className="block text-sm text-gray-600">
-                    Session Types
+                    Consultation Types
                   </label>
                   <Select
                     isMulti

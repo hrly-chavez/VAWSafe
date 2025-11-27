@@ -44,7 +44,7 @@ const roleTitles = {
   Shared: `👥 Shared Session(s)`,
   "Social Worker": `Social Worker Session(s) — Total: ${grouped["Social Worker"]?.length || 0}`,
   Psychometrician: `Psychometrician Session(s) — Total: ${grouped["Psychometrician"]?.length || 0}`,
-  Nurse: `Nurse Session(s) — Total: ${grouped["Nurse"]?.length || 0}`,
+  Nurse: `Nurse Consultation(s) — Total: ${grouped["Nurse"]?.length || 0}`,
   "Home Life": `Home Life Session(s) — Total: ${grouped["Home Life"]?.length || 0}`,
   Unassigned: `Other Session(s) — Total: ${grouped["Unassigned"]?.length || 0}`,
 };
@@ -143,7 +143,7 @@ const roleTitles = {
       })}
 
       {/* Create Session Button */}
-      {(() => {
+      {/* {(() => {
         const session1 = (incident.sessions || []).find((s) => s.sess_num === 1);
         const canCreate = session1 && session1.sess_status === "Done";
         if (canCreate) {
@@ -163,7 +163,7 @@ const roleTitles = {
           );
         }
         return null;
-      })()}
+      })()} */}
     </div>
   );
 }

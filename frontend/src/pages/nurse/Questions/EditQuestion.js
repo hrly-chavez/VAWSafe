@@ -13,6 +13,7 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
     ques_answer_type: "",
     mappings: [],
   });
+
   const [categories, setCategories] = useState([]);
   const [answerTypes, setAnswerTypes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -22,20 +23,43 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
   const [sessionTypes, setSessionTypes] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
 
+  // =============================
   // Fetch question details
+  // =============================
   useEffect(() => {
     if (!show || !questionId) return;
-    api
-      .get(`/api/nurse/questions/${questionId}/`)
+
+    api.get(`/api/nurse/questions/${questionId}/`)
       .then((res) => {
         setQuestion(res.data);
 
-        // Prefill mappings
+        // ===== PREFILL MAPPINGS =====
         if (res.data.mappings && res.data.mappings.length > 0) {
-          const nums = [
+          const rawSessionNumbers = [
             ...new Set(res.data.mappings.map((m) => m.session_number)),
-          ].map((num) => ({ value: num, label: `Session ${num}` }));
+          ].sort((a, b) => a - b);
 
+          let prefill = [];
+
+          // If any session >= 4 → use only Session 4+
+          if (rawSessionNumbers.some((n) => n >= 4)) {
+            prefill.push({ value: "4+", label: "Session 4+" });
+          }
+
+          // Add 1–3 normally
+          if (rawSessionNumbers.includes(1)) {
+            prefill.push({ value: 1, label: "Session 1" });
+          }
+          if (rawSessionNumbers.includes(2)) {
+            prefill.push({ value: 2, label: "Session 2" });
+          }
+          if (rawSessionNumbers.includes(3)) {
+            prefill.push({ value: 3, label: "Session 3" });
+          }
+
+          setSelectedNumbers(prefill);
+
+          // ===== PREFILL SESSION TYPES =====
           const typeMap = new Map();
           res.data.mappings.forEach((m) => {
             if (!typeMap.has(m.session_type_id)) {
@@ -48,14 +72,15 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
             label: name,
           }));
 
-          setSelectedNumbers(nums);
           setSelectedTypes(types);
         }
       })
       .catch((err) => console.error("Failed to load question:", err));
   }, [questionId, show]);
 
+  // =============================
   // Fetch dropdown data
+  // =============================
   useEffect(() => {
     api.get("/api/nurse/questions/choices/").then((res) => {
       setCategories(res.data.categories);
@@ -63,13 +88,18 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
     });
   }, []);
 
-  // Fetch session types + numbers
+  // =============================
+  // Fetch SESSION TYPES + NUMBERS
+  // =============================
   useEffect(() => {
     if (step === 2) {
-      const nums = Array.from({ length: 10 }, (_, i) => ({
-        value: i + 1,
-        label: `Session ${i + 1}`,
-      }));
+      // New dropdown: 1,2,3,4+
+      const nums = [
+        { value: 1, label: "Session 1" },
+        { value: 2, label: "Session 2" },
+        { value: 3, label: "Session 3" },
+        { value: "4+", label: "Session 4+" }, // special
+      ];
       setSessionNumbers(nums);
 
       api
@@ -81,32 +111,48 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
     }
   }, [step]);
 
-  // Save question edits
-
+  // =============================
+  // Save QUESTION Edits
+  // =============================
   const handleSaveQuestion = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       const { mappings, created_by_name, ...editableFields } = question;
+
       const res = await api.patch(
         `/api/nurse/questions/${questionId}/`,
         editableFields
       );
 
-      //  Backend only returns 200 if real changes occurred
       if (res.status === 200) {
         alert("Question updated successfully!");
 
-        // Fetch latest question mappings
-        const updatedRes = await api.get(`/api/nurse/questions/${questionId}/`);
+        const updatedRes = await api.get(
+          `/api/nurse/questions/${questionId}/`
+        );
         setQuestion(updatedRes.data);
 
-        // Rebuild session number/type selections
+        // Prefill again
         if (updatedRes.data.mappings && updatedRes.data.mappings.length > 0) {
-          const nums = [
+          const rawSessionNumbers = [
             ...new Set(updatedRes.data.mappings.map((m) => m.session_number)),
-          ].map((num) => ({ value: num, label: `Session ${num}` }));
+          ].sort((a, b) => a - b);
+
+          let prefill = [];
+
+          if (rawSessionNumbers.some((n) => n >= 4)) {
+            prefill.push({ value: "4+", label: "Session 4+" });
+          }
+          if (rawSessionNumbers.includes(1))
+            prefill.push({ value: 1, label: "Session 1" });
+          if (rawSessionNumbers.includes(2))
+            prefill.push({ value: 2, label: "Session 2" });
+          if (rawSessionNumbers.includes(3))
+            prefill.push({ value: 3, label: "Session 3" });
+
+          setSelectedNumbers(prefill);
 
           const typeMap = new Map();
           updatedRes.data.mappings.forEach((m) => {
@@ -120,7 +166,6 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
             label: name,
           }));
 
-          setSelectedNumbers(nums);
           setSelectedTypes(types);
         }
 
@@ -133,23 +178,39 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
           err.response.data?.detail?.includes("No changes")
         ) {
           alert("No changes detected — proceeding to assignments.");
-          setStep(2); //  Go to Step 2 even if nothing changed
+          setStep(2);
         } else {
-          console.error("Failed to update question:", err);
           alert("Error updating question.");
         }
-      } else {
-        console.error("Failed to update question:", err);
-        alert("Error updating question.");
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // Save session assignments
+  // =============================
+  // Helper: expand 4+ into 4..15
+  // =============================
+  const expandSessionNumbers = (selected) => {
+    const OUT = new Set();
+
+    selected.forEach((n) => {
+      const v = typeof n === "object" ? n.value : n;
+      if (v === "4+") {
+        for (let i = 4; i <= 15; i++) OUT.add(i);
+      } else {
+        OUT.add(Number(v));
+      }
+    });
+
+    return Array.from(OUT).sort((a, b) => a - b);
+  };
+
+  // =============================
+  // Save ASSIGNMENTS (session numbers & types)
+  // =============================
   const handleAssign = async () => {
-    const currentNumbers = selectedNumbers.map((n) => n.value).sort();
+    const currentNumbers = expandSessionNumbers(selectedNumbers); // expand here
     const currentTypes = selectedTypes.map((t) => t.value).sort();
 
     const originalNumbers = (question.mappings || [])
@@ -167,11 +228,10 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
     const typesChanged =
       JSON.stringify(currentTypes) !== JSON.stringify(originalTypes);
 
-    // If nothing changed — show alert, then close
     if (!numbersChanged && !typesChanged) {
       alert("No changes detected in session assignments.");
-      if (onUpdated) onUpdated(); // refresh parent table if needed
-      onClose(); //  close modal
+      if (onUpdated) onUpdated();
+      onClose();
       return;
     }
 
@@ -181,6 +241,7 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
         session_numbers: currentNumbers,
         session_types: currentTypes,
       });
+
       alert("Assignments updated successfully!");
       if (onUpdated) onUpdated();
       onClose();
@@ -205,9 +266,7 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
               exit={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.3 }}
             >
-              <h2 className="text-xl font-bold text-blue-700 mb-4">
-                Edit Question
-              </h2>
+              <h2 className="text-xl font-bold text-blue-700 mb-4">Edit Question</h2>
 
               <form
                 onSubmit={handleSaveQuestion}
@@ -215,16 +274,11 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
               >
                 {/* Category */}
                 <div>
-                  <label className="block text-sm text-gray-600">
-                    Category
-                  </label>
+                  <label className="block text-sm text-gray-600">Category</label>
                   <select
                     value={question.ques_category || ""}
                     onChange={(e) =>
-                      setQuestion({
-                        ...question,
-                        ques_category: e.target.value,
-                      })
+                      setQuestion({ ...question, ques_category: e.target.value })
                     }
                     className="w-full border rounded p-2"
                     required
@@ -240,9 +294,7 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
 
                 {/* Question text */}
                 <div>
-                  <label className="block text-sm text-gray-600">
-                    Question
-                  </label>
+                  <label className="block text-sm text-gray-600">Question</label>
                   <textarea
                     value={question.ques_question_text || ""}
                     onChange={(e) =>
@@ -259,9 +311,7 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
 
                 {/* Answer type */}
                 <div>
-                  <label className="block text-sm text-gray-600">
-                    Answer Type
-                  </label>
+                  <label className="block text-sm text-gray-600">Answer Type</label>
                   <select
                     value={question.ques_answer_type || ""}
                     onChange={(e) =>
