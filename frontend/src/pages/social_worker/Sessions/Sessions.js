@@ -91,7 +91,8 @@ export default function Sessions() {
 
       {/* Table */}
       <div className="mt-6 bg-white rounded-xl shadow-md border border-neutral-200">
-        <div className="overflow-auto max-h-[480px] rounded-xl">
+        <div className="overflow-x-auto rounded-xl">
+
           <table className="min-w-full table-fixed border border-neutral-200">
             <thead className="sticky top-0 z-10 bg-gray-100 text-gray-700 text-sm font-semibold">
               <tr>
