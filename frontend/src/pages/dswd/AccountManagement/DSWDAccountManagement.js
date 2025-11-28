@@ -5,16 +5,17 @@ import RegisterUser from "../../RegisterUser";
 import ChangePass from "../AccountManagement/ChangePass/ChangePass";
 
 import {
-  PencilSquareIcon,
+  MagnifyingGlassIcon,
   EyeIcon,
-  TrashIcon,
+  KeyIcon,
+  UserPlusIcon
 } from "@heroicons/react/24/solid";
 import api from "../../../api/axios";
 
 export default function AccountManagement() {
   const [officials, setOfficials] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(""); 
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   // NEW: filter state: 'active' | 'archived' | 'all'
@@ -24,7 +25,9 @@ export default function AccountManagement() {
   const [showChangePassModal, setShowChangePassModal] = useState(false);
 
   // mao ni ang modal para sa register user
-  const [showRegisterModal, setShowRegisterModal] = useState(false); 
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     setLoading(true);
@@ -70,44 +73,52 @@ export default function AccountManagement() {
     }
   };
 
+  const filteredOfficials = officials.filter(o =>
+    o.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="p-4 md:p-6 font-sans w-full">
+    <div className="w-full px-6">
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
-        <h1 className="text-xl md:text-2xl font-bold text-[#292D96]">
-          Permissions & Accounts › User Management
-        </h1>
+      <h2 className="text-2xl font-bold text-[#292D96] pt-6 mb-6 text-center md:text-left">
+        Permissions & Accounts › User Management
+      </h2>
 
-        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+      {/* Controls row */}
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+        {/* Search bar on the left */}
+        <div className="flex items-center w-full md:w-2/3 border border-neutral-300 rounded-lg px-3 py-2 bg-white shadow-sm">
+          <MagnifyingGlassIcon className="h-5 w-5 text-gray-500 mr-2" />
+          <input
+            type="text"
+            placeholder="Search official by name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full text-sm text-neutral-900 outline-none"
+          />
+        </div>
 
-          {/* Filter */}
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="border rounded-lg px-3 py-2 text-sm w-full md:w-auto"
-          >
-            <option value="active">Active</option>
-            <option value="archived">Archived</option>
-          </select>
-
-          {/* Change password */}
+        {/* Buttons on the right */}
+        <div className="flex gap-3">
           <button
             onClick={() => setShowChangePassModal(true)}
-            className="text-orange-500 text-sm font-medium hover:underline"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-yellow-500 hover:bg-yellow-600 transition shadow-sm mb-4"
           >
+            <KeyIcon className="h-5 w-5" />
             Change Password
           </button>
 
-          {/* Add user */}
           <button
             onClick={() => setShowRegisterModal(true)}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-4 py-2 rounded-lg shadow w-full md:w-auto"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-green-500 hover:bg-green-600 transition shadow-sm mb-4"
           >
+            <UserPlusIcon className="h-5 w-5" />
             Add User
           </button>
         </div>
       </div>
+
 
       {/* Table Container */}
       <div className="rounded-2xl border border-neutral-200 bg-white shadow-md overflow-hidden">
@@ -115,11 +126,11 @@ export default function AccountManagement() {
         {/* Desktop Table */}
         <div className="hidden md:block max-h-[480px] overflow-auto">
           <table className="w-full text-sm text-neutral-800">
-            <thead className="sticky top-0 bg-neutral-50 shadow-sm text-neutral-600 font-semibold">
+            <thead className="sticky top-0 z-10 bg-gray-100 text-gray-700 text-sm font-semibold shadow">
               <tr>
-                <th className="px-4 py-3 text-left">Name</th>
-                <th className="px-4 py-3 text-left">User Role</th>
-                <th className="px-4 py-3 text-left">Actions</th>
+                <th className="px-4 py-3 text-left border">Name</th>
+                <th className="px-4 py-3 text-left border">User Role</th>
+                <th className="px-4 py-3 text-center border">Actions</th>
               </tr>
             </thead>
 
@@ -137,11 +148,14 @@ export default function AccountManagement() {
                   <td colSpan="3" className="text-center py-4 text-gray-500">No officials found.</td>
                 </tr>
               ) : (
-                officials.map((official) => (
-                  <tr key={official.of_id} className="hover:bg-neutral-50 transition">
+                filteredOfficials.map((official, index) => (
+                  <tr
+                    key={official.of_id}
+                    className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100 transition`}
+                  >
 
                     {/* Image + Name */}
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 border">
                       <div className="flex items-center gap-3">
                         <img
                           src={official.of_photo || "https://via.placeholder.com/40"}
@@ -156,7 +170,7 @@ export default function AccountManagement() {
                     </td>
 
                     {/* Role */}
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 border">
                       <span
                         className={`inline-block text-white text-xs font-semibold px-3 py-1 rounded-full shadow ${getRoleColor(official.of_role)}`}
                       >
@@ -165,13 +179,13 @@ export default function AccountManagement() {
                     </td>
 
                     {/* Actions */}
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-2">
+                    <td className="px-4 py-3 border text-center">
+                      <div className="flex justify-center gap-4">
                         <button
                           onClick={() => navigate(`/dswd/account-management/${official.of_id}`)}
-                          className="flex items-center gap-1 bg-[#292D96] text-white px-3 py-1 rounded text-sm shadow hover:bg-[#1f237d]"
+                          className="text-green-600 hover:text-green-700 transition"
                         >
-                          <EyeIcon className="h-4 w-4" /> View
+                          <EyeIcon className="h-5 w-5" />
                         </button>
 
                         {official.deleted_at && (
@@ -217,7 +231,7 @@ export default function AccountManagement() {
 
         {/* Mobile View — Cards */}
         <div className="md:hidden divide-y">
-          {officials.map((official) => (
+          {filteredOfficials.map((official, index) => (
             <div key={official.of_id} className="p-4">
 
               <div className="flex items-center gap-3">
@@ -243,7 +257,7 @@ export default function AccountManagement() {
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   onClick={() => navigate(`/dswd/account-management/${official.of_id}`)}
-                  className="bg-[#292D96] text-white px-3 py-1 rounded text-sm"
+                  className="bg-[#0000FF] text-white px-3 py-1 rounded text-sm"
                 >
                   View
                 </button>
@@ -270,26 +284,6 @@ export default function AccountManagement() {
 
             </div>
           ))}
-        </div>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex flex-col md:flex-row justify-between items-center mt-4 gap-3 text-sm text-gray-600">
-        <div className="flex items-center">
-          Show:
-          <select className="ml-2 border rounded px-2 py-1">
-            <option>5</option>
-            <option>10</option>
-            <option>15</option>
-            <option>25</option>
-          </select>
-        </div>
-
-        <div className="flex space-x-2">
-          <button className="px-3 py-1 border rounded hover:bg-gray-100">First</button>
-          <button className="px-3 py-1 border rounded hover:bg-gray-100">1</button>
-          <button className="px-3 py-1 border rounded hover:bg-gray-100">2</button>
-          <button className="px-3 py-1 border rounded hover:bg-gray-100">Last</button>
         </div>
       </div>
 
