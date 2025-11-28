@@ -123,12 +123,34 @@ export default function EditProfileModal({ officialData, onClose, onSave }) {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png"];
+    const maxSizeMB = 5; // adjust if needed
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+    // Validate MIME type (stronger than file extension)
+    if (!allowedTypes.includes(file.type)) {
+      alert("Invalid file type. Only JPG and PNG are allowed.");
+      e.target.value = null; 
+      return;
+    }
+
+    // Validate file size
+    if (file.size > maxSizeBytes) {
+      alert(`File is too large. Maximum size is ${maxSizeMB}MB`);
+      e.target.value = null;
+      return;
+    }
+
+    // Pass validation → preview + set formData
     setFormData({ ...formData, of_photo: file });
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result);
     };
-    if (file) reader.readAsDataURL(file);
+    reader.readAsDataURL(file);
   };
 
   const handleDragOver = (e) => {
@@ -141,17 +163,43 @@ export default function EditProfileModal({ officialData, onClose, onSave }) {
     e.preventDefault();
     e.stopPropagation();
 
-    // Handle the dropped file
     const file = e.dataTransfer.files[0];
-    if (file) {
-      setFormData({ ...formData, of_photo: file });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png"];
+    const allowedExtensions = ["jpg", "jpeg", "png"];
+    const maxSizeMB = 5;
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+    // Check MIME type
+    if (!allowedTypes.includes(file.type)) {
+      alert("Invalid file type. Only JPG and PNG images are allowed.");
+      return;
     }
+
+    // Check extension
+    const extension = file.name.split(".").pop().toLowerCase();
+    if (!allowedExtensions.includes(extension)) {
+      alert("Invalid file extension. Only JPG and PNG images are allowed.");
+      return;
+    }
+
+    // Check size
+    if (file.size > maxSizeBytes) {
+      alert(`File is too large. Maximum size is ${maxSizeMB}MB.`);
+      return;
+    }
+
+    // VALID → Save the file and preview
+    setFormData({ ...formData, of_photo: file });
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();

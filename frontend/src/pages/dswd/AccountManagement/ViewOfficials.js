@@ -107,8 +107,70 @@ export default function ViewOfficials() {
       setPhotoPreview(null);
       return;
     }
-    if (!file.type.startsWith("image/")) { alert("Please select an image."); return; }
-    if (file.size > 3 * 1024 * 1024) { alert("Max 3MB."); return; }
+
+    const allowedTypes = ["image/jpeg", "image/png"];
+    const allowedExtensions = ["jpg", "jpeg", "png"];
+    const maxSizeMB = 5;
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+    // MIME type check
+    if (!allowedTypes.includes(file.type)) {
+      alert("Invalid file type. Only JPG and PNG images are allowed.");
+      return;
+    }
+
+    // Extension check
+    const extension = file.name.split(".").pop().toLowerCase();
+    if (!allowedExtensions.includes(extension)) {
+      alert("Invalid file extension. Only JPG and PNG are allowed.");
+      return;
+    }
+
+    // File size check
+    if (file.size > maxSizeBytes) {
+      alert(`File is too large (max ${maxSizeMB}MB).`);
+      return;
+    }
+
+    // VALID → Save and preview
+    setFormPhoto(file);
+
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png"];
+    const allowedExtensions = ["jpg", "jpeg", "png"];
+    const maxSizeMB = 5;
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+    // MIME check
+    if (!allowedTypes.includes(file.type)) {
+      alert("Invalid file type. Only JPG and PNG images are allowed.");
+      return;
+    }
+
+    // Extension check
+    const extension = file.name.split(".").pop().toLowerCase();
+    if (!allowedExtensions.includes(extension)) {
+      alert("Invalid file extension. Only JPG and PNG are allowed.");
+      return;
+    }
+
+    // Size check
+    if (file.size > maxSizeBytes) {
+      alert(`File is too large (max ${maxSizeMB}MB).`);
+      return;
+    }
+
+    // VALID → Save + preview
     setFormPhoto(file);
     if (photoPreview) URL.revokeObjectURL(photoPreview);
     setPhotoPreview(URL.createObjectURL(file));
@@ -280,10 +342,24 @@ export default function ViewOfficials() {
                     </div>
                   </div>
                 </div>
-                <label htmlFor="of_photo" className="mt-2 inline-flex items-center gap-2 cursor-pointer rounded-lg border-2 border-dashed border-gray-300 hover:border-indigo-400 px-4 py-2 bg-gray-50/60">
-                  <span className="text-sm text-gray-700">Drag & drop or <span className="text-indigo-600 underline">choose a file</span></span>
-                  <input id="of_photo" type="file" accept="image/*" className="sr-only" onChange={(e) => handlePhotoChange(e.target.files?.[0] || null)} />
+                <label
+                  htmlFor="of_photo"
+                  className="mt-2 inline-flex items-center gap-2 cursor-pointer rounded-lg border-2 border-dashed border-gray-300 hover:border-indigo-400 px-4 py-2 bg-gray-50/60"
+                  onDrop={handleDrop}
+                  onDragOver={(e) => e.preventDefault()}
+                >
+                  <span className="text-sm text-gray-700">
+                    Drag & drop or <span className="text-indigo-600 underline">choose a file</span>
+                  </span>
+                  <input
+                    id="of_photo"
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(e) => handlePhotoChange(e.target.files?.[0] || null)}
+                  />
                 </label>
+
                 {formPhoto && (
                   <div className="text-xs text-gray-600 mt-1 flex items-center gap-2">
                     Selected: <span className="font-medium">{formPhoto.name}</span> ({Math.round(formPhoto.size/1024)} KB)
