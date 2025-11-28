@@ -13,6 +13,10 @@ export default function NurseProfile() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState("");
+
 
   useEffect(() => {
     api
@@ -29,6 +33,26 @@ export default function NurseProfile() {
         setLoading(false);
       });
   }, []);
+
+  useEffect(() => {
+    if (!officialData) return;
+
+    setAuditLoading(true);
+    api
+      .get(`/api/dswd/profile/${officialData.of_id}/audits/`)
+      .then((res) => {
+        setAuditLogs(res.data); // should now be an array
+        setAuditLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch audit logs:", err);
+        setAuditLogs([]); // fallback
+        setAuditLoading(false);
+      });
+  }, [officialData]);
+
+
+
 
   if (loading) return <div className="p-6 text-gray-600">Loading...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
@@ -78,20 +102,23 @@ export default function NurseProfile() {
         {/* Tabs Navigation */}
         <div className="px-6 md:px-8 mt-6 border-b border-gray-300">
           <nav className="flex space-x-6">
-            {["profile", "workload", "schedule"].map((tab) => (
+            {["profile", "workload", "schedule", "audits"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`py-2 border-b-2 transition duration-200 ${activeTab === tab
-                  ? "border-[#3F51B5] text-[#3F51B5] font-semibold"
-                  : "border-transparent text-gray-600 hover:text-[#3F51B5]"
-                  }`}
+                className={`py-2 border-b-2 transition duration-200 ${
+                  activeTab === tab
+                    ? "border-[#3F51B5] text-[#3F51B5] font-semibold"
+                    : "border-transparent text-gray-600 hover:text-[#3F51B5]"
+                }`}
               >
                 {tab === "profile" && "Full Profile"}
                 {tab === "workload" && "Performance & Workload"}
                 {tab === "schedule" && "Schedule & Availability"}
+                {tab === "audits" && "Audit Logs"}
               </button>
             ))}
+
           </nav>
         </div>
 
@@ -101,7 +128,22 @@ export default function NurseProfile() {
             <div className="space-y-8">
               {/* Personal & Contact Details */}
               <div>
-                <h2 className="text-xl font-bold mb-4 text-gray-800">Personal & Contact Details</h2>
+                {/* Official Account Status */}
+                <div>
+                  <h2 className="text-xl font-bold mb-4 text-gray-800">Official Account Status</h2>
+                  <div className="flex items-center p-4 bg-green-50 rounded-lg border border-green-300">
+                    <CheckBadgeIcon className="h-6 w-6 text-green-600 mr-3" />
+                    <p className="text-gray-700 text-sm">
+                      Account is <strong>Active</strong>. Last login:{" "}
+                      {new Date(officialData.last_login).toLocaleString("en-PH", {
+                        timeZone: "Asia/Manila",
+                        dateStyle: "long",
+                        timeStyle: "short",
+                      })}
+                    </p>
+                  </div>
+                </div>
+                <h2 className="mt-5 text-xl font-bold mb-4 text-gray-800">Personal & Contact Details</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm bg-gray-50 p-4 rounded-lg shadow-inner border border-gray-200">
                   <div className="pb-2 border-b border-gray-200">
                     <p className="text-gray-500">Full Name</p>
@@ -144,19 +186,41 @@ export default function NurseProfile() {
                 </div>
               </div>
 
-              {/* Official Account Status */}
-              <div>
-                <h2 className="text-xl font-bold mb-4 text-gray-800">Official Account Status</h2>
-                <div className="flex items-center p-4 bg-green-50 rounded-lg border border-green-300">
-                  <CheckBadgeIcon className="h-6 w-6 text-green-600 mr-3" />
-                  <p className="text-gray-700 text-sm">
-                    Account is <strong>{officialData.status || "Approved"}</strong> and <strong>Active</strong>. Last login:{" "}
-                    {new Date(officialData.last_login).toLocaleString("en-PH", {
-                      timeZone: "Asia/Manila",
-                      dateStyle: "long",
-                      timeStyle: "short",
-                    })}
-                  </p>
+              {/* ADDRESS */}
+              <div className="bg-white border rounded-xl shadow-md p-6">
+                <div className="relative mb-6">
+                  <div className="flex items-center gap-4 mb-3">
+                    <img src="/images/address.png" alt="Address Icon" className="h-8 w-8 object-contain" />
+                    <h3 className="text-2xl font-bold text-[#292D96]">Address</h3>
+                  </div>
+                  <div className="relative flex items-center">
+                    <div className="flex-grow">
+                      <hr className="border-t border-gray-300" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700">
+                  <div>
+                    <p className="text-xs text-gray-500">Province</p>
+                    <p className="font-medium">{officialData.address?.province_name || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Municipality</p>
+                    <p className="font-medium">{officialData.address?.municipality_name || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Barangay</p>
+                    <p className="font-medium">{officialData.address?.barangay_name || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Sitio</p>
+                    <p className="font-medium">{officialData.address?.sitio || "N/A"}</p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <p className="text-xs text-gray-500">Street</p>
+                    <p className="font-medium">{officialData.address?.street || "N/A"}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -245,25 +309,53 @@ export default function NurseProfile() {
               </div>
             </div>
           )}
+
+          {activeTab === "audits" && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold mb-4 text-gray-800">Audit Logs</h2>
+              
+              {auditLoading ? (
+                <p className="text-gray-500">Loading audit logs...</p>
+              ) : auditLogs.length === 0 ? (
+                <p className="text-gray-500">No audit logs found.</p>
+              ) : (
+                <div className="space-y-2">
+                  {auditLogs.map((log, idx) => (
+                    <div key={idx} className="p-4 bg-gray-50 border rounded-lg shadow-sm">
+                      <p className="text-sm text-gray-700">
+                        <strong>Action:</strong> {log.action}
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        <strong>Changes:</strong> {JSON.stringify(log.changes)}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        <strong>Date:</strong> {new Date(log.created_at).toLocaleString("en-PH")}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+
         </div>
 
-        {/* Action Buttons */}
-        <div className="px-6 md:px-8 pb-8">
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              onClick={() => setShowEditModal(true)}
-              className="bg-[#3F51B5] text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm"
-            >
-              Edit Profile
-            </button>
+        {/* EDIT & CHANGE PASSWORD */}
+        <div className="mt-6 mb-6 flex flex-wrap justify-center gap-3">
+          <button
+            onClick={() => setShowEditModal(true)}
+            className="bg-[#3F51B5] text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm"
+          >
+            Edit Profile
+          </button>
 
-            <button
-              onClick={() => setShowChangePassword(true)}
-              className="bg-[#10B981] text-white px-5 py-2 rounded-lg hover:bg-green-700 transition shadow-sm"
-            >
-              Change Password / Username
-            </button>
-          </div>
+          <button
+            onClick={() => setShowChangePassword(true)}
+            className="bg-[#10B981] text-white px-5 py-2 rounded-lg hover:bg-green-700 transition shadow-sm"
+          >
+            Change Password / Username
+          </button>
         </div>
 
         {/* Modals */}

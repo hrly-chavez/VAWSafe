@@ -27,6 +27,7 @@ const CreateSession = () => {
   "Family Counseling / Reintegration",
   "Pyschological Evaluation",
   "Counseling",
+  "Case Closure",
 
   ];
 

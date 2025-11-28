@@ -153,20 +153,31 @@ export default function WorkerCardSection({
                 {/* Assign Button */}
                 <div className="flex justify-end mt-3">
                   <button
-                    onClick={() =>
+                    onClick={() => {
+                      // Prevent removing logged-in Social Worker
+                      if (worker.role === "Social Worker") return;
+
+                      // Enforce 1 Nurse rule
+                      if (worker.role === "Nurse" && selectedRoles.includes("Nurse") && !selectedOfficials.includes(worker.of_id))
+                        return;
+
+                      // Enforce 1 Psychometrician rule
+                      if (worker.role === "Psychometrician" && selectedRoles.includes("Psychometrician") && !selectedOfficials.includes(worker.of_id))
+                        return;
+
                       setSelectedOfficials((prev) =>
                         prev.includes(worker.of_id)
                           ? prev.filter((id) => id !== worker.of_id)
-                          : prev.length < 3
-                          ? [...prev, worker.of_id]
-                          : prev
-                      )
-                    }
+                          : [...prev, worker.of_id]
+                      );
+                    }}
+
                     disabled={
-                      (!selectedOfficials.includes(worker.of_id) &&
-                        selectedOfficials.length >= 3) ||
-                      isRoleTaken
+                      (worker.role === "Social Worker" && selectedOfficials.includes(worker.of_id)) || // cannot remove SW
+                      (worker.role === "Nurse" && selectedRoles.includes("Nurse") && !selectedOfficials.includes(worker.of_id)) ||
+                      (worker.role === "Psychometrician" && selectedRoles.includes("Psychometrician") && !selectedOfficials.includes(worker.of_id))
                     }
+                    
                     className={`px-3 py-1 rounded-md text-sm font-semibold transition ${
                       selectedOfficials.includes(worker.of_id)
                         ? "bg-blue-600 text-white"

@@ -58,6 +58,7 @@ export default function AddQuestion({ onClose }) {
       "Intervention Planning / Case Conference",
       "Case Study / Psychosocial Assessment",
       "Family Counseling / Reintegration",
+      "Case Closure",
       ];
 
       const filtered = res.data
