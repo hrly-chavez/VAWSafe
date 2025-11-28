@@ -652,17 +652,6 @@ class ChangeLogListView(generics.ListAPIView):
     serializer_class = ChangeLogSerializer
 
 #============================================Account Management======================================
-
-IMMUTABLE_FIELDS = {"of_fname", "of_lname", "of_dob"}  # protect unless special flow
-
-def _diff(before, after):
-    changes = {}
-    for k, new in after.items():
-        old = getattr(before, k, None)
-        if old != new:
-            changes[k] = [old, new]
-    return changes
-
 def _audit(actor, action, target, reason=None, changes=None):
     return AuditLog.objects.create(
         actor=actor,
@@ -743,45 +732,6 @@ class OfficialViewSet(ModelViewSet):
         return super().get_permissions()
 
     # ---------------------------------------------------
-    #  UPDATE (with audit + immutable field protection)
-    # ---------------------------------------------------
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop("partial", False)
-        instance = self.get_object()
-        reason = request.data.get("reason") or request.headers.get("X-Reason")
-
-        incoming = request.data.copy()
-        stripped = {}
-
-        # prevent immutable edits
-        for f in IMMUTABLE_FIELDS:
-            if f in incoming:
-                stripped[f] = incoming.pop(f)
-
-        serializer = self.get_serializer(instance, data=incoming, partial=partial)
-        serializer.is_valid(raise_exception=True)
-
-        changes = _diff(instance, serializer.validated_data)
-
-        self.perform_update(serializer)
-
-        if getattr(instance, "_prefetched_objects_cache", None):
-            instance._prefetched_objects_cache = {}
-
-        if changes or stripped:
-            if stripped:
-                changes["_immutable_rejected"] = {k: v for k, v in stripped.items()}
-            _audit(
-                request.user,
-                "update",
-                serializer.instance,
-                reason=reason,
-                changes=_audit_safe(changes),
-            )
-
-        return Response(serializer.data)
-
-    # ---------------------------------------------------
     #  COMBINED ACTION 1 — ARCHIVE + DEACTIVATE
     # ---------------------------------------------------
     @action(detail=True, methods=["post"])
@@ -798,7 +748,7 @@ class OfficialViewSet(ModelViewSet):
                 official.user.is_active = False
                 official.user.save(update_fields=["is_active"])
 
-            _audit(request.user, "archive", official, reason=reason)
+            _audit(request.user, "archive", official, reason=reason, changes={"archived_at": [None, str(official.deleted_at)]})
             return Response({
                 "status": "archived_and_deactivated",
                 "deleted_at": official.deleted_at
@@ -809,7 +759,7 @@ class OfficialViewSet(ModelViewSet):
             official.user.is_active = False
             official.user.save(update_fields=["is_active"])
 
-            _audit(request.user, "deactivate", official, reason=reason)
+            _audit(request.user, "deactivate", official, reason=reason, changes={"archived_at": [None, str(official.deleted_at)]})
             return Response({"status": "deactivated"})
 
         return Response({"detail": "Already archived & deactivated."}, status=400)
@@ -1432,9 +1382,19 @@ class DSWDDashboardAPIView(APIView):
 #             serializer.save()  # Save the updated profile data
 #             return Response(serializer.data)
 #         return Response(serializer.errors, status=400)
+
+def _diff(instance, new_data):
+    changes = {}
+    for field, new_value in new_data.items():
+        old_value = getattr(instance, field, None)
+        if old_value != new_value:
+            changes[field] = [str(old_value), str(new_value)]
+    return changes
+
+
 class ProfileViewSet(viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser, JSONParser]  # 👈 allows photo uploads + JSON
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_object(self):
         user = self.request.user
@@ -1450,18 +1410,21 @@ class ProfileViewSet(viewsets.GenericViewSet):
 
     def update(self, request, *args, **kwargs):
         official = self.get_object()
-        data = request.data.copy()  # make a mutable copy
+        data = request.data.copy()
 
-        # 🔹 Normalize isAddressUpdated flag
+        # ---- Track old data ----
+        old_instance = Official.objects.get(pk=official.pk)
+
+        # ---- Normalize address flag ----
         is_address_updated = data.get("isAddressUpdated", False)
         if isinstance(is_address_updated, str):
             is_address_updated = is_address_updated.lower() == "true"
 
-        # 🔹 Handle uploaded photo (if any)
+        # ---- Handle photo ----
         if "of_photo" in request.FILES:
             official.of_photo = request.FILES["of_photo"]
 
-        # 🔹 Handle address: parse JSON if it's a string
+        # ---- Handle address ----
         new_address = data.get("address")
         if isinstance(new_address, str):
             try:
@@ -1469,33 +1432,22 @@ class ProfileViewSet(viewsets.GenericViewSet):
             except json.JSONDecodeError:
                 new_address = None
 
-        # 🧩 If only the address is being updated, don't overwrite names accidentally
         if is_address_updated and new_address:
+            # Prevent overwriting names accidentally
             for field in ["of_fname", "of_lname"]:
                 data.pop(field, None)
 
-            # Validate address completeness
-            missing_fields = []
-            if not new_address.get("province"):
-                missing_fields.append("Province")
-            if not new_address.get("municipality"):
-                missing_fields.append("Municipality")
-            if not new_address.get("barangay"):
-                missing_fields.append("Barangay")
-            if not new_address.get("sitio"):
-                missing_fields.append("Sitio")
-            if not new_address.get("street"):
-                missing_fields.append("Street")
-
+            # Validate fields
+            missing_fields = [f.capitalize() for f in ["province", "municipality", "barangay", "sitio", "street"] if not new_address.get(f)]
             if missing_fields:
-                return Response(
-                    {"error": f"The following address fields are required: {', '.join(missing_fields)}"},
-                    status=400,
-                )
+                return Response({"error": f"Missing fields: {', '.join(missing_fields)}"}, status=400)
 
             # Delete old address if it exists
-            if official.address:
-                official.address.delete()
+            try:
+                if official.address:
+                    official.address.delete()
+            except Address.DoesNotExist:
+                pass  # safe if no address exists
 
             # Create new address
             try:
@@ -1513,14 +1465,48 @@ class ProfileViewSet(viewsets.GenericViewSet):
                 street=new_address.get("street"),
             )
 
-        # Save updates (address + photo + others)
+        # ---- Save main changes ----
         serializer = OfficialSerializer(official, data=data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            official.save()
-            return Response(serializer.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
-        return Response(serializer.errors, status=400)
+        # ---- Detect changes ----
+        changes = _diff(old_instance, serializer.validated_data)
+
+        # ---- Address logging ----
+        if is_address_updated:
+            try:
+                old_addr_str = str(old_instance.address)
+            except Address.DoesNotExist:
+                old_addr_str = "None"
+
+            new_addr_str = str(official.address) if official.address else "None"
+            changes["address"] = [old_addr_str, new_addr_str]
+
+        # ---- Photo logging ----
+        if "of_photo" in request.FILES:
+            changes["of_photo"] = ["<old photo>", "<new uploaded photo>"]
+
+        # ---- Write audit log ----
+        if changes:
+            _audit(
+                actor=request.user,
+                action="update",
+                target=official,
+                reason=request.data.get("reason", "Profile update"),
+                changes=_audit_safe(changes),
+            )
+
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["get"])
+    def audits(self, request, pk=None):
+        qs = AuditLog.objects.filter(
+            target_model="Official",
+            target_id=str(pk)
+        ).order_by("-created_at")[:50]
+        return Response(AuditLogSerializer(qs, many=True).data)
+
     
 #==========================================Change Password (user side)==============================
 User = get_user_model()

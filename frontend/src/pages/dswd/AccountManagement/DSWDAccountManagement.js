@@ -99,6 +99,16 @@ export default function AccountManagement() {
           />
         </div>
 
+        {/* Filter */}
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="border rounded-lg px-3 py-2 text-sm w-full md:w-auto"
+        >
+          <option value="active">Active</option>
+          <option value="archived">Archived</option>
+        </select>
+
         {/* Buttons on the right */}
         <div className="flex gap-3">
           <button
