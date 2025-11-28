@@ -1154,7 +1154,14 @@ def schedule_next_session(request):
         # ---- Behavior:
         #   - If first session: DO NOT auto-assign logged-in official (leave assigned_officials as-is)
         #   - Else (Session 2+): auto-assign logged-in official if none provided
-        if not is_first_session:
+        # if not is_first_session:
+        #     if not assigned_officials:
+        #         assigned_officials = [official.pk]
+        if is_first_session:
+            # Ensure logged-in SW is included exactly once
+            if official.pk not in assigned_officials:
+                assigned_officials.insert(0, official.pk)
+        else:
             if not assigned_officials:
                 assigned_officials = [official.pk]
 
