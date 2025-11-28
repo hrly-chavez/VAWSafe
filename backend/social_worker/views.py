@@ -1030,7 +1030,7 @@ def finish_session(request, sess_id):
                 combined.append(f"{p.official.of_role} – {p.notes.strip()}")
 
         session.sess_description = "\n\n".join(combined).strip()
-
+        
         # ===============================
         # UPDATE SESSION OVERALL STATUS
         # ===============================
@@ -1041,6 +1041,29 @@ def finish_session(request, sess_id):
 
         session.save()
 
+        # =======================================================
+        # NEW: AUTO-CLOSE CASE IF SESSION TYPE == "Case Closure"
+        # =======================================================
+        case_closed = False
+
+        if session.sess_status == "Done" and session.sess_type.filter(name="Case Closure").exists():
+            incident = session.incident_id
+
+            # Use existing serializer to enforce 2-session rule
+            serializer = CloseCaseSerializer(
+                incident,
+                data={"incident_status": "Done"},
+                partial=True
+            )
+
+            try:
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                case_closed = True
+            except Exception as e:
+                # Case not closed due to validation (ex: less than 2 sessions)
+                case_closed = False
+
     all_finished = session.all_officials_done()
 
     return Response({
@@ -1049,6 +1072,7 @@ def finish_session(request, sess_id):
         "skipped_answers": skipped,
         "session_completed": all_finished,
         "all_finished": all_finished,
+        "case_closed": case_closed,  
         "session": SessionDetailSerializer(session, context={"request": request}).data
     }, status=200)
 
