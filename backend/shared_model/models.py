@@ -736,7 +736,7 @@ class SessionType(models.Model):
         ('Legal Assistance Session', 'Legal Assistance Session'),
         ('Counseling', 'Counseling'),
         ('Follow-up', 'Follow-up'),
-        ('Termination / Discharge Planning', 'Termination / Discharge Planning'),
+        ('Case Closure', 'Case Closure'),
     ]
 
     name = models.CharField(max_length=100, choices=SESSION_TYPES)

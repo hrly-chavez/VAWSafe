@@ -20,6 +20,8 @@ const StartMoreSession = () => {
   const [loading, setLoading] = useState(true);
   const [finishing, setFinishing] = useState(false);
   const [error, setError] = useState("");
+  const isCaseClosureSession =
+    session?.sess_type_display?.some((t) => t.name === "Case Closure");
 
   // Fetch session data and service categories
   useEffect(() => {
@@ -129,7 +131,11 @@ const StartMoreSession = () => {
       // Proceed with API call
       const response = await api.post(`/api/social_worker/sessions/${sess_id}/finish/`, payload);
 
-      alert("Session completed successfully!");
+      if (response?.data?.case_closed) {
+        alert("Session completed successfully.\nThe case has now been CLOSED.");
+      } else {
+        alert("Session completed successfully!");
+      }
 
       const victimId =
         response?.data?.session?.incident?.vic_id?.vic_id ||
@@ -285,7 +291,16 @@ const StartMoreSession = () => {
     {/* ACTION BUTTONS */}
     <div className="flex justify-end gap-4 mt-6">
     <button
-        onClick={handleFinishSession}
+         onClick={() => {
+        // Extra confirmation ONLY for Case Closure
+          if (isCaseClosureSession) {
+              const confirmed = window.confirm(
+                "This session is a CASE CLOSURE session.\nFinishing this will CLOSE the entire case.\n\nDo you want to continue?"
+              );
+              if (!confirmed) return;
+          }
+          handleFinishSession();
+      }}
         disabled={finishing}
         className={`px-6 py-2 rounded-md font-semibold text-white flex items-center justify-center gap-2 transition ${
           finishing

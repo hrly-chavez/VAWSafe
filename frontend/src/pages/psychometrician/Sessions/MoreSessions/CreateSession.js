@@ -25,6 +25,7 @@ const CreateSession = () => {
   "Intervention Planning / Case Conference",
   "Case Study / Psychosocial Assessment",
   "Family Counseling / Reintegration",
+  "Case Closure",
 
   ];
 

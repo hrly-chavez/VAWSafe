@@ -60,6 +60,7 @@ export default function AddQuestion({ onClose }) {
       "Family Counseling / Reintegration",
       "Pyschological Evaluation",
       "Counseling",
+      "Case Closure",
       ];
 
       const filtered = res.data
