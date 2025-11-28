@@ -83,8 +83,8 @@ export default function NurseProfile() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`py-2 border-b-2 transition duration-200 ${activeTab === tab
-                    ? "border-[#3F51B5] text-[#3F51B5] font-semibold"
-                    : "border-transparent text-gray-600 hover:text-[#3F51B5]"
+                  ? "border-[#3F51B5] text-[#3F51B5] font-semibold"
+                  : "border-transparent text-gray-600 hover:text-[#3F51B5]"
                   }`}
               >
                 {tab === "profile" && "Full Profile"}
@@ -112,10 +112,6 @@ export default function NurseProfile() {
                     <p className="text-[#3F51B5] font-medium">{officialData.of_role}</p>
                   </div>
                   <div className="pb-2 border-b border-gray-200">
-                    <p className="text-gray-500">Specialization</p>
-                    <p className="text-gray-800">{officialData.of_specialization || "N/A"}</p>
-                  </div>
-                  <div className="pb-2 border-b border-gray-200">
                     <p className="text-gray-500">Contact Number</p>
                     <p className="text-gray-800">{officialData.of_contact || "N/A"}</p>
                   </div>
@@ -126,6 +122,24 @@ export default function NurseProfile() {
                   <div className="pb-2 border-b border-gray-200">
                     <p className="text-gray-500">Date of Birth</p>
                     <p className="text-gray-800">{officialData.of_dob || "N/A"}</p>
+                  </div>
+                  <div className="pb-2 border-b border-gray-200">
+                    <p className="text-gray-500">Place of Birth</p>
+                    <p className="text-gray-800">{officialData.of_pob || "N/A"}</p>
+                  </div>
+                  <div className="pb-2 border-b border-gray-200 md:col-span-2">
+                    <p className="text-gray-500">Full Address</p>
+                    <p className="text-gray-800 font-medium">
+                      {[
+                        officialData.address?.street,
+                        officialData.address?.sitio,
+                        officialData.address?.barangay_name,
+                        officialData.address?.municipality_name,
+                        officialData.address?.province_name,
+                      ]
+                        .filter(Boolean) // removes null/undefined
+                        .join(", ") || "N/A"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -250,76 +264,6 @@ export default function NurseProfile() {
               Change Password / Username
             </button>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700">
-            <div>
-              <p className="text-xs text-gray-500">Email</p>
-              <p className="font-medium">{officialData.of_email}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Contact Number</p>
-              <p className="font-medium">{officialData.of_contact || "N/A"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Date of Birth</p>
-              <p className="font-medium">{officialData.of_dob || "N/A"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Place of Birth</p>
-              <p className="font-medium">{officialData.of_pob || "N/A"}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* ADDRESS */}
-        <div className="bg-white border rounded-xl shadow-md p-6">
-          <div className="relative mb-6">
-            <div className="flex items-center gap-4 mb-3">
-              <img src="/images/address.png" alt="Address Icon" className="h-8 w-8 object-contain" />
-              <h3 className="text-2xl font-bold text-[#292D96]">Address</h3>
-            </div>
-            <div className="relative flex items-center">
-              <div className="flex-grow">
-                <hr className="border-t border-gray-300" />
-              </div>
-              <button onClick={() => setShowEditModal(true)} title="Edit">
-                <img src="/images/pen.png" alt="Edit Icon" className="ml-2 h-10 w-10 object-contain" />
-              </button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700">
-            <div>
-              <p className="text-xs text-gray-500">Province</p>
-              <p className="font-medium">{officialData.address?.province_name || "N/A"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Municipality</p>
-              <p className="font-medium">{officialData.address?.municipality_name || "N/A"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Barangay</p>
-              <p className="font-medium">{officialData.address?.barangay_name || "N/A"}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-500">Sitio</p>
-              <p className="font-medium">{officialData.address?.sitio || "N/A"}</p>
-            </div>
-            <div className="md:col-span-2">
-              <p className="text-xs text-gray-500">Street</p>
-              <p className="font-medium">{officialData.address?.street || "N/A"}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* CHANGE PASSWORD */}
-        <div className="flex justify-center">
-          <button
-            onClick={() => setShowChangePassword(true)}
-            className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition shadow-sm"
-          >
-            Change Password / Username
-          </button>
         </div>
 
         {/* Modals */}

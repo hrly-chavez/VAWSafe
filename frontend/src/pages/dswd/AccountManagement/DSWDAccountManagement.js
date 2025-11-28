@@ -3,12 +3,17 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import RegisterUser from "../../RegisterUser";
 import ChangePass from "../AccountManagement/ChangePass/ChangePass";
+import ReasonModal from "../AccountManagement/Feedback/ReasonModal";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import {
   MagnifyingGlassIcon,
   EyeIcon,
   KeyIcon,
-  UserPlusIcon
+  UserPlusIcon,
+  TrashIcon,
+  ArrowPathIcon
 } from "@heroicons/react/24/solid";
 import api from "../../../api/axios";
 
@@ -20,6 +25,9 @@ export default function AccountManagement() {
 
   // NEW: filter state: 'active' | 'archived' | 'all'
   const [filter, setFilter] = useState("active");
+  const [showReasonModal, setShowReasonModal] = useState(false);
+  const [reasonAction, setReasonAction] = useState(null);
+  const [reasonType, setReasonType] = useState("archive");
 
   //change pass
   const [showChangePassModal, setShowChangePassModal] = useState(false);
@@ -33,12 +41,9 @@ export default function AccountManagement() {
     setLoading(true);
     setError("");
 
-    const includeArchived = filter !== "active"; // fetch archived only when needed
-    const url = includeArchived ? "/api/dswd/officials/?include_archived=1" : "/api/dswd/officials/";
-
+    const url = "/api/dswd/officials/?include_archived=1"; // always fetch all
     api.get(url)
       .then((res) => {
-        // client-side post filter for convenience
         let data = res.data || [];
         if (filter === "active") {
           data = data.filter(o => !o.deleted_at);
@@ -54,7 +59,6 @@ export default function AccountManagement() {
         setLoading(false);
       });
   }, [filter]);
-
 
 
   // Users Color Role
@@ -87,23 +91,37 @@ export default function AccountManagement() {
 
       {/* Controls row */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
-        {/* Search bar on the left */}
-        <div className="flex items-center w-full md:w-2/3 border border-neutral-300 rounded-lg px-3 py-2 bg-white shadow-sm">
-          <MagnifyingGlassIcon className="h-5 w-5 text-gray-500 mr-2" />
-          <input
-            type="text"
-            placeholder="Search official by name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full text-sm text-neutral-900 outline-none"
-          />
+        {/* Left side: Search + Filter */}
+        <div className="flex items-center gap-3 flex-1">
+          {/* Search bar */}
+          <div className="flex items-center w-full md:w-2/3 border border-neutral-300 rounded-lg px-3 py-2 bg-white shadow-sm">
+            <MagnifyingGlassIcon className="h-5 w-5 text-gray-500 mr-2" />
+            <input
+              type="text"
+              placeholder="Search official by name..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full text-sm text-neutral-900 outline-none"
+            />
+          </div>
         </div>
 
-        {/* Buttons on the right */}
+        {/* Right side: Buttons */}
         <div className="flex gap-3">
+          {/* Filter dropdown */}
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="border rounded-lg px-3 py-2 text-sm bg-white shadow-sm"
+          >
+            <option value="all">All</option>
+            <option value="active">Active</option>
+            <option value="archived">Archived</option>
+          </select>
+
           <button
             onClick={() => setShowChangePassModal(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-yellow-500 hover:bg-yellow-600 transition shadow-sm mb-4"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-yellow-500 hover:bg-yellow-600 transition shadow-sm"
           >
             <KeyIcon className="h-5 w-5" />
             Change Password
@@ -111,15 +129,13 @@ export default function AccountManagement() {
 
           <button
             onClick={() => setShowRegisterModal(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-green-500 hover:bg-green-600 transition shadow-sm mb-4"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-green-500 hover:bg-green-600 transition shadow-sm"
           >
             <UserPlusIcon className="h-5 w-5" />
             Add User
           </button>
-
         </div>
       </div>
-
 
       {/* Table Container */}
       <div className="rounded-2xl border border-neutral-200 bg-white shadow-md overflow-hidden">
@@ -130,7 +146,10 @@ export default function AccountManagement() {
             <thead className="sticky top-0 z-10 bg-gray-100 text-gray-700 text-sm font-semibold shadow">
               <tr>
                 <th className="px-4 py-3 text-left border">Name</th>
+                <th className="px-4 py-3 text-left border">Contact Number</th>
                 <th className="px-4 py-3 text-left border">User Role</th>
+                <th className="px-4 py-3 text-left border">Address</th>
+                <th className="px-4 py-3 text-left border">Status</th>
                 <th className="px-4 py-3 text-center border">Actions</th>
               </tr>
             </thead>
@@ -155,73 +174,109 @@ export default function AccountManagement() {
                 </tr>
               ) : (
                 filteredOfficials.map((official, index) => (
-                  <tr
-                    key={official.of_id}
-                    className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100 transition`}
-                  >
+                  <tr key={official.of_id} className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-gray-100 transition`}>
+                    {/* Name */}
+                    <td className="px-4 py-3 border font-medium text-gray-800">{official.full_name}</td>
 
-                    {/* Image + Name */}
-                    <td className="px-4 py-3 border">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={official.of_photo || "https://via.placeholder.com/40"}
-                          alt="Profile"
-                          className="w-10 h-10 rounded-full object-cover border border-gray-300"
-                        />
-                        <div>
-                          <div className="font-semibold text-gray-800">{official.full_name}</div>
-                          <div className="text-xs text-gray-500">{official.of_contact || "No contact"}</div>
-                        </div>
-                      </div>
-                    </td>
+                    {/* Contact */}
+                    <td className="px-4 py-3 border">{official.of_contact || "N/A"}</td>
 
                     {/* Role */}
                     <td className="px-4 py-3 border">
-                      <span
-                        className={`inline-block text-white text-xs font-semibold px-3 py-1 rounded-full shadow ${getRoleColor(official.of_role)}`}
-                      >
+                      <span className={`inline-block text-white text-xs font-semibold px-3 py-1 rounded-full shadow ${getRoleColor(official.of_role)}`}>
                         {official.of_role || "Unassigned"}
                       </span>
+                    </td>
+
+                    {/* Address */}
+                    <td className="px-4 py-3 border text-sm text-gray-700">
+                      {[
+                        official.address?.street,
+                        official.address?.sitio,
+                        official.address?.barangay_name,
+                        official.address?.municipality_name,
+                        official.address?.province_name,
+                      ].filter(Boolean).join(", ") || "N/A"}
+                    </td>
+
+                    {/* Status */}
+                    <td className="px-4 py-3 border">
+                      {official.deleted_at ? (
+                        <span className="text-red-600 font-semibold">Archived</span>
+                      ) : (
+                        <span className="text-green-600 font-semibold">Active</span>
+                      )}
                     </td>
 
                     {/* Actions */}
                     <td className="px-4 py-3 border text-center">
                       <div className="flex justify-center gap-4">
+                        {/* View */}
                         <button
                           onClick={() => navigate(`/dswd/account-management/${official.of_id}`)}
                           className="text-green-600 hover:text-green-700 transition"
+                          title="View"
                         >
                           <EyeIcon className="h-5 w-5" />
                         </button>
 
+                        {/* Archive */}
+                        {!official.deleted_at && (
+                          <button
+                            onClick={() => {
+                              setReasonAction(() => async (reason) => {
+                                try {
+                                  await api.post(`/api/dswd/officials/${official.of_id}/archive_or_deactivate/`, { reason });
+                                  toast.success("Official archived & deactivated.", {
+                                    position: "top-right",
+                                    autoClose: 2000,
+                                  });
+                                  const res = await api.get("/api/dswd/officials/?include_archived=1");
+                                  setOfficials(res.data || []);
+                                } catch {
+                                  toast.error("Failed to archive.", {
+                                    position: "top-right",
+                                    autoClose: 4000,
+                                  });
+                                }
+                              });
+                              setReasonType("archive");
+                              setShowReasonModal(true);
+                            }}
+                            className="text-red-600 hover:text-red-700 transition"
+                            title="Archive"
+                          >
+                            <TrashIcon className="h-5 w-5" />
+                          </button>
+                        )}
+
+                        {/* Unarchive */}
                         {official.deleted_at && (
                           <button
-                            onClick={async () => {
-                              const reason = window.prompt("Reason for unarchive?");
-                              if (reason === null) return;
-                              try {
-                                await api.post(
-                                  `/api/dswd/officials/${official.of_id}/unarchive_or_reactivate/`,
-                                  { reason }
-                                );
-                                const includeArchived = filter !== "active";
-                                const url = includeArchived
-                                  ? "/api/dswd/officials/?include_archived=1"
-                                  : "/api/dswd/officials/";
-                                const res = await api.get(url);
-                                let data = res.data || [];
-                                if (filter === "active") data = data.filter((o) => !o.deleted_at);
-                                if (filter === "archived") data = data.filter((o) => !!o.deleted_at);
-                                setOfficials(data);
-                                alert("Official successfully unarchived and reactivated.");
-                              } catch (e) {
-                                console.error(e);
-                                alert("Failed to unarchive/reactivate.");
-                              }
+                            onClick={() => {
+                              setReasonAction(() => async (reason) => {
+                                try {
+                                  await api.post(`/api/dswd/officials/${official.of_id}/unarchive_or_reactivate/`, { reason });
+                                  toast.success("Official successfully unarchived and reactivated.", {
+                                    position: "top-right",
+                                    autoClose: 2000,
+                                  });
+                                  const res = await api.get("/api/dswd/officials/?include_archived=1");
+                                  setOfficials(res.data || []);
+                                } catch {
+                                  toast.error("Failed to unarchive/reactivate.", {
+                                    position: "top-right",
+                                    autoClose: 4000,
+                                  });
+                                }
+                              });
+                              setReasonType("unarchive");
+                              setShowReasonModal(true);
                             }}
-                            className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded text-sm shadow"
+                            className="text-gray-600 hover:text-gray-800 transition"
+                            title="Unarchive"
                           >
-                            Unarchive
+                            <ArrowPathIcon className="h-5 w-5" />
                           </button>
                         )}
                       </div>
@@ -235,9 +290,10 @@ export default function AccountManagement() {
 
         {/* Mobile View — Cards */}
         <div className="md:hidden divide-y">
-          {filteredOfficials.map((official, index) => (
+          {filteredOfficials.map((official) => (
             <div key={official.of_id} className="p-4">
 
+              {/* Header with photo + name */}
               <div className="flex items-center gap-3">
                 <img
                   src={official.of_photo || "https://via.placeholder.com/40"}
@@ -250,6 +306,7 @@ export default function AccountManagement() {
                 </div>
               </div>
 
+              {/* Role badge */}
               <div className="mt-2">
                 <span
                   className={`inline-block text-white text-xs font-semibold px-3 py-1 rounded-full ${getRoleColor(official.of_role)}`}
@@ -258,32 +315,44 @@ export default function AccountManagement() {
                 </span>
               </div>
 
+              {/* Actions */}
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   onClick={() => navigate(`/dswd/account-management/${official.of_id}`)}
-                  className="bg-[#0000FF] text-white px-3 py-1 rounded text-sm"
+                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition"
                 >
                   View
                 </button>
 
                 {official.deleted_at && (
                   <button
-                    onClick={async () => {
-                      const reason = window.prompt("Reason for unarchive?");
-                      if (reason === null) return;
-                      try {
-                        await api.post(
-                          `/api/dswd/officials/${official.of_id}/unarchive_or_reactivate/`,
-                          { reason }
-                        );
-                        const res = await api.get("/api/dswd/officials/?include_archived=1");
-                        setOfficials(res.data.filter((o) => !!o.deleted_at));
-                        alert("Unarchived and reactivated.");
-                      } catch {
-                        alert("Failed to unarchive.");
-                      }
+                    onClick={() => {
+                      setReasonAction(() => async (reason) => {
+                        try {
+                          await api.post(
+                            `/api/dswd/officials/${official.of_id}/unarchive_or_reactivate/`,
+                            { reason }
+                          );
+                          const res = await api.get("/api/dswd/officials/?include_archived=1");
+                          setOfficials(res.data.filter((o) => !!o.deleted_at));
+
+                          // ✅ Toast success
+                          toast.success("Official successfully unarchived and reactivated.", {
+                            position: "top-right",
+                            autoClose: 2000,
+                          });
+                        } catch {
+                          // ✅ Toast error
+                          toast.error("Failed to unarchive/reactivate.", {
+                            position: "top-right",
+                            autoClose: 4000,
+                          });
+                        }
+                      });
+                      setReasonType("unarchive");
+                      setShowReasonModal(true);
                     }}
-                    className="bg-gray-700 text-white px-3 py-1 rounded text-sm"
+                    className="bg-gray-700 text-white px-3 py-1 rounded text-sm hover:bg-gray-800 transition"
                   >
                     Unarchive
                   </button>
@@ -304,7 +373,16 @@ export default function AccountManagement() {
       {showChangePassModal && (
         <ChangePass onClose={() => setShowChangePassModal(false)} />
       )}
+      {showReasonModal && (
+        <ReasonModal
+          type={reasonType}
+          onSubmit={reasonAction}
+          onClose={() => setShowReasonModal(false)}
+        />
+      )}
+
+      <ToastContainer />
+
     </div>
   );
-
 }
