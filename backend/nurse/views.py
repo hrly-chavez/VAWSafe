@@ -51,7 +51,6 @@ def cleanup_decrypted_file_later(file_path, victim_id, delay=10):
     except Exception as e:
         logger.error(f"Failed to delete decrypted photo for victim {victim_id}: {e}")
 
-
 class victim_list(generics.ListAPIView):
     serializer_class = VictimListSerializer
     permission_classes = [IsAuthenticated, IsRole]
@@ -68,8 +67,6 @@ class victim_list(generics.ListAPIView):
             return Victim.objects.none()  #prevents non-officials
 
         return Victim.objects.all().distinct()
-
-
 
 class victim_detail(generics.RetrieveAPIView):
     serializer_class = VictimDetailSerializer
@@ -140,8 +137,6 @@ class VictimIncidentsView(generics.ListAPIView):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True, context={"request": request})
         return Response(serializer.data)  
- 
-
   
 class search_victim_facial(APIView):
     """
@@ -287,22 +282,14 @@ class scheduled_session_lists(generics.ListAPIView):
 class scheduled_session_detail(generics.RetrieveUpdateAPIView):  
     """
     GET: Retrieve a single session detail.
-    PATCH: Update session info (e.g., type, description, location).
     this also handles the display for service in the frontend
     """
     serializer_class = SessionDetailSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        official = getattr(user, "official", None)
-        role = getattr(official, "of_role", None)
-        if not role:
-            return Session.objects.none()
-
-        return Session.objects.filter(
-            incident_id__sessions__assigned_official=official
-        ).distinct()
+    # Allow ANY authenticated official to view ANY session.
+        return Session.objects.all()
 
 class SessionTypeListView(generics.ListAPIView):
     """GET: List all available session types for dropdowns."""
@@ -458,7 +445,7 @@ def start_session(request, sess_id):
                 session=session,
                 question=m.question,
                 defaults={
-                    "sq_is_required": False,
+                    "sq_is_required": m.question.ques_is_required,   #
                     "sq_question_text_snapshot": m.question.ques_question_text,
                     "sq_answer_type_snapshot": m.question.ques_answer_type,
                 },
@@ -518,90 +505,104 @@ def add_custom_question(request, sess_id):
 
 def generate_session_docx(session, current_official=None):
     """
-    Creates a DOCX file summarizing all Q&A for a session.
-    - First session uses IPA-FORMAT-RHW.docx
-    - Subsequent sessions use a different template (e.g., IPA-FORMAT-NEXT.docx)
-    Output is saved to:
-        Desktop/Templates/victim<victim_id>/psychometrician/<filename>.docx
+    Safe version:
+    - Never crashes even if templates are missing
+    - Logs warnings instead of raising exceptions
+    - Still generates docx if templates exist
     """
 
-    # 1. Resolve Victim via Incident
-    if not session.incident_id:
-        raise ValueError("Session is not linked to any IncidentInformation.")
+    try:
+        # -----------------------------
+        # 1. Resolve Victim
+        # -----------------------------
+        if not session.incident_id or not session.incident_id.vic_id:
+            return None  # Do not block session finish
 
-    incident = session.incident_id
+        incident = session.incident_id
+        victim = incident.vic_id
+        victim_id = victim.vic_id
 
-    if not incident.vic_id:
-        raise ValueError("Incident does not contain a victim record.")
+        # Build safe output folder
+        full_name = victim.full_name
+        safe_full_name = "".join(c for c in full_name if c.isalnum() or c in (" ", "-")).strip()
 
-    victim = incident.vic_id
-    victim_id = victim.vic_id
+        desktop = os.path.join(os.path.expanduser("~"), "Desktop")
+        root_templates = os.path.join(desktop, "Templates")
 
-    # 2. Paths
-    desktop = os.path.join(os.path.expanduser("~"), "Desktop")
-    root_templates = os.path.join(desktop, "Templates")
+        # Output directory
+        out_dir = os.path.join(root_templates, safe_full_name, "psychometrician")
+        os.makedirs(out_dir, exist_ok=True)
 
-    # Build safe victim folder name
-    safe_full_name = re.sub(r'[\\/*?:"<>|]', "", victim.full_name)
+        # -----------------------------
+        # 2. Choose Template
+        # -----------------------------
+        is_first_session = (session.sess_num or 1) == 1
 
-    out_dir = os.path.join(root_templates, safe_full_name, "nurse")
-    os.makedirs(out_dir, exist_ok=True)
+        if is_first_session:
+            template_file = "IPA-FORMAT-RHW.docx"
+            output_file_name = "IPA-FORMAT-RHW.docx"
+        else:
+            template_file = "Individual-Sessions-Report-RHW.docx"
+            output_file_name = f"Individual-Sessions-Report-RHW-{session.sess_num}.docx"
 
-    # 3. Determine template based on session number
-    is_first_session = (session.sess_num or 1) == 1  # Use sess_num from model
+        template_path = os.path.join(root_templates, "psychometrician", template_file)
 
-    if is_first_session:
-        template_file = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
-        output_file_name = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
-    else:
-        template_file = "Individual-Sessions-Report-RHW.docx"  # Your second session template
-        output_file_name = f"Individual-Sessions-Report-RHW-{session.sess_num}.docx"
+        # -----------------------------
+        # 3. If TEMPLATE MISSING: Skip gracefully
+        # -----------------------------
+        if not os.path.exists(template_path):
+            print(f"[WARNING] Missing Psychometrician template: {template_path}")
+            return None  # do not block finish_session
 
-    template_path = os.path.join(root_templates, "nurse", template_file)
-    if not os.path.exists(template_path):
-        raise FileNotFoundError(f"Missing template: {template_path}")
+        # -----------------------------
+        # 4. Fetch Q&A
+        # -----------------------------
+        sqs = (
+            SessionQuestion.objects
+            .filter(session=session)
+            .select_related("question", "answered_by")
+            .order_by("pk")
+        )
 
-    # 4. Fetch session Q&A
-    sqs = (
-        SessionQuestion.objects
-        .filter(session=session)
-        .select_related("question", "answered_by")
-        .order_by("pk")
-    )
+        if current_official:
+            sqs = sqs.filter(answered_by__of_role=current_official.of_role)
 
-    if current_official:
-        sqs = sqs.filter(answered_by__of_role=current_official.of_role)
+        answers = []
+        for sq in sqs:
+            if current_official and sq.answered_by != current_official:
+                continue
 
-    answers = []
-    for sq in sqs:
-        if current_official and sq.answered_by != current_official:
-            continue
+            answers.append({
+                "question": sq.sq_question_text_snapshot or (sq.question.ques_question_text if sq.question else ""),
+                "value": sq.sq_value or "",
+                "note": sq.sq_note or "",
+                "role": sq.answered_by.of_role if sq.answered_by else "",
+                "answered_by": sq.answered_by.full_name if sq.answered_by else "",
+            })
 
-        answers.append({
-            "question": sq.sq_question_text_snapshot or (sq.question.ques_question_text if sq.question else ""),
-            "value": sq.sq_value or "",
-            "note": sq.sq_note or "",
-            "role": sq.answered_by.of_role if sq.answered_by else "",
-            "answered_by": sq.answered_by.full_name if sq.answered_by else "",
-        })
+        # -----------------------------
+        # 5. Render DOCX safely
+        # -----------------------------
+        context = {
+            "session": session,
+            "created_at": datetime.now().strftime("%B %d, %Y"),
+            "answers": answers,
+            "victim": victim,
+            "incident": incident,
+        }
 
-    # 5. Context for docx
-    context = {
-        "session": session,
-        "created_at": datetime.now().strftime("%B %d, %Y"),
-        "answers": answers,
-        "victim": victim,
-        "incident": incident,
-    }
+        doc = DocxTemplate(template_path)
+        doc.render(context)
 
-    # 6. Render and save
-    doc = DocxTemplate(template_path)
-    doc.render(context)
+        output_path = os.path.join(out_dir, output_file_name)
+        doc.save(output_path)
 
-    output_path = os.path.join(out_dir, output_file_name)
-    doc.save(output_path)
+        return output_path
 
-    return output_path
+    except Exception as e:
+        # GLOBAL CATCH — never block user
+        print(f"[ERROR] Psychometrician docx generation failed: {e}")
+        return None  # Always allow session to succeed
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
@@ -690,6 +691,28 @@ def finish_session(request, sess_id):
         )
 
         progress.notes = my_feedback
+        required_questions = session.session_questions.filter(
+            question__role=user.official.of_role,
+            sq_is_required=True
+        )
+        
+        unanswered = required_questions.filter(
+            Q(sq_value__isnull=True) | Q(sq_value__exact="")
+        )
+        if unanswered.exists():
+            return Response(
+                {
+                    "error": "You must answer all required questions before finishing this session.",
+                    "missing_required_questions": [
+                        {
+                            "sq_id": q.sq_id,
+                            "question_text": q.sq_question_text_snapshot
+                        }
+                        for q in unanswered
+                    ]
+                },
+                status=400
+            )
         progress.finished_at = timezone.now()
         progress.is_done = True
         progress.save()
@@ -728,9 +751,7 @@ def finish_session(request, sess_id):
         session.save()
 
     all_finished = session.all_officials_done()
-
-    if user.official.of_role == "Nurse":
-        output_doc = generate_session_docx(session, current_official=user.official)
+    output_doc = generate_session_docx(session, current_official=user.official)
 
     return Response({
         "message": "Your session progress has been marked as done.",
@@ -760,60 +781,9 @@ def close_case(request, incident_id):
 
     return Response({"message": "Case closed successfully!"}, status=200)
 
-#schedule session
-# @api_view(["GET", "POST"])
-# @permission_classes([IsAuthenticated])
-# def schedule_next_session(request):
-#     """
-#     GET: Lists current sessions (Pending/Ongoing) for the logged-in official.
-#     POST: Creates a new session (schedules the next one).
-#     Now role-agnostic: works for any official (Social Worker, Nurse, Psychometrician, Home Life).
-#     """
-#     user = request.user
-#     official = getattr(user, "official", None)
-#     role = getattr(official, "of_role", None)
-
-#     if not official or not role:
-#         return Response({"error": "Only registered officials can access this endpoint."},
-#                         status=status.HTTP_403_FORBIDDEN)
-
-#     # =========================
-#     # GET REQUEST
-#     # =========================
-#     if request.method == "GET":
-#         # Fetch all sessions where the current official is assigned
-#         sessions = Session.objects.filter(
-#             assigned_official=official,
-#             sess_status__in=["Pending", "Ongoing"]
-#         ).order_by("-sess_next_sched")
-
-#         serializer = SessionCRUDSerializer(sessions, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-
-#     # =========================
-#     # POST REQUEST
-#     # =========================
-#     elif request.method == "POST":
-#         serializer = SessionCRUDSerializer(data=request.data)
-#         if serializer.is_valid():
-#             # Save directly; the serializer handles sess_num auto-increment, etc.
-#             session = serializer.save()
-
-#             # Optional: Create SessionProgress entries automatically for assigned officials
-#             assigned_officials = session.assigned_official.all()
-#             for assigned in assigned_officials:
-#                 SessionProgress.objects.get_or_create(session=session, official=assigned)
-
-#             return Response(SessionCRUDSerializer(session).data, status=status.HTTP_201_CREATED)
-
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def schedule_next_session(request):
-    """
-    Also supports simplified creation for Session 2+ (no schedule/location).
-    """
     user = request.user
     official = getattr(user, "official", None)
     role = getattr(official, "of_role", None)
@@ -1136,7 +1106,6 @@ class QuestionListCreateView(generics.ListCreateAPIView):
         )
 
 # QUESTION DETAIL (UPDATE / TOGGLE ACTIVE)
-
 class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
@@ -1175,11 +1144,12 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        # Prepare old data
+        # Prepare old data (ADD ques_is_required)
         old_data = {
             "ques_category": instance.ques_category_id,
             "ques_question_text": instance.ques_question_text,
             "ques_answer_type": instance.ques_answer_type,
+            "ques_is_required": instance.ques_is_required,   # NEW
         }
 
         # Apply new values
@@ -1195,7 +1165,7 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
                 else updated_fields["ques_category"]
             )
 
-        # Detect real changes
+        # Detect real changes (now includes required)
         changes_detected = any(
             old_data[field] != updated_fields[field] for field in old_data
         )
@@ -1213,6 +1183,7 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
             "ques_category": "Category",
             "ques_question_text": "Question Text",
             "ques_answer_type": "Answer Type",
+            "ques_is_required": "Required",   # NEW
         }
 
         changes = []
@@ -1221,6 +1192,7 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
                 old_val = old_data[field]
                 new_val = updated_fields[field]
 
+                # Pretty label for category
                 if field == "ques_category":
                     old_val = (
                         QuestionCategory.objects.filter(id=old_val).first().name
@@ -1230,7 +1202,15 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
                         QuestionCategory.objects.filter(id=new_val).first().name
                         if new_val else "(None)"
                     )
-                changes.append(f"• {field_labels[field]} changed from '{old_val}' → '{new_val}'")
+
+                # Pretty label for required
+                if field == "ques_is_required":
+                    old_val = "Yes" if bool(old_val) else "No"
+                    new_val = "Yes" if bool(new_val) else "No"
+
+                changes.append(
+                    f"• {field_labels[field]} changed from '{old_val}' → '{new_val}'"
+                )
 
         description = "\n".join(changes) or "Updated question fields."
 
@@ -1243,7 +1223,7 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
         )
 
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+   
 # CHOICES (for AddQuestion modal)
 class QuestionChoicesView(APIView):
     """Return categories and answer types for the logged-in official’s role."""
@@ -1358,7 +1338,8 @@ class BulkAssignView(APIView):
                 desc_lines.append(f"• Removed Session Types: {', '.join(removed_types)}")
 
             if not desc_lines:
-                desc_lines.append("No changes to session assignments.")
+                continue
+
             description = "\n".join(desc_lines)
 
             # Log the reassignment
@@ -1410,6 +1391,7 @@ class ChangeLogListView(generics.ListAPIView):
             | models.Q(model_name__in=["Question", "SessionTypeQuestion"])
             & models.Q(user__of_role=official.of_role)
         ).select_related("user")
+
 
 
 #==========================================================================

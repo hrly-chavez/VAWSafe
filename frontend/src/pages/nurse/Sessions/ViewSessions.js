@@ -35,7 +35,7 @@ export default function ViewSessions() {
 
     })
     .catch((err) => {
-      console.error("Failed to fetch session", err);
+      console.error("Failed to fetch consultation", err);
       setLoading(false);
     });
 }, [sess_id]);
@@ -46,7 +46,7 @@ export default function ViewSessions() {
     api
       .get("/api/nurse/session-types/")
       .then((res) => setAllTypes(res.data))
-      .catch((err) => console.error("Failed to fetch session types", err));
+      .catch((err) => console.error("Failed to fetch consultation types", err));
   }, []);
 
   //  Save type update
@@ -60,8 +60,8 @@ export default function ViewSessions() {
       setSelectedTypes(res.data.sess_type_display || []);
       setEditingType(false);
     } catch (err) {
-      console.error("Failed to update session type", err);
-      alert("Failed to update session type.");
+      console.error("Failed to update consultation type", err);
+      alert("Failed to update consultation type.");
     }
   };
 
@@ -71,7 +71,7 @@ export default function ViewSessions() {
     return (
       <div className="p-6">
         <p className="text-red-600">
-          Session not found or you are not assigned to it.
+          Consultation not found or you are not assigned to it.
         </p>
         <button
           onClick={() => navigate(-1)}
@@ -88,17 +88,17 @@ export default function ViewSessions() {
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-8">
       <h2 className="text-2xl font-bold text-blue-800 border-b pb-2">
-        Session Details
+        Consultation Details
       </h2> 
             {role && (
         <p className="text-sm text-gray-600 mb-2">
-          Viewing session as: <span className="font-semibold text-blue-700">{role}</span>
+          Viewing Consultation as: <span className="font-semibold text-blue-700">{role}</span>
         </p>
       )}
 
       {isDone && (
         <p className="text-gray-500 italic text-sm mb-2">
-          You’ve already completed your part of this session. You can review it, but no further edits are allowed.
+          You’ve already completed your part of this Consultation. You can review it, but no further edits are allowed.
         </p>
       )}
 
@@ -106,7 +106,7 @@ export default function ViewSessions() {
       {/* Session Info */}
       <section className="bg-gray-50 p-4 rounded-lg border">
         <h3 className="font-semibold text-lg mb-3 text-gray-800">
-          Session Information
+          Consultation Information
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
@@ -114,7 +114,7 @@ export default function ViewSessions() {
             <p className="font-medium">{incident?.incident_num || "—"}</p>
           </div>
           <div>
-            <p className="text-gray-500">Session No.</p>
+            <p className="text-gray-500">Consultation No.</p>
             <p className="font-medium">{session.sess_num || "—"}</p>
           </div>
           <div>
@@ -131,6 +131,7 @@ export default function ViewSessions() {
               {session.sess_status}
             </span>
           </div>
+          
           <div>
             <p className="text-gray-500">Type</p>
             {editingType ? (
@@ -168,14 +169,14 @@ export default function ViewSessions() {
                     ? sess_type_display.map((t) => t.name).join(", ")
                     : "—"}
                 </p>
-                 {session.sess_status === "Pending" && !isDone && (
+                 {/* {session.sess_status === "Pending" && !isDone && (
                     <button
                       onClick={() => setEditingType(true)}
                       className="ml-2 text-blue-600 text-sm hover:underline"
                     >
                       Edit
                     </button>
-                  )}
+                  )} */}
               </div>
             )}
           </div>
@@ -211,7 +212,7 @@ export default function ViewSessions() {
       {/* If finished, show read-only indicator */}
         {session.my_progress && session.my_progress.date_ended && (
           <p className="text-gray-600 italic text-sm text-right mt-2">
-            You’ve already completed your part of this session.
+            You’ve already completed your part of this Consultation.
           </p>
         )}
 
@@ -223,7 +224,7 @@ export default function ViewSessions() {
                 onClick={() => navigate(`/nurse/sessions/${sess_id}/start`)}
                 className="px-5 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition"
               >
-                Start Session
+                Start Consultation
               </button>
             )}
 
@@ -232,7 +233,7 @@ export default function ViewSessions() {
                 onClick={() => navigate(`/nurse/sessions/${sess_id}/start`)}
                 className="px-5 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition"
               >
-                Continue Session
+                Continue Consultation
               </button>
             )}
 
@@ -241,7 +242,7 @@ export default function ViewSessions() {
                 disabled
                 className="px-5 py-2 bg-gray-300 text-gray-600 rounded-md font-medium cursor-not-allowed"
               >
-                Session Completed (Your part)
+                Consultation Completed (Your part)
               </button>
             )}
 
@@ -250,7 +251,7 @@ export default function ViewSessions() {
               disabled
               className="px-5 py-2 bg-gray-300 text-gray-600 rounded-md font-medium cursor-not-allowed"
             >
-              Session Completed
+              Consultation Completed
             </button>
           )}
 

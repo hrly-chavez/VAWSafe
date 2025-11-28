@@ -48,7 +48,6 @@ def cleanup_decrypted_file_later(file_path, victim_id, delay=10):
     except Exception as e:
         logger.error(f"Failed to delete decrypted photo for victim {victim_id}: {e}")
 
-
 class victim_list(generics.ListAPIView):
     serializer_class = VictimListSerializer
     permission_classes = [IsAuthenticated, IsRole]
@@ -65,8 +64,6 @@ class victim_list(generics.ListAPIView):
             return Victim.objects.none()  #prevents non-officials
 
         return Victim.objects.all().distinct()
-
-
 
 class victim_detail(generics.RetrieveAPIView):
     serializer_class = VictimDetailSerializer
@@ -137,8 +134,6 @@ class VictimIncidentsView(generics.ListAPIView):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True, context={"request": request})
         return Response(serializer.data)  
- 
-
   
 class search_victim_facial(APIView):
     """
@@ -764,7 +759,6 @@ def finish_session(request, sess_id):
         "session": SessionDetailSerializer(session, context={"request": request}).data
     }, status=200)
 
-
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def close_case(request, incident_id):
@@ -784,60 +778,9 @@ def close_case(request, incident_id):
 
     return Response({"message": "Case closed successfully!"}, status=200)
 
-#schedule session
-# @api_view(["GET", "POST"])
-# @permission_classes([IsAuthenticated])
-# def schedule_next_session(request):
-#     """
-#     GET: Lists current sessions (Pending/Ongoing) for the logged-in official.
-#     POST: Creates a new session (schedules the next one).
-#     Now role-agnostic: works for any official (Social Worker, Nurse, Psychometrician, Home Life).
-#     """
-#     user = request.user
-#     official = getattr(user, "official", None)
-#     role = getattr(official, "of_role", None)
-
-#     if not official or not role:
-#         return Response({"error": "Only registered officials can access this endpoint."},
-#                         status=status.HTTP_403_FORBIDDEN)
-
-#     # =========================
-#     # GET REQUEST
-#     # =========================
-#     if request.method == "GET":
-#         # Fetch all sessions where the current official is assigned
-#         sessions = Session.objects.filter(
-#             assigned_official=official,
-#             sess_status__in=["Pending", "Ongoing"]
-#         ).order_by("-sess_next_sched")
-
-#         serializer = SessionCRUDSerializer(sessions, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-
-#     # =========================
-#     # POST REQUEST
-#     # =========================
-#     elif request.method == "POST":
-#         serializer = SessionCRUDSerializer(data=request.data)
-#         if serializer.is_valid():
-#             # Save directly; the serializer handles sess_num auto-increment, etc.
-#             session = serializer.save()
-
-#             # Optional: Create SessionProgress entries automatically for assigned officials
-#             assigned_officials = session.assigned_official.all()
-#             for assigned in assigned_officials:
-#                 SessionProgress.objects.get_or_create(session=session, official=assigned)
-
-#             return Response(SessionCRUDSerializer(session).data, status=status.HTTP_201_CREATED)
-
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
 def schedule_next_session(request):
-    """
-    Also supports simplified creation for Session 2+ (no schedule/location).
-    """
     user = request.user
     official = getattr(user, "official", None)
     role = getattr(official, "of_role", None)
@@ -1199,11 +1142,12 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        # Prepare old data
+        # Prepare old data (ADD ques_is_required)
         old_data = {
             "ques_category": instance.ques_category_id,
             "ques_question_text": instance.ques_question_text,
             "ques_answer_type": instance.ques_answer_type,
+            "ques_is_required": instance.ques_is_required,   # NEW
         }
 
         # Apply new values
@@ -1219,7 +1163,7 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
                 else updated_fields["ques_category"]
             )
 
-        # Detect real changes
+        # Detect real changes (now includes required)
         changes_detected = any(
             old_data[field] != updated_fields[field] for field in old_data
         )
@@ -1237,6 +1181,7 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
             "ques_category": "Category",
             "ques_question_text": "Question Text",
             "ques_answer_type": "Answer Type",
+            "ques_is_required": "Required",   # NEW
         }
 
         changes = []
@@ -1245,6 +1190,7 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
                 old_val = old_data[field]
                 new_val = updated_fields[field]
 
+                # Pretty label for category
                 if field == "ques_category":
                     old_val = (
                         QuestionCategory.objects.filter(id=old_val).first().name
@@ -1254,7 +1200,15 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
                         QuestionCategory.objects.filter(id=new_val).first().name
                         if new_val else "(None)"
                     )
-                changes.append(f"• {field_labels[field]} changed from '{old_val}' → '{new_val}'")
+
+                # Pretty label for required
+                if field == "ques_is_required":
+                    old_val = "Yes" if bool(old_val) else "No"
+                    new_val = "Yes" if bool(new_val) else "No"
+
+                changes.append(
+                    f"• {field_labels[field]} changed from '{old_val}' → '{new_val}'"
+                )
 
         description = "\n".join(changes) or "Updated question fields."
 
@@ -1382,7 +1336,8 @@ class BulkAssignView(APIView):
                 desc_lines.append(f"• Removed Session Types: {', '.join(removed_types)}")
 
             if not desc_lines:
-                desc_lines.append("No changes to session assignments.")
+                continue
+
             description = "\n".join(desc_lines)
 
             # Log the reassignment

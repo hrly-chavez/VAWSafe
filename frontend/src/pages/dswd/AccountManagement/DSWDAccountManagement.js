@@ -116,6 +116,7 @@ export default function AccountManagement() {
             <UserPlusIcon className="h-5 w-5" />
             Add User
           </button>
+
         </div>
       </div>
 
@@ -124,7 +125,7 @@ export default function AccountManagement() {
       <div className="rounded-2xl border border-neutral-200 bg-white shadow-md overflow-hidden">
 
         {/* Desktop Table */}
-        <div className="hidden md:block max-h-[480px] overflow-auto">
+        <div className="hidden md:block max-h-[600px] overflow-auto">
           <table className="w-full text-sm text-neutral-800">
             <thead className="sticky top-0 z-10 bg-gray-100 text-gray-700 text-sm font-semibold shadow">
               <tr>
@@ -133,19 +134,24 @@ export default function AccountManagement() {
                 <th className="px-4 py-3 text-center border">Actions</th>
               </tr>
             </thead>
-
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="3" className="text-center py-4 text-gray-500">Loading officials...</td>
+                  <td colSpan="3" className="text-center py-4 text-gray-500">
+                    Loading officials...
+                  </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan="3" className="text-center py-4 text-red-500">{error}</td>
+                  <td colSpan="3" className="text-center py-4 text-red-500">
+                    {error}
+                  </td>
                 </tr>
               ) : officials.length === 0 ? (
                 <tr>
-                  <td colSpan="3" className="text-center py-4 text-gray-500">No officials found.</td>
+                  <td colSpan="3" className="text-center py-4 text-gray-500">
+                    No officials found.
+                  </td>
                 </tr>
               ) : (
                 filteredOfficials.map((official, index) => (
@@ -193,26 +199,24 @@ export default function AccountManagement() {
                             onClick={async () => {
                               const reason = window.prompt("Reason for unarchive?");
                               if (reason === null) return;
-
                               try {
-                                await api.post(`/api/dswd/officials/${official.of_id}/unarchive/`, { reason });
-
+                                await api.post(
+                                  `/api/dswd/officials/${official.of_id}/unarchive_or_reactivate/`,
+                                  { reason }
+                                );
                                 const includeArchived = filter !== "active";
                                 const url = includeArchived
                                   ? "/api/dswd/officials/?include_archived=1"
                                   : "/api/dswd/officials/";
-
                                 const res = await api.get(url);
                                 let data = res.data || [];
-
-                                if (filter === "active") data = data.filter(o => !o.deleted_at);
-                                if (filter === "archived") data = data.filter(o => !!o.deleted_at);
-
+                                if (filter === "active") data = data.filter((o) => !o.deleted_at);
+                                if (filter === "archived") data = data.filter((o) => !!o.deleted_at);
                                 setOfficials(data);
-                                alert("Unarchived. Use 'Reactivate' on the details page to allow login again.");
+                                alert("Official successfully unarchived and reactivated.");
                               } catch (e) {
                                 console.error(e);
-                                alert("Failed to unarchive.");
+                                alert("Failed to unarchive/reactivate.");
                               }
                             }}
                             className="bg-gray-700 hover:bg-gray-800 text-white px-3 py-1 rounded text-sm shadow"
@@ -266,13 +270,17 @@ export default function AccountManagement() {
                   <button
                     onClick={async () => {
                       const reason = window.prompt("Reason for unarchive?");
-                      if (reason !== null) {
-                        try {
-                          await api.post(`/api/dswd/officials/${official.of_id}/unarchive/`, { reason });
-                          alert("Unarchived.");
-                        } catch {
-                          alert("Failed to unarchive.");
-                        }
+                      if (reason === null) return;
+                      try {
+                        await api.post(
+                          `/api/dswd/officials/${official.of_id}/unarchive_or_reactivate/`,
+                          { reason }
+                        );
+                        const res = await api.get("/api/dswd/officials/?include_archived=1");
+                        setOfficials(res.data.filter((o) => !!o.deleted_at));
+                        alert("Unarchived and reactivated.");
+                      } catch {
+                        alert("Failed to unarchive.");
                       }
                     }}
                     className="bg-gray-700 text-white px-3 py-1 rounded text-sm"

@@ -1,10 +1,11 @@
-// src/pages/psychometrician/Sessions/StartSession.js
+// src/pages/nurse/Sessions/StartSession.js
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import NextSessionModal from "./NextSessionModal";
 import CaseSessionFollowup from "./CaseSessionFollowup";
+import { useRef } from "react";
 
 import Select from "react-select";
 
@@ -21,7 +22,8 @@ export default function StartSession() {
   const [role, setRole] = useState("");
   const [isDone, setIsDone] = useState(false);
   const [myFeedback, setMyFeedback] = useState("");
-
+  const [openRoles, setOpenRoles] = useState([]);
+  const roleRefs = useRef({});
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -38,6 +40,15 @@ export default function StartSession() {
           const data = response.data;
           setSession(data);
           setQuestions(data.questions || []);
+
+          // OPEN ALL ROLES BY DEFAULT
+          const allRoles = new Set();
+          (data.questions || []).forEach((q) => {
+            const r = q.assigned_role || q.question_category_name || null;
+            if (r) allRoles.add(r);
+          });
+          setOpenRoles([...allRoles]);
+
           setProgress(data.my_progress || null);
           setMyFeedback(data?.my_progress?.notes || "");
           const myRole = data?.my_progress?.official_role || data?.my_progress?.role || "";
@@ -46,18 +57,27 @@ export default function StartSession() {
         } else if (sess.sess_status === "Ongoing") {
           setSession(sess);
           setQuestions(sess.questions || []);
+
+          // OPEN ALL ROLES BY DEFAULT
+          const allRoles = new Set();
+          (sess.questions || []).forEach((q) => {
+            const r = q.assigned_role || q.question_category_name || null;
+            if (r) allRoles.add(r);
+          });
+          setOpenRoles([...allRoles]);
+
           setProgress(sess.my_progress || null);
           setMyFeedback(sess?.my_progress?.notes || "");
           const myRole = sess?.my_progress?.official_role || sess?.my_progress?.role || "";
           setRole(myRole || "");
           setIsDone(Boolean(sess?.my_progress?.is_done));
         } else {
-          alert("This session is already finished.");
+          alert("This consultation is already finished.");
           navigate(-1);
         }
       } catch (err) {
-        console.error("Failed to load session", err);
-        alert("Could not load session.");
+        console.error("Failed to load consultation", err);
+        alert("Could not load consultation.");
       } finally {
         setLoading(false);
       }
@@ -102,6 +122,21 @@ export default function StartSession() {
       services: selectedServices.map((s) => s.value),
     };
 
+    // =============================
+    // REQUIRED QUESTIONS CHECK
+    // =============================
+    const missingRequired = questions.filter(
+      (q) =>
+        q.sq_is_required &&
+        isQuestionEditable(q) &&
+        (!q.sq_value || q.sq_value.trim() === "")
+    );
+
+    if (missingRequired.length > 0) {
+      alert("Please answer all REQUIRED questions before finishing this consultation.");
+      return; // stop finish flow
+    }
+
 
     const response = await api.post(`/api/nurse/sessions/${sess_id}/finish/`, payload);
     const { session_completed, all_finished } = response.data;
@@ -116,13 +151,13 @@ export default function StartSession() {
     //  Unified redirect behavior (always go to victim page)
     if (all_finished || session_completed) {
       alert(
-        "All assigned officials have completed this session.\n" +
-        "The session is now marked as done.\n" +
+        "All assigned officials have completed this consultation.\n" +
+        "The consultation is now marked as done.\n" +
         "Redirecting to the victim’s profile..."
       );
     } else {
       alert(
-        "Your part of this shared session has been completed.\n" +
+        "Your part of this shared consultation has been completed.\n" +
         "You’ll now be redirected to the victim’s profile."
       );
     }
@@ -136,8 +171,14 @@ export default function StartSession() {
       navigate("/nurse/victims");
     }
   } catch (err) {
-    console.error("Failed to finish session", err);
-    alert("Failed to finish session.");
+    console.error("Failed to finish consultation", err);
+
+      // Show backend error message if available
+      const msg =
+        err?.response?.data?.error ||
+        "Failed to finish consultation. Please ensure all required questions are answered.";
+
+      alert(msg);
   }
 };
 
@@ -181,33 +222,62 @@ useEffect(() => {
 }, [loading, questions, role]);
 
 
-  if (loading) return <p className="p-6">Loading session...</p>;
+  if (loading) return <p className="p-6">Loading consultation...</p>;
 
   const roleOrder = ["Social Worker", "Nurse", "Psychometrician", "Home Life"];
   const roleColors = {
-    "Social Worker": "border-green-600 bg-green-50",
-    Nurse: "border-blue-600 bg-blue-50",
-    Psychometrician: "border-purple-600 bg-purple-50",
-    "Home Life": "border-orange-600 bg-orange-50",
+    "Social Worker": "border-gray-300 bg-white",
+    Nurse: "border-gray-300 bg-white",
+    Psychometrician: "border-gray-300 bg-white",
+    "Home Life": "border-gray-300 bg-white",
   };
+
 
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-10">
+      
       {/* HEADER */}
-      <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold text-green-700 mb-2">
-          Session {session?.sess_num || ""} — {session?.sess_status}
-        </h2>
-        {role && (
-          <p className="text-gray-700">
-            You are logged in as: <span className="font-semibold text-green-700">{role}</span>
+       <div className="text-center mb-8">
+
+          {/* SESSION TITLE – blue, with bottom border */}
+          <h2 className="text-2xl font-bold text-blue-800 border-b pb-2 inline-block mb-2">
+              {session?.sess_type_display?.[0]?.name} consultation
+            </h2>
+
+          {/* STATUS BADGE – professional subtle colors */}
+          <div className="mt-1">
+            <span
+              className={`
+                inline-block px-3 py-1 rounded-full text-xs font-medium border
+                ${
+                  session?.sess_status === "Pending"
+                    ? "bg-gray-50 text-gray-600 border-gray-300"
+                    : session?.sess_status === "Ongoing"
+                    ? "bg-blue-50 text-blue-700 border-blue-300"
+                    : "bg-green-50 text-green-700 border-green-300"
+                }
+              `}
+            >
+              {session?.sess_status}
+            </span>
+          </div>
+
+          {/* ROLE */}
+          {role && (
+            <p className="text-gray-600 mt-2 text-sm">
+              Logged in as:{" "}
+              <span className="font-semibold text-gray-800">{role}</span>
+            </p>
+          )}
+
+          {/* SUBTEXT */}
+          <p className="text-gray-500 text-xs mt-2">
+            Complete your part of this consultation below. Other officials’ answers are visible for review.
           </p>
-        )}
-        <p className="text-gray-500 text-sm mt-1">
-          Complete your part of this session below. Other officials’ answers are shown for
-          review only.
-        </p>
-      </div>
+        </div>
+
+
+
 
         {/* ROLE GROUPED QUESTIONS (grouped by role -> category) */}
           <div className="space-y-8">
@@ -231,26 +301,67 @@ useEffect(() => {
                   key={r}
                   ref={isUserRole ? mySectionRef : null}
                   data-role-section={r.toLowerCase()}
-                  className={`rounded-md border-2 ${colorClass} p-5 shadow-sm`}
-                >
+                  className="rounded-md border border-blue-300 p-5 shadow-sm bg-white border-t-4 border-blue-600"
+
+
+
+                  >
                   {/* Role header with colored badge */}
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-semibold text-gray-800 uppercase tracking-wide">
+                  <button
+                    onClick={() =>
+                      setOpenRoles((prev) =>
+                        prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]
+                      )
+                    }
+                    className="w-full flex items-center justify-between mb-4 text-left"
+                  >
+                    <h3 className="text-xl font-bold text-gray-800 tracking-wide flex items-center gap-2">
                       {r} Section
                     </h3>
+                    <div className="mt-1 mb-3 h-[2px] bg-blue-600/20"></div>
+
+
+
+                    {/* Right-side button with role badge + plus/minus */}
+                    <div className="flex items-center gap-3">
                     <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        r === "Social Worker" ? "bg-green-100 text-green-800" :
-                        r === "Nurse" ? "bg-blue-100 text-blue-800" :
-                        r === "Psychometrician" ? "bg-purple-100 text-purple-800" :
-                        "bg-orange-100 text-orange-800"
+                      className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${
+                        r === "Social Worker"
+                          ? "bg-blue-600"
+                          : r === "Nurse"
+                          ? "bg-teal-600"
+                          : r === "Psychometrician"
+                          ? "bg-red-600"
+                          : "bg-orange-600"
                       }`}
                     >
                       {r}
                     </span>
-                  </div>
+
+
+
+
+                      {/* Toggle Icon */}
+                      <span className="text-2xl text-gray-700">
+                        {openRoles.includes(r) ? "−" : "+"}
+                      </span>
+                    </div>
+                  </button>
+
 
                   {/* Group questions by category within this role */}
+                  <div
+                    ref={(el) => (roleRefs.current[r] = el)}
+                    style={{
+                      height: openRoles.includes(r)
+                        ? roleRefs.current[r]?.scrollHeight + "px"
+                        : "0px",
+                      opacity: openRoles.includes(r) ? 1 : 0,
+                    }}
+                    className="overflow-hidden transition-all duration-500 ease-in-out"
+                  >
+
+
                   {Object.entries(
                     roleQuestions.reduce((acc, q) => {
                       const category = q.question_category_name || "Uncategorized";
@@ -261,23 +372,14 @@ useEffect(() => {
                   ).map(([category, catQuestions]) => (
                     <div key={category} className="mb-6">
                       {/* Category Header */}
-                    <div
-                      className={`px-4 py-2 rounded-t-md border-l-4 shadow-sm ${
-                        r === "Social Worker"
-                          ? "bg-gradient-to-r from-green-100 to-green-50 border-green-600"
-                          : r === "Nurse"
-                          ? "bg-gradient-to-r from-blue-100 to-blue-50 border-blue-600"
-                          : r === "Psychometrician"
-                          ? "bg-gradient-to-r from-purple-100 to-purple-50 border-purple-600"
-                          : r === "Home Life"
-                          ? "bg-gradient-to-r from-orange-100 to-orange-50 border-orange-600"
-                          : "bg-gradient-to-r from-gray-100 to-gray-50 border-gray-400"
-                      }`}
-                    >
-                      <h5 className="text-md font-semibold text-gray-800 tracking-wide drop-shadow-sm">
-                        {category}
-                      </h5>
-                    </div>
+                    
+                    <div className="px-4 py-2 rounded-t-md border-l-4 border-blue-600 bg-gray-50 shadow-sm">
+                    
+                    <h5 className="text-md font-semibold text-gray-900 tracking-wide">
+                      {category}
+                    </h5>
+                  </div>
+
 
                       {/* Category Question List */}
                       <div className="border border-t-0 rounded-b-md p-3 bg-white shadow-sm">
@@ -291,16 +393,26 @@ useEffect(() => {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 12 }}
                                 transition={{ duration: 0.22, delay: index * 0.04 }}
-                                className="p-4 border border-gray-200 bg-white rounded-md mb-4"
+                                className="p-4 border border-gray-200 bg-white rounded-md mb-4 hover:shadow-md transition-shadow"
                               >
                                 <div className="flex items-start justify-between">
-                                  <p className="font-medium text-gray-900 mb-2">
-                                    {q.sq_question_text_snapshot || q.question_text || q.sq_custom_text}
-                                  </p>
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <p className="font-medium text-gray-900">
+                                      {q.sq_question_text_snapshot || q.question_text || q.sq_custom_text}
+                                    </p>
+
+                                    {q.sq_is_required && (
+                                      <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">
+                                        REQUIRED
+                                      </span>
+                                    )}
+                                  </div>
+
                                   {!editable && (
                                     <span className="text-xs text-gray-500 italic ml-4">Read-only</span>
                                   )}
-                                </div>
+                              </div>
+
 
                                 {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Yes/No" && (
                                   <select
@@ -381,58 +493,13 @@ useEffect(() => {
                       />
                     )}
                   </div>
+                  </div>
                 </div>
               );
             })}
+            
           </div>
 
-     
-
-    
-
-      {/* SESSION FEEDBACK */}
-      {/* <div className="mt-10 space-y-6">
-        <h2 className="text-2xl font-bold text-green-700 mb-4">Session Feedback</h2> */}
-
-        {/* ---- YOUR FEEDBACK (EDITABLE) ---- */}
-        {/* <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">
-            Your Feedback ({role})
-          </h3>
-          <textarea
-            value={myFeedback}
-            onChange={(e) => setMyFeedback(e.target.value)}
-            disabled={isDone}
-            className="w-full border rounded-md p-3 text-sm text-gray-800 bg-white"
-            rows={4}
-            placeholder="Enter your own feedback about this session..."
-          />
-        </div> */}
-
-        {/* ---- OTHERS' FEEDBACK (READ-ONLY) ---- */}
-        {/* <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">Other Officials’ Feedback</h3>
-
-          <div className="space-y-4">
-            {session?.progress
-              ?.filter((p) => p.official_role !== role)
-              .map((p) => (
-                <div
-                  key={p.official}
-                  className="p-3 bg-gray-50 border rounded-md shadow-sm"
-                >
-                  <p className="font-semibold text-gray-700 mb-1">{p.official_role}</p>
-                  <textarea
-                    value={p.notes || ""}
-                    readOnly
-                    className="w-full border rounded-md p-2 bg-gray-100 text-sm"
-                    rows={3}
-                  />
-                </div>
-              ))}
-          </div>
-        </div> */}
-      {/* </div> */}
 
 
       {/* ACTION BUTTONS */}
@@ -442,12 +509,12 @@ useEffect(() => {
             onClick={handleFinishSession}
             className="px-6 py-2 rounded-md bg-green-600 text-white font-semibold hover:bg-green-700"
           >
-            Finish Session
+            Finish Consultation
           </button>
         )}
         {isDone && (
           <p className="text-gray-600 italic mt-2 text-sm">
-            You’ve already completed your part of this session.
+            You’ve already completed your part of this consultation.
           </p>
         )}
         <button

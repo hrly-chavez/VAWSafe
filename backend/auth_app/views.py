@@ -1,5 +1,7 @@
 import tempfile, os, traceback
+from django.db import transaction
 import numpy as np
+import cv2
 from sklearn.metrics.pairwise import cosine_similarity
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -248,361 +250,343 @@ class create_official(APIView):
 
     def post(self, request):
         # -----------------------
-        # Validate data
+        # Validate incoming data
         # -----------------------
         serializer = OfficialSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         role = serializer.validated_data.get("of_role", "").strip()
-        user = None
-        username = None
-        generated_password = None
-        status_value = "pending"
+        fname = request.data.get("of_fname", "").strip().lower()
+        lname = request.data.get("of_lname", "").strip().lower()
+        base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
 
-        # -----------------------
-        # Account creation logic
-        # -----------------------
-        if role == "DSWD":
-            if Official.objects.filter(of_role="DSWD").exists():
-                return Response(
-                    {"error": "A DSWD account already exists. Cannot create another."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            fname = request.data.get("of_fname", "").strip().lower()
-            lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
-
-            # Ensure unique username
-            username = base_username
-            counter = 0
-            while User.objects.filter(username=username).exists():
-                counter += 1
-                username = f"{base_username}{counter}"
-
-            generated_password = generate_strong_password(length=16)
-            user = User.objects.create_user(username=username, password=generated_password)
-            status_value = "approved"
-
-        elif role == "Social Worker":
-            fname = request.data.get("of_fname", "").strip().lower()
-            lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
-
-            username = base_username
-            counter = 0
-            while User.objects.filter(username=username).exists():
-                counter += 1
-                username = f"{base_username}{counter}"
-
-            generated_password = generate_strong_password(length=16)
-            user = User.objects.create_user(username=username, password=generated_password)
-            status_value = "approved"
-
-        elif role == "Nurse":
-            fname = request.data.get("of_fname", "").strip().lower()
-            lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
-
-            username = base_username
-            counter = 0
-            while User.objects.filter(username=username).exists():
-                counter += 1
-                username = f"{base_username}{counter}"
-
-            generated_password = generate_strong_password(length=16)
-            user = User.objects.create_user(username=username, password=generated_password)
-            status_value = "approved"
-
-        elif role == "Psychometrician":
-            fname = request.data.get("of_fname", "").strip().lower()
-            lname = request.data.get("of_lname", "").strip().lower()
-            base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
-
-            username = base_username
-            counter = 0
-            while User.objects.filter(username=username).exists():
-                counter += 1
-                username = f"{base_username}{counter}"
-
-            generated_password = generate_strong_password(length=16)
-            user = User.objects.create_user(username=username, password=generated_password)
-            status_value = "approved"
-        else:
-            return Response({"error": f"Invalid role: {role}"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # -----------------------
-        # Create Official with serializer.save()
-        # -----------------------
-        official = serializer.save(
-            user=user,
-            status=status_value
-        )
-
-        if not official:
-            return Response({"error": "Failed to create official."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # -----------------------
-        # Handle uploaded photos
-        # -----------------------
         photo_files = request.FILES.getlist("of_photos")
         if not photo_files:
             single_photo = request.FILES.get("of_photo")
             if single_photo:
                 photo_files = [single_photo]
 
-        if photo_files:
-            # store first photo in of_photo field
-            official.of_photo = photo_files[0]
-            official.save()
+        if not photo_files:
+            return Response({"error": "At least one face photo is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         # -----------------------
-        # Face Embeddings (Social Worker / DSWD / Nurse / Psychometrician only)
+        # Process face embeddings
         # -----------------------
-        if role in ["Social Worker", "DSWD", "Nurse", "Psychometrician"]:
-            created_count = 0
-            for file in photo_files:
-                temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+        embeddings_success_count = 0
+        temp_embeddings_data = []
+
+        for file in photo_files:
+            temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+            try:
+                image = Image.open(file).convert("RGB")
+                image.save(temp_image, format="JPEG")
+                temp_image.flush()
+                temp_image.close()
+
                 try:
-                    image = Image.open(file).convert("RGB")
-                    image.save(temp_image, format="JPEG")
-                    temp_image.flush()
-                    temp_image.close()
-
                     embeddings = DeepFace.represent(
                         img_path=temp_image.name,
                         model_name="ArcFace",
                         enforce_detection=True
                     )
-
-                    # normalize output
-                    if isinstance(embeddings, list):
-                        if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
-                            embedding_vector = embeddings[0]["embedding"]
-                        elif all(isinstance(x, float) for x in embeddings):
-                            embedding_vector = embeddings
-                        else:
-                            raise ValueError("Unexpected list format from DeepFace.")
-                    elif isinstance(embeddings, dict) and "embedding" in embeddings:
-                        embedding_vector = embeddings["embedding"]
-                    else:
-                        raise ValueError("Unexpected format from DeepFace.represent()")
-
-                    OfficialFaceSample.objects.create(
-                        official=official,
-                        photo=file,
-                        embedding=embedding_vector
+                except ValueError as e:
+                    # This is triggered when no face is detected
+                    return Response(
+                        {"error": "Face could not be detected. Please upload a clear face photo."},
+                        status=status.HTTP_400_BAD_REQUEST
                     )
-                    created_count += 1
-
                 except Exception as e:
-                    traceback.print_exc()
-                finally:
-                    if os.path.exists(temp_image.name):
-                        os.remove(temp_image.name)
+                    # Catch-all for other DeepFace or unexpected errors
+                    return Response(
+                        {"error": "Face recognition failed. Please try again."},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                    )
 
-            if created_count == 0:
-                return Response(
-                    {"error": "Face registration failed. Please upload clearer photos."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                # normalize output
+                if isinstance(embeddings, list):
+                    if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
+                        embedding_vector = embeddings[0]["embedding"]
+                    elif all(isinstance(x, float) for x in embeddings):
+                        embedding_vector = embeddings
+                    else:
+                        raise ValueError("Unexpected list format from DeepFace.")
+                elif isinstance(embeddings, dict) and "embedding" in embeddings:
+                    embedding_vector = embeddings["embedding"]
+                else:
+                    raise ValueError("Unexpected format from DeepFace.represent()")
 
-            # Send credentials by email
-            email_address = serializer.validated_data.get("of_email")
-            if email_address:
-                subject = f"Your {role} Account Credentials"
-                message = (
-                    f"Hello {official.of_fname} {official.of_lname},\n\n"
-                    f"Your {role} account has been created and approved.\n\n"
-                    f"Username: {username}\n"
-                    f"Password: {generated_password}\n\n"
-                    f"Please log in and change your password immediately."
-                )
-                send_mail(
-                    subject,
-                    message,
-                    settings.DEFAULT_FROM_EMAIL,
-                    [email_address],
-                    fail_silently=False,
-                )
+                temp_embeddings_data.append({
+                    "photo": file,
+                    "embedding": embedding_vector
+                })
+                embeddings_success_count += 1
 
-            return Response({
-                "message": f"{role} registered. {created_count} face sample(s) saved.",
-                "official_id": official.of_id,
-                "username": username,
-                "password": generated_password,
-                "role": official.of_role,
-                "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
-            }, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                traceback.print_exc()
+            finally:
+                if os.path.exists(temp_image.name):
+                    os.remove(temp_image.name)
 
+        if embeddings_success_count == 0:
+            return Response(
+                {"error": "Face registration failed. Please upload clearer photos."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        # -----------------------
+        # Create User account
+        # -----------------------
+        username = base_username
+        counter = 0
+        while User.objects.filter(username=username).exists():
+            counter += 1
+            username = f"{base_username}{counter}"
 
-# class face_login(APIView):
+        generated_password = generate_strong_password(length=16)
+        user = User.objects.create_user(username=username, password=generated_password)
+
+        # -----------------------
+        # Save Official
+        # -----------------------
+        status_value = "approved" if role in ["DSWD", "Social Worker", "Nurse", "Psychometrician"] else "pending"
+        official = serializer.save(user=user, status=status_value)
+        official.of_photo = photo_files[0]
+        official.save()
+
+        # -----------------------
+        # Save face embeddings
+        # -----------------------
+        for data in temp_embeddings_data:
+            OfficialFaceSample.objects.create(
+                official=official,
+                photo=data["photo"],
+                embedding=data["embedding"]
+            )
+
+        # -----------------------
+        # Send credentials email (optional)
+        # -----------------------
+        email_address = serializer.validated_data.get("of_email")
+        if email_address:
+            subject = f"Your {role} Account Credentials"
+            message = (
+                f"Hello {official.of_fname} {official.of_lname},\n\n"
+                f"Your {role} account has been created and approved.\n\n"
+                f"Username: {username}\n"
+                f"Password: {generated_password}\n\n"
+                f"Please log in and change your password immediately."
+            )
+            try:
+                send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email_address], fail_silently=True)
+            except Exception as e:
+                print("Email sending failed:", e)
+
+        return Response({
+            "message": f"{role} registered. {embeddings_success_count} face sample(s) saved.",
+            "official_id": official.of_id,
+            "username": username,
+            "password": generated_password,
+            "role": official.of_role,
+            "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
+        }, status=status.HTTP_201_CREATED)
+
+# class create_official(APIView):
 #     parser_classes = [MultiPartParser, FormParser]
-#     throttle_classes = [ScopedRateThrottle]
-#     throttle_scope = 'face_login'
 #     permission_classes = [AllowAny]
 
-#     SIMILARITY_THRESHOLD = 0.65  # adjust based on testing
-
-#     @method_decorator(csrf_protect)  # require CSRF for POST (cookies auth)
 #     def post(self, request):
-#         uploaded_frames = [file for name, file in request.FILES.items() if name.startswith("frame")]
-#         if not uploaded_frames:
-#             return Response({"error": "No frame(s) provided"}, status=status.HTTP_400_BAD_REQUEST)
+#         # -----------------------
+#         # Validate data
+#         # -----------------------
+#         serializer = OfficialSerializer(data=request.data)
+#         if not serializer.is_valid():
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-#         best_match = None
-#         best_sample = None
-#         best_score = -1.0  # cosine similarity (higher = better)
+#         role = serializer.validated_data.get("of_role", "").strip()
+#         user = None
+#         username = None
+#         generated_password = None
+#         status_value = "pending"
 
-#         try:
-#             for file in uploaded_frames:
+#         # -----------------------
+#         # Account creation logic
+#         # -----------------------
+#         if role == "DSWD":
+#             if Official.objects.filter(of_role="DSWD").exists():
+#                 return Response(
+#                     {"error": "A DSWD account already exists. Cannot create another."},
+#                     status=status.HTTP_400_BAD_REQUEST,
+#                 )
+
+#             fname = request.data.get("of_fname", "").strip().lower()
+#             lname = request.data.get("of_lname", "").strip().lower()
+#             base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
+
+#             # Ensure unique username
+#             username = base_username
+#             counter = 0
+#             while User.objects.filter(username=username).exists():
+#                 counter += 1
+#                 username = f"{base_username}{counter}"
+
+#             generated_password = generate_strong_password(length=16)
+#             user = User.objects.create_user(username=username, password=generated_password)
+#             status_value = "approved"
+
+#         elif role == "Social Worker":
+#             fname = request.data.get("of_fname", "").strip().lower()
+#             lname = request.data.get("of_lname", "").strip().lower()
+#             base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
+
+#             username = base_username
+#             counter = 0
+#             while User.objects.filter(username=username).exists():
+#                 counter += 1
+#                 username = f"{base_username}{counter}"
+
+#             generated_password = generate_strong_password(length=16)
+#             user = User.objects.create_user(username=username, password=generated_password)
+#             status_value = "approved"
+
+#         elif role == "Nurse":
+#             fname = request.data.get("of_fname", "").strip().lower()
+#             lname = request.data.get("of_lname", "").strip().lower()
+#             base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
+
+#             username = base_username
+#             counter = 0
+#             while User.objects.filter(username=username).exists():
+#                 counter += 1
+#                 username = f"{base_username}{counter}"
+
+#             generated_password = generate_strong_password(length=16)
+#             user = User.objects.create_user(username=username, password=generated_password)
+#             status_value = "approved"
+
+#         elif role == "Psychometrician":
+#             fname = request.data.get("of_fname", "").strip().lower()
+#             lname = request.data.get("of_lname", "").strip().lower()
+#             base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
+
+#             username = base_username
+#             counter = 0
+#             while User.objects.filter(username=username).exists():
+#                 counter += 1
+#                 username = f"{base_username}{counter}"
+
+#             generated_password = generate_strong_password(length=16)
+#             user = User.objects.create_user(username=username, password=generated_password)
+#             status_value = "approved"
+#         else:
+#             return Response({"error": f"Invalid role: {role}"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # -----------------------
+#         # Create Official with serializer.save()
+#         # -----------------------
+#         official = serializer.save(
+#             user=user,
+#             status=status_value
+#         )
+
+#         if not official:
+#             return Response({"error": "Failed to create official."}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # -----------------------
+#         # Handle uploaded photos
+#         # -----------------------
+#         photo_files = request.FILES.getlist("of_photos")
+#         if not photo_files:
+#             single_photo = request.FILES.get("of_photo")
+#             if single_photo:
+#                 photo_files = [single_photo]
+
+#         if photo_files:
+#             # store first photo in of_photo field
+#             official.of_photo = photo_files[0]
+#             official.save()
+
+#         # -----------------------
+#         # Face Embeddings (Social Worker / DSWD / Nurse / Psychometrician only)
+#         # -----------------------
+#         if role in ["Social Worker", "DSWD", "Nurse", "Psychometrician"]:
+#             created_count = 0
+#             for file in photo_files:
 #                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
-#                 image = Image.open(file).convert("RGB")
-#                 image.save(temp_image, format="JPEG")
-#                 temp_image.flush()
-#                 temp_image.close()
-
 #                 try:
-#                     # Generate embedding for uploaded frame
+#                     image = Image.open(file).convert("RGB")
+#                     image.save(temp_image, format="JPEG")
+#                     temp_image.flush()
+#                     temp_image.close()
+
 #                     embeddings = DeepFace.represent(
 #                         img_path=temp_image.name,
 #                         model_name="ArcFace",
 #                         enforce_detection=True
 #                     )
 
-#                     # Handle different DeepFace.represent() return types
-#                     frame_embedding = None
+#                     # normalize output
 #                     if isinstance(embeddings, list):
-#                         if len(embeddings) > 0 and isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
-#                             frame_embedding = embeddings[0]["embedding"]
-#                         elif all(isinstance(x, (int, float)) for x in embeddings):
-#                             frame_embedding = embeddings
-#                     elif isinstance(embeddings, dict) and "embedding" in embeddings:
-#                         frame_embedding = embeddings["embedding"]
-
-#                     if frame_embedding is None:
-#                         print(f"[WARN] No usable embedding from {file}")
-#                         continue
-
-#                     frame_embedding = np.array(frame_embedding).reshape(1, -1)
-
-#                     # Compare with stored samples
-#                     for sample in OfficialFaceSample.objects.select_related("official"):
-#                         official = sample.official
-#                         embedding = sample.embedding
-
-#                         if embedding:
-#                             sample_embedding = np.array(embedding).reshape(1, -1)
-#                             score = cosine_similarity(frame_embedding, sample_embedding)[0][0]
-#                             accuracy = score * 100
-#                             is_match = "TRUE" if score >= self.SIMILARITY_THRESHOLD else "FALSE"
-#                             print(
-#                                 f"[FACE LOGIN] Verifying {official.full_name} | "
-#                                 f"Score: {score:.4f} | Accuracy: {accuracy:.2f}% | "
-#                                 f"Threshold: {self.SIMILARITY_THRESHOLD} | Result: {is_match}"
-#                             )
-#                             if score > best_score:
-#                                 best_score = score
-#                                 best_match = official
-#                                 best_sample = sample
+#                         if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
+#                             embedding_vector = embeddings[0]["embedding"]
+#                         elif all(isinstance(x, float) for x in embeddings):
+#                             embedding_vector = embeddings
 #                         else:
-#                             # Fallback to DeepFace.verify
-#                             try:
-#                                 result = DeepFace.verify(
-#                                     img1_path=temp_image.name,
-#                                     img2_path=sample.photo.path,
-#                                     model_name="ArcFace",
-#                                     enforce_detection=True
-#                                 )
-#                                 if result.get("verified"):
-#                                     score = 1.0 / (1.0 + result["distance"])
-#                                     if score > best_score:
-#                                         best_score = score
-#                                         best_match = official
-#                                         best_sample = sample
-#                             except Exception as ve:
-#                                 print(f"[WARN] Fallback failed for {official.full_name}: {ve}")
-#                                 continue
+#                             raise ValueError("Unexpected list format from DeepFace.")
+#                     elif isinstance(embeddings, dict) and "embedding" in embeddings:
+#                         embedding_vector = embeddings["embedding"]
+#                     else:
+#                         raise ValueError("Unexpected format from DeepFace.represent()")
 
+#                     OfficialFaceSample.objects.create(
+#                         official=official,
+#                         photo=file,
+#                         embedding=embedding_vector
+#                     )
+#                     created_count += 1
+
+#                 except Exception as e:
+#                     traceback.print_exc()
 #                 finally:
 #                     if os.path.exists(temp_image.name):
 #                         os.remove(temp_image.name)
 
-#             # Apply similarity threshold
-#             if best_match and best_score >= self.SIMILARITY_THRESHOLD:
-#                 accuracy = best_score * 100
-#                 print(
-#                     f"[FACE LOGIN]  MATCH FOUND | Name: {best_match.full_name} | "
-#                     f"Similarity: {best_score:.4f} | Accuracy: {accuracy:.2f}% | "
-#                     f"Threshold: {self.SIMILARITY_THRESHOLD} | Result: TRUE"
+#             if created_count == 0:
+#                 return Response(
+#                     {"error": "Face registration failed. Please upload clearer photos."},
+#                     status=status.HTTP_400_BAD_REQUEST
 #                 )
 
-#                 # ⬇️ Instead of returning tokens in body, mint tokens and set HttpOnly cookies
-#                 refresh = RefreshToken.for_user(best_match.user)
-#                 access = str(refresh.access_token)
-
-#                 # Build profile photo URL (same as before)
-#                 if getattr(best_match, "of_photo", None) and best_match.of_photo:
-#                     rel_url = best_match.of_photo.url
-#                 elif best_sample and best_sample.photo:
-#                     rel_url = best_sample.photo.url
-#                 else:
-#                     rel_url = None
-#                 profile_photo_url = request.build_absolute_uri(rel_url) if rel_url else None
-
-#                 resp = Response({
-#                     "match": True,
-#                     "official_id": best_match.of_id,
-#                     "name": best_match.full_name,
-#                     "fname": best_match.of_fname,
-#                     "lname": best_match.of_lname,
-#                     "username": best_match.user.username,
-#                     "role": best_match.of_role,
-#                     "profile_photo_url": profile_photo_url,
-#                     "similarity_score": float(best_score),
-#                     "threshold": self.SIMILARITY_THRESHOLD
-#                 }, status=status.HTTP_200_OK)
-
-#                 # Log successful facial login
-#                 ip = get_client_ip(request)
-#                 user_agent = request.META.get('HTTP_USER_AGENT', '')
-
-#                 LoginTracker.objects.create(
-#                     user=best_match.user,
-#                     role=best_match.of_role,
-#                     ip_address=ip,
-#                     user_agent=user_agent,
-#                     status="Success"
+#             # Send credentials by email
+#             email_address = serializer.validated_data.get("of_email")
+#             if email_address:
+#                 subject = f"Your {role} Account Credentials"
+#                 message = (
+#                     f"Hello {official.of_fname} {official.of_lname},\n\n"
+#                     f"Your {role} account has been created and approved.\n\n"
+#                     f"Username: {username}\n"
+#                     f"Password: {generated_password}\n\n"
+#                     f"Please log in and change your password immediately."
+#                 )
+#                 send_mail(
+#                     subject,
+#                     message,
+#                     settings.DEFAULT_FROM_EMAIL,
+#                     [email_address],
+#                     fail_silently=False,
 #                 )
 
-#                 # 👉 Set HttpOnly cookies
-#                 set_auth_cookies(resp, access, str(refresh))
-#                 return resp
-            
-                
+#             return Response({
+#                 "message": f"{role} registered. {created_count} face sample(s) saved.",
+#                 "official_id": official.of_id,
+#                 "username": username,
+#                 "password": generated_password,
+#                 "role": official.of_role,
+#                 "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
+#             }, status=status.HTTP_201_CREATED)
 
-#             accuracy = best_score * 100 if best_score > 0 else 0
-#             print(
-#                 f"[FACE LOGIN]  NO MATCH | Best Score: {best_score:.4f} | "
-#                 f"Accuracy: {accuracy:.2f}% | "
-#                 f"Threshold: {self.SIMILARITY_THRESHOLD} | Result: FALSE"
-#             )
 
-#             LoginTracker.objects.create(
-#                 user=None,
-#                 role=None,
-#                 ip_address=get_client_ip(request),
-#                 user_agent=request.META.get('HTTP_USER_AGENT', ''),
-#                 status="Failed"
-#             )
 
-#             return Response({"match": False, "message": "No matching face found."}, status=status.HTTP_404_NOT_FOUND)
-
-#         except Exception as e:
-#             traceback.print_exc()
-#             return Response({"match": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 logger = logging.getLogger(__name__)
 
 class face_login(APIView):
@@ -814,6 +798,15 @@ class face_login(APIView):
             )
 
             return Response({"match": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+    
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+
+def detect_face(image_bytes):
+    nparr = np.frombuffer(image_bytes, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+    return len(faces) > 0
 
 class blick_check(APIView):
     parser_classes = [MultiPartParser, FormParser]
@@ -822,9 +815,13 @@ class blick_check(APIView):
     def post(self, request):
         uploaded_frames = [file for name, file in request.FILES.items() if name.startswith("frame")]
         if not uploaded_frames:
-            return Response({"error": "No frames received"}, status=400)
+            return Response({
+                "blink": False,
+                "message": "No frames received. Please position your face clearly in front of the camera."
+            }, status=200)
 
         for i, file in enumerate(uploaded_frames):
+            temp_image = None
             try:
                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
                 image = Image.open(file).convert("RGB")
@@ -835,10 +832,18 @@ class blick_check(APIView):
                 with open(temp_image.name, "rb") as f:
                     image_bytes = f.read()
 
+                # Step 1: detect face first
+                if not detect_face(image_bytes):  # <-- implement detect_face function
+                    os.remove(temp_image.name)
+                    return Response({
+                        "blink": False,
+                        "message": "No face detected. Please position your face clearly in front of the camera."
+                    }, status=200)
+
+                # Step 2: detect blink
                 if detect_blink(image_bytes):
-                    os.remove(temp_image.name) # cleanup temp
-                        
-                    #  Return blink index + candidate indices
+                    os.remove(temp_image.name)
+
                     candidate_indices = [i]
                     if i > 0:
                         candidate_indices.insert(0, i - 1)
@@ -854,12 +859,62 @@ class blick_check(APIView):
                     os.remove(temp_image.name)
             except Exception as e:
                 print(f"[WARN] Blink check failed: {e}")
+                if temp_image and os.path.exists(temp_image.name):
+                    os.remove(temp_image.name)
                 continue
 
+        # --- NO BLINK DETECTED in any frame ---
         return Response({
             "blink": False,
             "message": "No blink detected. Please blink clearly."
-        }, status=403)
+        }, status=200)
+
+
+# class blick_check(APIView):
+#     parser_classes = [MultiPartParser, FormParser]
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         uploaded_frames = [file for name, file in request.FILES.items() if name.startswith("frame")]
+#         if not uploaded_frames:
+#             return Response({"error": "No frames received"}, status=400)
+
+#         for i, file in enumerate(uploaded_frames):
+#             try:
+#                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
+#                 image = Image.open(file).convert("RGB")
+#                 image.save(temp_image, format="JPEG")
+#                 temp_image.flush()
+#                 temp_image.close()
+
+#                 with open(temp_image.name, "rb") as f:
+#                     image_bytes = f.read()
+
+#                 if detect_blink(image_bytes):
+#                     os.remove(temp_image.name) # cleanup temp
+                        
+#                     #  Return blink index + candidate indices
+#                     candidate_indices = [i]
+#                     if i > 0:
+#                         candidate_indices.insert(0, i - 1)
+#                     if i < len(uploaded_frames) - 1:
+#                         candidate_indices.append(i + 1)
+
+#                     return Response({
+#                         "blink": True,
+#                         "frame_index": i,
+#                         "candidate_indices": candidate_indices
+#                     }, status=200)
+#                 else:
+#                     os.remove(temp_image.name)
+#             except Exception as e:
+#                 print(f"[WARN] Blink check failed: {e}")
+#                 continue
+
+#         return Response({
+#             "blink": False,
+#             "message": "No blink detected. Please blink clearly."
+#         }, status=403)
 
     
 #manual login ni sya para sa cookie instead of localstorage

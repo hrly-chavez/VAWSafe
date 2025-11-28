@@ -19,6 +19,17 @@ const CreateSession = () => {
   const [fetchingQuestions, setFetchingQuestions] = useState(false);
   const [error, setError] = useState("");
   const [starting, setStarting] = useState(false); 
+  const forbiddenFornurse = [
+  "Termination / Discharge Planning",
+  "Legal Assistance Session",
+  "Intervention Planning / Case Conference",
+  "Case Study / Psychosocial Assessment",
+  "Family Counseling / Reintegration",
+  "Pyschological Evaluation",
+  "Counseling",
+
+  ];
+
   // Load top summary & session types
   useEffect(() => {
     const fetchData = async () => {
@@ -30,14 +41,17 @@ const CreateSession = () => {
 
         setSummary(summaryRes.data);
         setSessionTypes(
-          typeRes.data.map((t) => ({
+        typeRes.data
+          .filter((t) => !forbiddenFornurse.includes(t.name))
+          .map((t) => ({
             value: t.id,
             label: t.name,
           }))
-        );
+      );
+
       } catch (err) {
         console.error("Failed to load data", err);
-        setError("Failed to load incident or session types.");
+        setError("Failed to load incident or Consultation types.");
       } finally {
         setLoading(false);
       }
@@ -67,25 +81,25 @@ const CreateSession = () => {
     loadQuestions();
   }, [selectedType, summary]);
 
-  if (loading) return <p className="p-6 text-gray-600">Loading session form...</p>;
+  if (loading) return <p className="p-6 text-gray-600">Loading Consultation form...</p>;
   if (error) return <p className="p-6 text-red-600">{error}</p>;
   if (!summary) return <p className="p-6">No incident found.</p>;
 
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-8">
       <h2 className="text-2xl font-bold text-blue-800 border-b pb-2">
-        nurse – Create New Session
+        Nurse – Create New Consultation
       </h2>
 
       {/* Info Section */}
       <section className="bg-gray-50 p-4 rounded-lg border shadow-sm">
         <h3 className="font-semibold text-lg mb-3 text-gray-800">
-          Session Information
+          Consultation Information
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <InfoCard label="Case Number" value={summary.incident_num || "—"} />
           <InfoCard label="Victim Name" value={summary.victim_name || "—"} />
-          <InfoCard label="Next Session Number" value={summary.next_session_number || "—"} />
+          <InfoCard label="Next Consultation Number" value={summary.next_session_number || "—"} />
           
         </div>
       </section>
@@ -93,13 +107,13 @@ const CreateSession = () => {
       {/* Session Type Selection */}
       <section className="bg-gray-50 p-4 rounded-lg border shadow-sm">
         <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Select Session Type
+          Select Consultation Type
         </label>
         <Select
           options={sessionTypes}
           value={selectedType}
           onChange={(val) => setSelectedType(val)}
-          placeholder="Choose session type..."
+          placeholder="Choose consultation type..."
         />
       </section>
 
@@ -125,10 +139,18 @@ const CreateSession = () => {
             }`}
             onClick={async () => {
               if (!selectedType || !summary) return;
+
+              //  Confirmation prompt
+              const confirmed = window.confirm(
+                "Are you sure you want to start this session?"
+              );
+
+              if (!confirmed) return;
+
               setStarting(true);
               try {
                 // Step 1: Create a new session
-                const createRes = await api.post("/api/nurse/more-sessions/", {
+                const createRes = await api.post("/api/social_worker/more-sessions/", {
                   incident_id: summary.incident_id,
                   sess_type: [selectedType.value],
                 });
@@ -137,10 +159,10 @@ const CreateSession = () => {
                 const sessId = newSession.sess_id;
 
                 // Step 2: Start the session (hydrate role-based questions)
-                await api.post(`/api/nurse/sessions/${sessId}/start/`);
+                await api.post(`/api/social_worker/sessions/${sessId}/start/`);
 
                 // Step 3: Redirect to StartMoreSession
-                navigate(`/nurse/more-sessions/${sessId}/start`);
+                navigate(`/social_worker/more-sessions/${sessId}/start`);
               } catch (err) {
                 console.error("Failed to start session", err);
                 alert("Failed to start session. Please try again.");
@@ -148,6 +170,7 @@ const CreateSession = () => {
                 setStarting(false);
               }
             }}
+
           >
             {starting && (
               <svg
@@ -171,7 +194,7 @@ const CreateSession = () => {
                 ></path>
               </svg>
             )}
-            {starting ? "Starting..." : "Start Session"}
+            {starting ? "Starting..." : "Start Consultation"}
           </button>
       </div>
     </div>

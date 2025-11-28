@@ -1,129 +1,172 @@
-// src/pages/nurse/Sessions/Session.js
+// src/pages/nurse/Sessions/Sessions.js
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import "./Sessions.css";
+import {
+  MagnifyingGlassIcon,
+  EyeIcon,
+} from "@heroicons/react/24/solid";
 import api from "../../../api/axios";
 
 export default function Sessions() {
   const [sessions, setSessions] = useState([]);
-  const [search, setSearch] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    api
-      .get("/api/nurse/sessions/pending&Ongoing/")
-      .then((res) => setSessions(res.data))
-      .catch((err) => console.error("Failed to fetch sessions", err));
+    const loadSessions = async () => {
+      try {
+        const res = await api.get("/api/nurse/sessions/pending&Ongoing/");
+        setSessions(Array.isArray(res.data) ? res.data : []);
+      } catch (err) {
+        console.error("Failed to fetch sessions", err);
+        setError("Failed to load sessions.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadSessions();
   }, []);
 
   const filtered = sessions.filter((s) => {
     const matchesSearch = (s.victim_name || "")
       .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchesStatus = statusFilter
-      ? s.sess_status === statusFilter
-      : true;
+      .includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter ? s.sess_status === statusFilter : true;
     return matchesSearch && matchesStatus;
   });
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
-    const d = new Date(dateStr);
-    return d.toLocaleString("en-US", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
+    const parts = dateStr.split("T");
+    const date = parts[0];
+    const time = parts[1]?.slice(0, 5);
+    const [year, month, day] = date.split("-");
+    const readableDate = new Date(`${year}-${month}-${day}T00:00:00`);
+    return `${readableDate.toLocaleDateString("en-US", { dateStyle: "medium" })} ${convertTo12Hour(time)}`;
+  };
+
+  const convertTo12Hour = (hhmm) => {
+    if (!hhmm) return "—";
+    let [h, m] = hhmm.split(":");
+    h = parseInt(h, 10);
+    const suffix = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return `${h}:${m} ${suffix}`;
   };
 
   return (
-    <div>
-      <div className="flex min-h-screen bg-white">
-        <div className="sw-sessions-page">
-          <div className="sw-sessions-card">
-            <h2 className="sessionstext">Sessions</h2>
-            <p className="list-text">List of Scheduled Sessions</p>
+    <div className="w-full px-6">
+      {/* Title */}
+      <h2 className="text-xl md:text-2xl font-bold text-[#292D96] pt-6 mb-2">
+        Sessions
+      </h2>
+      <p className="text-sm md:text-base text-gray-600 mb-6">
+        List of Scheduled Sessions
+      </p>
 
-              {/* Status filter */}
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700"
-              >
-                <option value="">All Status</option>
-                <option value="Pending">Pending</option>
-                <option value="Ongoing">Ongoing</option>
-              </select>
-            
+      {/* Search + Filter */}
+      <div className="mt-4 w-full flex flex-wrap justify-between items-center gap-4">
+        <div className="flex items-center w-full md:w-2/3 border border-neutral-300 rounded-lg px-3 py-2">
+          <MagnifyingGlassIcon className="h-5 w-5 text-gray-500 mr-2" />
+          <input
+            type="text"
+            placeholder="Search by victim name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full text-sm text-neutral-900 outline-none"
+          />
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="border border-neutral-300 rounded-md px-3 py-2 text-sm text-gray-700"
+        >
+          <option value="">All Status</option>
+          <option value="Pending">Pending</option>
+          <option value="Ongoing">Ongoing</option>
+        </select>
+      </div>
 
-            {/* Table */}
-            <div className="table-container overflow-x-auto">
-              <table className="table-sessions min-w-full border rounded shadow-sm">
-                <thead>
-                  <tr>
-                    <th>Victim Name</th>
-                    <th>Case No.</th>
-                    <th>Session No.</th>
-                    <th>Schedule Date</th>
-                    <th>Status</th>
-                    <th>Assigned Official(s)</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.length > 0 ? (
-                    filtered.map((s, idx) => (
-                      <tr key={idx}>
-                        <td>{s.victim_name || "—"}</td>
-                        <td>{s.case_no || "—"}</td>
-                        <td>{s.sess_num || "—"}</td>
-                        <td>{formatDate(s.sess_next_sched)}</td>
+      {/* Table */}
+      <div className="mt-6 bg-white rounded-xl shadow-md border border-neutral-200">
+        <div className="overflow-x-auto rounded-xl">
 
-                        {/* Status badge */}
-                        <td>
-                          <span
-                            className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-                              s.sess_status === "Pending"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : s.sess_status === "Ongoing"
+          <table className="min-w-full table-fixed border border-neutral-200">
+            <thead className="sticky top-0 z-10 bg-gray-100 text-gray-700 text-sm font-semibold">
+              <tr>
+                <th className="border px-4 py-3 text-left">Victim Name</th>
+                <th className="border px-4 py-3 text-left">Case No.</th>
+                <th className="border px-4 py-3 text-left">Session No.</th>
+                <th className="border px-4 py-3 text-left">Schedule Date</th>
+                <th className="border px-4 py-3 text-left">Status</th>
+                <th className="border px-4 py-3 text-left">Assigned Official(s)</th>
+                <th className="border px-4 py-3 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="text-sm text-neutral-800">
+              {loading && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-6 text-center text-neutral-500">
+                    Loading sessions…
+                  </td>
+                </tr>
+              )}
+              {!loading && error && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-6 text-center text-red-600">
+                    {error}
+                  </td>
+                </tr>
+              )}
+              {!loading && !error && filtered.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-6 text-center text-neutral-500 italic">
+                    No sessions found.
+                  </td>
+                </tr>
+              )}
+              {!loading &&
+                !error &&
+                filtered.map((s, idx) => {
+                  const rowBg = idx % 2 === 0 ? "bg-white" : "bg-gray-50";
+                  return (
+                    <tr key={s.sess_id} className={rowBg}>
+                      <td className="border px-4 py-3">{s.victim_name || "—"}</td>
+                      <td className="border px-4 py-3">{s.case_no || "—"}</td>
+                      <td className="border px-4 py-3">{s.sess_num || "—"}</td>
+                      <td className="border px-4 py-3">{formatDate(s.sess_next_sched)}</td>
+                      <td className="border px-4 py-3">
+                        <span
+                          className={`inline-block px-2 py-1 rounded text-xs font-semibold ${s.sess_status === "Pending"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : s.sess_status === "Ongoing"
                                 ? "bg-blue-100 text-blue-700"
                                 : "bg-green-100 text-green-700"
                             }`}
-                          >
-                            {s.sess_status}
-                          </span>
-                        </td>
-
-                        {/* Officials */}
-                        <td>
-                          {s.official_names && s.official_names.length > 0
-                            ? s.official_names.join(", ")
-                            : "—"}
-                        </td>
-
-                        <td className="flex gap-2">
-                          <Link
-                            to={`/nurse/sessions/${s.sess_id}`}
-                            className="text-blue-700 bg-blue-100 px-3 py-1 rounded hover:bg-blue-200"
-                          >
-                            View
-                          </Link>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan="8"
-                        className="text-center text-gray-500 py-4"
-                      >
-                        No sessions found.
+                        >
+                          {s.sess_status}
+                        </span>
+                      </td>
+                      <td className="border px-4 py-3">
+                        {s.official_names && s.official_names.length > 0
+                          ? s.official_names.join(", ")
+                          : "—"}
+                      </td>
+                      <td className="border px-4 py-3 text-center">
+                        <Link
+                          to={`/nurse/sessions/${s.sess_id}`}
+                          className="text-[#10b981] hover:text-[#059669]"
+                        >
+                          <EyeIcon className="h-5 w-5 inline" />
+                        </Link>
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                  );
+                })}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

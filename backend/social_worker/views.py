@@ -1480,11 +1480,12 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        # Prepare old data
+        # Prepare old data (ADD ques_is_required)
         old_data = {
             "ques_category": instance.ques_category_id,
             "ques_question_text": instance.ques_question_text,
             "ques_answer_type": instance.ques_answer_type,
+            "ques_is_required": instance.ques_is_required,   # NEW
         }
 
         # Apply new values
@@ -1500,7 +1501,7 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
                 else updated_fields["ques_category"]
             )
 
-        # Detect real changes
+        # Detect real changes (now includes required)
         changes_detected = any(
             old_data[field] != updated_fields[field] for field in old_data
         )
@@ -1518,6 +1519,7 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
             "ques_category": "Category",
             "ques_question_text": "Question Text",
             "ques_answer_type": "Answer Type",
+            "ques_is_required": "Required",   # NEW
         }
 
         changes = []
@@ -1526,6 +1528,7 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
                 old_val = old_data[field]
                 new_val = updated_fields[field]
 
+                # Pretty label for category
                 if field == "ques_category":
                     old_val = (
                         QuestionCategory.objects.filter(id=old_val).first().name
@@ -1535,7 +1538,15 @@ class QuestionDetailView(generics.RetrieveUpdateDestroyAPIView):
                         QuestionCategory.objects.filter(id=new_val).first().name
                         if new_val else "(None)"
                     )
-                changes.append(f"• {field_labels[field]} changed from '{old_val}' → '{new_val}'")
+
+                # Pretty label for required
+                if field == "ques_is_required":
+                    old_val = "Yes" if bool(old_val) else "No"
+                    new_val = "Yes" if bool(new_val) else "No"
+
+                changes.append(
+                    f"• {field_labels[field]} changed from '{old_val}' → '{new_val}'"
+                )
 
         description = "\n".join(changes) or "Updated question fields."
 
@@ -1663,7 +1674,8 @@ class BulkAssignView(APIView):
                 desc_lines.append(f"• Removed Session Types: {', '.join(removed_types)}")
 
             if not desc_lines:
-                desc_lines.append("No changes to session assignments.")
+                continue
+
             description = "\n".join(desc_lines)
 
             # Log the reassignment

@@ -1,5 +1,5 @@
 
-// src/pages/psychometrician/Sessions/MoreSessions/PreviewMappedQuestions.js
+// src/pages/nurse/Sessions/MoreSessions/PreviewMappedQuestions.js
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -15,7 +15,7 @@ export default function PreviewMappedQuestions({ questions, loading }) {
   if (!questions || questions.length === 0) {
     return (
       <p className="text-gray-500 italic">
-        Select a session type to view mapped questions for your role.
+        Select a Consultation type to view mapped questions for your role.
       </p>
     );
   }

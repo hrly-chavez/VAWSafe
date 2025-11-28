@@ -21,6 +21,8 @@ export default function Questions() {
   const [selectedLogId, setSelectedLogId] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedQuestionId, setSelectedQuestionId] = useState(null);
+  const [requiredFilter, setRequiredFilter] = useState(null);
+  const [sessionFilter, setSessionFilter] = useState(null);
 
   const fetchCategories = async () => {
   try {
@@ -54,13 +56,30 @@ export default function Questions() {
   fetchQuestions(selectedCategory?.value || null);
 }, [selectedCategory]);
 
-  const filteredQuestions = questions.filter((q) => {
+  const filteredQuestions = questions
+  .filter((q) => {
     const query = searchQuery.toLowerCase();
     return (
       q.ques_question_text.toLowerCase().includes(query) ||
-      q.ques_category?.toLowerCase().includes(query)
+      (q.category_name || "").toLowerCase().includes(query)
     );
-  });
+  })
+  .filter((q) => {
+    if (!requiredFilter || requiredFilter === "all") return true;
+    if (requiredFilter === "required") return q.ques_is_required === true;
+    if (requiredFilter === "not_required") return q.ques_is_required === false;
+    return true;
+  })
+  .filter((q) => {
+    if (!sessionFilter) return true;
+    const sessionNumbers = q.mappings?.map((m) => m.session_number) || [];
+    if (sessionFilter === "4plus") return sessionNumbers.some((n) => n >= 4);
+    return sessionNumbers.includes(sessionFilter);
+  })
+  
+  .sort((a, b) => b.ques_id - a.ques_id);
+
+
 
   const handleEditClick = (questionId) => {
     setEditingQuestion(questionId);
@@ -93,53 +112,143 @@ export default function Questions() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-[#292D96] tracking-tight">
-          Q&amp;A Library
+  <div className="w-full px-6">
+
+    {/* ================= PAGE HEADER ================= */}
+      <div className="mt-4 mb-4">
+        <h1 className="text-2xl font-semibold text-[#292D96]">
+          Q&A Library
         </h1>
-        <p className="text-sm text-gray-600 mt-1">
-          VAWSAFE | Social Worker | Role-specific question library
+        <p className="text-sm text-gray-600">
+          VAWSAFE | Social Worker | Question Management
         </p>
       </div>
 
-      {/* Search & Add */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-3 mb-6 items-center">
-        <div className="flex items-center col-span-2">
+      {/* ================= FILTERS ================= */}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+
+        {/* Search */}
+        <div className="flex items-center w-full md:w-1/3 border border-gray-300 rounded-md px-3 py-2">
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-500 mr-2" />
           <input
             type="text"
-            placeholder="Search question..."
+            placeholder="Search questions..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-4 py-2 text-sm"
+            className="w-full text-sm text-gray-800 outline-none"
           />
         </div>
 
-        <div className="col-span-2">
+        {/* Category Filter */}
+        <div className="w-full md:w-1/4">
           <Select
             options={categories}
             value={selectedCategory}
             onChange={setSelectedCategory}
             isClearable
             placeholder="Filter by Category"
+            menuPortalTarget={null}
+            menuPosition="absolute"
+            menuPlacement="auto"
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              menu: (base) => ({ ...base, zIndex: 9999, width: "100%" }),
+              container: (base) => ({ ...base, width: "100%" }),
+            }}
           />
+
         </div>
 
-        <div className="flex justify-end col-span-2">
+        {/* Required Filter */}
+        <div className="w-full md:w-1/4">
+          <Select
+          options={[
+            { value: "required", label: "Required Only" },
+            { value: "not_required", label: "Not Required Only" },
+            { value: "all", label: "All" },
+          ]}
+          value={
+              requiredFilter
+                ? {
+                    value: requiredFilter,
+                    label:
+                      requiredFilter === "required"
+                        ? "Required Only"
+                        : requiredFilter === "not_required"
+                        ? "Not Required Only"
+                        : "All",
+                  }
+                : null
+            }
+          onChange={(opt) => setRequiredFilter(opt?.value || null)}
+          isClearable
+          placeholder="Filter by Required"
+          menuPortalTarget={null}
+          menuPosition="absolute"
+          menuPlacement="auto"
+          styles={{
+            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+            menu: (base) => ({ ...base, zIndex: 9999, width: "100%" }),
+            container: (base) => ({ ...base, width: "100%" }),
+          }}
+        />
+        </div>
+
+        {/* Session Number Filter */}
+        <div className="w-full md:w-1/4">
+          <Select
+            options={[
+              { value: 1, label: "Session 1" },
+              { value: 2, label: "Session 2" },
+              { value: 3, label: "Session 3" },
+              { value: "4plus", label: "Session 4+" },
+            ]}
+           value={
+              sessionFilter
+                ? {
+                    value: sessionFilter,
+                    label:
+                      sessionFilter === "4plus"
+                        ? "Session 4+"
+                        : `Session ${sessionFilter}`,
+                  }
+                : null
+            }
+            onChange={(opt) => setSessionFilter(opt?.value || null)}
+            isClearable
+            placeholder="Filter by Session"
+            menuPortalTarget={null}
+            menuPosition="absolute"
+            menuPlacement="auto"
+            styles={{
+              menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              menu: (base) => ({ ...base, zIndex: 9999, width: "100%" }),
+              container: (base) => ({ ...base, width: "100%" }),
+            }}
+          />
+
+        </div>
+
+        {/* Add Question Button */}
+        <div className="w-full md:w-auto ml-auto">
           <button
             onClick={() => setShowAddModal(true)}
-            className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded-md font-semibold hover:bg-blue-700 transition"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-semibold hover:bg-blue-700"
           >
             + Add Question
           </button>
         </div>
+
       </div>
 
+
       {/* Table */}
-      <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+      <div className="mt-6 bg-white rounded-xl shadow-md border border-neutral-200">
+        <div className="overflow-x-auto rounded-xl">
+
       <table className="min-w-full text-sm text-left">
-        <thead className="bg-blue-50 text-gray-700 uppercase text-xs font-semibold">
+        <thead className="sticky top-0 z-10 bg-gray-100 text-gray-700 text-sm font-semibold">
+
             <tr>
               <th className="border p-3 text-left">Category</th>
               <th className="border p-3 text-left">Question</th>
@@ -163,12 +272,12 @@ export default function Questions() {
                     !q.ques_is_active ? "opacity-60 bg-gray-100" : "bg-white"
                   }`}
                 >
-                  <td className="border p-3">
+                  <td className="border px-4 py-3">
                     {q.category_name || "Uncategorized"}
                   </td>
-                  <td className="border p-3">{q.ques_question_text}</td>
-                  <td className="border p-3">{q.ques_answer_type}</td>
-                  <td className="border p-3">
+                  <td className="border px-4 py-3">{q.ques_question_text}</td>
+                  <td className="border px-4 py-3">{q.ques_answer_type}</td>
+                  <td className="border px-4 py-3">
                     {q.ques_is_active ? "Yes" : "No"}
                   </td>
                   {/* Action Button */}
@@ -224,6 +333,7 @@ export default function Questions() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Add Modal */}

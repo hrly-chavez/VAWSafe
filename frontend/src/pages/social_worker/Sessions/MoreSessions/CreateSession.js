@@ -7,6 +7,12 @@ import api from "../../../../api/axios";
 import Select from "react-select";
 import PreviewMappedQuestions from "./PreviewMappedQuestions";
 
+
+const forbiddenForSocialWorker = [
+  "Pyschological Evaluation",
+  "Intervention Planning / Case Conference",
+  ];
+
 const CreateSession = () => {
   const { incident_id } = useParams();
   const navigate = useNavigate();
@@ -20,9 +26,7 @@ const CreateSession = () => {
   const [error, setError] = useState("");
   const [starting, setStarting] = useState(false); 
   
-  const forbiddenForSocialWorker = [
-  "Pyschological Evaluation"  
-  ];
+  
   // Load top summary & session types
   useEffect(() => {
     const fetchData = async () => {
@@ -131,6 +135,14 @@ const CreateSession = () => {
             }`}
             onClick={async () => {
               if (!selectedType || !summary) return;
+
+              //  Confirmation prompt
+              const confirmed = window.confirm(
+                "Are you sure you want to start this session?"
+              );
+
+              if (!confirmed) return;
+
               setStarting(true);
               try {
                 // Step 1: Create a new session
@@ -154,6 +166,7 @@ const CreateSession = () => {
                 setStarting(false);
               }
             }}
+
           >
             {starting && (
               <svg

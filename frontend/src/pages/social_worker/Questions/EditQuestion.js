@@ -11,6 +11,7 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
     ques_category: "",
     ques_question_text: "",
     ques_answer_type: "",
+    ques_is_required: false,
     mappings: [],
   });
 
@@ -330,6 +331,24 @@ export default function EditQuestion({ show, onClose, questionId, onUpdated }) {
                       </option>
                     ))}
                   </select>
+                </div>
+                
+                {/* Required toggle */}
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    id="req-toggle"
+                    type="checkbox"
+                    checked={question.ques_is_required || false}
+                    onChange={(e) =>
+                      setQuestion({
+                        ...question,
+                        ques_is_required: e.target.checked,
+                      })
+                    }
+                  />
+                  <label htmlFor="req-toggle" className="text-sm text-gray-700">
+                    Required question
+                  </label>
                 </div>
 
                 <div className="flex justify-end gap-3 mt-4">

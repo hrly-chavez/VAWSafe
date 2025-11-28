@@ -1,6 +1,7 @@
 from rest_framework import serializers, generics, permissions
 from shared_model.models import *
 from datetime import date
+from PIL import Image
 
 #===========================================VAWC Victim==========================================
 class VictimListSerializer(serializers.ModelSerializer):
@@ -473,14 +474,36 @@ class OfficialSerializer(serializers.ModelSerializer):
         model = Official
         fields = [
             "of_id", "full_name", "of_role", "of_contact", "of_email", "of_photo", "of_dob", "of_pob", "of_fname", "of_lname", "of_m_initial", "of_sex",
-            "address", "status",
-            "user_is_active", "deleted_at"
+            "address", "user_is_active", "deleted_at"
         ]
 
     def get_user_is_active(self, obj):
         if obj.user_id:
             return bool(obj.user.is_active)
         return None
+
+    def validate_of_photo(self, file):
+        allowed_types = ["JPEG", "PNG"]
+
+        # Validate image content using PIL (safer than imghdr)
+        try:
+            img = Image.open(file)
+            img.verify()  # verifies integrity
+        except Exception:
+            raise serializers.ValidationError("Uploaded file is not a valid image.")
+
+        # Check image format
+        if img.format not in allowed_types:
+            raise serializers.ValidationError("Only JPG and PNG images are allowed.")
+
+        # Reset file pointer (verify() moves it)
+        file.seek(0)
+
+        # Validate file size
+        if file.size > 3 * 1024 * 1024:
+            raise serializers.ValidationError("Image is too large (max 3MB).")
+
+        return file
 
 class AuditLogSerializer(serializers.ModelSerializer):
     actor_name = serializers.SerializerMethodField()
