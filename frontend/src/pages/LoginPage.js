@@ -189,8 +189,9 @@ const LoginPage = () => {
     const frames = await captureBurstFrames();
     if (loginCancelledRef.current) return;
 
-    if (frames.length === 0) {
-      setMessage(" Failed to capture webcam images.");
+    // 🔹 If no frames captured, assume no face detected
+    if (!frames || frames.length === 0) {
+      setMessage("No face detected. Please position your face clearly in front of the camera.");
       setLoading(false);
       return;
     }
@@ -216,9 +217,10 @@ const LoginPage = () => {
       if (loginCancelledRef.current) return;
       const blinkData = await blinkRes.json();
 
+      // 🔹 If blink not detected, assume no face detected
       if (!blinkRes.ok || !blinkData.blink) {
         setMessage(
-          blinkData.message || " No blink detected, please try again."
+          blinkData.message || "No face or blink detected. Please try again."
         );
         setLoading(false);
         return;
@@ -593,16 +595,17 @@ const LoginPage = () => {
 
                 {message && (
                   <p
-                    className={`mt-4 text-sm font-medium ${loading
-                      ? "text-white animate-pulse"
-                      : blinkCaptured ||
-                        (typeof message === "string" &&
-                          message.includes("✅"))
+                    className={`mt-4 text-sm font-medium ${
+                      loading
+                        ? "text-white animate-pulse"
+                        : blinkCaptured ||
+                          (typeof message === "string" && message.includes("✅"))
                         ? "text-green-400"
-                        : message === "No blink detected. Please blink clearly."
-                          ? "text-red-400"
-                          : "text-white"
-                      }`}
+                        : message === "No blink detected. Please blink clearly." ||
+                          message === "No face detected. Please position your face clearly in front of the camera."
+                        ? "text-red-400"
+                        : "text-white"
+                    }`}
                   >
                     {message}
                   </p>
@@ -611,8 +614,8 @@ const LoginPage = () => {
                 <div className="mt-6 flex flex-col sm:flex-row sm:gap-6 gap-4 items-center">
                   {!loading &&
                     (message === "No blink detected. Please blink clearly." ||
-                      (typeof message === "string" &&
-                        message.includes(""))) && (
+                      message === "No face detected. Please position your face clearly in front of the camera." ||
+                      (typeof message === "string" && message.includes(""))) && (
                       <button
                         onClick={handleFaceLogin}
                         className="w-44 py-2 bg-red-500 text-white font-semibold rounded-full shadow hover:bg-red-600 transition"
