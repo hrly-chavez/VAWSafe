@@ -637,3 +637,21 @@ class MonthlyReportRowSerializer(serializers.Serializer):
     Sexually_Exploited = serializers.IntegerField(source="Sexually Exploited")
     referredDSWD = serializers.IntegerField()
     referredHospital = serializers.IntegerField()
+
+#===========================================Serializers for Login Tracker ==========================================
+class LoginTrackerSerializer(serializers.ModelSerializer):
+    official_name = serializers.CharField(source="get_official_name", read_only=True)
+
+    class Meta:
+        model = LoginTracker
+        fields = [
+            "id",
+            "user",
+            "username_attempted",
+            "role",
+            "ip_address",
+            "user_agent",
+            "login_time",
+            "status",
+            "official_name",
+        ]

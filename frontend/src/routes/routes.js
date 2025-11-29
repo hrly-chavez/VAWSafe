@@ -37,6 +37,7 @@ export const ROUTES = {
   DSWD_PENDING_ACCOUNT: "/dswd/account-management/pending",
   DSWD_QUESTIONS: "/dswd/questions",
   DSWD_PROFILE: "/dswd/profile",
+  DSWD_LOGIN_TRACKER: "/dswd/login-tracker",
 
   // SOCIAL WORKER
   SOCIAL_WORKER: "/social_worker",
