@@ -502,10 +502,11 @@ export default function VictimDetailPage() {
                                     }`}
                                 >
                                   {report.report_type} Report —{" "}
-                                  {new Date(report.report_month).toLocaleDateString(
-                                    "en-US",
-                                    { month: "long", year: "numeric" }
-                                  )}
+                                  {new Date(report.report_month).toLocaleString("en-US", {
+                                    year: "numeric",   
+                                    month: "long",     
+                                    day: "numeric",     
+                                  })}
                                 </h4>
                                 <p className="text-xs text-gray-500">
                                   Prepared by: {report.prepared_by_name}
