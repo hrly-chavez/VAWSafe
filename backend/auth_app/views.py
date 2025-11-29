@@ -16,7 +16,7 @@ from rest_framework.exceptions import Throttled
 from rest_framework_simplejwt.tokens import RefreshToken
 from shared_model.models import Official, OfficialFaceSample, LoginTracker, AuditLog
 from shared_model.permissions import AllowSetupOrAdmin
-from .serializers import OfficialSerializer, LoginTrackerSerializer
+from .serializers import OfficialSerializer
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from django.core.mail import send_mail
 from django.conf import settings
