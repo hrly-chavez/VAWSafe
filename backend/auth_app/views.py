@@ -1100,18 +1100,18 @@ class CookieTokenObtainPairView(APIView):
 #         return resp
 
 #=================================Login Tracker=====================================
-class LoginTrackerViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = LoginTracker.objects.all().order_by('-login_time')
-    serializer_class = LoginTrackerSerializer
-    # permission_classes = [IsAuthenticated, IsRole]
-    # allowed_roles = ['DSWD']
-    permission_classes = [AllowAny]
+# class LoginTrackerViewSet(viewsets.ReadOnlyModelViewSet):
+#     queryset = LoginTracker.objects.all().order_by('-login_time')
+#     serializer_class = LoginTrackerSerializer
+#     # permission_classes = [IsAuthenticated, IsRole]
+#     # allowed_roles = ['DSWD']
+#     permission_classes = [AllowAny]
 
-    def get_queryset(self):
-        user = self.request.user
-        if hasattr(user, 'official') and user.official.of_role != 'DSWD':
-            return self.queryset.filter(user=user)
-        return self.queryset  # DSWD sees all
+#     def get_queryset(self):
+#         user = self.request.user
+#         if hasattr(user, 'official') and user.official.of_role != 'DSWD':
+#             return self.queryset.filter(user=user)
+#         return self.queryset  # DSWD sees all
 
 # 4) Refresh -> read refresh from cookie; set new cookies; return 204
 class CookieTokenRefreshView(views.APIView):
