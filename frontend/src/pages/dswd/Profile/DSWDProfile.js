@@ -16,6 +16,35 @@ export default function DSWDProfile() {
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError] = useState("");
 
+  // Helper function to make changes human-readable
+  const formatChange = (field, value) => {
+    const fieldLabels = {
+      of_fname: "First Name",
+      of_lname: "Last Name",
+      of_m_initial: "Middle Initial",
+      of_suffix: "Suffix",
+      of_sex: "Sex",
+      of_dob: "Date of Birth",
+      of_pob: "Place of Birth",
+      of_contact: "Contact",
+      of_email: "Email",
+      deleted_at: "Deleted At",
+      username: "Username",
+      // add more fields as needed
+    };
+
+    const label = fieldLabels[field] || field;
+
+    if (Array.isArray(value) && value.length === 2) {
+      return `${label} changed from ${value[0]} to ${value[1]}`;
+    } else if (Array.isArray(value) && value.length === 1) {
+      return `${label} set to ${value[0]}`;
+    } else {
+      return `${label} changed to ${value}`;
+    }
+  };
+
+
   // Fetch profile
   useEffect(() => {
     api
@@ -74,8 +103,11 @@ export default function DSWDProfile() {
             <h1 className="text-3xl font-bold mt-4 text-gray-800">{officialData.full_name}</h1>
             <p className="text-lg text-[#292D96] font-medium">{officialData.of_role}</p>
             <div className="mt-2 flex space-x-2 items-center">
-              <span className="px-3 py-1 text-xs font-bold rounded-full uppercase bg-green-500 text-white">
-                Approved
+              <span
+                className={`px-3 py-1 text-xs font-bold rounded-full uppercase text-white
+                  ${officialData.deleted_at ? "bg-red-500" : "bg-green-500"}`}
+              >
+                {officialData.deleted_at ? "Archived" : "Active"}
               </span>
               <p className="text-sm text-gray-500">Assigned: Regional Center</p>
             </div>
@@ -171,24 +203,49 @@ export default function DSWDProfile() {
               ) : auditLogs.length === 0 ? (
                 <p className="text-gray-500">No audit logs found.</p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-4">
                   {auditLogs.map((log, idx) => (
-                    <div key={idx} className="p-4 bg-gray-50 border rounded-lg shadow-sm">
-                      <p className="text-sm text-gray-700">
-                        <strong>Action:</strong> {log.action}
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        <strong>Changes:</strong> {JSON.stringify(log.changes)}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        <strong>Date:</strong> {new Date(log.created_at).toLocaleString("en-PH")}
-                      </p>
+                    <div
+                      key={idx}
+                      className="p-4 bg-gray-50 border rounded-lg shadow-sm hover:bg-gray-100 transition"
+                    >
+                      {/* Header: Action by Actor */}
+                      <div className="flex justify-between text-sm mb-1">
+                        <div>
+                          <span className="font-medium capitalize">{log.action}</span>{" "}
+                          <span className="opacity-70">by</span>{" "}
+                          <span className="font-medium">{log.actor_name || "System"}</span>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(log.created_at).toLocaleString("en-PH")}
+                        </div>
+                      </div>
+
+                      {/* Reason */}
+                      {log.reason && (
+                        <div className="text-xs text-gray-700 mb-1">
+                          <span className="font-medium">Reason:</span> {log.reason}
+                        </div>
+                      )}
+
+                      {/* Changes (hide for create, archive, unarchive) */}
+                      {!["create", "archive", "unarchive"].includes(log.action) && log.changes && (
+                        <div className="mt-2 text-xs">
+                          <span className="font-medium">Changes:</span>
+                          <ul className="list-disc ml-5 mt-1">
+                            {Object.entries(log.changes).map(([field, value], index) => (
+                              <li key={index}>{formatChange(field, value)}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
             </div>
           )}
+
         </div>
 
         {/* Edit & Change Password Buttons */}
