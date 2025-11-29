@@ -25,6 +25,7 @@ const CreateSession = () => {
   "Intervention Planning / Case Conference",
   "Case Study / Psychosocial Assessment",
   "Family Counseling / Reintegration",
+  "Case Closure",
 
   ];
 
@@ -137,10 +138,18 @@ const CreateSession = () => {
             }`}
             onClick={async () => {
               if (!selectedType || !summary) return;
+
+              //  Confirmation prompt
+              const confirmed = window.confirm(
+                "Are you sure you want to start this session?"
+              );
+
+              if (!confirmed) return;
+
               setStarting(true);
               try {
                 // Step 1: Create a new session
-                const createRes = await api.post("/api/psychometrician/more-sessions/", {
+                const createRes = await api.post("/api/social_worker/more-sessions/", {
                   incident_id: summary.incident_id,
                   sess_type: [selectedType.value],
                 });
@@ -149,10 +158,10 @@ const CreateSession = () => {
                 const sessId = newSession.sess_id;
 
                 // Step 2: Start the session (hydrate role-based questions)
-                await api.post(`/api/psychometrician/sessions/${sessId}/start/`);
+                await api.post(`/api/social_worker/sessions/${sessId}/start/`);
 
                 // Step 3: Redirect to StartMoreSession
-                navigate(`/psychometrician/more-sessions/${sessId}/start`);
+                navigate(`/social_worker/more-sessions/${sessId}/start`);
               } catch (err) {
                 console.error("Failed to start session", err);
                 alert("Failed to start session. Please try again.");
@@ -160,6 +169,7 @@ const CreateSession = () => {
                 setStarting(false);
               }
             }}
+
           >
             {starting && (
               <svg

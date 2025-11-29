@@ -35,6 +35,8 @@ const RegisterUser = ({ onClose, defaultRole }) => {
   const [sitio, setSitio] = useState("");
   const [street, setStreet] = useState("");
 
+  const [errorMessage, setErrorMessage] = useState("");
+
 
   // const [selectedCity, setSelectedCity] = useState("");
   const [selectedProvince, setSelectedProvince] = useState("");
@@ -63,12 +65,12 @@ const RegisterUser = ({ onClose, defaultRole }) => {
   }, [defaultRole]);
 
   // Fetch provinces
-useEffect(() => {
-  axios.get("http://localhost:8000/api/desk_officer/provinces/")
-  // axios.get("http://192.168.254.199:8000/api/desk_officer/provinces/")
-    .then((res) => setProvinces(res.data))   // <-- store provinces
-    .catch((err) => console.error("Failed to load provinces:", err));
-}, []);
+  useEffect(() => {
+    axios.get("http://localhost:8000/api/desk_officer/provinces/")
+    // axios.get("http://192.168.254.199:8000/api/desk_officer/provinces/")
+      .then((res) => setProvinces(res.data))   // <-- store provinces
+      .catch((err) => console.error("Failed to load provinces:", err));
+  }, []);
 
   // Fetch municipalities based on selected province
   useEffect(() => {
@@ -128,8 +130,207 @@ useEffect(() => {
     setCurrentIndex(updated.length < MAX_PHOTOS ? updated.length : MAX_PHOTOS - 1);
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   const newErrors = {
+  //     of_fname: "",
+  //     of_lname: "",
+  //     of_email: "",
+  //     sex: "",
+  //     of_dob: "",
+  //     of_pob: "",
+  //     of_contact: "",
+  //     address: "",
+  //     photos: "",
+  //   };
+  //   let hasError = false;
+
+  //   // First name
+  //   if (!of_fname.trim()) {
+  //     newErrors.of_fname = "Required";
+  //     hasError = true;
+  //   }
+
+  //   // Last name
+  //   if (!of_lname.trim()) {
+  //     newErrors.of_lname = "Required";
+  //     hasError = true;
+  //   }
+
+  //   // Email
+  //   if (!of_email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(of_email)) {
+  //     newErrors.of_email = "Please provide a valid email.";
+  //     hasError = true;
+  //   }
+
+  //   // Sex
+  //   if (!sex.trim()) {
+  //     newErrors.sex = "Required";
+  //     hasError = true;
+  //   }
+
+  //   // Date of Birth
+  //   if (!of_dob.trim()) {
+  //     newErrors.of_dob = "Required";
+  //     hasError = true;
+  //   }
+
+  //   // Place of Birth
+  //   if (!of_pob.trim()) {
+  //     newErrors.of_pob = "Required";
+  //     hasError = true;
+  //   }
+
+  //   // Contact Number
+  //   if (!of_contact.trim()) {
+  //     newErrors.of_contact = "Required";
+  //     hasError = true;
+  //   } else if (!/^\d{11}$/.test(of_contact)) {
+  //     newErrors.of_contact = "Contact number must be exactly 11 digits.";
+  //     hasError = true;
+  //   }
+
+  //   // Address validation
+  //   if (
+  //     !selectedProvince ||
+  //     !selectedMunicipality ||
+  //     !selectedBarangay ||
+  //     !sitio.trim() ||
+  //     !street.trim()
+  //   ) {
+  //     newErrors.address = "Please complete all address fields.";
+  //     hasError = true;
+  //   }
+
+  //   // Photos
+  //   if (photos.length < MAX_PHOTOS || photos.some((p) => !p)) {
+  //     newErrors.photos = `Please capture all ${MAX_PHOTOS} face photos.`;
+  //     hasError = true;
+  //   }
+
+  //   setRegErrors(newErrors);
+  //   if (hasError) return;
+
+  //   const formData = new FormData();
+  //   formData.append("of_fname", of_fname);
+  //   formData.append("of_lname", of_lname);
+  //   formData.append("of_email", of_email);
+  //   formData.append("of_role", of_role);
+  //   formData.append("of_m_initial", of_m_initial);
+  //   formData.append("of_suffix", of_suffix);
+  //   formData.append("of_sex", sex);
+  //   formData.append("of_dob", of_dob);
+  //   formData.append("of_pob", of_pob);
+  //   formData.append("of_contact", of_contact);
+  //   formData.append("address.province", selectedProvince);
+  //   formData.append("address.municipality", selectedMunicipality);
+  //   formData.append("address.barangay", selectedBarangay);
+  //   formData.append("address.sitio", sitio);
+  //   formData.append("address.street", street);
+
+  //   // Add all photos to FormData
+  //   for (let i = 0; i < photos.length; i++) {
+  //     const blob = await fetch(photos[i]).then((res) => res.blob());
+
+  //     // Validate MIME type
+  //     if (blob.type !== "image/jpeg") {
+  //       alert("Invalid image format. Only JPEG is allowed.");
+  //       return;
+  //     }
+
+  //     // Validate max file size (3MB recommended)
+  //     if (blob.size > 3 * 1024 * 1024) {
+  //       alert("Photo is too large. Maximum size is 3MB.");
+  //       return;
+  //     }
+
+  //     const photoFile = new File([blob], `photo_${i + 1}.jpg`, {
+  //       type: "image/jpeg",
+  //     });
+  //     formData.append("of_photos", photoFile);
+  //   }
+
+
+  //   // Step 1: Check if the face already exists
+  //   try {
+  //     //unya nani i push if dli na dev phase
+  //     // const checkResponse = await fetch("http://localhost:8000/api/auth/search-official/", {
+  //     //   method: "POST",
+  //     //   body: formData,
+  //     // });
+
+  //     // const checkData = await checkResponse.json();
+
+  //     // // If a match is found (verified = true), stop registration
+  //     // if (checkData.match && checkData.match === true) {
+  //     //   alert("A matching official was found. Registration cannot proceed.");
+  //     //   return;  // Stop further submission
+  //     // }
+
+  //     // Step 2: Proceed to register the user if no match is found
+  //     const response = await fetch("http://localhost:8000/api/auth/add-user/", {
+  //     // const response = await fetch("http://192.168.254.199:8000/api/auth/add-user/", {
+  //       method: "POST",
+  //       body: formData,
+  //     });
+
+  //     const data = await response.json();
+
+  //     // if (of_role === "VAWDesk") {
+  //     //     // ✅ Case 1: VAWDesk self-registering or created by DSWD
+  //     //     if (Array.isArray(defaultRole)) {
+  //     //         // DSWD created this account
+  //     //         setStatus("VAWDesk account created successfully, pending activation notice sent.");
+  //     //     } else {
+  //     //         // VAWDesk self-registration
+  //     //         setStatus("Your VAWDesk account is pending approval from DSWD.");
+  //     //     }
+  //     //     setCredentials(null);
+
+  //     // } else 
+  //     if (of_role === "DSWD") {
+  //       setStatus("DSWD account created successfully!");
+  //       setCredentials({
+  //         username: data.username,
+  //         password: data.password,
+  //         role: data.role,
+  //       });
+  //     } else {
+  //       setStatus("Registration successful!");
+  //       setCredentials({
+  //         username: data.username,
+  //         password: data.password,
+  //         role: data.role,
+  //       });
+  //     }
+
+  //     // Reset form
+  //     setPhotos([]);
+  //     setFname("");
+  //     setLname("");
+  //     setMname("");
+  //     setSuffix("");
+  //     setSex("");
+  //     setDob("");
+  //     setPob("");
+  //     setContact("");
+  //     setEmail("");
+  //     setSitio("");
+  //     setStreet("");
+  //     setCurrentIndex(0);
+
+  //   } catch (err) {
+  //     console.error("Registration error:", err);
+  //     setStatus("Registration failed. Please check the input or camera.");
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setStatus("");
+    setCredentials(null);
 
     const newErrors = {
       of_fname: "",
@@ -144,98 +345,51 @@ useEffect(() => {
     };
     let hasError = false;
 
-    // First name
-    if (!of_fname.trim()) {
-      newErrors.of_fname = "Required";
-      hasError = true;
+    // Basic field validations
+    if (!of_fname.trim()) { newErrors.of_fname = "Required"; hasError = true; }
+    if (!of_lname.trim()) { newErrors.of_lname = "Required"; hasError = true; }
+    if (!of_email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(of_email)) { newErrors.of_email = "Valid email required"; hasError = true; }
+    if (!sex.trim()) { newErrors.sex = "Required"; hasError = true; }
+    if (!of_dob.trim()) { newErrors.of_dob = "Required"; hasError = true; }
+    if (!of_pob.trim()) { newErrors.of_pob = "Required"; hasError = true; }
+    if (!of_contact.trim() || !/^\d{11}$/.test(of_contact)) { newErrors.of_contact = "Must be 11 digits"; hasError = true; }
+    if (!selectedProvince || !selectedMunicipality || !selectedBarangay || !sitio.trim() || !street.trim()) {
+      newErrors.address = "Complete all address fields"; hasError = true;
     }
-
-    // Last name
-    if (!of_lname.trim()) {
-      newErrors.of_lname = "Required";
-      hasError = true;
-    }
-
-    // Email
-    if (!of_email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(of_email)) {
-      newErrors.of_email = "Please provide a valid email.";
-      hasError = true;
-    }
-
-    // Sex
-    if (!sex.trim()) {
-      newErrors.sex = "Required";
-      hasError = true;
-    }
-
-    // Date of Birth
-    if (!of_dob.trim()) {
-      newErrors.of_dob = "Required";
-      hasError = true;
-    }
-
-    // Place of Birth
-    if (!of_pob.trim()) {
-      newErrors.of_pob = "Required";
-      hasError = true;
-    }
-
-    // Contact Number
-    if (!of_contact.trim()) {
-      newErrors.of_contact = "Required";
-      hasError = true;
-    } else if (!/^\d{11}$/.test(of_contact)) {
-      newErrors.of_contact = "Contact number must be exactly 11 digits.";
-      hasError = true;
-    }
-
-    // Address validation
-    if (
-      !selectedProvince ||
-      !selectedMunicipality ||
-      !selectedBarangay ||
-      !sitio.trim() ||
-      !street.trim()
-    ) {
-      newErrors.address = "Please complete all address fields.";
-      hasError = true;
-    }
-
-    // Photos
     if (photos.length < MAX_PHOTOS || photos.some((p) => !p)) {
-      newErrors.photos = `Please capture all ${MAX_PHOTOS} face photos.`;
-      hasError = true;
+      newErrors.photos = `Please capture all ${MAX_PHOTOS} face photos`; hasError = true;
     }
 
     setRegErrors(newErrors);
-    if (hasError) return;
+    if (hasError) { setLoading(false); return; }
 
-    const formData = new FormData();
-    formData.append("of_fname", of_fname);
-    formData.append("of_lname", of_lname);
-    formData.append("of_email", of_email);
-    formData.append("of_role", of_role);
-    formData.append("of_m_initial", of_m_initial);
-    formData.append("of_suffix", of_suffix);
-    formData.append("of_sex", sex);
-    formData.append("of_dob", of_dob);
-    formData.append("of_pob", of_pob);
-    formData.append("of_contact", of_contact);
-    formData.append("address.province", selectedProvince);
-    formData.append("address.municipality", selectedMunicipality);
-    formData.append("address.barangay", selectedBarangay);
-    formData.append("address.sitio", sitio);
-    formData.append("address.street", street);
-
-    // Add all photos to FormData
-    for (let i = 0; i < photos.length; i++) {
-      const blob = await fetch(photos[i]).then((res) => res.blob());
-      const photoFile = new File([blob], `photo_${i + 1}.jpg`, { type: "image/jpeg" });
-      formData.append("of_photos", photoFile);
-    }
-
-    // Step 1: Check if the face already exists
     try {
+      const formData = new FormData();
+      formData.append("of_fname", of_fname);
+      formData.append("of_lname", of_lname);
+      formData.append("of_email", of_email);
+      formData.append("of_role", of_role);
+      formData.append("of_m_initial", of_m_initial);
+      formData.append("of_suffix", of_suffix);
+      formData.append("of_sex", sex);
+      formData.append("of_dob", of_dob);
+      formData.append("of_pob", of_pob);
+      formData.append("of_contact", of_contact);
+      formData.append("address.province", selectedProvince);
+      formData.append("address.municipality", selectedMunicipality);
+      formData.append("address.barangay", selectedBarangay);
+      formData.append("address.sitio", sitio);
+      formData.append("address.street", street);
+
+      for (let i = 0; i < photos.length; i++) {
+        const blob = await fetch(photos[i]).then(res => res.blob());
+        if (blob.type !== "image/jpeg") { alert("Only JPEG allowed"); setLoading(false); return; }
+        if (blob.size > 3 * 1024 * 1024) { alert("Max 3MB per photo"); setLoading(false); return; }
+        const photoFile = new File([blob], `photo_${i + 1}.jpg`, { type: "image/jpeg" });
+        formData.append("of_photos", photoFile);
+      }
+
+      // Step 1: Check if the face already exists
       //unya nani i push if dli na dev phase
       // const checkResponse = await fetch("http://localhost:8000/api/auth/search-official/", {
       //   method: "POST",
@@ -252,62 +406,55 @@ useEffect(() => {
 
       // Step 2: Proceed to register the user if no match is found
       const response = await fetch("http://localhost:8000/api/auth/add-user/", {
-      // const response = await fetch("http://192.168.254.199:8000/api/auth/add-user/", {
         method: "POST",
         body: formData,
       });
 
       const data = await response.json();
 
-      // if (of_role === "VAWDesk") {
-      //     // ✅ Case 1: VAWDesk self-registering or created by DSWD
-      //     if (Array.isArray(defaultRole)) {
-      //         // DSWD created this account
-      //         setStatus("VAWDesk account created successfully, pending activation notice sent.");
-      //     } else {
-      //         // VAWDesk self-registration
-      //         setStatus("Your VAWDesk account is pending approval from DSWD.");
-      //     }
-      //     setCredentials(null);
+      if (!response.ok) {
+        // Backend returned an error (face not detected or other)
+        setErrorMessage(data.error || "Registration failed. Please try again.");
+        return;
+      }
 
-      // } else 
-      if (of_role === "DSWD") {
-        setStatus("DSWD account created successfully!");
-        setCredentials({
-          username: data.username,
-          password: data.password,
-          role: data.role,
-        });
-      } else {
+      // Clear previous errors
+      setErrorMessage("");
+
+      // Only set credentials if backend confirms successful registration
+      if (data.username && data.password) {
         setStatus("Registration successful!");
         setCredentials({
           username: data.username,
           password: data.password,
           role: data.role,
         });
-      }
 
-      // Reset form
-      setPhotos([]);
-      setFname("");
-      setLname("");
-      setMname("");
-      setSuffix("");
-      setSex("");
-      setDob("");
-      setPob("");
-      setContact("");
-      setEmail("");
-      setSitio("");
-      setStreet("");
-      setCurrentIndex(0);
+        // Reset form
+        setPhotos([]);
+        setFname("");
+        setLname("");
+        setMname("");
+        setSuffix("");
+        setSex("");
+        setDob("");
+        setPob("");
+        setContact("");
+        setEmail("");
+        setSitio("");
+        setStreet("");
+        setCurrentIndex(0);
+      } else {
+        setStatus("Registration completed but credentials not provided.");
+      }
 
     } catch (err) {
       console.error("Registration error:", err);
       setStatus("Registration failed. Please check the input or camera.");
+    } finally {
+      setLoading(false);
     }
   };
-
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
@@ -352,19 +499,6 @@ useEffect(() => {
                   className={inputStyle}
                 />
                 {regErrors.of_lname && <p className="text-red-500 text-sm">{regErrors.of_lname}</p>}
-              </div>
-
-              {/* Email */}
-              <div className="flex flex-col">
-                <label className="font-medium text-sm mb-1">Email</label>
-                <input
-                  type="email"
-                  placeholder="example@email.com"
-                  value={of_email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={inputStyle}
-                />
-                {regErrors.of_email && <p className="text-red-500 text-sm">{regErrors.of_email}</p>}
               </div>
 
               <div className="flex flex-col">
@@ -424,6 +558,19 @@ useEffect(() => {
                   className={inputStyle} 
                 />
                 {regErrors.of_pob && <p className="text-red-500 text-sm">{regErrors.of_pob}</p>}
+              </div>
+
+              {/* Email */}
+              <div className="flex flex-col">
+                <label className="font-medium text-sm mb-1">Email</label>
+                <input
+                  type="email"
+                  placeholder="example@email.com"
+                  value={of_email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={inputStyle}
+                />
+                {regErrors.of_email && <p className="text-red-500 text-sm">{regErrors.of_email}</p>}
               </div>
 
               {/* Contact & Role */}
@@ -615,6 +762,11 @@ useEffect(() => {
               </div>
             </div>
 
+            {errorMessage && (
+              <div className="mt-4 p-3 border border-red-500 bg-red-100 text-red-900 rounded-lg shadow">
+                {errorMessage}
+              </div>
+            )}
             {/* Submit Button */}
             <div className="w-full flex justify-center">
               <button

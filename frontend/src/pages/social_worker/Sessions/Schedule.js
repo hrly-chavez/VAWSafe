@@ -21,6 +21,7 @@ export default function Schedule({ victim, incident, back, next }) {
   // New states for social workers display
   const [officials, setOfficials] = useState([]);
   const [selectedOfficials, setSelectedOfficials] = useState([]);
+  const [loggedInSW, setLoggedInSW] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [loadingSW, setLoadingSW] = useState(true);
 
@@ -158,8 +159,47 @@ export default function Schedule({ victim, incident, back, next }) {
 
 
   useEffect(() => {
-    fetchSocialWorkers();
+    const load = async () => {
+      await fetchSocialWorkers();
+    };
+    load();
   }, []);
+
+  // Auto-select the LOGGED-IN Social Worker
+    useEffect(() => {
+      const loadLoggedIn = async () => {
+        try {
+          const me = await api.get("/api/auth/me/");
+          const swId = me.data?.user?.official_id;
+
+          // Auto-select logged-in SW
+          if (swId) {
+            setLoggedInSW(swId);
+            setSelectedOfficials((prev) =>
+              prev.includes(swId) ? prev : [...prev, swId]
+            );
+          }
+        } catch (err) {
+          console.error("Failed to fetch logged-in user", err);
+        }
+      };
+
+      loadLoggedIn();
+    }, []);
+
+  
+  // Count roles among selected officials
+  const selectedDetails = officials.filter((o) =>
+    selectedOfficials.includes(o.of_id)
+  );
+
+  const hasSW = selectedDetails.some((o) => o.role === "Social Worker");
+  const hasNurse = selectedDetails.some((o) => o.role === "Nurse");
+  const hasPsych = selectedDetails.some((o) => o.role === "Psychometrician");
+
+  const disableSubmit =
+    !hasSW || !hasNurse || !hasPsych || isSubmitting;
+
   // Helper: Convert "HH:MM–HH:MM" to "hh:mm AM/PM – hh:mm AM/PM"
   const formatTo12Hour = (range) => {
     try {
@@ -309,9 +349,9 @@ export default function Schedule({ victim, incident, back, next }) {
         )}
         <button
         onClick={handleSubmitSchedule}
-        disabled={isSubmitting || selectedOfficials.length === 0}
+        disabled={disableSubmit}
         className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold shadow transition-all 
-          ${isSubmitting || selectedOfficials.length === 0
+          ${disableSubmit
             ? "bg-gray-400 cursor-not-allowed"
             : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
           }`}>

@@ -135,6 +135,14 @@ const CreateSession = () => {
             }`}
             onClick={async () => {
               if (!selectedType || !summary) return;
+
+              //  Confirmation prompt
+              const confirmed = window.confirm(
+                "Are you sure you want to start this session?"
+              );
+
+              if (!confirmed) return;
+
               setStarting(true);
               try {
                 // Step 1: Create a new session
@@ -158,6 +166,7 @@ const CreateSession = () => {
                 setStarting(false);
               }
             }}
+
           >
             {starting && (
               <svg

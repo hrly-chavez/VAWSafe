@@ -103,7 +103,7 @@ export default function DSWDDashboard() {
     fetchDashboardData();
   }, []);
 
-  // ✅ Line chart (Monthly Victim Reports)
+  // Line chart (Monthly Victim Reports)
   const lineData = {
     labels: [
       "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -113,17 +113,9 @@ export default function DSWDDashboard() {
       {
         label: "Total Victims",
         data: monthlyVictimData,
-        borderColor: "#6366F1",
-        backgroundColor: (context) => {
-          const chart = context.chart;
-          const { ctx, chartArea } = chart;
-          if (!chartArea) return "#6366F1";
-          const gradient = ctx.createLinearGradient(0, 0, 0, chartArea.bottom);
-          gradient.addColorStop(0, "rgba(99,102,241,0.4)");
-          gradient.addColorStop(1, "rgba(99,102,241,0.05)");
-          return gradient;
-        },
-        pointBackgroundColor: "#4338CA",
+        borderColor: "#3B82F6",
+        backgroundColor: "rgba(59,130,246,0.3)",
+        pointBackgroundColor: "#1E40AF",
         pointRadius: 5,
         borderWidth: 3,
         fill: true,
@@ -135,27 +127,13 @@ export default function DSWDDashboard() {
   const barOptions = {
     indexAxis: "y",
     responsive: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: { enabled: true },
-    },
+    plugins: { legend: { display: false } },
     scales: {
-      x: {
-        beginAtZero: true,
-        ticks: { 
-          stepSize: 1,
-          color: "#374151",
-        },
-        grid: { color: "rgba(209, 213, 219, 0.4)" },
-      },
-      y: {
-        grid: { color: "rgba(209, 213, 219, 0.4)" },
-        ticks: { color: "#374151" },
-      },
+      x: { beginAtZero: true, ticks: { stepSize: 1, color: "#374151" }, grid: { color: "rgba(209,213,219,0.4)" } },
+      y: { ticks: { color: "#374151" }, grid: { color: "rgba(209,213,219,0.4)" } },
     },
   };
 
-  // ✅ Pie chart (Case Status)
   const pieData = {
     labels: ["Active", "Resolved"],
     datasets: [
@@ -164,10 +142,7 @@ export default function DSWDDashboard() {
           incidentStats.active_cases || 0,
           incidentStats.status_types?.Done || 0,
         ],
-        backgroundColor: [
-          "rgba(59, 130, 246, 0.85)",
-          "rgba(156, 163, 175, 0.85)",
-        ],
+        backgroundColor: ["rgba(59,130,246,0.85)", "rgba(156,163,175,0.85)"],
         borderColor: ["#2563EB", "#6B7280"],
         hoverOffset: 10,
         borderWidth: 3,
@@ -177,13 +152,10 @@ export default function DSWDDashboard() {
 
   const pieOptions = {
     responsive: true,
-    plugins: {
-      legend: { position: "bottom" },
-    },
-    cutout: "55%", // donut style
+    plugins: { legend: { position: "bottom" } },
+    cutout: "55%",
   };
 
-  // ✅ Doughnut chart (Age Groups)
   const ageGroupData = {
     labels: ["Minors", "Adults"],
     datasets: [
@@ -215,6 +187,7 @@ export default function DSWDDashboard() {
       value: incidentStats.top_violence_type || "N/A",
       bg: "from-green-400 to-emerald-500",
       icon: <ChartBarIcon className="w-6 h-6 text-white" />,
+      textSize: "text-lg"
     },
     {
       label: "Female Victims (Minors)",
@@ -224,13 +197,17 @@ export default function DSWDDashboard() {
     },
   ];
 
-  if (loading)
-    return <div className="p-10 text-center text-gray-500">Loading dashboard...</div>;
-  if (error)
-    return <div className="p-10 text-center text-red-600">{error}</div>;
+  if (loading) return <div className="p-10 text-center text-gray-500">Loading dashboard...</div>;
+  if (error) return <div className="p-10 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="px-6 py-8 space-y-10 bg-gray-50 font-sans">
+    <div className="p-4 md:p-8 space-y-8 font-inter bg-[#f7f9fc]">
+      {/* Header */}
+      <header>
+        <h1 className="text-3xl font-extrabold text-gray-800">DSWD Dashboard</h1>
+        <p className="text-gray-500 mt-1">Monitoring victims, incidents, and monthly reports.</p>
+      </header>
+
       {/* KPI CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {kpiCards.map((kpi, idx) => (
@@ -238,7 +215,7 @@ export default function DSWDDashboard() {
             key={idx}
             className={`p-6 rounded-2xl shadow-md text-white bg-gradient-to-r ${kpi.bg} transform hover:scale-105 transition`}
           >
-            <h3 className="text-3xl font-bold flex items-center gap-3">
+            <h3 className={`${kpi.textSize || "text-3xl"} font-bold flex items-center gap-3`}>
               {kpi.icon} {kpi.value}
             </h3>
             <p className="text-sm mt-2 font-semibold opacity-90">{kpi.label}</p>
@@ -246,9 +223,8 @@ export default function DSWDDashboard() {
         ))}
       </div>
 
-      {/* MIDDLE CHARTS */}
+      {/* Middle Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Violence Type */}
         <div className="bg-white rounded-2xl shadow-md p-6">
           <h2 className="text-lg font-semibold mb-4 text-[#292D96]">
             Violence Type Breakdown
@@ -280,15 +256,15 @@ export default function DSWDDashboard() {
               options={{
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false }  },
-                  scales: {
-                    y: {
-                      beginAtZero: true,
-                      ticks: {
-                        stepSize: 1,
-                      }
+                plugins: { legend: { display: false } },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      stepSize: 1,
                     }
                   }
+                }
               }}
             />
           </div>

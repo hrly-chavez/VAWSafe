@@ -131,6 +131,7 @@ export default function ViewSessions() {
               {session.sess_status}
             </span>
           </div>
+          
           <div>
             <p className="text-gray-500">Type</p>
             {editingType ? (
@@ -168,14 +169,14 @@ export default function ViewSessions() {
                     ? sess_type_display.map((t) => t.name).join(", ")
                     : "—"}
                 </p>
-                 {session.sess_status === "Pending" && !isDone && (
+                 {/* {session.sess_status === "Pending" && !isDone && (
                     <button
                       onClick={() => setEditingType(true)}
                       className="ml-2 text-blue-600 text-sm hover:underline"
                     >
                       Edit
                     </button>
-                  )}
+                  )} */}
               </div>
             )}
           </div>

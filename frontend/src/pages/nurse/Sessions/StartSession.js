@@ -5,6 +5,7 @@ import api from "../../../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import NextSessionModal from "./NextSessionModal";
 import CaseSessionFollowup from "./CaseSessionFollowup";
+import { useRef } from "react";
 
 import Select from "react-select";
 
@@ -21,7 +22,8 @@ export default function StartSession() {
   const [role, setRole] = useState("");
   const [isDone, setIsDone] = useState(false);
   const [myFeedback, setMyFeedback] = useState("");
-
+  const [openRoles, setOpenRoles] = useState([]);
+  const roleRefs = useRef({});
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -38,6 +40,15 @@ export default function StartSession() {
           const data = response.data;
           setSession(data);
           setQuestions(data.questions || []);
+
+          // OPEN ALL ROLES BY DEFAULT
+          const allRoles = new Set();
+          (data.questions || []).forEach((q) => {
+            const r = q.assigned_role || q.question_category_name || null;
+            if (r) allRoles.add(r);
+          });
+          setOpenRoles([...allRoles]);
+
           setProgress(data.my_progress || null);
           setMyFeedback(data?.my_progress?.notes || "");
           const myRole = data?.my_progress?.official_role || data?.my_progress?.role || "";
@@ -46,6 +57,15 @@ export default function StartSession() {
         } else if (sess.sess_status === "Ongoing") {
           setSession(sess);
           setQuestions(sess.questions || []);
+
+          // OPEN ALL ROLES BY DEFAULT
+          const allRoles = new Set();
+          (sess.questions || []).forEach((q) => {
+            const r = q.assigned_role || q.question_category_name || null;
+            if (r) allRoles.add(r);
+          });
+          setOpenRoles([...allRoles]);
+
           setProgress(sess.my_progress || null);
           setMyFeedback(sess?.my_progress?.notes || "");
           const myRole = sess?.my_progress?.official_role || sess?.my_progress?.role || "";
@@ -113,7 +133,7 @@ export default function StartSession() {
     );
 
     if (missingRequired.length > 0) {
-      alert("Please answer all REQUIRED questions before finishing this session.");
+      alert("Please answer all REQUIRED questions before finishing this consultation.");
       return; // stop finish flow
     }
 
@@ -202,33 +222,62 @@ useEffect(() => {
 }, [loading, questions, role]);
 
 
-  if (loading) return <p className="p-6">Loading session...</p>;
+  if (loading) return <p className="p-6">Loading consultation...</p>;
 
   const roleOrder = ["Social Worker", "Nurse", "Psychometrician", "Home Life"];
   const roleColors = {
-    "Social Worker": "border-green-600 bg-green-50",
-    Nurse: "border-blue-600 bg-blue-50",
-    Psychometrician: "border-purple-600 bg-purple-50",
-    "Home Life": "border-orange-600 bg-orange-50",
+    "Social Worker": "border-gray-300 bg-white",
+    Nurse: "border-gray-300 bg-white",
+    Psychometrician: "border-gray-300 bg-white",
+    "Home Life": "border-gray-300 bg-white",
   };
+
 
   return (
     <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-10">
+      
       {/* HEADER */}
-      <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold text-green-700 mb-2">
-          Consultation {session?.sess_num || ""} — {session?.sess_status}
-        </h2>
-        {role && (
-          <p className="text-gray-700">
-            You are logged in as: <span className="font-semibold text-green-700">{role}</span>
+       <div className="text-center mb-8">
+
+          {/* SESSION TITLE – blue, with bottom border */}
+          <h2 className="text-2xl font-bold text-blue-800 border-b pb-2 inline-block mb-2">
+              {session?.sess_type_display?.[0]?.name} consultation
+            </h2>
+
+          {/* STATUS BADGE – professional subtle colors */}
+          <div className="mt-1">
+            <span
+              className={`
+                inline-block px-3 py-1 rounded-full text-xs font-medium border
+                ${
+                  session?.sess_status === "Pending"
+                    ? "bg-gray-50 text-gray-600 border-gray-300"
+                    : session?.sess_status === "Ongoing"
+                    ? "bg-blue-50 text-blue-700 border-blue-300"
+                    : "bg-green-50 text-green-700 border-green-300"
+                }
+              `}
+            >
+              {session?.sess_status}
+            </span>
+          </div>
+
+          {/* ROLE */}
+          {role && (
+            <p className="text-gray-600 mt-2 text-sm">
+              Logged in as:{" "}
+              <span className="font-semibold text-gray-800">{role}</span>
+            </p>
+          )}
+
+          {/* SUBTEXT */}
+          <p className="text-gray-500 text-xs mt-2">
+            Complete your part of this consultation below. Other officials’ answers are visible for review.
           </p>
-        )}
-        <p className="text-gray-500 text-sm mt-1">
-          Complete your part of this consultation below. Other officials’ answers are shown for
-          review only.
-        </p>
-      </div>
+        </div>
+
+
+
 
         {/* ROLE GROUPED QUESTIONS (grouped by role -> category) */}
           <div className="space-y-8">
@@ -252,26 +301,67 @@ useEffect(() => {
                   key={r}
                   ref={isUserRole ? mySectionRef : null}
                   data-role-section={r.toLowerCase()}
-                  className={`rounded-md border-2 ${colorClass} p-5 shadow-sm`}
-                >
+                  className="rounded-md border border-blue-300 p-5 shadow-sm bg-white border-t-4 border-blue-600"
+
+
+
+                  >
                   {/* Role header with colored badge */}
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-semibold text-gray-800 uppercase tracking-wide">
+                  <button
+                    onClick={() =>
+                      setOpenRoles((prev) =>
+                        prev.includes(r) ? prev.filter((x) => x !== r) : [...prev, r]
+                      )
+                    }
+                    className="w-full flex items-center justify-between mb-4 text-left"
+                  >
+                    <h3 className="text-xl font-bold text-gray-800 tracking-wide flex items-center gap-2">
                       {r} Section
                     </h3>
+                    <div className="mt-1 mb-3 h-[2px] bg-blue-600/20"></div>
+
+
+
+                    {/* Right-side button with role badge + plus/minus */}
+                    <div className="flex items-center gap-3">
                     <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        r === "Social Worker" ? "bg-green-100 text-green-800" :
-                        r === "Nurse" ? "bg-blue-100 text-blue-800" :
-                        r === "Psychometrician" ? "bg-purple-100 text-purple-800" :
-                        "bg-orange-100 text-orange-800"
+                      className={`px-3 py-1 rounded-full text-xs font-semibold text-white ${
+                        r === "Social Worker"
+                          ? "bg-blue-600"
+                          : r === "Nurse"
+                          ? "bg-teal-600"
+                          : r === "Psychometrician"
+                          ? "bg-red-600"
+                          : "bg-orange-600"
                       }`}
                     >
                       {r}
                     </span>
-                  </div>
+
+
+
+
+                      {/* Toggle Icon */}
+                      <span className="text-2xl text-gray-700">
+                        {openRoles.includes(r) ? "−" : "+"}
+                      </span>
+                    </div>
+                  </button>
+
 
                   {/* Group questions by category within this role */}
+                  <div
+                    ref={(el) => (roleRefs.current[r] = el)}
+                    style={{
+                      height: openRoles.includes(r)
+                        ? roleRefs.current[r]?.scrollHeight + "px"
+                        : "0px",
+                      opacity: openRoles.includes(r) ? 1 : 0,
+                    }}
+                    className="overflow-hidden transition-all duration-500 ease-in-out"
+                  >
+
+
                   {Object.entries(
                     roleQuestions.reduce((acc, q) => {
                       const category = q.question_category_name || "Uncategorized";
@@ -282,20 +372,10 @@ useEffect(() => {
                   ).map(([category, catQuestions]) => (
                     <div key={category} className="mb-6">
                       {/* Category Header */}
-                    <div
-                    className={`px-4 py-2 rounded-t-md border-l-4 shadow-sm ${
-                      r === "Social Worker"
-                        ? "bg-gradient-to-r from-green-100 to-green-50 border-green-600"
-                        : r === "Nurse"
-                        ? "bg-gradient-to-r from-blue-100 to-blue-50 border-blue-600"
-                        : r === "Psychometrician"
-                        ? "bg-gradient-to-r from-purple-100 to-purple-50 border-purple-600"
-                        : r === "Home Life"
-                        ? "bg-gradient-to-r from-orange-100 to-orange-50 border-orange-600"
-                        : "bg-gradient-to-r from-gray-100 to-gray-50 border-gray-400"
-                    }`}
-                  >
-                    <h5 className="text-md font-semibold text-gray-800 tracking-wide drop-shadow-sm">
+                    
+                    <div className="px-4 py-2 rounded-t-md border-l-4 border-blue-600 bg-gray-50 shadow-sm">
+                    
+                    <h5 className="text-md font-semibold text-gray-900 tracking-wide">
                       {category}
                     </h5>
                   </div>
@@ -313,7 +393,7 @@ useEffect(() => {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 12 }}
                                 transition={{ duration: 0.22, delay: index * 0.04 }}
-                                className="p-4 border border-gray-200 bg-white rounded-md mb-4"
+                                className="p-4 border border-gray-200 bg-white rounded-md mb-4 hover:shadow-md transition-shadow"
                               >
                                 <div className="flex items-start justify-between">
                                   <div className="flex items-center gap-2 mb-2">
@@ -413,58 +493,13 @@ useEffect(() => {
                       />
                     )}
                   </div>
+                  </div>
                 </div>
               );
             })}
+            
           </div>
 
-     
-
-    
-
-      {/* SESSION FEEDBACK */}
-      {/* <div className="mt-10 space-y-6">
-        <h2 className="text-2xl font-bold text-green-700 mb-4">Session Feedback</h2> */}
-
-        {/* ---- YOUR FEEDBACK (EDITABLE) ---- */}
-        {/* <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">
-            Your Feedback ({role})
-          </h3>
-          <textarea
-            value={myFeedback}
-            onChange={(e) => setMyFeedback(e.target.value)}
-            disabled={isDone}
-            className="w-full border rounded-md p-3 text-sm text-gray-800 bg-white"
-            rows={4}
-            placeholder="Enter your own feedback about this session..."
-          />
-        </div> */}
-
-        {/* ---- OTHERS' FEEDBACK (READ-ONLY) ---- */}
-        {/* <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">Other Officials’ Feedback</h3>
-
-          <div className="space-y-4">
-            {session?.progress
-              ?.filter((p) => p.official_role !== role)
-              .map((p) => (
-                <div
-                  key={p.official}
-                  className="p-3 bg-gray-50 border rounded-md shadow-sm"
-                >
-                  <p className="font-semibold text-gray-700 mb-1">{p.official_role}</p>
-                  <textarea
-                    value={p.notes || ""}
-                    readOnly
-                    className="w-full border rounded-md p-2 bg-gray-100 text-sm"
-                    rows={3}
-                  />
-                </div>
-              ))}
-          </div>
-        </div> */}
-      {/* </div> */}
 
 
       {/* ACTION BUTTONS */}

@@ -23,13 +23,6 @@ export default function Navbar({ toggleSidebar }) {
         <img src="/images/iacvawc-logo.png" alt="IACVAWC" className="h-[55px] w-[55px] rounded-md object-contain" />
       </div>
 
-      {/* Center title - always visible */}
-      <div className="flex-1 text-center px-2 sm:px-4">
-        <p className="text-sm sm:text-[18px] font-semibold tracking-wide text-[#292D96] truncate">
-          VAWC Case Monitoring and Profiling System
-        </p>
-      </div>
-
       {/* Right date/time - hidden on small screens */}
       <div className="hidden sm:block text-right text-sm text-gray-700 font-medium whitespace-nowrap">
         <p>

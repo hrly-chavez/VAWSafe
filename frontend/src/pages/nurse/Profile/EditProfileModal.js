@@ -123,12 +123,34 @@ export default function EditProfileModal({ officialData, onClose, onSave }) {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png"];
+    const maxSizeMB = 5; // adjust if needed
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+    // Validate MIME type (stronger than file extension)
+    if (!allowedTypes.includes(file.type)) {
+      alert("Invalid file type. Only JPG and PNG are allowed.");
+      e.target.value = null; 
+      return;
+    }
+
+    // Validate file size
+    if (file.size > maxSizeBytes) {
+      alert(`File is too large. Maximum size is ${maxSizeMB}MB`);
+      e.target.value = null;
+      return;
+    }
+
+    // Pass validation → preview + set formData
     setFormData({ ...formData, of_photo: file });
+
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result);
     };
-    if (file) reader.readAsDataURL(file);
+    reader.readAsDataURL(file);
   };
 
   const handleDragOver = (e) => {
@@ -141,17 +163,43 @@ export default function EditProfileModal({ officialData, onClose, onSave }) {
     e.preventDefault();
     e.stopPropagation();
 
-    // Handle the dropped file
     const file = e.dataTransfer.files[0];
-    if (file) {
-      setFormData({ ...formData, of_photo: file });
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png"];
+    const allowedExtensions = ["jpg", "jpeg", "png"];
+    const maxSizeMB = 5;
+    const maxSizeBytes = maxSizeMB * 1024 * 1024;
+
+    // Check MIME type
+    if (!allowedTypes.includes(file.type)) {
+      alert("Invalid file type. Only JPG and PNG images are allowed.");
+      return;
     }
+
+    // Check extension
+    const extension = file.name.split(".").pop().toLowerCase();
+    if (!allowedExtensions.includes(extension)) {
+      alert("Invalid file extension. Only JPG and PNG images are allowed.");
+      return;
+    }
+
+    // Check size
+    if (file.size > maxSizeBytes) {
+      alert(`File is too large. Maximum size is ${maxSizeMB}MB.`);
+      return;
+    }
+
+    // VALID → Save the file and preview
+    setFormData({ ...formData, of_photo: file });
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result);
+    };
+    reader.readAsDataURL(file);
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -159,13 +207,6 @@ export default function EditProfileModal({ officialData, onClose, onSave }) {
     // Log the selected province and municipality before submitting
     console.log('Province ID to submit:', formData.new_province);
     console.log('Municipality ID to submit:', formData.new_municipality);
-
-    // // Check if the address is being updated
-    // const isAddressUpdated = formData.new_province !== officialData.address?.province?.id ||
-    //                         formData.new_municipality !== officialData.address?.municipality?.id ||
-    //                         formData.new_barangay !== officialData.address?.barangay?.id ||
-    //                         formData.new_sitio !== officialData.address?.sitio ||
-    //                         formData.new_street !== officialData.address?.street;
 
     // If address is being updated, check if all fields are filled out
     if (isAddressUpdated) {
@@ -193,6 +234,7 @@ export default function EditProfileModal({ officialData, onClose, onSave }) {
         street: formData.new_street,
       },
       isAddressUpdated: isAddressUpdated,
+      reason: formData.reason || "No reason provided",
     };
 
     // Only add the address to the data if the address has been updated
@@ -237,9 +279,6 @@ export default function EditProfileModal({ officialData, onClose, onSave }) {
       }
     }
   };
-
-
-
 
   return (
     <div className="fixed inset-0 z-50">
@@ -501,6 +540,18 @@ export default function EditProfileModal({ officialData, onClose, onSave }) {
                 >
                   <p className="text-sm text-gray-600">Drag & Drop a file</p>
                 </div>
+              </div>
+
+              <div className="mt-4 sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reason for Update (for audit)</label>
+                <input
+                  type="text"
+                  name="reason"
+                  value={formData.reason || ""}
+                  onChange={handleInputChange}
+                  className="w-full border rounded px-3 py-2 text-sm"
+                  placeholder="e.g., Corrected spelling, updated contact info"
+                />
               </div>
             </div>
 
