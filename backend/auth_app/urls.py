@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 router = DefaultRouter()
-router.register(r'login-tracker', LoginTrackerViewSet, basename='login-tracker')
+# router.register(r'login-tracker', LoginTrackerViewSet, basename='login-tracker')
 
 urlpatterns = [
     path('add-user/', create_official.as_view(), name='add-user'),

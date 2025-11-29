@@ -1547,3 +1547,16 @@ class UpdateUsernamePasswordView(APIView):
         user.save()
 
         return Response({"success": True, "message": "Username and password updated successfully"})
+    
+#========================================== Login Tracker ==============================
+class LoginTrackerListAPIView(APIView):
+    """
+    Admin-only endpoint to view login tracker logs
+    """
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["DSWD"]  # only DSWD/admin can view
+
+    def get(self, request):
+        logs = LoginTracker.objects.order_by("-login_time")[:200]  # last 200 logs
+        serializer = LoginTrackerSerializer(logs, many=True)
+        return Response(serializer.data)

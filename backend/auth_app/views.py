@@ -14,7 +14,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.exceptions import Throttled
 from rest_framework_simplejwt.tokens import RefreshToken
-from shared_model.models import Official, OfficialFaceSample, LoginTracker
+from shared_model.models import Official, OfficialFaceSample, LoginTracker, AuditLog
+from shared_model.permissions import AllowSetupOrAdmin
 from .serializers import OfficialSerializer, LoginTrackerSerializer
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from django.core.mail import send_mail
@@ -243,10 +244,11 @@ def generate_strong_password(length=16):
 
     # Return the password as a string
     return ''.join(password)
+    
 
 class create_official(APIView):
     parser_classes = [MultiPartParser, FormParser]
-    permission_classes = [AllowAny]
+    permission_classes = [AllowSetupOrAdmin]
 
     def post(self, request):
         # -----------------------
@@ -353,6 +355,26 @@ class create_official(APIView):
         official = serializer.save(user=user, status=status_value)
         official.of_photo = photo_files[0]
         official.save()
+
+        # -----------------------
+        # Create Audit Log Entry
+        # -----------------------
+        AuditLog.objects.create(
+            actor=request.user if request.user.is_authenticated else None,  # admin who created the account
+            action="create",  # <-- you should add this to ACTION_CHOICES
+            target_model="Official",
+            target_id=official.of_id,
+            reason=f"Created new official account: {official.of_fname} {official.of_lname}",
+            changes={
+                "created_fields": {
+                    "fname": official.of_fname,
+                    "lname": official.of_lname,
+                    "role": official.of_role,
+                    "status": official.status,
+                    "username": user.username,
+                }
+            }
+        )
 
         # -----------------------
         # Save face embeddings
@@ -1078,18 +1100,18 @@ class CookieTokenObtainPairView(APIView):
 #         return resp
 
 #=================================Login Tracker=====================================
-class LoginTrackerViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = LoginTracker.objects.all().order_by('-login_time')
-    serializer_class = LoginTrackerSerializer
-    # permission_classes = [IsAuthenticated, IsRole]
-    # allowed_roles = ['DSWD']
-    permission_classes = [AllowAny]
+# class LoginTrackerViewSet(viewsets.ReadOnlyModelViewSet):
+#     queryset = LoginTracker.objects.all().order_by('-login_time')
+#     serializer_class = LoginTrackerSerializer
+#     # permission_classes = [IsAuthenticated, IsRole]
+#     # allowed_roles = ['DSWD']
+#     permission_classes = [AllowAny]
 
-    def get_queryset(self):
-        user = self.request.user
-        if hasattr(user, 'official') and user.official.of_role != 'DSWD':
-            return self.queryset.filter(user=user)
-        return self.queryset  # DSWD sees all
+#     def get_queryset(self):
+#         user = self.request.user
+#         if hasattr(user, 'official') and user.official.of_role != 'DSWD':
+#             return self.queryset.filter(user=user)
+#         return self.queryset  # DSWD sees all
 
 # 4) Refresh -> read refresh from cookie; set new cookies; return 204
 class CookieTokenRefreshView(views.APIView):

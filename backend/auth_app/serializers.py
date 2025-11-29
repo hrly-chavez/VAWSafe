@@ -55,20 +55,20 @@ class OfficialFaceSampleSerializer(serializers.ModelSerializer):
         model = OfficialFaceSample
         fields = "_all_"
 
-class LoginTrackerSerializer(serializers.ModelSerializer):
-    official_name = serializers.SerializerMethodField()
+# class LoginTrackerSerializer(serializers.ModelSerializer):
+#     official_name = serializers.SerializerMethodField()
 
-    class Meta:
-        model = LoginTracker
-        fields = [
-            'id', 'official_name', 'role', 'ip_address', 'user_agent', 'login_time', 'status'
-        ]
+#     class Meta:
+#         model = LoginTracker
+#         fields = [
+#             'id', 'official_name', 'role', 'ip_address', 'user_agent', 'login_time', 'status'
+#         ]
 
-    def get_official_name(self, obj):
-        try:
-            official = getattr(obj.user, "official", None)
-            if official:
-                return official.full_name  # assuming you already have full_name property
-            return obj.user.username  # fallback if no linked official
-        except Exception:
-            return "Unknown"
+#     def get_official_name(self, obj):
+#         try:
+#             official = getattr(obj.user, "official", None)
+#             if official:
+#                 return official.full_name  # assuming you already have full_name property
+#             return obj.user.username  # fallback if no linked official
+#         except Exception:
+#             return "Unknown"

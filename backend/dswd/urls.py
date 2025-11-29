@@ -58,5 +58,8 @@ urlpatterns = [
     #reports
     path("dswddashboard/summary/", DSWDDashboardAPIView.as_view(), name="dswd-dashboard-summary"),
 
+    #login tracker
+    path("login-tracker/", LoginTrackerListAPIView.as_view(), name="login-tracker"),
+
     path('', include(router.urls)),
 ]# + router.urls

@@ -203,8 +203,9 @@ class OfficialUnavailability(models.Model):
 
 class AuditLog(models.Model):
     ACTION_CHOICES = [
+        ("create", "Create"),
         ("deactivate", "Deactivate"),
-        ("reactivate", "Reactivate"),
+        ("unarchive", "Unarchive"),
         ("archive", "Archive"),
         ("update", "Update"),
     ]

@@ -49,6 +49,7 @@ const DSWDServices = lazy(() =>import("./pages/dswd/ServiceDSWD/DSWDServices"));
 const DSWDAccountManagement = lazy(() =>import("./pages/dswd/AccountManagement/DSWDAccountManagement"));
 const DSWDQuestions = lazy(() => import("./pages/dswd/Questions/Questions"));
 const DSWDProfile = lazy(() => import("./pages/dswd/Profile/DSWDProfile"));
+const DSWDLoginTracker = lazy(() => import("./pages/dswd/LoginTracker/LoginTracker"));
 
 //Nurse
 const NurseDashboard = lazy(() =>import("./pages/nurse/Dashboard/NurseDashboard"));
@@ -125,6 +126,7 @@ export default function App() {
               <Route path={ROUTES.DSWD_QUESTIONS} element={<DSWDQuestions />} />
               <Route path={ROUTES.DSWD_VIEW_OFFICIALS}element={<DSWDViewOfficials />}/>
               <Route path={ROUTES.DSWD_PENDING_ACCOUNT}element={<DSWDPendingAccount />}/>
+              <Route path={ROUTES.DSWD_LOGIN_TRACKER} element={<DSWDLoginTracker />}/>
             </Route>
 
             {/* SOCIAL WORKER group */}
