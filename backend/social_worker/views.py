@@ -522,7 +522,7 @@ class VictimIncidentsView(generics.ListAPIView):
 class search_victim_facial(APIView):
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['DSWD', 'Social Worker']
+    allowed_roles = ['DSWD', 'Social Worker', 'Psychometrician', 'Nurse']
 
     def decrypt_temp_file(self, encrypted_path):
         """Decrypt .enc image into a temporary .jpg file."""
@@ -553,7 +553,7 @@ class search_victim_facial(APIView):
         if not uploaded_file:
             return Response({"error": "No image uploaded."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Save the temporary image
+        # Save the temporary uploaded image
         try:
             temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
             temp_image.write(uploaded_file.read())
@@ -566,30 +566,24 @@ class search_victim_facial(APIView):
         best_match = None
         best_sample = None
         lowest_distance = float("inf")
-        decrypted_temp_files = []  # List to keep track of decrypted temp files
+        decrypted_temp_files = []
 
         try:
-            # Check the role and filter VictimFaceSample accordingly
-            if user_role == "DSWD":
-                # DSWD can view all victims
-                victim_samples = VictimFaceSample.objects.select_related("victim")
-            elif user_role == "Social Worker":
-                # Social Worker can only view assigned victims via the session model
-                victim_samples = VictimFaceSample.objects.filter(
-                    victim__incidents__sessions__assigned_official=request.user.official
-                ).select_related("victim")
+            # 🔥 ALL ROLES: View all victims
+            victim_samples = VictimFaceSample.objects.select_related("victim")
 
             for sample in victim_samples:
                 try:
-                    # Check if the photo is encrypted (.enc)
                     photo_path = sample.photo.path
+
+                    # Check encrypted photo
                     if photo_path.lower().endswith(".enc"):
                         decrypted_photo_path = self.decrypt_temp_file(photo_path)
                         if decrypted_photo_path:
                             photo_path = decrypted_photo_path
-                            decrypted_temp_files.append(decrypted_photo_path)  # Track decrypted files
+                            decrypted_temp_files.append(decrypted_photo_path)
                         else:
-                            continue  # Skip this sample if decryption fails
+                            continue
 
                     # Perform face verification
                     result = DeepFace.verify(
@@ -600,7 +594,10 @@ class search_victim_facial(APIView):
                     )
 
                     victim = sample.victim
-                    print(f"[DEBUG] Compared with {victim.vic_first_name} {victim.vic_last_name}, distance: {result['distance']:.4f}, verified: {result['verified']}")
+                    print(
+                        f"[DEBUG] Compared with {victim.vic_first_name} {victim.vic_last_name}, "
+                        f"distance: {result['distance']:.4f}, verified: {result['verified']}"
+                    )
 
                     if result["verified"] and result["distance"] < lowest_distance:
                         lowest_distance = result["distance"]
@@ -619,7 +616,6 @@ class search_victim_facial(APIView):
                     "victim_data": serializer.data
                 }, status=status.HTTP_200_OK)
 
-            # No match found
             return Response({
                 "match": False,
                 "message": "The Victim is not yet registered."
@@ -634,14 +630,14 @@ class search_victim_facial(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         finally:
-            # Clean up the temporary image files
+            # Clean up the temporary detection files
             if chosen_frame and os.path.exists(chosen_frame):
                 os.remove(chosen_frame)
 
-            # Clean up decrypted temp files after comparison
             for f in decrypted_temp_files:
                 if os.path.exists(f):
                     os.remove(f)
+
 
 
 #========================================SESSIONS====================================================
@@ -2046,7 +2042,7 @@ def generate_monthly_consolidated_report(report_instance):
 class SocialWorkerMonthlyReportViewSet(viewsets.ModelViewSet):
     serializer_class = SocialWorkerMonthlyReportSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker"]
+    allowed_roles = ["Social Worker", "DSWD"]
 
     def get_queryset(self):
         vic_id = self.kwargs["vic_id"]
