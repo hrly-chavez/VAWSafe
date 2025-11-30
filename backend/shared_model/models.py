@@ -320,10 +320,20 @@ class Victim(models.Model):
     vic_last_school_attended = EncryptedCharField(max_length=512, null=True, blank=True)
     vic_last_school_address = EncryptedCharField(max_length=512, null=True, blank=True)
     vic_occupation = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_income = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    vic_income = models.CharField(max_length=100, blank=True, null=True)
     vic_skills = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_contact_number = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_provincial_address = EncryptedCharField(max_length=512, blank=True, null=True)
+
+    subject_interest = EncryptedCharField(max_length=512, blank=True, null=True)
+    honors = EncryptedCharField(max_length=512, blank=True, null=True)
+    hobbies = EncryptedCharField(max_length=512, blank=True, null=True)
+    vocational_interest = EncryptedCharField(max_length=512, blank=True, null=True)
+    previous_skills = EncryptedCharField(max_length=512, blank=True, null=True)
+    type_of_training = EncryptedCharField(max_length=512, blank=True, null=True)
+    training_where = EncryptedCharField(max_length=512, blank=True, null=True)
+    training_when = EncryptedCharField(max_length=512, blank=True, null=True)
+    employment_experience = EncryptedCharField(max_length=512, blank=True, null=True)
     
     # present address
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, related_name="victim_address", null=True, blank=True)
@@ -549,7 +559,7 @@ class FamilyMember(models.Model):
     fam_civil_status = models.CharField(max_length=50, null=True, blank=True)
     fam_educational_attainment = models.CharField(max_length=50, null=True, blank=True)
     fam_occupation = models.CharField(max_length=50, null=True, blank=True)
-    fam_income = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    fam_income = models.CharField(max_length=50, null=True, blank=True)
 
     # foreign key
     victim = models.ForeignKey(Victim, on_delete=models.CASCADE, blank=True, null=True, related_name="family_members")
