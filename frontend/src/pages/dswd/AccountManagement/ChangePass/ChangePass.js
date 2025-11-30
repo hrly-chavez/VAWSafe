@@ -52,7 +52,19 @@ export default function ForgotPasswordModal({ onClose }) {
       }
     } catch (err) {
       console.error("Forgot password error:", err);
-      setMessage("Error connecting to server.");
+
+      if (err.response?.data?.message) {
+        const raw = err.response.data.message;
+
+        // if message contains "Face could not be detected", show cleaner text
+        if (raw.includes("Face could not be detected")) {
+          setMessage("Face could not be detected. Please confirm that the picture is a face photo.");
+        } else {
+          setMessage(raw);
+        }
+      } else {
+        setMessage("Error connecting to server.");
+      }
     } finally {
       setLoading(false);
     }
@@ -99,8 +111,14 @@ export default function ForgotPasswordModal({ onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-lg font-semibold text-[#292D96]">
-          Forgot Password (Face Verification)
+          Change Password (Face Verification)
         </h3>
+
+        {message && (
+          <div className="p-2 text-sm text-red-700 bg-red-100 border border-red-200 rounded-lg">
+            {message}
+          </div>
+        )}
 
         {/* Step 1: Capture Face */}
         {step === "capture" && (

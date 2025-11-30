@@ -17,6 +17,35 @@ export default function ViewOfficials() {
   const [auditsLoading, setAuditsLoading] = useState(false);
   const [auditsError, setAuditsError] = useState("");
 
+  // Helper function to make changes human-readable
+  const formatChange = (field, value) => {
+    const fieldLabels = {
+      of_fname: "First Name",
+      of_lname: "Last Name",
+      of_m_initial: "Middle Initial",
+      of_suffix: "Suffix",
+      of_sex: "Sex",
+      of_dob: "Date of Birth",
+      of_pob: "Place of Birth",
+      of_contact: "Contact",
+      of_email: "Email",
+      deleted_at: "Deleted At",
+      username: "Username",
+      // add more fields as needed
+    };
+
+    const label = fieldLabels[field] || field;
+
+    if (Array.isArray(value) && value.length === 2) {
+      return `${label} changed from ${value[0]} to ${value[1]}`;
+    } else if (Array.isArray(value) && value.length === 1) {
+      return `${label} set to ${value[0]}`;
+    } else {
+      return `${label} changed to ${value}`;
+    }
+  };
+
+
   useEffect(() => {
     api.get(`/api/dswd/officials/${of_id}/`)
       .then((res) => {
@@ -68,8 +97,11 @@ export default function ViewOfficials() {
             <h1 className="text-3xl font-bold mt-4 text-gray-800">{official.full_name}</h1>
             <p className="text-lg text-[#292D96] font-medium">{official.of_role || "Unassigned"}</p>
             <div className="mt-2 flex space-x-2 items-center">
-              <span className="px-3 py-1 text-xs font-bold rounded-full uppercase bg-green-500 text-white">
-                {official.status || "Active"}
+              <span
+                className={`px-3 py-1 text-xs font-bold rounded-full uppercase bg-green-500 text-white
+                  ${official.deleted_at ? "bg-red-500" : "bg-green-500"}`}
+              >
+                {official.deleted_at ? "Archived" : "Active"}
               </span>
               <p className="text-sm text-gray-500">Email: {official.of_email || "N/A"}</p>
             </div>
@@ -127,23 +159,15 @@ export default function ViewOfficials() {
                     <p className="text-gray-500">Contact</p>
                     <p className="text-gray-800 font-medium">{official.of_contact || "—"}</p>
                   </div>
-                  <div>
-                    <p className="text-gray-500">Specialization</p>
-                    <p className="text-gray-800 font-medium">{official.of_specialization || "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Status</p>
-                    <p className="text-gray-800 font-medium capitalize">{official.status}</p>
-                  </div>
                   <div className="md:col-span-2">
                     <p className="text-gray-500">Full Address</p>
                     <p className="text-gray-800 font-medium">
                       {[
                         official.address?.street,
                         official.address?.sitio,
-                        official.address?.barangay?.name,
-                        official.address?.municipality?.name,
-                        official.address?.province?.name,
+                        official.address?.barangay_name,
+                        official.address?.municipality_name,
+                        official.address?.province_name,
                       ].filter(Boolean).join(", ") || "—"}
                     </p>
                   </div>
@@ -165,6 +189,7 @@ export default function ViewOfficials() {
                   key={a.id}
                   className="border rounded-md p-4 shadow-sm bg-gray-50 mb-4 hover:bg-gray-100 transition"
                 >
+                  {/* Header: Action by Actor */}
                   <div className="flex justify-between text-sm">
                     <div>
                       <span className="font-medium capitalize">{a.action}</span>{" "}
@@ -175,19 +200,31 @@ export default function ViewOfficials() {
                       {new Date(a.created_at).toLocaleString()}
                     </div>
                   </div>
+
+                  {/* Reason */}
                   {a.reason && (
                     <div className="mt-1 text-xs">
                       <span className="font-medium">Reason:</span> {a.reason}
                     </div>
                   )}
-                  <div className="mt-2 text-xs">
-                    <span className="font-medium">Changes:</span>{" "}
-                    {JSON.stringify(a.changes)}
-                  </div>
+
+                  {/* Changes (hide for create, archive, unarchive) */}
+                  {!["create", "archive", "unarchive"].includes(a.action) && a.changes && (
+                    <div className="mt-2 text-xs">
+                      <span className="font-medium">Changes:</span>
+                      <ul className="list-disc ml-5 mt-1">
+                        {Object.entries(a.changes).map(([field, value], index) => (
+                          <li key={index}>{formatChange(field, value)}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                 </div>
               ))}
             </div>
           )}
+
 
           {/* Back Button */}
           <div className="flex justify-end mt-10">
