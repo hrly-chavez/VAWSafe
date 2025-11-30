@@ -53,10 +53,24 @@ export default function SearchVictimFacial({ onClose, onFound }) {
 
     } catch (err) {
       console.error("Search victim error:", err);
-      setMessage("Error connecting to server.");
+
+      if (err.response) {
+        // If backend returns JSON error (like match:false), show it
+        const backendMessage = err.response.data?.message;
+
+        if (backendMessage) {
+          setMessage(backendMessage);
+        } else {
+          setMessage("Server returned an error.");
+        }
+      } else {
+        setMessage("Error connecting to server.");
+      }
+
     } finally {
       setLoading(false);
     }
+
   };
 
   const handleBackdrop = (e) => {

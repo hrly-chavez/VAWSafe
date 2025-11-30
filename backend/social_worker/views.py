@@ -568,6 +568,8 @@ class search_victim_facial(APIView):
         lowest_distance = float("inf")
         decrypted_temp_files = []
 
+        face_detection_failed = False  # <-- Track if uploaded face could not be detected
+
         try:
             # 🔥 ALL ROLES: View all victims
             victim_samples = VictimFaceSample.objects.select_related("victim")
@@ -604,9 +606,22 @@ class search_victim_facial(APIView):
                         best_match = victim
                         best_sample = sample
 
+                except ValueError as ve:
+                    # This happens if DeepFace fails to detect a face
+                    if "Face could not be detected" in str(ve):
+                        face_detection_failed = True
+                        break  # Stop further comparison, uploaded face not detected
+                    print(f"[WARN] Skipping {sample.victim.vic_first_name} {sample.victim.vic_last_name} due to error: {str(ve)}")
+                    continue
                 except Exception as ve:
                     print(f"[WARN] Skipping {sample.victim.vic_first_name} {sample.victim.vic_last_name} due to error: {str(ve)}")
                     continue
+
+            if face_detection_failed:
+                return Response({
+                    "match": False,
+                    "message": "Face could not be detected. Please provide a clear face image."
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             if best_match:
                 serializer = VictimDetailSerializer(best_match, context={"request": request})
@@ -618,8 +633,8 @@ class search_victim_facial(APIView):
 
             return Response({
                 "match": False,
-                "message": "The Victim is not yet registered."
-            }, status=status.HTTP_404_NOT_FOUND)
+                "message": "No victim match found."
+            }, status=status.HTTP_200_OK)
 
         except Exception as e:
             traceback.print_exc()

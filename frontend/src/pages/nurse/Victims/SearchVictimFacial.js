@@ -54,8 +54,15 @@ export default function SearchVictimFacial({ onClose, onFound }) {
     } catch (err) {
       console.error("Search victim error:", err);
 
-      if (err.response?.status === 403) {
-        setMessage("You are not allowed to view this victim because they are not assigned to you.");
+      if (err.response) {
+        // If backend returns JSON error (like match:false), show it
+        const backendMessage = err.response.data?.message;
+
+        if (backendMessage) {
+          setMessage(backendMessage);
+        } else {
+          setMessage("Server returned an error.");
+        }
       } else {
         setMessage("Error connecting to server.");
       }
