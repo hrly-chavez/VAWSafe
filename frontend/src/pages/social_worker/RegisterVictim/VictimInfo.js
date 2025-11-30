@@ -182,6 +182,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             value={formDataState.vic_birth_date || ""}
             onChange={(e) => handleChange("vic_birth_date", e.target.value)}
           />
+
           <input
             className="input"
             type="text"
@@ -257,11 +258,19 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
               Select Educational Level
             </option>
             <option value="No Formal Education">No Formal Education</option>
-            <option value="Elementary Level/Graduate">Elementary Level/Graduate</option>
-            <option value="Junior High School Level/Graduate">Junior High School Level/Graduate</option>
-            <option value="Senior High School Level/Graduate">Senior High School Level/Graduate</option>
+            <option value="Elementary Level/Graduate">
+              Elementary Level/Graduate
+            </option>
+            <option value="Junior High School Level/Graduate">
+              Junior High School Level/Graduate
+            </option>
+            <option value="Senior High School Level/Graduate">
+              Senior High School Level/Graduate
+            </option>
             <option value="Technical/Vocational">Technical/Vocational</option>
-            <option value="College Level/Graduate">College Level/Graduate</option>
+            <option value="College Level/Graduate">
+              College Level/Graduate
+            </option>
             <option value="Post graduate">Post graduate</option>
           </select>
         </div>
@@ -291,17 +300,22 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               School Years
             </label>
+
             <input
-              type="text"
-              className="input w-full"
               placeholder="Enter School Years"
+              type="number"
+              className="input w-full"
+              min={0}
+              max={25}
               value={formDataState.vic_school_years || ""}
-              onChange={(e) => handleChange("vic_school_years", e.target.value)}
+              onChange={(e) => {
+                const value = Math.min(Math.max(Number(e.target.value), 0), 25); // clamp between 0 and 25
+                handleChange("vic_school_years", value);
+              }}
             />
           </div>
         </div>
       </div>
-
 
       {/* last school name and address */}
       <div className="flex flex-col mb-4">
@@ -338,12 +352,20 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             placeholder="Occupation"
             onChange={(e) => handleChange("vic_occupation", e.target.value)}
           />
-          <input
+
+          <select
             className="input"
-            type="text"
-            placeholder="Income"
+            value={formDataState.vic_income || ""}
             onChange={(e) => handleChange("vic_income", e.target.value)}
-          />
+          >
+            <option value="">Select Income</option>
+            <option value="0-5000">₱0 - ₱5,000</option>
+            <option value="5001-10000">₱5,001 - ₱10,000</option>
+            <option value="10001-20000">₱10,001 - ₱20,000</option>
+            <option value="20001-50000">₱20,001 - ₱50,000</option>
+            <option value="50001+">₱50,001 and above</option>
+          </select>
+
           <input
             className="input"
             type="text"
@@ -441,6 +463,121 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             handleChange("vic_provincial_address", e.target.value)
           }
         />
+      </div>
+
+      {/* extra fields added para universal sa docx forms */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Subject Interest
+          </label>
+          <input
+            className="input w-full"
+            type="text"
+            placeholder="Subject Interest"
+            onChange={(e) => handleChange("subject_interest", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Honors
+          </label>
+          <input
+            className="input w-full"
+            type="text"
+            placeholder="Honors"
+            onChange={(e) => handleChange("honors", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Hobbies
+          </label>
+          <input
+            className="input w-full"
+            type="text"
+            placeholder="Hobbies"
+            onChange={(e) => handleChange("hobbies", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Vocational Interest
+          </label>
+          <input
+            className="input w-full"
+            type="text"
+            placeholder="Vocational Interest"
+            onChange={(e) =>
+              handleChange("vocational_interest", e.target.value)
+            }
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Previous Skills
+          </label>
+          <input
+            className="input w-full"
+            type="text"
+            placeholder="Previous Skills"
+            onChange={(e) => handleChange("previous_skills", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Type of Training
+          </label>
+          <input
+            className="input w-full"
+            type="text"
+            placeholder="Type of Training"
+            onChange={(e) => handleChange("type_of_training", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Where
+          </label>
+          <input
+            className="input w-full"
+            type="text"
+            placeholder="Where"
+            onChange={(e) => handleChange("training_where", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            When
+          </label>
+          <input
+            className="input w-full"
+            type="text"
+            placeholder="When"
+            onChange={(e) => handleChange("training_when", e.target.value)}
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Employment Experience
+          </label>
+          <input
+            className="input w-full"
+            type="text"
+            placeholder="Employment Experience"
+            onChange={(e) =>
+              handleChange("employment_experience", e.target.value)
+            }
+          />
+        </div>
       </div>
     </div>
   );
