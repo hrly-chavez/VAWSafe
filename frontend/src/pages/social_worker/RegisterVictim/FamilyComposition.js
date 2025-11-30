@@ -191,8 +191,6 @@ export default function FamilyComposition({ formDataState, setFormDataState }) {
 
   return (
     <div className="overflow-x-auto p-4">
-      <h2 className="text-xl font-semibold mb-4">Family Member Information</h2>
-
       <button
         onClick={addMember}
         className="bg-blue-500 text-white px-4 py-2 rounded mb-4 hover:bg-blue-600"
