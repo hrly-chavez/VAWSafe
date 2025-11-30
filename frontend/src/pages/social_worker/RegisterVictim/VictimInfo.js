@@ -132,24 +132,27 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input"
             type="text"
             placeholder="First Name"
+            value={formDataState.vic_first_name || ""}
             onChange={(e) => handleChange("vic_first_name", e.target.value)}
           />
           <input
             className="input"
             type="text"
             placeholder="Middle Name"
+            value={formDataState.vic_middle_name || ""}
             onChange={(e) => handleChange("vic_middle_name", e.target.value)}
           />
           <input
             className="input"
             type="text"
             placeholder="Last Name"
+            value={formDataState.vic_last_name || ""}
             onChange={(e) => handleChange("vic_last_name", e.target.value)}
           />
           <input
             className="input"
             type="text"
-            placeholder="Extension (e.g. Jr., III)"
+            value={formDataState.vic_extension || ""}
             onChange={(e) => handleChange("vic_extension", e.target.value)}
           />
         </div>
@@ -165,6 +168,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input"
             type="text"
             placeholder="Nickname/Alias"
+            value={formDataState.vic_alias || ""}
             onChange={(e) => handleChange("vic_alias", e.target.value)}
           />
         </div>
@@ -307,7 +311,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
               className="input w-full"
               min={0}
               max={25}
-              value={formDataState.vic_school_years || ""}
+              value={formDataState.vic_school_years || 0}
               onChange={(e) => {
                 const value = Math.min(Math.max(Number(e.target.value), 0), 25); // clamp between 0 and 25
                 handleChange("vic_school_years", value);
@@ -327,6 +331,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input"
             type="text"
             placeholder="School Name"
+            value={formDataState.vic_last_school_attended || ""}
             onChange={(e) =>
               handleChange("vic_last_school_attended", e.target.value)
             }
@@ -335,6 +340,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input"
             type="text"
             placeholder="School Address"
+            value={formDataState.vic_last_school_address || ""}
             onChange={(e) =>
               handleChange("vic_last_school_address", e.target.value)
             }
@@ -350,6 +356,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input"
             type="text"
             placeholder="Occupation"
+            value={formDataState.vic_occupation || ""}
             onChange={(e) => handleChange("vic_occupation", e.target.value)}
           />
 
@@ -370,6 +377,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input"
             type="text"
             placeholder="Skills"
+            value={formDataState.vic_skills || ""}
             onChange={(e) => handleChange("vic_skills", e.target.value)}
           />
         </div>
@@ -459,6 +467,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
           className="input w-full"
           type="text"
           placeholder="Provincial Address"
+          value={formDataState.vic_provincial_address || ""}
           onChange={(e) =>
             handleChange("vic_provincial_address", e.target.value)
           }
@@ -475,6 +484,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input w-full"
             type="text"
             placeholder="Subject Interest"
+            value={formDataState.subject_interest || ""}
             onChange={(e) => handleChange("subject_interest", e.target.value)}
           />
         </div>
@@ -487,6 +497,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input w-full"
             type="text"
             placeholder="Honors"
+            value={formDataState.honors || ""}
             onChange={(e) => handleChange("honors", e.target.value)}
           />
         </div>
@@ -499,6 +510,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input w-full"
             type="text"
             placeholder="Hobbies"
+            value={formDataState.hobbies || ""}
             onChange={(e) => handleChange("hobbies", e.target.value)}
           />
         </div>
@@ -511,6 +523,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input w-full"
             type="text"
             placeholder="Vocational Interest"
+            value={formDataState.vocational_interest || ""}
             onChange={(e) =>
               handleChange("vocational_interest", e.target.value)
             }
@@ -525,6 +538,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input w-full"
             type="text"
             placeholder="Previous Skills"
+            value={formDataState.previous_skills || ""}
             onChange={(e) => handleChange("previous_skills", e.target.value)}
           />
         </div>
@@ -537,6 +551,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input w-full"
             type="text"
             placeholder="Type of Training"
+            value={formDataState.type_of_training || ""}
             onChange={(e) => handleChange("type_of_training", e.target.value)}
           />
         </div>
@@ -549,6 +564,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input w-full"
             type="text"
             placeholder="Where"
+            value={formDataState.training_where || ""}
             onChange={(e) => handleChange("training_where", e.target.value)}
           />
         </div>
@@ -561,6 +577,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input w-full"
             type="text"
             placeholder="When"
+            value={formDataState.training_when || ""}
             onChange={(e) => handleChange("training_when", e.target.value)}
           />
         </div>
@@ -573,6 +590,7 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input w-full"
             type="text"
             placeholder="Employment Experience"
+            value={formDataState.employment_experience || ""}
             onChange={(e) =>
               handleChange("employment_experience", e.target.value)
             }
