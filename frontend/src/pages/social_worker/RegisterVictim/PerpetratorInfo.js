@@ -31,27 +31,6 @@ export default function PerpetratorInfo({
   submit,
   loading,
 }) {
-  const isMinor = (birthDate) => {
-    if (!birthDate) return false;
-    const birth = new Date(birthDate);
-    const today = new Date();
-    const age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    const dayDiff = today.getDate() - birth.getDate();
-    return (
-      age < 18 ||
-      (age === 18 && (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)))
-    );
-  };
-
-  useEffect(() => {
-    const minor = isMinor(formDataState.per_birth_date);
-    setFormDataState((prev) => ({
-      ...prev,
-      is_per_minor: minor,
-    }));
-  }, [formDataState.per_birth_date, setFormDataState]);
-
   const handleChange = (field, value) =>
     setFormDataState((prev) => ({ ...prev, [field]: value }));
 
