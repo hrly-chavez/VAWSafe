@@ -2,28 +2,6 @@
 import { useEffect } from "react";
 import { NATIONALITIES } from "./helpers/Nationalities";
 
-// const RELATIONSHIP_TO_VICTIM_TYPE = {
-//   "Personal/Family": [
-//     "Current spouse/partner",
-//     "Former spouse/partner",
-//     "Current fiance/dating relationship",
-//     "Neighbors/peers/coworkers/classmates",
-//     "Immediate family members",
-//     "Stepfamily members",
-//   ],
-//   "Persons of Authority": [
-//     "Employer/manager/supervisor",
-//     "Agent of the employer",
-//     "Teacher/Instructor/professor",
-//     "Coach/trainer",
-//     "Religious leaders/workers",
-//     "Community leaders/workers",
-//   ],
-//   "State Actor": ["Government official", "Military", "Police", "Paramilitary"],
-//   "Non-State Actor": ["Insurgent", "Rebel", "Violent extremist", "Militia"],
-//   "Stranger/Unknown": [],
-// };
-
 export default function PerpetratorInfo({
   formDataState,
   setFormDataState,
