@@ -12,28 +12,11 @@ export default function DSWDProfile() {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
 
-  // Dummy audit log data
-  const dummyAuditLogs = [
-    {
-      timestamp: "2025-11-28T23:55:51",
-      action: "Logged in",
-      device_info: "Chrome on Windows 11",
-      ip_address: "192.168.1.10",
-    },
-    {
-      timestamp: "2025-11-28T22:30:12",
-      action: "Changed password",
-      device_info: "Edge on Windows 11",
-      ip_address: "192.168.1.11",
-    },
-    {
-      timestamp: "2025-11-27T19:15:00",
-      action: "Viewed victim case",
-      device_info: "Firefox on Ubuntu",
-      ip_address: "192.168.1.12",
-    },
-  ];
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState("");
 
+  // Fetch profile
   useEffect(() => {
     api
       .get("/api/dswd/profile/retrieve/")
@@ -48,6 +31,24 @@ export default function DSWDProfile() {
       });
   }, []);
 
+  // Fetch audit logs once profile data is available
+  useEffect(() => {
+    if (!officialData) return;
+
+    setAuditLoading(true);
+    api
+      .get(`/api/dswd/profile/${officialData.of_id}/audits/`)
+      .then((res) => {
+        setAuditLogs(res.data); // array of audit logs
+        setAuditLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch audit logs:", err);
+        setAuditError("Unable to load audit logs.");
+        setAuditLoading(false);
+      });
+  }, [officialData]);
+
   if (loading) return <div className="p-6 text-gray-600">Loading...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
 
@@ -58,7 +59,7 @@ export default function DSWDProfile() {
       <div className="w-full max-w-6xl bg-white shadow-xl rounded-xl overflow-hidden border border-gray-200">
 
         {/* Header */}
-        <header className="h-40 rounded-t-xl bg-[#292D96] flex items-start p-6">
+        <header className="h-40 rounded-t-xl bg-[#292D96] flex items-end p-6">
           <h1 className="text-3xl font-bold text-white shadow-sm">DSWD Official Profile</h1>
         </header>
 
@@ -96,24 +97,19 @@ export default function DSWDProfile() {
         {/* Tabs Navigation */}
         <div className="px-6 md:px-8 mt-6 border-b border-gray-300">
           <nav className="flex space-x-6">
-            <button
-              onClick={() => setActiveTab("profile")}
-              className={`py-2 border-b-2 transition duration-200 ${activeTab === "profile"
-                ? "border-[#292D96] text-[#292D96] font-semibold"
-                : "border-transparent text-gray-600 hover:text-[#292D96]"
+            {["profile", "audit"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`py-2 border-b-2 transition duration-200 ${
+                  activeTab === tab
+                    ? "border-[#292D96] text-[#292D96] font-semibold"
+                    : "border-transparent text-gray-600 hover:text-[#292D96]"
                 }`}
-            >
-              Full Profile
-            </button>
-            <button
-              onClick={() => setActiveTab("audit")}
-              className={`py-2 border-b-2 transition duration-200 ${activeTab === "audit"
-                ? "border-[#292D96] text-[#292D96] font-semibold"
-                : "border-transparent text-gray-600 hover:text-[#292D96]"
-                }`}
-            >
-              Audit Log
-            </button>
+              >
+                {tab === "profile" ? "Full Profile" : "Audit Logs"}
+              </button>
+            ))}
           </nav>
         </div>
 
@@ -141,28 +137,6 @@ export default function DSWDProfile() {
                     <p className="text-gray-500">Email Address</p>
                     <p className="text-gray-800">{officialData.of_email}</p>
                   </div>
-                  <div className="pb-2 border-b border-gray-200">
-                    <p className="text-gray-500">Date of Birth</p>
-                    <p className="text-gray-800">{officialData.of_dob || "N/A"}</p>
-                  </div>
-                  <div className="pb-2 border-b border-gray-200">
-                    <p className="text-gray-500">Place of Birth</p>
-                    <p className="text-gray-800">{officialData.of_pob || "N/A"}</p>
-                  </div>
-                  <div className="md:col-span-2 pb-2 border-b border-gray-200">
-                    <p className="text-gray-500">Full Address</p>
-                    <p className="text-gray-800 font-medium">
-                      {[
-                        officialData.address?.street,
-                        officialData.address?.sitio,
-                        officialData.address?.barangay_name,
-                        officialData.address?.municipality_name,
-                        officialData.address?.province_name,
-                      ]
-                        .filter(Boolean)
-                        .join(", ") || "N/A"}
-                    </p>
-                  </div>
                 </div>
               </div>
 
@@ -172,14 +146,13 @@ export default function DSWDProfile() {
                 <div className="flex items-center p-4 bg-green-50 rounded-lg border border-green-300">
                   <CheckBadgeIcon className="h-6 w-6 text-green-600 mr-3" />
                   <p className="text-gray-700 text-sm">
-                    Account is <strong>{officialData.status || "Approved"}</strong> and <strong>Active</strong>.
-                    Last login:{" "}
+                    Account is <strong>Active</strong>. Last login:{" "}
                     {officialData.last_login
                       ? new Date(officialData.last_login).toLocaleString("en-PH", {
-                        timeZone: "Asia/Manila",
-                        dateStyle: "long",
-                        timeStyle: "short",
-                      })
+                          timeZone: "Asia/Manila",
+                          dateStyle: "long",
+                          timeStyle: "short",
+                        })
                       : "N/A"}
                   </p>
                 </div>
@@ -188,39 +161,37 @@ export default function DSWDProfile() {
           )}
 
           {activeTab === "audit" && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-bold text-gray-800">Audit Log</h2>
-              <table className="w-full text-sm border border-gray-300 rounded-lg overflow-hidden">
-                <thead className="bg-gray-100 text-gray-600">
-                  <tr>
-                    <th className="px-4 py-2 text-left">Timestamp</th>
-                    <th className="px-4 py-2 text-left">Action</th>
-                    <th className="px-4 py-2 text-left">Device</th>
-                    <th className="px-4 py-2 text-left">IP Address</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dummyAuditLogs.map((log, idx) => (
-                    <tr key={idx} className="border-t">
-                      <td className="px-4 py-2">
-                        {new Date(log.timestamp).toLocaleString("en-PH", {
-                          timeZone: "Asia/Manila",
-                          dateStyle: "long",
-                          timeStyle: "medium",
-                        })}
-                      </td>
-                      <td className="px-4 py-2">{log.action}</td>
-                      <td className="px-4 py-2">{log.device_info}</td>
-                      <td className="px-4 py-2">{log.ip_address}</td>
-                    </tr>
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold mb-4 text-gray-800">Audit Logs</h2>
+
+              {auditLoading ? (
+                <p className="text-gray-500">Loading audit logs...</p>
+              ) : auditError ? (
+                <p className="text-red-500">{auditError}</p>
+              ) : auditLogs.length === 0 ? (
+                <p className="text-gray-500">No audit logs found.</p>
+              ) : (
+                <div className="space-y-2">
+                  {auditLogs.map((log, idx) => (
+                    <div key={idx} className="p-4 bg-gray-50 border rounded-lg shadow-sm">
+                      <p className="text-sm text-gray-700">
+                        <strong>Action:</strong> {log.action}
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        <strong>Changes:</strong> {JSON.stringify(log.changes)}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        <strong>Date:</strong> {new Date(log.created_at).toLocaleString("en-PH")}
+                      </p>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Action Buttons */}
+        {/* Edit & Change Password Buttons */}
         <div className="px-6 md:px-8 pb-8">
           <div className="mt-6 flex flex-wrap gap-3">
             <button
@@ -247,10 +218,7 @@ export default function DSWDProfile() {
             onSave={handleSaveProfile}
           />
         )}
-
-        {showChangePassword && (
-          <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
-        )}
+        {showChangePassword && <ChangePasswordModal onClose={() => setShowChangePassword(false)} />}
       </div>
     </div>
   );

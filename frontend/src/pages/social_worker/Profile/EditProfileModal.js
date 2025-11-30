@@ -208,13 +208,6 @@ export default function EditProfileModal({ officialData, onClose, onSave }) {
     console.log('Province ID to submit:', formData.new_province);
     console.log('Municipality ID to submit:', formData.new_municipality);
 
-    // // Check if the address is being updated
-    // const isAddressUpdated = formData.new_province !== officialData.address?.province?.id ||
-    //                         formData.new_municipality !== officialData.address?.municipality?.id ||
-    //                         formData.new_barangay !== officialData.address?.barangay?.id ||
-    //                         formData.new_sitio !== officialData.address?.sitio ||
-    //                         formData.new_street !== officialData.address?.street;
-
     // If address is being updated, check if all fields are filled out
     if (isAddressUpdated) {
       if (!formData.new_province || !formData.new_municipality || !formData.new_barangay || !formData.new_sitio || !formData.new_street) {
@@ -241,6 +234,7 @@ export default function EditProfileModal({ officialData, onClose, onSave }) {
         street: formData.new_street,
       },
       isAddressUpdated: isAddressUpdated,
+      reason: formData.reason || "No reason provided",
     };
 
     // Only add the address to the data if the address has been updated
@@ -285,9 +279,6 @@ export default function EditProfileModal({ officialData, onClose, onSave }) {
       }
     }
   };
-
-
-
 
   return (
     <div className="fixed inset-0 z-50">
@@ -549,6 +540,18 @@ export default function EditProfileModal({ officialData, onClose, onSave }) {
                 >
                   <p className="text-sm text-gray-600">Drag & Drop a file</p>
                 </div>
+              </div>
+
+              <div className="mt-4 sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Reason for Update (for audit)</label>
+                <input
+                  type="text"
+                  name="reason"
+                  value={formData.reason || ""}
+                  onChange={handleInputChange}
+                  className="w-full border rounded px-3 py-2 text-sm"
+                  placeholder="e.g., Corrected spelling, updated contact info"
+                />
               </div>
             </div>
 
