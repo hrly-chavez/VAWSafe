@@ -4,7 +4,7 @@ import api from "../../../api/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRef } from "react";
 
-export default function SessionTypeQuestionPreview({ sessionNum, selectedTypes }) {
+export default function SessionTypeQuestionPreview({ sessionNum, selectedTypes, userRole }) {
   const [questions, setQuestions] = useState([]);
   const [openRoles, setOpenRoles] = useState([]); // collapse by role only
   const roleRefs = useRef({});
@@ -14,7 +14,6 @@ export default function SessionTypeQuestionPreview({ sessionNum, selectedTypes }
       setQuestions([]);
       return;
     }
-
     const currentUrl = window.location.pathname;
     const match = currentUrl.match(/\/sessions\/(\d+)/);
     const sessId = match ? match[1] : null;
@@ -31,10 +30,13 @@ export default function SessionTypeQuestionPreview({ sessionNum, selectedTypes }
       .then((res) => {
         setQuestions(res.data);
 
-        // Auto-open all roles by default
-        const rolesSet = new Set();
-        res.data.forEach((q) => rolesSet.add(q.question_role || "Unassigned"));
-        setOpenRoles([...rolesSet]);
+        // Auto-open only the logged-in user's role
+        if (userRole) {
+          setOpenRoles([userRole]);
+        } else {
+          // fallback: collapse all
+          setOpenRoles([]);
+        }
       })
       .catch((err) => console.error("Failed to fetch mapped questions", err));
   }, [sessionNum, selectedTypes]);
@@ -68,9 +70,10 @@ export default function SessionTypeQuestionPreview({ sessionNum, selectedTypes }
       )}
 
       {Object.entries(groupedByRole).map(([role, categories]) => (
-        <div
-          key={role}
-          className="mb-6 border rounded-lg shadow-sm overflow-hidden"
+        <div 
+        key={role}
+        className="mb-6 border rounded-lg shadow-sm overflow-hidden"
+        data-role-section={role.toLowerCase()}
         >
           {/* ROLE HEADER (copied design from SessionDetails.js) */}
           <button

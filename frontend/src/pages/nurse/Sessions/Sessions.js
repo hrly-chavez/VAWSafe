@@ -18,7 +18,11 @@ export default function Sessions() {
     const loadSessions = async () => {
       try {
         const res = await api.get("/api/nurse/sessions/pending&Ongoing/");
-        setSessions(Array.isArray(res.data) ? res.data : []);
+        setSessions(
+            (Array.isArray(res.data) ? res.data : []).sort(
+              (a, b) => new Date(b.sess_next_sched) - new Date(a.sess_next_sched)
+            )
+          );
       } catch (err) {
         console.error("Failed to fetch sessions", err);
         setError("Failed to load sessions.");
