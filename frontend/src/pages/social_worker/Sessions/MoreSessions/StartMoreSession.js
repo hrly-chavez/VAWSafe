@@ -1,5 +1,5 @@
 // src/pages/social_worker/Sessions/MoreSessions/StartMoreSession.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../../../api/axios";
 import Select from "react-select";
@@ -22,6 +22,8 @@ const StartMoreSession = () => {
   const [error, setError] = useState("");
   const isCaseClosureSession =
     session?.sess_type_display?.some((t) => t.name === "Case Closure");
+  const questionRefs = useRef({});
+
 
   // Fetch session data and service categories
   useEffect(() => {
@@ -124,9 +126,25 @@ const StartMoreSession = () => {
 
       if (missingRequired.length > 0) {
         alert("Please answer all REQUIRED questions before finishing this session.");
+
+        // Scroll to the FIRST missing required question
+        const firstMissing = missingRequired[0];
+        const element = questionRefs.current[firstMissing.sq_id];
+
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+
+          // Highlight temporarily
+          element.classList.add("ring-4", "ring-red-300");
+          setTimeout(() => {
+            element.classList.remove("ring-4", "ring-red-300");
+          }, 1500);
+        }
+
         setFinishing(false);
         return;
       }
+
 
       // Proceed with API call
       const response = await api.post(`/api/social_worker/sessions/${sess_id}/finish/`, payload);
@@ -198,6 +216,7 @@ const StartMoreSession = () => {
               {qs.map((q, index) => (
                 <motion.div
                   key={q.sq_id}
+                  ref={(el) => (questionRefs.current[q.sq_id] = el)}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
