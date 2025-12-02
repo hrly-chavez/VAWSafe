@@ -1660,15 +1660,43 @@ class PsychometricianDashboardAPIView(APIView):
         total_victims = Victim.objects.count()
         victim_summary = {"total_victims": total_victims}
 
-        # Session Summary
+        # Sessions
         sessions = Session.objects.filter(assigned_official=official)
         week_ahead = today + timedelta(days=7)
 
+        total_assigned = sessions.count()
+        sessions_this_week_count = sessions.filter(
+            sess_next_sched__date__range=[today, week_ahead]
+        ).count()
+        pending_count = sessions.filter(sess_status="Pending").count()
+        ongoing_count = sessions.filter(sess_status="Ongoing").count()
+
+        # Percentages (same logic as NurseDashboard)
+        total_assigned_percent = (
+            (total_assigned / total_victims * 100) if total_victims > 0 else 0
+        )
+        sessions_week_percent = (
+            (sessions_this_week_count / 7 * 100) if 7 > 0 else 0
+        )
+        pending_percent = (
+            (pending_count / total_assigned * 100) if total_assigned > 0 else 0
+        )
+        ongoing_percent = (
+            (ongoing_count / total_assigned * 100) if total_assigned > 0 else 0
+        )
+
         session_summary = {
-            "total_assigned_sessions": sessions.count(),
-            "sessions_this_week": sessions.filter(sess_next_sched__date__range=[today, week_ahead]).count(),
-            "pending_sessions": sessions.filter(sess_status="Pending").count(),
-            "ongoing_sessions": sessions.filter(sess_status="Ongoing").count(),
+            "total_assigned_sessions": total_assigned,
+            "total_assigned_percent": round(total_assigned_percent, 1),
+
+            "sessions_this_week": sessions_this_week_count,
+            "sessions_week_percent": round(sessions_week_percent, 1),
+
+            "pending_sessions": pending_count,
+            "pending_percent": round(pending_percent, 1),
+
+            "ongoing_sessions": ongoing_count,
+            "ongoing_percent": round(ongoing_percent, 1),
         }
 
         # Monthly Victim Reports (with violence type breakdown)
@@ -1698,7 +1726,7 @@ class PsychometricianDashboardAPIView(APIView):
         violence_counts = Counter(i.violence_type for i in incidents if i.violence_type)
         violence_types_dict = dict(violence_counts)
 
-        # Notifications: upcoming sessions
+        # Notifications
         upcoming_sessions = sessions.filter(
             sess_next_sched__date__range=(today, today + timedelta(days=3)),
             sess_status__in=["Pending", "Ongoing"]
@@ -1707,7 +1735,6 @@ class PsychometricianDashboardAPIView(APIView):
             ~Q(progress__official=official)
         ).distinct()
 
-        # Overdue Sessions: past due date and not completed
         overdue_sessions = sessions.filter(
             sess_next_sched__date__lt=today,
             sess_status__in=["Pending", "Ongoing"]
@@ -1718,9 +1745,9 @@ class PsychometricianDashboardAPIView(APIView):
 
         return Response({
             "victim_summary": VictimSummarySerializer(victim_summary).data,
-            "session_summary": SessionSummarySerializer(session_summary).data,
+            "session_summary": session_summary,
             "monthly_report_rows": monthly_report_data,
-            "violence_types": violence_types_dict,  
+            "violence_types": violence_types_dict,
             "upcoming_sessions": [
                 {
                     "id": s.pk,

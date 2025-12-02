@@ -896,16 +896,23 @@ class VictimSummarySerializer(serializers.Serializer):
 # --- Session Summary ---
 class SessionSummarySerializer(serializers.Serializer):
     total_assigned_sessions = serializers.IntegerField()
+    total_assigned_percent = serializers.FloatField(required=False)
+
     sessions_this_week = serializers.IntegerField()
+    sessions_week_percent = serializers.FloatField(required=False)
+
     pending_sessions = serializers.IntegerField()
+    pending_percent = serializers.FloatField(required=False)
+
     ongoing_sessions = serializers.IntegerField()
+    ongoing_percent = serializers.FloatField(required=False)
 
 
 # --- Monthly Report Row ---
 class MonthlyReportRowSerializer(serializers.Serializer):
     month = serializers.CharField()
     totalVictims = serializers.IntegerField()
-    # Add violence type breakdowns (optional, mirrors DSWD/Nurse)
+    # Violence type breakdowns
     Physical_Violence = serializers.IntegerField(source="Physical Violence", required=False)
     Physical_Abused = serializers.IntegerField(source="Physical Abused", required=False)
     Psychological_Violence = serializers.IntegerField(source="Psychological Violence", required=False)
@@ -941,7 +948,7 @@ class UpcomingSessionSerializer(serializers.ModelSerializer):
         return obj.sess_type.first().name if obj.sess_type.exists() else None
 
 
-# --- Overdue Sessions (same structure as Upcoming) ---
+# --- Overdue Sessions ---
 class OverdueSessionSerializer(serializers.ModelSerializer):
     victim_name = serializers.SerializerMethodField()
     session_type = serializers.SerializerMethodField()
