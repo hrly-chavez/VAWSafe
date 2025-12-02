@@ -86,8 +86,6 @@ export default function VictimDetails() {
 
   const [victim, setVictim] = useState(null);
   const [incidentList, setIncidentList] = useState([]);
-  const [familyMembers, setFamilyMembers] = useState([]);
-  const [contactPersons, setContactPersons] = useState([]);
 
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [selectedSessionIndex, setSelectedSessionIndex] = useState(null);
@@ -150,28 +148,6 @@ export default function VictimDetails() {
         );
       } finally {
         setLoading(false);
-      }
-    };
-
-    const fetchFamilyMembers = async () => {
-      try {
-        const res = await api.get(
-          `/api/social_worker/victims/${vic_id}/family-members/`
-        );
-        setFamilyMembers(res.data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    const fetchContactPersons = async () => {
-      try {
-        const res = await api.get(
-          `/api/social_worker/victims/${vic_id}/contact-persons/`
-        );
-        setContactPersons(res.data);
-      } catch (err) {
-        console.error(err);
       }
     };
 
@@ -255,8 +231,6 @@ export default function VictimDetails() {
 
     if (vic_id) {
       fetchVictim();
-      fetchFamilyMembers();
-      fetchContactPersons();
       fetchIncidents();
       fetchReports();
     }
@@ -272,13 +246,13 @@ export default function VictimDetails() {
 
   const fullName = victim
     ? [
-      get(victim, ["vic_first_name"]),
-      get(victim, ["vic_middle_name"]),
-      get(victim, ["vic_last_name"]),
-      get(victim, ["vic_extension"]),
-    ]
-      .filter(Boolean)
-      .join(" ")
+        get(victim, ["vic_first_name"]),
+        get(victim, ["vic_middle_name"]),
+        get(victim, ["vic_last_name"]),
+        get(victim, ["vic_extension"]),
+      ]
+        .filter(Boolean)
+        .join(" ")
     : "";
 
   if (loading) return <p>Loading victim details...</p>;
@@ -330,10 +304,11 @@ export default function VictimDetails() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-2 text-sm font-semibold rounded-t-md transition-colors duration-200 ${isActive
-                    ? "bg-[#292D96] text-white border border-gray-300 border-b-0"
-                    : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#292D96] border border-gray-300"
-                    }`}
+                  className={`px-6 py-2 text-sm font-semibold rounded-t-md transition-colors duration-200 ${
+                    isActive
+                      ? "bg-[#292D96] text-white border border-gray-300 border-b-0"
+                      : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#292D96] border border-gray-300"
+                  }`}
                 >
                   {tab === "details" && "Details"}
                   {tab === "case" && "Case Details"}
@@ -497,7 +472,9 @@ export default function VictimDetails() {
               {/* Contact Person */}
               <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
-                  <h2 className="text-lg font-semibold text-gray-800">Contact Person</h2>
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Contact Person
+                  </h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm p-6">
                   {victim.contact_persons?.length > 0 ? (
@@ -533,7 +510,7 @@ export default function VictimDetails() {
                           label="Work Address"
                           value={person.cont_work_address}
                         />
-                      </div>
+                      </React.Fragment>
                     ))
                   ) : (
                     <p className="text-sm text-gray-500 italic">
@@ -546,20 +523,37 @@ export default function VictimDetails() {
               {/* Family Members */}
               <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
-                  <h2 className="text-lg font-semibold text-gray-800">Family Members</h2>
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Family Members
+                  </h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm p-6">
                   {victim.family_members?.length > 0 ? (
                     victim.family_members.map((member, index) => (
                       <React.Fragment key={index}>
                         <Info label="Full Name" value={member.full_name} />
-                        <Info label="Relationship" value={member.fam_victim_relationship} />
+                        <Info
+                          label="Relationship"
+                          value={member.fam_victim_relationship}
+                        />
                         <Info label="Sex" value={member.fam_sex} />
-                        <Info label="Civil Status" value={member.fam_civil_status} />
-                        <Info label="Educational Attainment" value={member.fam_educational_attainment} />
-                        <Info label="Occupation" value={member.fam_occupation} />
+                        <Info
+                          label="Civil Status"
+                          value={member.fam_civil_status}
+                        />
+                        <Info
+                          label="Educational Attainment"
+                          value={member.fam_educational_attainment}
+                        />
+                        <Info
+                          label="Occupation"
+                          value={member.fam_occupation}
+                        />
                         <Info label="Income" value={member.fam_income} />
-                        <Info label="Birth Date" value={member.fam_birth_date} />
+                        <Info
+                          label="Birth Date"
+                          value={member.fam_birth_date}
+                        />
                       </React.Fragment>
                     ))
                   ) : (
@@ -773,8 +767,9 @@ function ReportDropdown({ title, colorClass, reports, onSelect }) {
 
       {/* Slide down content */}
       <div
-        className={`overflow-hidden transition-all duration-500 ease-in-out ${open ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
-          }`}
+        className={`overflow-hidden transition-all duration-500 ease-in-out ${
+          open ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
+        }`}
       >
         <div className="p-4 bg-white space-y-4">
           {reports.length === 0 ? (
