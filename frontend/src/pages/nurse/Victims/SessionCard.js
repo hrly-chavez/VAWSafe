@@ -143,7 +143,7 @@ const roleTitles = {
       })}
 
       {/* Create Session Button */}
-      {/* {(() => {
+      {(() => {
         const session1 = (incident.sessions || []).find((s) => s.sess_num === 1);
         const canCreate = session1 && session1.sess_status === "Done";
         if (canCreate) {
@@ -163,7 +163,7 @@ const roleTitles = {
           );
         }
         return null;
-      })()} */}
+      })()}
     </div>
   );
 }
