@@ -13,32 +13,38 @@ import {
   DocumentIcon,
   ExclamationTriangleIcon,
   ClockIcon,
-  UserCircleIcon
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 
 const iconMap = {
   // Case Info
   "Case No": <FolderIcon className="h-4 w-4 text-gray-500" />,
-  "Status": <ExclamationTriangleIcon className="h-4 w-4 text-gray-500" />,
+  Status: <ExclamationTriangleIcon className="h-4 w-4 text-gray-500" />,
   "Created At": <CalendarIcon className="h-4 w-4 text-gray-500" />,
-  "Violence Type": <ExclamationTriangleIcon className="h-4 w-4 text-gray-500" />,
-  "Violence Subtype": <ExclamationTriangleIcon className="h-4 w-4 text-gray-500" />,
+  "Violence Type": (
+    <ExclamationTriangleIcon className="h-4 w-4 text-gray-500" />
+  ),
+  "Violence Subtype": (
+    <ExclamationTriangleIcon className="h-4 w-4 text-gray-500" />
+  ),
   "Date of Incident": <CalendarIcon className="h-4 w-4 text-gray-500" />,
   "Time of Incident": <ClockIcon className="h-4 w-4 text-gray-500" />,
-  "Place of Incident": <MapPinIcon className="h-4 w-4 text-gray-500" />,
-  "Description": <DocumentIcon className="h-4 w-4 text-gray-500" />,
+  Description: <DocumentIcon className="h-4 w-4 text-gray-500" />,
 
   // Perpetrator Info
   "Full Name": <UserIcon className="h-4 w-4 text-gray-500" />,
-  "Alias": <UserCircleIcon className="h-4 w-4 text-gray-500" />,
-  "Sex": <UserIcon className="h-4 w-4 text-gray-500" />,
+  Alias: <UserCircleIcon className="h-4 w-4 text-gray-500" />,
+  Sex: <UserIcon className="h-4 w-4 text-gray-500" />,
   "Birth Date": <CalendarIcon className="h-4 w-4 text-gray-500" />,
   "Birth Place": <MapPinIcon className="h-4 w-4 text-gray-500" />,
-  "Religion": <GlobeAltIcon className="h-4 w-4 text-gray-500" />,
+  Religion: <GlobeAltIcon className="h-4 w-4 text-gray-500" />,
   "Relationship to Victim": <UserGroupIcon className="h-4 w-4 text-gray-500" />,
-  "Educational Attainment": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
-  "Occupation": <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
+  "Educational Attainment": (
+    <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />
+  ),
+  Occupation: <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
   "Contact Number": <PhoneIcon className="h-4 w-4 text-gray-500" />,
+  "Known Address": <MapPinIcon className="h-4 w-4 text-gray-500" />,
 };
 
 export default function VictimCases({ selectedIncident, onClose }) {
@@ -77,38 +83,107 @@ export default function VictimCases({ selectedIncident, onClose }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm p-6">
               <InfoItem label="Case No" value={selectedIncident.incident_num} />
               <InfoItem label="Status" value={selectedIncident.status} />
-              <InfoItem label="Created At" value={new Date(selectedIncident.created_at).toLocaleString()} />
-              <InfoItem label="Violence Type" value={selectedIncident.violence_type} />
-              <InfoItem label="Violence Subtype" value={selectedIncident.violence_subtype} />
-              <InfoItem label="Date of Incident" value={selectedIncident.incident_date} />
-              <InfoItem label="Time of Incident" value={selectedIncident.incident_time} />
+              <InfoItem
+                label="Created At"
+                value={new Date(selectedIncident.created_at).toLocaleString()}
+              />
+              <InfoItem
+                label="Violence Type"
+                value={selectedIncident.violence_type}
+              />
+              <InfoItem
+                label="Violence Subtype"
+                value={selectedIncident.violence_subtype}
+              />
+              <InfoItem
+                label="Date of Incident"
+                value={selectedIncident.incident_date}
+              />
+              <InfoItem
+                label="Time of Incident"
+                value={selectedIncident.incident_time}
+              />
             </div>
             <div className="p-6">
-              <InfoItem label="Place of Incident" value={selectedIncident.incident_location} />
-              <InfoItem label="Description" value={selectedIncident.incident_description} />
+              <InfoItem
+                label="Description"
+                value={selectedIncident.incident_description}
+              />
             </div>
           </div>
 
           {/* Perpetrator Info */}
           <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
             <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
-              <h2 className="text-lg font-semibold text-gray-800">Perpetrator Info</h2>
+              <h2 className="text-lg font-semibold text-gray-800">
+                Perpetrator Info
+              </h2>
             </div>
             {selectedIncident.perpetrator ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm p-6">
-                <InfoItem label="Full Name" value={`${selectedIncident.perpetrator.per_first_name || ""} ${selectedIncident.perpetrator.per_last_name || ""}`} />
-                <InfoItem label="Alias" value={selectedIncident.perpetrator.per_alias} />
-                <InfoItem label="Sex" value={selectedIncident.perpetrator.per_sex} />
-                <InfoItem label="Birth Date" value={selectedIncident.perpetrator.per_birth_date} />
-                <InfoItem label="Birth Place" value={selectedIncident.perpetrator.per_birth_place} />
-                <InfoItem label="Religion" value={selectedIncident.perpetrator.per_religion} />
-                <InfoItem label="Relationship to Victim" value={selectedIncident.perpetrator.per_relationship_type} />
-                <InfoItem label="Educational Attainment" value={selectedIncident.perpetrator.per_educational_attainment} />
-                <InfoItem label="Occupation" value={selectedIncident.perpetrator.per_main_occupation} />
-                <InfoItem label="Contact Number" value={selectedIncident.perpetrator.per_contact_number} />
+                <InfoItem
+                  label="Full Name"
+                  value={
+                    selectedIncident.perpetrator
+                      ? [
+                          selectedIncident.perpetrator.per_first_name,
+                          selectedIncident.perpetrator.per_middle_name,
+                          selectedIncident.perpetrator.per_last_name,
+                          selectedIncident.perpetrator.per_extension,
+                        ]
+                          .filter(Boolean)
+                          .join(" ")
+                      : ""
+                  }
+                />
+
+                <InfoItem
+                  label="Alias"
+                  value={selectedIncident.perpetrator.per_alias}
+                />
+                <InfoItem
+                  label="Sex"
+                  value={selectedIncident.perpetrator.per_sex}
+                />
+                <InfoItem
+                  label="Birth Date"
+                  value={selectedIncident.perpetrator.per_birth_date}
+                />
+                <InfoItem
+                  label="Birth Place"
+                  value={selectedIncident.perpetrator.per_birth_place}
+                />
+                <InfoItem
+                  label="Religion"
+                  value={selectedIncident.perpetrator.per_religion}
+                />
+                <InfoItem
+                  label="Relationship to Victim"
+                  value={selectedIncident.perpetrator.per_victim_relationship}
+                />
+                <InfoItem
+                  label="Educational Attainment"
+                  value={
+                    selectedIncident.perpetrator.per_educational_attainment
+                  }
+                />
+                <InfoItem
+                  label="Occupation"
+                  value={selectedIncident.perpetrator.per_occupation}
+                />
+                <InfoItem
+                  label="Contact Number"
+                  value={selectedIncident.perpetrator.per_contact_number}
+                />
+                <InfoItem
+                  label="Known Address"
+                  value={selectedIncident.perpetrator.per_known_address}
+                />
               </div>
             ) : (
-              <p className="text-sm text-gray-500 italic p-6">No perpetrator information available.</p>
+              <p className="text-sm text-gray-500 italic p-6">
+                No perpetrator information available.
+              </p>
             )}
           </div>
 
@@ -123,7 +198,10 @@ export default function VictimCases({ selectedIncident, onClose }) {
                   {selectedIncident.evidences.map((ev, idx) => (
                     <div key={idx} className="border rounded-md p-3 bg-white">
                       <InfoItem label="Description" value={ev.description} />
-                      <InfoItem label="Uploaded At" value={new Date(ev.uploaded_at).toLocaleString()} />
+                      <InfoItem
+                        label="Uploaded At"
+                        value={new Date(ev.uploaded_at).toLocaleString()}
+                      />
                       <a
                         href={ev.file}
                         target="_blank"
@@ -136,7 +214,9 @@ export default function VictimCases({ selectedIncident, onClose }) {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500 italic">No evidence files available.</p>
+                <p className="text-sm text-gray-500 italic">
+                  No evidence files available.
+                </p>
               )}
             </div>
           </div>

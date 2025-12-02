@@ -128,7 +128,6 @@ export default function VictimDetails() {
     try {
       const res = await api.get(`/api/social_worker/case/${vic_id}/`);
       if (Array.isArray(res.data)) setIncidentList(res.data);
-      console.log(incidentList);
     } catch (err) {
       console.error("Failed to fetch incidents", err);
     }
