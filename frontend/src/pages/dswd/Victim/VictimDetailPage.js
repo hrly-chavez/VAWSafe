@@ -31,35 +31,21 @@ import {
 
 const iconMap = {
   // Personal Info
+  "Full Name": <UserIcon className="h-4 w-4 text-gray-500" />,
   Sex: <UserIcon className="h-4 w-4 text-gray-500" />,
   "Birth Date": <CalendarIcon className="h-4 w-4 text-gray-500" />,
+  "Birth Place": <MapPinIcon className="h-4 w-4 text-gray-500" />,
   "Civil Status": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
   Religion: <GlobeAltIcon className="h-4 w-4 text-gray-500" />,
   Nationality: <FlagIcon className="h-4 w-4 text-gray-500" />,
-  "Birth Place": <MapPinIcon className="h-4 w-4 text-gray-500" />,
   "Contact Number": <PhoneIcon className="h-4 w-4 text-gray-500" />,
   "Current Address": <HomeIcon className="h-4 w-4 text-gray-500" />,
   "Provincial Address": <HomeIcon className="h-4 w-4 text-gray-500" />,
-
-  // Experience
-  Occupation: <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
-  "Monthly Income": <CurrencyDollarIcon className="h-4 w-4 text-gray-500" />,
-  Skills: <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />,
-  "Previous Skills": (
-    <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />
-  ),
-  "Type of Training": <AcademicCapIcon className="h-4 w-4 text-gray-500" />,
-  "Training Location": <MapPinIcon className="h-4 w-4 text-gray-500" />,
-  "Training Time": <ClockIcon className="h-4 w-4 text-gray-500" />,
-  "Employment Experience": <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
+  "Work Address": <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
 
   // Education
-  "Educational Attainment": (
-    <AcademicCapIcon className="h-4 w-4 text-gray-500" />
-  ),
-  "Last School Attended": (
-    <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />
-  ),
+  "Educational Attainment": <AcademicCapIcon className="h-4 w-4 text-gray-500" />,
+  "Last School Attended": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
   "School Address": <MapPinIcon className="h-4 w-4 text-gray-500" />,
   "School Type": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
   "School Years": <CalendarIcon className="h-4 w-4 text-gray-500" />,
@@ -68,16 +54,24 @@ const iconMap = {
   Hobbies: <SparklesIcon className="h-4 w-4 text-gray-500" />,
   "Vocational Interest": <CogIcon className="h-4 w-4 text-gray-500" />,
 
+  // Experience / Skills / Training
+  Occupation: <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
+  "Monthly Income": <CurrencyDollarIcon className="h-4 w-4 text-gray-500" />,
+  Skills: <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />,
+  "Previous Skills": <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />,
+  "Type of Training": <AcademicCapIcon className="h-4 w-4 text-gray-500" />,
+  "Training Location": <MapPinIcon className="h-4 w-4 text-gray-500" />,
+  "Training Time": <ClockIcon className="h-4 w-4 text-gray-500" />,
+  "Employment Experience": <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
+
   // Contact Person
-  "Full Name": <UserIcon className="h-4 w-4 text-gray-500" />,
   Relationship: <UserGroupIcon className="h-4 w-4 text-gray-500" />,
-  "Contact Number (Contact Person)": (
-    <PhoneIcon className="h-4 w-4 text-gray-500" />
-  ),
+  "Contact Number (Contact Person)": <PhoneIcon className="h-4 w-4 text-gray-500" />,
 
   // Family Members
   Income: <CurrencyDollarIcon className="h-4 w-4 text-gray-500" />,
 };
+
 
 export default function VictimDetails() {
   const { vic_id } = useParams();
@@ -139,6 +133,7 @@ export default function VictimDetails() {
       try {
         const res = await api.get(`/api/social_worker/victims/${vic_id}/`);
         const data = Array.isArray(res.data) ? res.data[0] : res.data;
+        console.log(data);
         setVictim(data || null);
       } catch (err) {
         setError(
@@ -515,6 +510,30 @@ export default function VictimDetails() {
                         <Info
                           label="Contact Number (Contact Person)"
                           value={person.cont_contact_number}
+                        />
+                        <Info
+                          label="Birth Date"
+                          value={person.cont_birth_date}
+                        />
+                        <Info
+                          label="Birth Place"
+                          value={person.cont_birth_place}
+                        />
+                        <Info
+                          label="Civil Status"
+                          value={person.cont_civil_status}
+                        />
+                        <Info
+                          label="Provincial Address"
+                          value={person.cont_prov_address}
+                        />
+                        <Info
+                          label="Sex"
+                          value={person.cont_sex}
+                        />
+                        <Info
+                          label="Work Address"
+                          value={person.cont_work_address}
                         />
                       </div>
                     ))
