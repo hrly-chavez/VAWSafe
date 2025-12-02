@@ -159,6 +159,8 @@ export default function VictimInfo({
             onChange={(e) => handleChange("vic_first_name", e.target.value)}
           />
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Middle Name"
@@ -166,6 +168,8 @@ export default function VictimInfo({
             onChange={(e) => handleChange("vic_middle_name", e.target.value)}
           />
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Last Name"
@@ -173,6 +177,8 @@ export default function VictimInfo({
             onChange={(e) => handleChange("vic_last_name", e.target.value)}
           />
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             value={formDataState.vic_extension || ""}
@@ -188,6 +194,8 @@ export default function VictimInfo({
         </label>
         <div>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Nickname/Alias"
@@ -204,6 +212,8 @@ export default function VictimInfo({
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="date"
             value={formDataState.vic_birth_date || ""}
@@ -213,6 +223,8 @@ export default function VictimInfo({
           />
 
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Birth Place"
@@ -229,6 +241,8 @@ export default function VictimInfo({
             Civil Status
           </label>
           <select
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input w-full"
             value={formDataState.vic_civil_status || ""}
             onChange={(e) => handleChange("vic_civil_status", e.target.value)}
@@ -252,6 +266,8 @@ export default function VictimInfo({
             Religion
           </label>
           <select
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             value={formDataState.vic_religion || ""}
             onChange={(e) => handleChange("vic_religion", e.target.value)}
@@ -277,6 +293,8 @@ export default function VictimInfo({
             Educational Attainment
           </label>
           <select
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input w-full"
             value={formDataState.vic_educational_attainment || ""}
             onChange={(e) =>
@@ -312,6 +330,8 @@ export default function VictimInfo({
               OS/OSY Status
             </label>
             <select
+              readOnly={isLocked}
+              disabled={isLocked}
               className="input w-full"
               value={formDataState.vic_school_type || ""}
               onChange={(e) => handleChange("vic_school_type", e.target.value)}
@@ -331,6 +351,8 @@ export default function VictimInfo({
             </label>
 
             <input
+              readOnly={isLocked}
+              disabled={isLocked}
               placeholder="Enter School Years"
               type="number"
               className="input w-full"
@@ -353,6 +375,8 @@ export default function VictimInfo({
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="School Name"
@@ -362,6 +386,8 @@ export default function VictimInfo({
             }
           />
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="School Address"
@@ -378,6 +404,8 @@ export default function VictimInfo({
       <div className="flex flex-col mb-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Occupation"
@@ -386,6 +414,8 @@ export default function VictimInfo({
           />
 
           <select
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             value={formDataState.vic_income || ""}
             onChange={(e) => handleChange("vic_income", e.target.value)}
@@ -399,6 +429,8 @@ export default function VictimInfo({
           </select>
 
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Skills"
@@ -415,6 +447,8 @@ export default function VictimInfo({
             Province
           </label>
           <select
+            readOnly={isLocked}
+            disabled={isLocked}
             value={formDataState.address.province || ""}
             onChange={(e) => handleChange("address.province", e.target.value)}
             className={inputStyle}
@@ -433,12 +467,14 @@ export default function VictimInfo({
             Municipality
           </label>
           <select
+            readOnly={isLocked}
+            disabled={isLocked}
             value={formDataState.address.municipality || ""}
             onChange={(e) =>
               handleChange("address.municipality", e.target.value)
             }
             className={inputStyle}
-            disabled={!formDataState.address.province}
+            // disabled={!formDataState.address.province}
           >
             <option value="">Select Municipality</option>
             {municipalities.map((m) => (
@@ -454,10 +490,12 @@ export default function VictimInfo({
             Barangay
           </label>
           <select
+            readOnly={isLocked}
+            disabled={isLocked}
             value={formDataState.address.barangay || ""}
             onChange={(e) => handleChange("address.barangay", e.target.value)}
             className={inputStyle}
-            disabled={!formDataState.address.municipality}
+            // disabled={!formDataState.address.municipality}
           >
             <option value="">Select Barangay</option>
             {barangays.map((b) => (
@@ -475,6 +513,8 @@ export default function VictimInfo({
           Telephone/Cellphone No.
         </label>
         <input
+          readOnly={isLocked}
+          disabled={isLocked}
           className="input w-full"
           type="text"
           placeholder="Contact Number"
@@ -489,6 +529,8 @@ export default function VictimInfo({
           Provincial Address
         </label>
         <input
+          readOnly={isLocked}
+          disabled={isLocked}
           className="input w-full"
           type="text"
           placeholder="Provincial Address"
@@ -506,6 +548,8 @@ export default function VictimInfo({
             Subject Interest
           </label>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input w-full"
             type="text"
             placeholder="Subject Interest"
@@ -519,6 +563,8 @@ export default function VictimInfo({
             Honors
           </label>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input w-full"
             type="text"
             placeholder="Honors"
@@ -532,6 +578,8 @@ export default function VictimInfo({
             Hobbies
           </label>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input w-full"
             type="text"
             placeholder="Hobbies"
@@ -545,6 +593,8 @@ export default function VictimInfo({
             Vocational Interest
           </label>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input w-full"
             type="text"
             placeholder="Vocational Interest"
@@ -560,6 +610,8 @@ export default function VictimInfo({
             Previous Skills
           </label>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input w-full"
             type="text"
             placeholder="Previous Skills"
@@ -573,6 +625,8 @@ export default function VictimInfo({
             Type of Training
           </label>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input w-full"
             type="text"
             placeholder="Type of Training"
@@ -586,6 +640,8 @@ export default function VictimInfo({
             Where
           </label>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input w-full"
             type="text"
             placeholder="Where"
@@ -599,6 +655,8 @@ export default function VictimInfo({
             When
           </label>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input w-full"
             type="text"
             placeholder="When"
@@ -612,6 +670,8 @@ export default function VictimInfo({
             Employment Experience
           </label>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input w-full"
             type="text"
             placeholder="Employment Experience"
