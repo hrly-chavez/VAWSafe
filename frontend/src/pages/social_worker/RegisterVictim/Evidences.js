@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 
-export default function Evidences({ files, setFiles }) {
+export default function Evidences({ files, setFiles, isLocked }) {
   // const [files, setFiles] = useState([]);
   const [error, setError] = useState("");
   const inputRef = useRef(null);
@@ -47,6 +47,8 @@ export default function Evidences({ files, setFiles }) {
       <h2 className="text-lg font-semibold mb-3">Upload Photos</h2>
 
       <input
+      readOnly={isLocked}
+            disabled={isLocked}
         type="file"
         accept="image/*"
         multiple
