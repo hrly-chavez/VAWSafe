@@ -26,49 +26,57 @@ import {
   BookOpenIcon,
   TrophyIcon,
   SparklesIcon,
-  CogIcon
-} from "@heroicons/react/24/solid"
+  CogIcon,
+} from "@heroicons/react/24/solid";
 
 const iconMap = {
   // Personal Info
-  "Sex": <UserIcon className="h-4 w-4 text-gray-500" />,
+  Sex: <UserIcon className="h-4 w-4 text-gray-500" />,
   "Birth Date": <CalendarIcon className="h-4 w-4 text-gray-500" />,
   "Civil Status": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
-  "Religion": <GlobeAltIcon className="h-4 w-4 text-gray-500" />,
-  "Nationality": <FlagIcon className="h-4 w-4 text-gray-500" />,
+  Religion: <GlobeAltIcon className="h-4 w-4 text-gray-500" />,
+  Nationality: <FlagIcon className="h-4 w-4 text-gray-500" />,
   "Birth Place": <MapPinIcon className="h-4 w-4 text-gray-500" />,
   "Contact Number": <PhoneIcon className="h-4 w-4 text-gray-500" />,
   "Current Address": <HomeIcon className="h-4 w-4 text-gray-500" />,
   "Provincial Address": <HomeIcon className="h-4 w-4 text-gray-500" />,
 
   // Experience
-  "Occupation": <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
+  Occupation: <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
   "Monthly Income": <CurrencyDollarIcon className="h-4 w-4 text-gray-500" />,
-  "Skills": <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />,
-  "Previous Skills": <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />,
+  Skills: <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />,
+  "Previous Skills": (
+    <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />
+  ),
   "Type of Training": <AcademicCapIcon className="h-4 w-4 text-gray-500" />,
   "Training Location": <MapPinIcon className="h-4 w-4 text-gray-500" />,
   "Training Time": <ClockIcon className="h-4 w-4 text-gray-500" />,
   "Employment Experience": <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
 
   // Education
-  "Educational Attainment": <AcademicCapIcon className="h-4 w-4 text-gray-500" />,
-  "Last School Attended": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
+  "Educational Attainment": (
+    <AcademicCapIcon className="h-4 w-4 text-gray-500" />
+  ),
+  "Last School Attended": (
+    <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />
+  ),
   "School Address": <MapPinIcon className="h-4 w-4 text-gray-500" />,
   "School Type": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
   "School Years": <CalendarIcon className="h-4 w-4 text-gray-500" />,
   "Subject Interest": <BookOpenIcon className="h-4 w-4 text-gray-500" />,
-  "Honors": <TrophyIcon className="h-4 w-4 text-gray-500" />,
-  "Hobbies": <SparklesIcon className="h-4 w-4 text-gray-500" />,
+  Honors: <TrophyIcon className="h-4 w-4 text-gray-500" />,
+  Hobbies: <SparklesIcon className="h-4 w-4 text-gray-500" />,
   "Vocational Interest": <CogIcon className="h-4 w-4 text-gray-500" />,
 
   // Contact Person
   "Full Name": <UserIcon className="h-4 w-4 text-gray-500" />,
-  "Relationship": <UserGroupIcon className="h-4 w-4 text-gray-500" />,
-  "Contact Number (Contact Person)": <PhoneIcon className="h-4 w-4 text-gray-500" />,
+  Relationship: <UserGroupIcon className="h-4 w-4 text-gray-500" />,
+  "Contact Number (Contact Person)": (
+    <PhoneIcon className="h-4 w-4 text-gray-500" />
+  ),
 
   // Family Members
-  "Income": <CurrencyDollarIcon className="h-4 w-4 text-gray-500" />,
+  Income: <CurrencyDollarIcon className="h-4 w-4 text-gray-500" />,
 };
 
 export default function VictimDetails() {
@@ -77,6 +85,9 @@ export default function VictimDetails() {
 
   const [victim, setVictim] = useState(null);
   const [incidentList, setIncidentList] = useState([]);
+  const [familyMembers, setFamilyMembers] = useState([]);
+  const [contactPersons, setContactPersons] = useState([]);
+
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [selectedSessionIndex, setSelectedSessionIndex] = useState(null);
   const [openSessionIndex, setOpenSessionIndex] = useState(null);
@@ -84,15 +95,21 @@ export default function VictimDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("details");
-  
+
   const [reportsList, setReportsList] = useState([]);
   const [selectedReport, setSelectedReport] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
 
   const groupedReports = {
-    "Social Worker": reportsList.filter(r => r.report_type?.toLowerCase().includes("social worker")),
-    "Nurse": reportsList.filter(r => r.report_type?.toLowerCase().includes("nurse")),
-    "Psychometrician": reportsList.filter(r => r.report_type?.toLowerCase().includes("psychometrician")),
+    "Social Worker": reportsList.filter((r) =>
+      r.report_type?.toLowerCase().includes("social worker")
+    ),
+    Nurse: reportsList.filter((r) =>
+      r.report_type?.toLowerCase().includes("nurse")
+    ),
+    Psychometrician: reportsList.filter((r) =>
+      r.report_type?.toLowerCase().includes("psychometrician")
+    ),
   };
 
   const roleColors = {
@@ -107,15 +124,15 @@ export default function VictimDetails() {
     return () => (document.body.style.overflow = "auto");
   }, [showModal]);
 
-   const fetchIncidents = async () => {
-      try {
-        const res = await api.get(`/api/social_worker/case/${vic_id}/`);
-        if (Array.isArray(res.data)) setIncidentList(res.data);
-        console.log(incidentList)
-      } catch (err) {
-        console.error("Failed to fetch incidents", err);
-      }
-    };
+  const fetchIncidents = async () => {
+    try {
+      const res = await api.get(`/api/social_worker/case/${vic_id}/`);
+      if (Array.isArray(res.data)) setIncidentList(res.data);
+      console.log(incidentList);
+    } catch (err) {
+      console.error("Failed to fetch incidents", err);
+    }
+  };
 
   // Fetch victim, incidents, and consolidated reports
   useEffect(() => {
@@ -125,9 +142,35 @@ export default function VictimDetails() {
         const data = Array.isArray(res.data) ? res.data[0] : res.data;
         setVictim(data || null);
       } catch (err) {
-        setError(err?.response?.status ? `Error ${err.response.status}` : "Request failed");
+        setError(
+          err?.response?.status
+            ? `Error ${err.response.status}`
+            : "Request failed"
+        );
       } finally {
         setLoading(false);
+      }
+    };
+
+    const fetchFamilyMembers = async () => {
+      try {
+        const res = await api.get(
+          `/api/social_worker/victims/${vic_id}/family-members/`
+        );
+        setFamilyMembers(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    const fetchContactPersons = async () => {
+      try {
+        const res = await api.get(
+          `/api/social_worker/victims/${vic_id}/contact-persons/`
+        );
+        setContactPersons(res.data);
+      } catch (err) {
+        console.error(err);
       }
     };
 
@@ -142,14 +185,18 @@ export default function VictimDetails() {
         const normalize = (report, type) => ({
           ...report,
           report_type: report.report_type ?? type,
-          prepared_by_id: report.prepared_by_id ?? report.prepared_by?.id ?? null,
-          prepared_by_name: report.prepared_by_name ?? report.prepared_by?.full_name ?? "—",
+          prepared_by_id:
+            report.prepared_by_id ?? report.prepared_by?.id ?? null,
+          prepared_by_name:
+            report.prepared_by_name ?? report.prepared_by?.full_name ?? "—",
           incident: report.incident?.id ?? report.incident ?? null,
         });
 
         try {
-          const swRes = await api.get(`/api/social_worker/victims/${vic_id}/reports/`);
-          swData = (Array.isArray(swRes.data) ? swRes.data : []).map(r =>
+          const swRes = await api.get(
+            `/api/social_worker/victims/${vic_id}/reports/`
+          );
+          swData = (Array.isArray(swRes.data) ? swRes.data : []).map((r) =>
             normalize(r, "Social Worker")
           );
         } catch (err) {
@@ -157,28 +204,34 @@ export default function VictimDetails() {
         }
 
         try {
-          const nurseRes = await api.get(`/api/nurse/victims/${vic_id}/monthly-reports/`);
-          nurseData = (Array.isArray(nurseRes.data) ? nurseRes.data : []).map(r =>
-            normalize(r, "Nurse")
+          const nurseRes = await api.get(
+            `/api/nurse/victims/${vic_id}/monthly-reports/`
+          );
+          nurseData = (Array.isArray(nurseRes.data) ? nurseRes.data : []).map(
+            (r) => normalize(r, "Nurse")
           );
         } catch (err) {
           console.error("Nurse reports error", err);
         }
 
         try {
-          const psychComRes = await api.get(`/api/nurse/victims/${vic_id}/psych-comprehensive-reports/`);
-          psychComData = (Array.isArray(psychComRes.data) ? psychComRes.data : []).map(r =>
-            normalize(r, "Psychometrician Comprehensive")
+          const psychComRes = await api.get(
+            `/api/nurse/victims/${vic_id}/psych-comprehensive-reports/`
           );
+          psychComData = (
+            Array.isArray(psychComRes.data) ? psychComRes.data : []
+          ).map((r) => normalize(r, "Psychometrician Comprehensive"));
         } catch (err) {
           console.error("Psych comprehensive error", err);
         }
 
         try {
-          const psychMonthlyRes = await api.get(`/api/nurse/victims/${vic_id}/psych-monthly-progress-reports/`);
-          psychMonthlyData = (Array.isArray(psychMonthlyRes.data) ? psychMonthlyRes.data : []).map(r =>
-            normalize(r, "Psychometrician Monthly")
+          const psychMonthlyRes = await api.get(
+            `/api/nurse/victims/${vic_id}/psych-monthly-progress-reports/`
           );
+          psychMonthlyData = (
+            Array.isArray(psychMonthlyRes.data) ? psychMonthlyRes.data : []
+          ).map((r) => normalize(r, "Psychometrician Monthly"));
         } catch (err) {
           console.error("Psych monthly error", err);
         }
@@ -190,7 +243,9 @@ export default function VictimDetails() {
           ...psychMonthlyData,
         ];
 
-        combined.sort((a, b) => new Date(b.report_month) - new Date(a.report_month));
+        combined.sort(
+          (a, b) => new Date(b.report_month) - new Date(a.report_month)
+        );
         setReportsList(combined);
       } catch (err) {
         console.error("Unexpected error fetching reports", err);
@@ -199,6 +254,8 @@ export default function VictimDetails() {
 
     if (vic_id) {
       fetchVictim();
+      fetchFamilyMembers();
+      fetchContactPersons();
       fetchIncidents();
       fetchReports();
     }
@@ -214,13 +271,13 @@ export default function VictimDetails() {
 
   const fullName = victim
     ? [
-      get(victim, ["vic_first_name"]),
-      get(victim, ["vic_middle_name"]),
-      get(victim, ["vic_last_name"]),
-      get(victim, ["vic_extension"]),
-    ]
-      .filter(Boolean)
-      .join(" ")
+        get(victim, ["vic_first_name"]),
+        get(victim, ["vic_middle_name"]),
+        get(victim, ["vic_last_name"]),
+        get(victim, ["vic_extension"]),
+      ]
+        .filter(Boolean)
+        .join(" ")
     : "";
 
   if (loading) return <p>Loading victim details...</p>;
@@ -262,7 +319,9 @@ export default function VictimDetails() {
         </section>
 
         {/* Tabs */}
-        <div className="px-6 md:px-8 mt-8"> {/* added mt-8 for spacing */}
+        <div className="px-6 md:px-8 mt-8">
+          {" "}
+          {/* added mt-8 for spacing */}
           <div className="flex border-b border-gray-300 bg-white">
             {["details", "case", "reports"].map((tab) => {
               const isActive = activeTab === tab;
@@ -270,10 +329,11 @@ export default function VictimDetails() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-2 text-sm font-semibold rounded-t-md transition-colors duration-200 ${isActive
-                    ? "bg-[#292D96] text-white border border-gray-300 border-b-0"
-                    : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#292D96] border border-gray-300"
-                    }`}
+                  className={`px-6 py-2 text-sm font-semibold rounded-t-md transition-colors duration-200 ${
+                    isActive
+                      ? "bg-[#292D96] text-white border border-gray-300 border-b-0"
+                      : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#292D96] border border-gray-300"
+                  }`}
                 >
                   {tab === "details" && "Details"}
                   {tab === "case" && "Case Details"}
@@ -292,74 +352,177 @@ export default function VictimDetails() {
               <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
                 {/* Title bar with gray background */}
                 <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
-                  <h2 className="text-lg font-semibold text-gray-800">Personal Information</h2>
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Personal Information
+                  </h2>
                 </div>
 
                 {/* Content */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm p-6">
-                  <Info label="Sex" value={get(victim, ["vic_sex"])} icon={<UserIcon className="h-4 w-4 text-gray-500" />} />
-                  <Info label="Civil Status" value={get(victim, ["vic_civil_status"])} icon={<BuildingLibraryIcon className="h-4 w-4 text-gray-500" />} />
-                  <Info label="Birth Date" value={get(victim, ["vic_birth_date"])} icon={<CalendarIcon className="h-4 w-4 text-gray-500" />} />
-                  <Info label="Birth Place" value={get(victim, ["vic_birth_place"])} icon={<MapPinIcon className="h-4 w-4 text-gray-500" />} />
-                  <Info label="Religion" value={get(victim, ["vic_religion"])} icon={<GlobeAltIcon className="h-4 w-4 text-gray-500" />} />
-                  <Info label="Nationality" value={get(victim, ["vic_nationality"])} icon={<FlagIcon className="h-4 w-4 text-gray-500" />} />
-                  <Info label="Contact Number" value={get(victim, ["vic_contact_number"])} icon={<PhoneIcon className="h-4 w-4 text-gray-500" />} />
-                  <Info label="Current Address" value={get(victim, ["vic_current_address"])} icon={<HomeIcon className="h-4 w-4 text-gray-500" />} />
-                  <Info label="Provincial Address" value={get(victim, ["vic_provincial_address"])} icon={<HomeIcon className="h-4 w-4 text-gray-500" />} />
+                  <Info
+                    label="Sex"
+                    value={get(victim, ["vic_sex"])}
+                    icon={<UserIcon className="h-4 w-4 text-gray-500" />}
+                  />
+                  <Info
+                    label="Civil Status"
+                    value={get(victim, ["vic_civil_status"])}
+                    icon={
+                      <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />
+                    }
+                  />
+                  <Info
+                    label="Birth Date"
+                    value={get(victim, ["vic_birth_date"])}
+                    icon={<CalendarIcon className="h-4 w-4 text-gray-500" />}
+                  />
+                  <Info
+                    label="Birth Place"
+                    value={get(victim, ["vic_birth_place"])}
+                    icon={<MapPinIcon className="h-4 w-4 text-gray-500" />}
+                  />
+                  <Info
+                    label="Religion"
+                    value={get(victim, ["vic_religion"])}
+                    icon={<GlobeAltIcon className="h-4 w-4 text-gray-500" />}
+                  />
+                  <Info
+                    label="Nationality"
+                    value={get(victim, ["vic_nationality"])}
+                    icon={<FlagIcon className="h-4 w-4 text-gray-500" />}
+                  />
+                  <Info
+                    label="Contact Number"
+                    value={get(victim, ["vic_contact_number"])}
+                    icon={<PhoneIcon className="h-4 w-4 text-gray-500" />}
+                  />
+                  <Info
+                    label="Current Address"
+                    value={get(victim, ["vic_current_address"])}
+                    icon={<HomeIcon className="h-4 w-4 text-gray-500" />}
+                  />
+                  <Info
+                    label="Provincial Address"
+                    value={get(victim, ["vic_provincial_address"])}
+                    icon={<HomeIcon className="h-4 w-4 text-gray-500" />}
+                  />
                 </div>
               </div>
 
               {/* Experience */}
               <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
-                  <h2 className="text-lg font-semibold text-gray-800">Experience</h2>
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Experience
+                  </h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm p-6">
-                  <Info label="Occupation" value={get(victim, ["vic_occupation"])} />
-                  <Info label="Monthly Income" value={victim?.vic_income ? `₱${parseFloat(victim.vic_income).toLocaleString()}` : "—"} />
+                  <Info
+                    label="Occupation"
+                    value={get(victim, ["vic_occupation"])}
+                  />
+                  <Info
+                    label="Monthly Income"
+                    value={
+                      victim?.vic_income
+                        ? `₱${parseFloat(victim.vic_income).toLocaleString()}`
+                        : "—"
+                    }
+                  />
                   <Info label="Skills" value={get(victim, ["vic_skills"])} />
-                  <Info label="Previous Skills" value={get(victim, ["previous_skills"])} />
-                  <Info label="Type of Training" value={get(victim, ["type_of_training"])} />
-                  <Info label="Training Location" value={get(victim, ["training_where"])} />
-                  <Info label="Training Time" value={get(victim, ["training_when"])} />
-                  <Info label="Employment Experience" value={get(victim, ["employment_experience"])} />
+                  <Info
+                    label="Previous Skills"
+                    value={get(victim, ["previous_skills"])}
+                  />
+                  <Info
+                    label="Type of Training"
+                    value={get(victim, ["type_of_training"])}
+                  />
+                  <Info
+                    label="Training Location"
+                    value={get(victim, ["training_where"])}
+                  />
+                  <Info
+                    label="Training Time"
+                    value={get(victim, ["training_when"])}
+                  />
+                  <Info
+                    label="Employment Experience"
+                    value={get(victim, ["employment_experience"])}
+                  />
                 </div>
               </div>
 
               {/* Education */}
               <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
-                  <h2 className="text-lg font-semibold text-gray-800">Education</h2>
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Education
+                  </h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm p-6">
-                  <Info label="Educational Attainment" value={get(victim, ["vic_educational_attainment"])} />
-                  <Info label="Last School Attended" value={get(victim, ["vic_last_school_attended"])} />
-                  <Info label="School Address" value={get(victim, ["vic_last_school_address"])} />
-                  <Info label="School Type" value={get(victim, ["vic_school_type"])} />
-                  <Info label="School Years" value={get(victim, ["vic_school_years"])} />
-                  <Info label="Subject Interest" value={get(victim, ["subject_interest"])} />
+                  <Info
+                    label="Educational Attainment"
+                    value={get(victim, ["vic_educational_attainment"])}
+                  />
+                  <Info
+                    label="Last School Attended"
+                    value={get(victim, ["vic_last_school_attended"])}
+                  />
+                  <Info
+                    label="School Address"
+                    value={get(victim, ["vic_last_school_address"])}
+                  />
+                  <Info
+                    label="School Type"
+                    value={get(victim, ["vic_school_type"])}
+                  />
+                  <Info
+                    label="School Years"
+                    value={get(victim, ["vic_school_years"])}
+                  />
+                  <Info
+                    label="Subject Interest"
+                    value={get(victim, ["subject_interest"])}
+                  />
                   <Info label="Honors" value={get(victim, ["honors"])} />
                   <Info label="Hobbies" value={get(victim, ["hobbies"])} />
-                  <Info label="Vocational Interest" value={get(victim, ["vocational_interest"])} />
+                  <Info
+                    label="Vocational Interest"
+                    value={get(victim, ["vocational_interest"])}
+                  />
                 </div>
               </div>
 
               {/* Contact Person */}
               <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
-                  <h2 className="text-lg font-semibold text-gray-800">Contact Person</h2>
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Contact Person
+                  </h2>
                 </div>
                 <div className="p-6 text-sm">
                   {victim.contact_persons?.length > 0 ? (
                     victim.contact_persons.map((person, index) => (
-                      <div key={index} className="mb-4 pb-4 border-b border-gray-200 last:border-b-0">
+                      <div
+                        key={index}
+                        className="mb-4 pb-4 border-b border-gray-200 last:border-b-0"
+                      >
                         <Info label="Full Name" value={person.full_name} />
-                        <Info label="Relationship" value={person.cont_victim_relationship} />
-                        <Info label="Contact Number (Contact Person)" value={person.cont_contact_number} />
+                        <Info
+                          label="Relationship"
+                          value={person.cont_victim_relationship}
+                        />
+                        <Info
+                          label="Contact Number (Contact Person)"
+                          value={person.cont_contact_number}
+                        />
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-gray-500 italic">No contact person information available.</p>
+                    <p className="text-sm text-gray-500 italic">
+                      No contact person information available.
+                    </p>
                   )}
                 </div>
               </div>
@@ -367,24 +530,46 @@ export default function VictimDetails() {
               {/* Family Members */}
               <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
-                  <h2 className="text-lg font-semibold text-gray-800">Family Members</h2>
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Family Members
+                  </h2>
                 </div>
                 <div className="p-6 text-sm">
                   {victim.family_members?.length > 0 ? (
                     victim.family_members.map((member, index) => (
-                      <div key={index} className="mb-4 pb-4 border-b border-gray-200 last:border-b-0">
+                      <div
+                        key={index}
+                        className="mb-4 pb-4 border-b border-gray-200 last:border-b-0"
+                      >
                         <Info label="Full Name" value={member.full_name} />
-                        <Info label="Relationship" value={member.fam_victim_relationship} />
+                        <Info
+                          label="Relationship"
+                          value={member.fam_victim_relationship}
+                        />
                         <Info label="Sex" value={member.fam_sex} />
-                        <Info label="Civil Status" value={member.fam_civil_status} />
-                        <Info label="Educational Attainment" value={member.fam_educational_attainment} />
-                        <Info label="Occupation" value={member.fam_occupation} />
+                        <Info
+                          label="Civil Status"
+                          value={member.fam_civil_status}
+                        />
+                        <Info
+                          label="Educational Attainment"
+                          value={member.fam_educational_attainment}
+                        />
+                        <Info
+                          label="Occupation"
+                          value={member.fam_occupation}
+                        />
                         <Info label="Income" value={member.fam_income} />
-                        <Info label="Birth Date" value={member.fam_birth_date} />
+                        <Info
+                          label="Birth Date"
+                          value={member.fam_birth_date}
+                        />
                       </div>
                     ))
                   ) : (
-                    <p className="text-sm text-gray-500 italic">No family member information available.</p>
+                    <p className="text-sm text-gray-500 italic">
+                      No family member information available.
+                    </p>
                   )}
                 </div>
               </div>
@@ -397,19 +582,28 @@ export default function VictimDetails() {
               <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
                 {/* Title bar with gray background */}
                 <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
-                  <h2 className="text-lg font-semibold text-gray-800">Case Information</h2>
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Case Information
+                  </h2>
                 </div>
 
                 {/* Content */}
                 <div className="p-6">
                   {incidentList.length === 0 ? (
-                    <p className="text-sm text-gray-500 italic">No case records found for this victim.</p>
+                    <p className="text-sm text-gray-500 italic">
+                      No case records found for this victim.
+                    </p>
                   ) : (
                     incidentList.map((incident, index) => (
-                      <div key={index} className="border rounded-md p-4 shadow-sm bg-white mb-4">
+                      <div
+                        key={index}
+                        className="border rounded-md p-4 shadow-sm bg-white mb-4"
+                      >
                         <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
                           <div>
-                            <span className="font-medium text-gray-800">Case No:</span>{" "}
+                            <span className="font-medium text-gray-800">
+                              Case No:
+                            </span>{" "}
                             {incident.incident_num || "—"}
                           </div>
                           <div className="flex gap-3">
@@ -430,7 +624,9 @@ export default function VictimDetails() {
                               }}
                               className="inline-flex items-center gap-2 rounded-md border border-green-600 text-green-600 px-3 py-1.5 text-sm font-medium hover:bg-green-600 hover:text-white transition"
                             >
-                              {openSessionIndex === index ? "Hide Sessions" : "View Sessions"}
+                              {openSessionIndex === index
+                                ? "Hide Sessions"
+                                : "View Sessions"}
                             </button>
                           </div>
                         </div>
@@ -438,12 +634,16 @@ export default function VictimDetails() {
                         {/* Sessions inline list */}
                         {openSessionIndex === index && (
                           <SessionCard
-                          incident={incident}
-                          onSelectSession={(id) => setSelectedSessionIndex(id)}
-                          onCreateSession={() =>
-                            navigate(`/social_worker/more-sessions/create/${incident.incident_id}`)
-                          }
-                          naavigate={navigate}
+                            incident={incident}
+                            onSelectSession={(id) =>
+                              setSelectedSessionIndex(id)
+                            }
+                            onCreateSession={() =>
+                              navigate(
+                                `/social_worker/more-sessions/create/${incident.incident_id}`
+                              )
+                            }
+                            naavigate={navigate}
                           />
                         )}
                       </div>
@@ -486,7 +686,10 @@ export default function VictimDetails() {
               />
 
               {showReportModal && selectedReport && (
-                <Modal title="View Report" onClose={() => setShowReportModal(false)}>
+                <Modal
+                  title="View Report"
+                  onClose={() => setShowReportModal(false)}
+                >
                   <ReportModal
                     report={selectedReport}
                     userRole="DSWD"
@@ -504,13 +707,19 @@ export default function VictimDetails() {
             to="/dswd/victims"
             className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-4 py-2 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
           >
-            <svg xmlns="http://www.w3.org/2000/svg"
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth={2}
               stroke="currentColor"
-              className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              className="w-5 h-5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.75 19.5L8.25 12l7.5-7.5"
+              />
             </svg>
             Back to Victims
           </Link>
@@ -537,7 +746,6 @@ export default function VictimDetails() {
         />
       )}
     </div>
-
   );
 }
 
@@ -569,8 +777,9 @@ function ReportDropdown({ title, colorClass, reports, onSelect }) {
 
       {/* Slide down content */}
       <div
-        className={`overflow-hidden transition-all duration-500 ease-in-out ${open ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
-          }`}
+        className={`overflow-hidden transition-all duration-500 ease-in-out ${
+          open ? "max-h-screen opacity-100" : "max-h-0 opacity-0"
+        }`}
       >
         <div className="p-4 bg-white space-y-4">
           {reports.length === 0 ? (
