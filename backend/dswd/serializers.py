@@ -614,15 +614,25 @@ class ServicesSerializer(serializers.ModelSerializer):
 #===========================================Serializers for Dashboard views==========================================
 class FemaleVictimSummarySerializer(serializers.Serializer):
     total_female_victims = serializers.IntegerField()
-    minors = serializers.IntegerField()
-    adults = serializers.IntegerField()
+    age_0_18 = serializers.IntegerField()
+    age_18_35 = serializers.IntegerField()
+    age_36_50 = serializers.IntegerField()
+    age_51_plus = serializers.IntegerField()
+    age_0_18_percent = serializers.FloatField()
+    age_18_35_percent = serializers.FloatField()
+    age_36_50_percent = serializers.FloatField()
+    age_51_plus_percent = serializers.FloatField()
 
 class IncidentSummarySerializer(serializers.Serializer):
     total_cases = serializers.IntegerField()
     active_cases = serializers.IntegerField()
+    active_percent = serializers.FloatField()       
+    resolved_cases = serializers.IntegerField()
+    resolved_percent = serializers.FloatField()     
     violence_types = serializers.DictField(child=serializers.IntegerField())
     status_types = serializers.DictField(child=serializers.IntegerField())
     top_violence_type = serializers.CharField()
+    top_violence_percent = serializers.FloatField()
 
 class MonthlyReportRowSerializer(serializers.Serializer):
     month = serializers.CharField()

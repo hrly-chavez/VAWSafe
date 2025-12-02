@@ -57,39 +57,65 @@ export default function DSWDProfile() {
     <div className="min-h-screen p-4 sm:p-8 flex justify-center bg-gray-100 font-inter">
       <div className="w-full max-w-6xl bg-white shadow-xl rounded-xl overflow-hidden border border-gray-200">
 
-        {/* Header */}
-        <header className="h-40 rounded-t-xl bg-[#292D96] flex items-start p-6">
-          <h1 className="text-3xl font-bold text-white shadow-sm">DSWD Official Profile</h1>
-        </header>
+        {/* Shorter Header */}
+        <header className="h-24 rounded-t-xl bg-[#292D96]"></header>
 
-        {/* Profile Info */}
-        <section className="px-6 md:px-8 -mt-16 flex flex-col md:flex-row items-start space-y-6 md:space-y-0 md:space-x-8">
-          <div className="flex-shrink-0 w-full md:w-auto flex flex-col items-center md:items-start">
+        {/* Profile Section */}
+        <section className="px-6 md:px-8 flex flex-row items-start gap-6">
+          {/* Profile Photo (overlaps header) */}
+          <div className="-mt-16">
             <img
               src={`http://localhost:8000${officialData.of_photo || "/media/photos/placeholder.jpg"}`}
               alt="Profile"
-              className="w-32 h-32 rounded-full border-4 border-white ring-4 ring-[#F59E0B] bg-gray-200 object-cover shadow-lg"
+              className="w-40 h-40 rounded-full border-4 border-white bg-gray-200 object-cover shadow-lg"
             />
-            <h1 className="text-3xl font-bold mt-4 text-gray-800">{officialData.full_name}</h1>
-            <p className="text-lg text-[#292D96] font-medium">{officialData.of_role}</p>
-            <div className="mt-2 flex space-x-2 items-center">
-              <span className="px-3 py-1 text-xs font-bold rounded-full uppercase bg-green-500 text-white">
-                Approved
-              </span>
-              <p className="text-sm text-gray-500">Assigned: Regional Center</p>
-            </div>
           </div>
 
-          {/* Metrics */}
-          <div className="flex-grow w-full md:w-auto grid grid-cols-1 sm:grid-cols-2 gap-4 border border-gray-300 rounded-lg p-4 bg-gray-50 shadow-inner mt-4 md:mt-0">
-            <div className="text-center">
-              <p className="text-2xl font-extrabold text-[#292D96]">{officialData.active_caseload || 0}</p>
-              <p className="text-xs text-gray-500 uppercase tracking-widest">Active Caseloads</p>
+          {/* Name, Role, Status + Actions */}
+          <div className="mt-2 flex flex-col justify-center flex-grow">
+            {/* Name + Status + Action Buttons */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl font-bold text-gray-800">{officialData.full_name}</h1>
+
+              {/* Status Badge */}
+              <span className="inline-block px-3 py-1.5 text-sm font-medium rounded-full bg-green-100 text-green-700">
+                {officialData.status || "Approved"}
+              </span>
+
+              {/* Action Buttons */}
+              <button
+                onClick={() => setShowEditModal(true)}
+                className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-600 hover:text-[#292D96] transition"
+                title="Edit Profile"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 3.487a2.1 2.1 0 1 1 2.97 2.97L8.25 18.04l-4.5 1.5 1.5-4.5 11.612-11.553z" />
+                </svg>
+              </button>
+
+              <button
+                onClick={() => setShowChangePassword(true)}
+                className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-600 hover:text-[#292D96] transition"
+                title="Change Password / Username"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 0 0-9 0v3.75m-1.5 0h12a1.5 1.5 0 0 1 1.5 1.5v6.75a1.5 1.5 0 0 1-1.5 1.5h-12a1.5 1.5 0 0 1-1.5-1.5V12a1.5 1.5 0 0 1 1.5-1.5z" />
+                </svg>
+              </button>
             </div>
-            <div className="text-center border-l border-gray-300">
-              <p className="text-2xl font-extrabold text-[#10B981]">{officialData.total_user_accounts || 0}</p>
-              <p className="text-xs text-gray-500 uppercase tracking-widest">Total User Accounts</p>
-            </div>
+
+            {/* Role below name */}
+            <p className="text-sm text-gray-600 mt-2">{officialData.of_role}</p>
           </div>
         </section>
 

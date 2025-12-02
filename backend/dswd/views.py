@@ -19,7 +19,7 @@ from PIL import Image
 from django.utils import timezone
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db.models.fields.files import FieldFile
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from calendar import month_name
 from collections import Counter
 import json
@@ -1258,7 +1258,7 @@ class ResetPasswordView(APIView):
         return Response({"success": True, "message": "Password reset successful"}, status=status.HTTP_200_OK)
 
 
-#=============================Dashboard======================================
+# ============================= Dashboard =======================================
 class DSWDDashboardAPIView(APIView):
     permission_classes = [IsAuthenticated, IsRole]
     allowed_roles = ['DSWD']
@@ -1266,87 +1266,111 @@ class DSWDDashboardAPIView(APIView):
     def get(self, request):
         today = date.today()
 
-        #Victim Summary
-        victims = [v for v in Victim.objects.all() if v.vic_sex == "Female"]
-        total_female_victims = len(victims)
-        minors = 0
-        adults = 0
+        # ---------------- Victim Summary ----------------
+        victims_all = Victim.objects.all()
+        victims = [v for v in victims_all if getattr(v, "vic_sex", None) == "Female"]
 
-        for victim in victims:
-            if victim.vic_birth_date:
-                age = (
-                    today.year
-                    - victim.vic_birth_date.year
-                    - ((today.month, today.day) < (victim.vic_birth_date.month, victim.vic_birth_date.day))
-                )
+        total_female_victims = len(victims)
+
+        # Age group counters
+        age_0_18, age_18_35, age_36_50, age_51_plus = 0, 0, 0, 0
+
+        for v in victims:
+            birth = getattr(v, "vic_birth_date", None)
+            if birth:
+                age = today.year - birth.year - ((today.month, today.day) < (birth.month, birth.day))
                 if age < 18:
-                    minors += 1
-                else:
-                    adults += 1
+                    age_0_18 += 1
+                elif 18 <= age <= 35:
+                    age_18_35 += 1
+                elif 36 <= age <= 50:
+                    age_36_50 += 1
+                elif age >= 51:
+                    age_51_plus += 1
+
+        # Percentages
+        age_0_18_percent = round((age_0_18 / total_female_victims) * 100, 1) if total_female_victims > 0 else 0
+        age_18_35_percent = round((age_18_35 / total_female_victims) * 100, 1) if total_female_victims > 0 else 0
+        age_36_50_percent = round((age_36_50 / total_female_victims) * 100, 1) if total_female_victims > 0 else 0
+        age_51_plus_percent = round((age_51_plus / total_female_victims) * 100, 1) if total_female_victims > 0 else 0
 
         victim_summary = {
             "total_female_victims": total_female_victims,
-            "minors": minors,
-            "adults": adults,
+            "age_0_18": age_0_18,
+            "age_18_35": age_18_35,
+            "age_36_50": age_36_50,
+            "age_51_plus": age_51_plus,
+            "age_0_18_percent": age_0_18_percent,   
+            "age_18_35_percent": age_18_35_percent,
+            "age_36_50_percent": age_36_50_percent,
+            "age_51_plus_percent": age_51_plus_percent,
         }
 
-        #Incident Summary
+        # ---------------- Incident Summary ----------------
         incidents = IncidentInformation.objects.all()
         total_cases = incidents.count()
-        active_cases = len([
-            i for i in incidents
-            if i.incident_status in ["Pending", "Ongoing"]
-        ])
+
+        active_cases = sum(1 for i in incidents if getattr(i, "incident_status", None) in ["Pending", "Ongoing"])
+        resolved_cases = sum(1 for i in incidents if getattr(i, "incident_status", None) == "Done")
+
+        LIMIT_ACTIVE = 100
+        LIMIT_RESOLVED = 100
+
+        active_percent = round((active_cases / LIMIT_ACTIVE) * 100, 1) if LIMIT_ACTIVE > 0 else 0
+        resolved_percent = round((resolved_cases / LIMIT_RESOLVED) * 100, 1) if LIMIT_RESOLVED > 0 else 0
 
         violence_types = Counter(
-            i.violence_type for i in incidents if i.violence_type
+            getattr(i, "violence_type", None)
+            for i in incidents if getattr(i, "violence_type", None)
         )
         violence_types_dict = dict(violence_types)
 
         total_violence = sum(violence_types.values())
+        top_type, top_percent = "N/A", 0.0
         if total_violence > 0:
             top_key, top_count = violence_types.most_common(1)[0]
-            top_type = f"{top_key} ({round((top_count / total_violence) * 100)}%)"
-        else:
-            top_type = "N/A"
+            top_type = top_key
+            top_percent = round((top_count / total_violence) * 100, 1)
 
-        status_counts = (
-            incidents.values("incident_status")
-            .annotate(count=Count("incident_status"))
-        )
+        status_counts = incidents.values("incident_status").annotate(count=Count("incident_status"))
         status_types = {s["incident_status"]: s["count"] for s in status_counts}
 
         incident_summary = {
             "total_cases": total_cases,
             "active_cases": active_cases,
+            "active_percent": active_percent,
+            "resolved_cases": resolved_cases,
+            "resolved_percent": resolved_percent,
             "violence_types": violence_types_dict,
             "status_types": status_types,
             "top_violence_type": top_type,
+            "top_violence_percent": top_percent,
         }
 
-        #Monthly Report Rows
+        # ---------------- Monthly Report Rows ----------------
         report_rows = []
         for i in range(1, 13):
             month_incidents = [
                 inc for inc in incidents
-                if inc.incident_date and inc.incident_date.month == i
-            ]   
+                if getattr(inc, "incident_date", None)
+                and inc.incident_date.month == i
+                and inc.incident_date.year == today.year
+            ]
             report_rows.append({
                 "month": month_name[i],
                 "totalVictims": len(month_incidents),
-                "Physical Violence": sum(1 for inc in month_incidents if inc.violence_type == "Physical Violence"),
-                "Physical Abused": sum(1 for inc in month_incidents if inc.violence_type == "Physical Abused"),
-                "Psychological Violence": sum(1 for inc in month_incidents if inc.violence_type == "Psychological Violence"),
-                "Psychological Abuse": sum(1 for inc in month_incidents if inc.violence_type == "Psychological Abuse"),
-                "Economic Abused": sum(1 for inc in month_incidents if inc.violence_type == "Economic Abused"),
-                "Strandee": sum(1 for inc in month_incidents if inc.violence_type == "Strandee"),
-                "Sexually Abused": sum(1 for inc in month_incidents if inc.violence_type == "Sexually Abused"),
-                "Sexually Exploited": sum(1 for inc in month_incidents if inc.violence_type == "Sexually Exploited"),
+                "Physical Violence": sum(1 for inc in month_incidents if getattr(inc, "violence_type", None) == "Physical Violence"),
+                "Physical Abused": sum(1 for inc in month_incidents if getattr(inc, "violence_type", None) == "Physical Abused"),
+                "Psychological Violence": sum(1 for inc in month_incidents if getattr(inc, "violence_type", None) == "Psychological Violence"),
+                "Psychological Abuse": sum(1 for inc in month_incidents if getattr(inc, "violence_type", None) == "Psychological Abuse"),
+                "Economic Abused": sum(1 for inc in month_incidents if getattr(inc, "violence_type", None) == "Economic Abused"),
+                "Strandee": sum(1 for inc in month_incidents if getattr(inc, "violence_type", None) == "Strandee"),
+                "Sexually Abused": sum(1 for inc in month_incidents if getattr(inc, "violence_type", None) == "Sexually Abused"),
+                "Sexually Exploited": sum(1 for inc in month_incidents if getattr(inc, "violence_type", None) == "Sexually Exploited"),
                 "referredDSWD": 0,
                 "referredHospital": 0,
             })
 
-        #Serialize and return
         return Response({
             "victim_summary": FemaleVictimSummarySerializer(victim_summary).data,
             "incident_summary": IncidentSummarySerializer(incident_summary).data,
