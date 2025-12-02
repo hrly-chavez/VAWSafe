@@ -33,7 +33,6 @@ export default function StartSession() {
 
     useEffect(() => {
     let mounted = true;
-
     const loadSession = async () => {
       try {
         const detailRes = await api.get(`/api/social_worker/sessions/${sess_id}/`);
@@ -89,8 +88,11 @@ export default function StartSession() {
         }
 
         // === FINISHED ===
-        alert("This session is already finished.");
-        navigate(-1);
+              if (sess.sess_status === "Done") {
+                alert("This session is already finished.");
+                navigate(-1);
+                return;
+              }
 
       } catch (err) {
         console.error("Failed to load session", err);
