@@ -27,25 +27,6 @@ class AddressSerializer(serializers.ModelSerializer):
             parts.append(str(instance.province))
         return ", ".join(parts) or "—"
 
-# --- Lightweight list serializer ---
-class VictimListSerializer(serializers.ModelSerializer):
-    age = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Victim
-        fields = "__all__"
-
-    def get_age(self, obj):
-        if obj.vic_birth_date:
-            today = date.today()
-            return (
-                today.year
-                - obj.vic_birth_date.year
-                - ((today.month, today.day) < (obj.vic_birth_date.month, obj.vic_birth_date.day))
-            )
-        return None
-
-
 # --- Nested detail serializers ---
 class VictimFaceSampleSerializer(serializers.ModelSerializer):
     class Meta:
@@ -475,6 +456,24 @@ class IncidentInformationSerializer(serializers.ModelSerializer):
             s._prefetched_progress = list(s.progress.select_related("official").all())
 
         return SessionSerializer(queryset, many=True, context={"request": self.context.get("request")}).data
+
+class VictimListSerializer(serializers.ModelSerializer):
+    age = serializers.SerializerMethodField()
+    incidents = IncidentInformationSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Victim
+        fields = "__all__"
+
+    def get_age(self, obj):
+        if obj.vic_birth_date:
+            today = date.today()
+            return (
+                today.year
+                - obj.vic_birth_date.year
+                - ((today.month, today.day) < (obj.vic_birth_date.month, obj.vic_birth_date.day))
+            )
+        return None
 
 class SessionTypeQuestionSerializer(serializers.ModelSerializer): 
     """

@@ -209,6 +209,7 @@ class AuditLog(models.Model):
         ("unarchive", "Unarchive"),
         ("archive", "Archive"),
         ("update", "Update"),
+        ("change pass", "Change pass"),
     ]
     actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     action = models.CharField(max_length=32, choices=ACTION_CHOICES)

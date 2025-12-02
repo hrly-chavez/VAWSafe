@@ -157,16 +157,16 @@ const roleTitles = {
           if (canCreate) {
             return (
               <div className="flex justify-end mt-6">
-                <button
+                {/* <button
                   onClick={() =>
                     navigate(
-                      `/social_worker/more-sessions/create/${incident.incident_id}`
+                      `/nurse/more-sessions/create/${incident.incident_id}`
                     )
                   }
                   className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-4 py-2 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
                 >
                   + Create New Consultation
-                </button>
+                </button> */}
               </div>
             );
           }

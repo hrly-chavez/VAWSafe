@@ -50,6 +50,7 @@ export default function Sidebar({ sidebarOpen, toggleSidebar, notificationCount 
         { icon: "/images/heart.png", label: "Women Survivors", path: "/psychometrician/victims", },
         { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/psychometrician/sessions", },
         { icon: "/images/question_mark.png", label: "Questions", path: "/psychometrician/questions" },
+        // { icon: "/images/peace.png", label: "Services", path: "/psychometrician/services", },
         // { icon: "/images/case.png", label: "Case Records",path: "/psychometrician/case-records",},
         // { icon: "/images/calendar.png", label: "My Schedule",path: "/psychometrician/schedule",},
       ];
