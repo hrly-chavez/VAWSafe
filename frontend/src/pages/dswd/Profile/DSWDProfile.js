@@ -198,19 +198,22 @@ export default function DSWDProfile() {
               {/* Account Status */}
               <div>
                 <h2 className="text-xl font-bold mb-4 text-gray-800">Account Status</h2>
-                <div className="flex items-center p-4 bg-green-50 rounded-lg border border-green-300">
-                  <CheckBadgeIcon className="h-6 w-6 text-green-600 mr-3" />
-                  <p className="text-gray-700 text-sm">
-                    Account is <strong>Active</strong>. Last login:{" "}
-                    {officialData.last_login
-                      ? new Date(officialData.last_login).toLocaleString("en-PH", {
-                          timeZone: "Asia/Manila",
-                          dateStyle: "long",
-                          timeStyle: "short",
-                        })
-                      : "N/A"}
-                  </p>
-                </div>
+
+                {officialData.deleted_at ? (
+                  <div className="flex items-center p-4 bg-red-50 rounded-lg border border-red-300">
+                    <div className="h-6 w-6 text-red-600 mr-3" />
+                    <p className="text-gray-700 text-sm">
+                      Account is <strong>Deactivated</strong>.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center p-4 bg-green-50 rounded-lg border border-green-300">
+                    <CheckBadgeIcon className="h-6 w-6 text-green-600 mr-3" />
+                    <p className="text-gray-700 text-sm">
+                      Account is <strong>Active</strong>.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
