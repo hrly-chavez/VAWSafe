@@ -1,8 +1,13 @@
 //VictimInfo.js
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { formatPHNumber } from "./helpers/input-validators";
 
-export default function VictimInfo({ formDataState, setFormDataState }) {
+export default function VictimInfo({
+  formDataState,
+  setFormDataState,
+  isLocked,
+}) {
   const handleChange = (key, value) => {
     if (key.includes(".")) {
       const [outerKey, innerKey] = key.split(".");
@@ -116,6 +121,23 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
   const inputStyle =
     "px-4 py-2 rounded-lg bg-white border border-gray-300 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400";
 
+  // date validator
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  const minYear = new Date();
+  minYear.setFullYear(minYear.getFullYear() - 120); // 120 years ago
+  const minDate = minYear.toISOString().split("T")[0];
+
+  const handleDateChange = (e) => {
+    let inputDate = e.target.value;
+
+    // Clamp to today if user types a future date
+    if (inputDate > today) {
+      inputDate = today;
+    }
+
+    handleChange("vic_birth_date", inputDate);
+  };
+
   return (
     <div className="bg-white p-6 rounded-xl shadow-md space-y-6">
       <h2 className="text-2xl font-bold text-blue-800 border-b pb-2 tracking-wide">
@@ -129,29 +151,48 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         </label>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="First Name"
+            value={formDataState.vic_first_name || ""}
             onChange={(e) => handleChange("vic_first_name", e.target.value)}
           />
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Middle Name"
+            value={formDataState.vic_middle_name || ""}
             onChange={(e) => handleChange("vic_middle_name", e.target.value)}
           />
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Last Name"
+            value={formDataState.vic_last_name || ""}
             onChange={(e) => handleChange("vic_last_name", e.target.value)}
           />
-          <input
+          <select
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
-            type="text"
-            placeholder="Extension (e.g. Jr., III)"
+            value={formDataState.vic_extension || ""}
             onChange={(e) => handleChange("vic_extension", e.target.value)}
-          />
+          >
+            <option value="">Select Extension</option>
+            <option value="Jr.">Jr.</option>
+            <option value="Sr.">Sr.</option>
+            <option value="II">II</option>
+            <option value="III">III</option>
+            <option value="IV">IV</option>
+            <option value="V">V</option>
+            <option value="">None</option>
+          </select>
         </div>
       </div>
 
@@ -162,9 +203,12 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         </label>
         <div>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Nickname/Alias"
+            value={formDataState.vic_alias || ""}
             onChange={(e) => handleChange("vic_alias", e.target.value)}
           />
         </div>
@@ -177,12 +221,19 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="date"
             value={formDataState.vic_birth_date || ""}
-            onChange={(e) => handleChange("vic_birth_date", e.target.value)}
+            min={minDate}
+            max={today}
+            onChange={handleDateChange}
           />
+
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Birth Place"
@@ -199,6 +250,8 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             Civil Status
           </label>
           <select
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input w-full"
             value={formDataState.vic_civil_status || ""}
             onChange={(e) => handleChange("vic_civil_status", e.target.value)}
@@ -222,6 +275,8 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             Religion
           </label>
           <select
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             value={formDataState.vic_religion || ""}
             onChange={(e) => handleChange("vic_religion", e.target.value)}
@@ -247,6 +302,8 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             Educational Attainment
           </label>
           <select
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input w-full"
             value={formDataState.vic_educational_attainment || ""}
             onChange={(e) =>
@@ -257,11 +314,19 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
               Select Educational Level
             </option>
             <option value="No Formal Education">No Formal Education</option>
-            <option value="Elementary Level/Graduate">Elementary Level/Graduate</option>
-            <option value="Junior High School Level/Graduate">Junior High School Level/Graduate</option>
-            <option value="Senior High School Level/Graduate">Senior High School Level/Graduate</option>
+            <option value="Elementary Level/Graduate">
+              Elementary Level/Graduate
+            </option>
+            <option value="Junior High School Level/Graduate">
+              Junior High School Level/Graduate
+            </option>
+            <option value="Senior High School Level/Graduate">
+              Senior High School Level/Graduate
+            </option>
             <option value="Technical/Vocational">Technical/Vocational</option>
-            <option value="College Level/Graduate">College Level/Graduate</option>
+            <option value="College Level/Graduate">
+              College Level/Graduate
+            </option>
             <option value="Post graduate">Post graduate</option>
           </select>
         </div>
@@ -274,6 +339,8 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
               OS/OSY Status
             </label>
             <select
+              readOnly={isLocked}
+              disabled={isLocked}
               className="input w-full"
               value={formDataState.vic_school_type || ""}
               onChange={(e) => handleChange("vic_school_type", e.target.value)}
@@ -291,17 +358,24 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               School Years
             </label>
+
             <input
-              type="text"
-              className="input w-full"
+              readOnly={isLocked}
+              disabled={isLocked}
               placeholder="Enter School Years"
-              value={formDataState.vic_school_years || ""}
-              onChange={(e) => handleChange("vic_school_years", e.target.value)}
+              type="number"
+              className="input w-full"
+              min={0}
+              max={25}
+              value={formDataState.vic_school_years || 0}
+              onChange={(e) => {
+                const value = Math.min(Math.max(Number(e.target.value), 0), 25); // clamp between 0 and 25
+                handleChange("vic_school_years", value);
+              }}
             />
           </div>
         </div>
       </div>
-
 
       {/* last school name and address */}
       <div className="flex flex-col mb-4">
@@ -310,17 +384,23 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="School Name"
+            value={formDataState.vic_last_school_attended || ""}
             onChange={(e) =>
               handleChange("vic_last_school_attended", e.target.value)
             }
           />
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="School Address"
+            value={formDataState.vic_last_school_address || ""}
             onChange={(e) =>
               handleChange("vic_last_school_address", e.target.value)
             }
@@ -333,21 +413,37 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
       <div className="flex flex-col mb-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Occupation"
+            value={formDataState.vic_occupation || ""}
             onChange={(e) => handleChange("vic_occupation", e.target.value)}
           />
-          <input
+
+          <select
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
-            type="text"
-            placeholder="Income"
+            value={formDataState.vic_income || ""}
             onChange={(e) => handleChange("vic_income", e.target.value)}
-          />
+          >
+            <option value="">Select Income</option>
+            <option value="0-5000">₱0 - ₱5,000</option>
+            <option value="5001-10000">₱5,001 - ₱10,000</option>
+            <option value="10001-20000">₱10,001 - ₱20,000</option>
+            <option value="20001-50000">₱20,001 - ₱50,000</option>
+            <option value="50001+">₱50,001 and above</option>
+          </select>
+
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Skills"
+            value={formDataState.vic_skills || ""}
             onChange={(e) => handleChange("vic_skills", e.target.value)}
           />
         </div>
@@ -360,6 +456,8 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             Province
           </label>
           <select
+            readOnly={isLocked}
+            disabled={isLocked}
             value={formDataState.address.province || ""}
             onChange={(e) => handleChange("address.province", e.target.value)}
             className={inputStyle}
@@ -378,12 +476,14 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             Municipality
           </label>
           <select
+            readOnly={isLocked}
+            disabled={isLocked}
             value={formDataState.address.municipality || ""}
             onChange={(e) =>
               handleChange("address.municipality", e.target.value)
             }
             className={inputStyle}
-            disabled={!formDataState.address.province}
+            // disabled={!formDataState.address.province}
           >
             <option value="">Select Municipality</option>
             {municipalities.map((m) => (
@@ -399,10 +499,12 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             Barangay
           </label>
           <select
+            readOnly={isLocked}
+            disabled={isLocked}
             value={formDataState.address.barangay || ""}
             onChange={(e) => handleChange("address.barangay", e.target.value)}
             className={inputStyle}
-            disabled={!formDataState.address.municipality}
+            // disabled={!formDataState.address.municipality}
           >
             <option value="">Select Barangay</option>
             {barangays.map((b) => (
@@ -420,11 +522,15 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
           Telephone/Cellphone No.
         </label>
         <input
+          readOnly={isLocked}
+          disabled={isLocked}
           className="input w-full"
           type="text"
           placeholder="Contact Number"
           value={formDataState.vic_contact_number || ""}
-          onChange={(e) => handleChange("vic_contact_number", e.target.value)}
+          onChange={(e) =>
+            handleChange("vic_contact_number", formatPHNumber(e.target.value))
+          }
         />
       </div>
 
@@ -434,13 +540,158 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
           Provincial Address
         </label>
         <input
+          readOnly={isLocked}
+          disabled={isLocked}
           className="input w-full"
           type="text"
           placeholder="Provincial Address"
+          value={formDataState.vic_provincial_address || ""}
           onChange={(e) =>
             handleChange("vic_provincial_address", e.target.value)
           }
         />
+      </div>
+
+      {/* extra fields added para universal sa docx forms */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Subject Interest
+          </label>
+          <input
+            readOnly={isLocked}
+            disabled={isLocked}
+            className="input w-full"
+            type="text"
+            placeholder="Subject Interest"
+            value={formDataState.subject_interest || ""}
+            onChange={(e) => handleChange("subject_interest", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Honors
+          </label>
+          <input
+            readOnly={isLocked}
+            disabled={isLocked}
+            className="input w-full"
+            type="text"
+            placeholder="Honors"
+            value={formDataState.honors || ""}
+            onChange={(e) => handleChange("honors", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Hobbies
+          </label>
+          <input
+            readOnly={isLocked}
+            disabled={isLocked}
+            className="input w-full"
+            type="text"
+            placeholder="Hobbies"
+            value={formDataState.hobbies || ""}
+            onChange={(e) => handleChange("hobbies", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Vocational Interest
+          </label>
+          <input
+            readOnly={isLocked}
+            disabled={isLocked}
+            className="input w-full"
+            type="text"
+            placeholder="Vocational Interest"
+            value={formDataState.vocational_interest || ""}
+            onChange={(e) =>
+              handleChange("vocational_interest", e.target.value)
+            }
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Previous Skills
+          </label>
+          <input
+            readOnly={isLocked}
+            disabled={isLocked}
+            className="input w-full"
+            type="text"
+            placeholder="Previous Skills"
+            value={formDataState.previous_skills || ""}
+            onChange={(e) => handleChange("previous_skills", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Type of Training
+          </label>
+          <input
+            readOnly={isLocked}
+            disabled={isLocked}
+            className="input w-full"
+            type="text"
+            placeholder="Type of Training"
+            value={formDataState.type_of_training || ""}
+            onChange={(e) => handleChange("type_of_training", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Where
+          </label>
+          <input
+            readOnly={isLocked}
+            disabled={isLocked}
+            className="input w-full"
+            type="text"
+            placeholder="Where"
+            value={formDataState.training_where || ""}
+            onChange={(e) => handleChange("training_where", e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            When
+          </label>
+          <input
+            readOnly={isLocked}
+            disabled={isLocked}
+            className="input w-full"
+            type="text"
+            placeholder="When"
+            value={formDataState.training_when || ""}
+            onChange={(e) => handleChange("training_when", e.target.value)}
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Employment Experience
+          </label>
+          <input
+            readOnly={isLocked}
+            disabled={isLocked}
+            className="input w-full"
+            type="text"
+            placeholder="Employment Experience"
+            value={formDataState.employment_experience || ""}
+            onChange={(e) =>
+              handleChange("employment_experience", e.target.value)
+            }
+          />
+        </div>
       </div>
     </div>
   );

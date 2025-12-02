@@ -35,7 +35,7 @@ export default function StartSession() {
     
         const loadSession = async () => {
           try {
-            const detailRes = await api.get(`/api/social_worker/sessions/${sess_id}/`);
+            const detailRes = await api.get(`/api/nurse/sessions/${sess_id}/`);
             const sess = detailRes.data;
     
             // === PENDING SESSION - only call start() once ===
@@ -43,7 +43,7 @@ export default function StartSession() {
               if (!startedRef.current) {
                 startedRef.current = true; // prevent duplicate calls
     
-                const response = await api.post(`/api/social_worker/sessions/${sess_id}/start/`);
+                const response = await api.post(`/api/nurse/sessions/${sess_id}/start/`);
                 const data = response.data;
     
                 const myRole =
@@ -62,7 +62,9 @@ export default function StartSession() {
     
                 // Open ONLY my role
                 setOpenRoles(myRole ? [myRole] : []);
-                return;
+                setTimeout(() => {
+                  window.location.reload();
+                }, 50);
               }
             }
     
@@ -88,8 +90,11 @@ export default function StartSession() {
             }
     
             // === FINISHED ===
-            alert("This session is already finished.");
-            navigate(-1);
+              if (sess.sess_status === "Done") {
+                alert("This session is already finished.");
+                navigate(-1);
+                return;
+              }
     
           } catch (err) {
             console.error("Failed to load session", err);

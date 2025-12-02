@@ -3,7 +3,7 @@ import React from "react";
 
 export default function Modal({ title, children, onClose }) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-[9999]">
       <div
         className="bg-white rounded-xl shadow-lg max-w-3xl w-full h-[90vh]
                    overflow-y-auto [-ms-overflow-style:'none'] [scrollbar-width:'none']

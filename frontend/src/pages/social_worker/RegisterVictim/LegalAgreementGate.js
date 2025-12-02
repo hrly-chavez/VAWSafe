@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function LegalAgreement({ setLegalAccepted }) {
   const [language, setLanguage] = useState("english");
+  const navigate = useNavigate();
 
   const handleAccept = () => setLegalAccepted(true);
-  const handleDecline = () => (window.location.href = "/social_worker");
+  const handleDecline = () => navigate("/social_worker");
   const buttonLabels = {
     english: {
       accept: "Accept & Proceed",

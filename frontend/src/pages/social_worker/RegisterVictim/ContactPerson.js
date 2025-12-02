@@ -1,4 +1,10 @@
-export default function ContactPerson({ formDataState, setFormDataState }) {
+import { formatPHNumber } from "./helpers/input-validators";
+
+export default function ContactPerson({
+  formDataState,
+  setFormDataState,
+  isLocked,
+}) {
   const handleChange = (field, value) => {
     setFormDataState((prev) => ({
       ...prev,
@@ -15,29 +21,49 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
         </label>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="First Name"
+            value={formDataState.cont_fname || ""}
             onChange={(e) => handleChange("cont_fname", e.target.value)}
           />
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Middle Name"
+            value={formDataState.cont_mname || ""}
             onChange={(e) => handleChange("cont_mname", e.target.value)}
           />
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Last Name"
+            value={formDataState.cont_lname || ""}
             onChange={(e) => handleChange("cont_lname", e.target.value)}
           />
-          <input
+          <select
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
-            type="text"
             placeholder="Extension (e.g. Jr., III)"
+            value={formDataState.cont_ext || ""}
             onChange={(e) => handleChange("cont_ext", e.target.value)}
-          />
+          >
+            <option value="">Select Extension</option>
+            <option value="Jr.">Jr.</option>
+            <option value="Sr.">Sr.</option>
+            <option value="II">II</option>
+            <option value="III">III</option>
+            <option value="IV">IV</option>
+            <option value="V">V</option>
+            <option value="">None</option>
+          </select>
         </div>
       </div>
 
@@ -48,14 +74,20 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="date"
+            value={formDataState.cont_birth_date || ""}
             onChange={(e) => handleChange("cont_birth_date", e.target.value)}
           />
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Birth Place"
+            value={formDataState.cont_birth_place || ""}
             onChange={(e) => handleChange("cont_birth_place", e.target.value)}
           />
         </div>
@@ -67,7 +99,10 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
           Sex
         </label>
         <select
+          readOnly={isLocked}
+          disabled={isLocked}
           className="input w-full"
+          value={formDataState.cont_sex || ""}
           onChange={(e) => handleChange("cont_sex", e.target.value)}
         >
           <option value="">Select Sex</option>
@@ -83,7 +118,10 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
             Civil Status
           </label>
           <select
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input w-full"
+            value={formDataState.cont_civil_status || ""}
             onChange={(e) => handleChange("cont_civil_status", e.target.value)}
           >
             <option>Select Civil Status</option>
@@ -103,9 +141,12 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
         </label>
         <div>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="e.g. Siblings"
+            value={formDataState.cont_victim_relationship || ""}
             onChange={(e) =>
               handleChange("cont_victim_relationship", e.target.value)
             }
@@ -120,11 +161,17 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
             Contact Number
           </label>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="e.g. 09123456789"
+            value={formDataState.cont_contact_number || ""}
             onChange={(e) =>
-              handleChange("cont_contact_number", e.target.value)
+              handleChange(
+                "cont_contact_number",
+                formatPHNumber(e.target.value)
+              )
             }
           />
         </div>
@@ -137,9 +184,12 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
             Provincial Address
           </label>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="e.g. Samar Leyte"
+            value={formDataState.cont_prov_address || ""}
             onChange={(e) => handleChange("cont_prov_address", e.target.value)}
           />
         </div>
@@ -152,9 +202,12 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
             Work Address
           </label>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="e.g. IT Park"
+            value={formDataState.cont_work_address || ""}
             onChange={(e) => handleChange("cont_work_address", e.target.value)}
           />
         </div>

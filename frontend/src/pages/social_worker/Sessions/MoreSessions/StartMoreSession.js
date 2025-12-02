@@ -161,7 +161,7 @@ const StartMoreSession = () => {
         session?.incident?.vic_id?.vic_id ||
         null;
 
-      if (victimId) {
+      if (victimId) { 
         navigate(`/social_worker/victims/${victimId}`);
       } else {
         navigate("/social_worker/victims");

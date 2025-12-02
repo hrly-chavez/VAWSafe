@@ -25,6 +25,9 @@ const hasAny = (state, keys) =>
   keys.some((key) => state[key] !== undefined && state[key] !== "" && state[key] !== null);
 
 export default function RegisterVictim() {
+  // this is for disabling form after registering
+  const [isLocked, setIsLocked] = useState(false);
+
   const [evidenceFiles, setEvidenceFiles] = useState([]);
   const [legalAccepted, setLegalAccepted] = useState(false);
   const navigate = useNavigate();
@@ -184,6 +187,7 @@ export default function RegisterVictim() {
 
       setStatusMessage("✅ Victim registered successfully!");
       setLoading(false);
+      setIsLocked(true);
       setShowSchedulePage({ victim: res.data.victim, incident: res.data.incident });
     } catch (err) {
       console.error("Register victim exception:", err);
@@ -229,9 +233,9 @@ export default function RegisterVictim() {
                 {openSections[key] && (
                   <div className="mt-4 border-l-4 border-blue-500 pl-4">
                     {key === "evidences" ? (
-                      <Component files={evidenceFiles} setFiles={setEvidenceFiles} />
+                      <Component files={evidenceFiles} setFiles={setEvidenceFiles} isLocked={isLocked}/>
                     ) : (
-                      <Component formDataState={formDataState} setFormDataState={setFormDataState} victimPhotos={victimPhotos} />
+                      <Component formDataState={formDataState} setFormDataState={setFormDataState} victimPhotos={victimPhotos} isLocked={isLocked}/>
                     )}
                   </div>
                 )}
@@ -254,7 +258,7 @@ export default function RegisterVictim() {
             )}
 
             {/* Buttons */}
-            {isAnySectionOpen && (
+            {isAnySectionOpen && !isLocked && (
               <div className="flex flex-col sm:flex-row justify-end gap-4 mt-8">
                 <button
                   onClick={cancel}

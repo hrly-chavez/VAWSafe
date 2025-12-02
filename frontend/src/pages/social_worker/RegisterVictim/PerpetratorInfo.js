@@ -1,57 +1,13 @@
 // src/components/PerpetratorInfo.js
 import { useEffect } from "react";
 import { NATIONALITIES } from "./helpers/Nationalities";
-
-// const RELATIONSHIP_TO_VICTIM_TYPE = {
-//   "Personal/Family": [
-//     "Current spouse/partner",
-//     "Former spouse/partner",
-//     "Current fiance/dating relationship",
-//     "Neighbors/peers/coworkers/classmates",
-//     "Immediate family members",
-//     "Stepfamily members",
-//   ],
-//   "Persons of Authority": [
-//     "Employer/manager/supervisor",
-//     "Agent of the employer",
-//     "Teacher/Instructor/professor",
-//     "Coach/trainer",
-//     "Religious leaders/workers",
-//     "Community leaders/workers",
-//   ],
-//   "State Actor": ["Government official", "Military", "Police", "Paramilitary"],
-//   "Non-State Actor": ["Insurgent", "Rebel", "Violent extremist", "Militia"],
-//   "Stranger/Unknown": [],
-// };
+import { formatPHNumber } from "./helpers/input-validators";
 
 export default function PerpetratorInfo({
   formDataState,
   setFormDataState,
-  back,
-  submit,
-  loading,
+  isLocked,
 }) {
-  const isMinor = (birthDate) => {
-    if (!birthDate) return false;
-    const birth = new Date(birthDate);
-    const today = new Date();
-    const age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    const dayDiff = today.getDate() - birth.getDate();
-    return (
-      age < 18 ||
-      (age === 18 && (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)))
-    );
-  };
-
-  useEffect(() => {
-    const minor = isMinor(formDataState.per_birth_date);
-    setFormDataState((prev) => ({
-      ...prev,
-      is_per_minor: minor,
-    }));
-  }, [formDataState.per_birth_date, setFormDataState]);
-
   const handleChange = (field, value) =>
     setFormDataState((prev) => ({ ...prev, [field]: value }));
 
@@ -68,29 +24,52 @@ export default function PerpetratorInfo({
         </label>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="First Name"
+            value={formDataState.per_first_name || ""}
             onChange={(e) => handleChange("per_first_name", e.target.value)}
           />
+
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Middle Name"
+            value={formDataState.per_middle_name || ""}
             onChange={(e) => handleChange("per_middle_name", e.target.value)}
           />
+
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Last Name"
+            value={formDataState.per_last_name || ""}
             onChange={(e) => handleChange("per_last_name", e.target.value)}
           />
-          <input
+
+          <select
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
-            type="text"
             placeholder="Extension (e.g. Jr., III)"
+            value={formDataState.per_extension || ""}
             onChange={(e) => handleChange("per_extension", e.target.value)}
-          />
+          >
+            <option value="">Select Extension</option>
+            <option value="Jr.">Jr.</option>
+            <option value="Sr.">Sr.</option>
+            <option value="II">II</option>
+            <option value="III">III</option>
+            <option value="IV">IV</option>
+            <option value="V">V</option>
+            <option value="">None</option>
+          </select>
         </div>
       </div>
 
@@ -101,9 +80,12 @@ export default function PerpetratorInfo({
         </label>
         <div>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Nickname/Alias"
+            value={formDataState.per_alias || ""}
             onChange={(e) => handleChange("per_alias", e.target.value)}
           />
         </div>
@@ -116,14 +98,21 @@ export default function PerpetratorInfo({
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="date"
+            value={formDataState.per_birth_date || ""}
             onChange={(e) => handleChange("per_birth_date", e.target.value)}
           />
+
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="Birth Place"
+            value={formDataState.per_birth_place || ""}
             onChange={(e) => handleChange("per_birth_place", e.target.value)}
           />
         </div>
@@ -135,7 +124,10 @@ export default function PerpetratorInfo({
           Sex
         </label>
         <select
+          readOnly={isLocked}
+          disabled={isLocked}
           className="input w-full"
+          value={formDataState.per_sex || ""}
           onChange={(e) => handleChange("per_sex", e.target.value)}
         >
           <option value="">Select Sex</option>
@@ -150,7 +142,10 @@ export default function PerpetratorInfo({
           Religion
         </label>
         <select
+          readOnly={isLocked}
+          disabled={isLocked}
           className="input w-full"
+          value={formDataState.per_religion || ""}
           onChange={(e) => handleChange("per_religion", e.target.value)}
         >
           <option value="">Select Religion</option>
@@ -170,9 +165,12 @@ export default function PerpetratorInfo({
         </label>
         <div>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="e.g. Siblings"
+            value={formDataState.per_victim_relationship || ""}
             onChange={(e) =>
               handleChange("per_victim_relationship", e.target.value)
             }
@@ -187,7 +185,10 @@ export default function PerpetratorInfo({
             Educational Attainment
           </label>
           <select
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input w-full"
+            value={formDataState.per_educational_attainment || ""}
             onChange={(e) =>
               handleChange("per_educational_attainment", e.target.value)
             }
@@ -219,8 +220,11 @@ export default function PerpetratorInfo({
             Known Address
           </label>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
+            value={formDataState.per_known_address || ""}
             onChange={(e) => handleChange("per_known_address", e.target.value)}
           />
         </div>
@@ -233,10 +237,15 @@ export default function PerpetratorInfo({
             Contact Number
           </label>
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="e.g. 09123456789"
-            onChange={(e) => handleChange("per_contact_number", e.target.value)}
+            value={formDataState.per_contact_number || ""}
+            onChange={(e) =>
+              handleChange("per_contact_number", formatPHNumber(e.target.value))
+            }
           />
         </div>
       </div>
@@ -247,37 +256,15 @@ export default function PerpetratorInfo({
           Main Occupation
         </label>
         <input
+          readOnly={isLocked}
+          disabled={isLocked}
           className="input w-full"
           type="text"
           placeholder="Main Occupation"
+          value={formDataState.per_occupation || ""}
           onChange={(e) => handleChange("per_occupation", e.target.value)}
         />
       </div>
-
-      {/* Actions (if needed) */}
-      {back || submit ? (
-        <div className="flex justify-between mt-6">
-          {back && (
-            <button
-              type="button"
-              onClick={back}
-              className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
-            >
-              Back
-            </button>
-          )}
-          {submit && (
-            <button
-              type="button"
-              onClick={submit}
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
-              {loading ? "Submitting..." : "Submit"}
-            </button>
-          )}
-        </div>
-      ) : null}
     </div>
   );
 }
