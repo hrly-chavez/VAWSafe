@@ -73,7 +73,7 @@ function FamilyMember({ index, member, updateMember, onRemove, isLocked }) {
           <option value="III">III</option>
           <option value="IV">IV</option>
           <option value="V">V</option>
-          <option value="None">None</option>
+          <option value="">None</option>
         </select>
 
         <input

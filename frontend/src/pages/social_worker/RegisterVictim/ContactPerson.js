@@ -47,15 +47,23 @@ export default function ContactPerson({
             value={formDataState.cont_lname || ""}
             onChange={(e) => handleChange("cont_lname", e.target.value)}
           />
-          <input
+          <select
             readOnly={isLocked}
             disabled={isLocked}
             className="input"
-            type="text"
             placeholder="Extension (e.g. Jr., III)"
             value={formDataState.cont_ext || ""}
             onChange={(e) => handleChange("cont_ext", e.target.value)}
-          />
+          >
+            <option value="">Select Extension</option>
+            <option value="Jr.">Jr.</option>
+            <option value="Sr.">Sr.</option>
+            <option value="II">II</option>
+            <option value="III">III</option>
+            <option value="IV">IV</option>
+            <option value="V">V</option>
+            <option value="">None</option>
+          </select>
         </div>
       </div>
 
