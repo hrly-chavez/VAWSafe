@@ -1584,3 +1584,15 @@ class LoginTrackerListAPIView(APIView):
         logs = LoginTracker.objects.order_by("-login_time")[:200]  # last 200 logs
         serializer = LoginTrackerSerializer(logs, many=True)
         return Response(serializer.data)
+
+class LoginTrackerCleanupAPIView(APIView):
+    permission_classes = [IsAuthenticated, IsRole]
+    allowed_roles = ["DSWD"]
+
+    def delete(self, request):
+        threshold = timezone.now() - timedelta(days=14)
+        deleted_count, _ = LoginTracker.objects.filter(
+            login_time__lt=threshold
+        ).delete()
+
+        return Response({"deleted": deleted_count})

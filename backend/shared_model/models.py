@@ -1024,7 +1024,8 @@ class LoginTracker(models.Model):
     role = models.CharField(max_length=50, blank=True, null=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True, null=True)
-    login_time = models.DateTimeField(auto_now_add=True)
+    # login_time = models.DateTimeField(auto_now_add=True)
+    login_time = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="Success")
 
     def __str__(self):
