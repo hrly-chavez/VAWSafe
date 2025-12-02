@@ -82,7 +82,7 @@ export default function VictimCases({ selectedIncident, onClose }) {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm p-6">
               <InfoItem label="Case No" value={selectedIncident.incident_num} />
-              <InfoItem label="Status" value={selectedIncident.status} />
+              <InfoItem label="Status" value={selectedIncident.incident_status} />
               <InfoItem
                 label="Created At"
                 value={new Date(selectedIncident.created_at).toLocaleString()}
