@@ -118,7 +118,9 @@ export default function StartSession() {
     
                 // Open ONLY my role
                 setOpenRoles(myRole ? [myRole] : []);
-                return;
+                setTimeout(() => {
+                  window.location.reload();
+                }, 50);
               }
             }
     
