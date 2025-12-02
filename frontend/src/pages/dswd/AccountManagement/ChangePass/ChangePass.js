@@ -91,6 +91,7 @@ export default function ForgotPasswordModal({ onClose }) {
       if (res.data.success) {
         setResetToken(res.data.reset_token);
         setStep("reset"); // ✅ now proceed to reset step
+        onClose();
       } else {
         setMessage(res.data.message || "Email verification failed.");
       }
@@ -148,7 +149,7 @@ export default function ForgotPasswordModal({ onClose }) {
         {step === "email" && (
           <>
             <p className="text-sm text-neutral-700">
-              ✅ Face matched: <strong>{officialData.full_name}</strong>
+              Face matched: <strong>{officialData.full_name}</strong>
             </p>
             <input
               type="email"
