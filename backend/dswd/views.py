@@ -1246,16 +1246,67 @@ class ResetPasswordView(APIView):
         if not default_token_generator.check_token(user, token):
             return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Validate password strength
         try:
-            # Validate the new password
             validate_password(new_password, user)
         except ValidationError as e:
             return Response({"error": e.messages}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Apply new password
         user.set_password(new_password)
         user.save()
 
-        return Response({"success": True, "message": "Password reset successful"}, status=status.HTTP_200_OK)
+        # ------------- AUDIT LOGGING -------------
+        official = getattr(user, "official", None)
+
+        changes = {
+            "password": ["<old password>", "<new password>"]
+        }
+
+        _audit(
+            actor=user,  # Password reset is initiated by user via link
+            action="change pass",
+            target=official if official else user,
+            reason="Password reset via email link",
+            changes=_audit_safe(changes),
+        )
+        # ------------------------------------------
+
+        return Response(
+            {"success": True, "message": "Password reset successful"},
+            status=status.HTTP_200_OK
+        )
+
+# class ResetPasswordView(APIView):
+#     permission_classes = [AllowAny]
+
+#     def post(self, request):
+#         uidb64 = request.data.get("uid")
+#         token = request.data.get("token")
+#         new_password = request.data.get("new_password")
+
+#         if not (uidb64 and token and new_password):
+#             return Response({"error": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         try:
+#             uid = force_str(urlsafe_base64_decode(uidb64))
+#             user = get_user_model().objects.get(pk=uid)
+#         except (get_user_model().DoesNotExist, ValueError, TypeError):
+#             return Response({"error": "Invalid link"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         if not default_token_generator.check_token(user, token):
+#             return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         try:
+#             # Validate the new password
+#             validate_password(new_password, user)
+#         except ValidationError as e:
+#             return Response({"error": e.messages}, status=status.HTTP_400_BAD_REQUEST)
+
+#         user.set_password(new_password)
+#         user.save()
+
+#         return Response({"success": True, "message": "Password reset successful"}, status=status.HTTP_200_OK)
 
 
 # ============================= Dashboard =======================================
@@ -1535,11 +1586,50 @@ class ProfileViewSet(viewsets.GenericViewSet):
 #==========================================Change Password (user side)==============================
 User = get_user_model()
 
+# class UpdateUsernamePasswordView(APIView):
+#     permission_classes = [IsAuthenticated]
+
+#     def post(self, request):
+#         user = request.user
+#         new_username = request.data.get("username")
+#         current_password = request.data.get("current_password")
+#         new_password = request.data.get("new_password")
+#         confirm_password = request.data.get("confirm_password")
+
+#         # Basic validation
+#         if not all([new_username, current_password, new_password, confirm_password]):
+#             return Response({"error": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         if not user.check_password(current_password):
+#             return Response({"error": "Current password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         if new_password != confirm_password:
+#             return Response({"error": "New password and confirmation do not match"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Validate password strength
+#         try:
+#             validate_password(new_password, user)
+#         except Exception as e:
+#             return Response({"error": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Update username & password
+#         if new_username != user.username:
+#             if User.objects.filter(username=new_username).exists():
+#                 return Response({"error": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
+#             user.username = new_username
+
+#         user.set_password(new_password)
+#         user.save()
+
+#         return Response({"success": True, "message": "Username and password updated successfully"})
+
 class UpdateUsernamePasswordView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         user = request.user
+        official = getattr(user, "official", None)  # For audit logging
+
         new_username = request.data.get("username")
         current_password = request.data.get("current_password")
         new_password = request.data.get("new_password")
@@ -1561,16 +1651,35 @@ class UpdateUsernamePasswordView(APIView):
         except Exception as e:
             return Response({"error": list(e.messages)}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Update username & password
+        # Track old values for audit purposes
+        changes = {}
+
+        # Username change
         if new_username != user.username:
             if User.objects.filter(username=new_username).exists():
                 return Response({"error": "Username already taken"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            changes["username"] = [user.username, new_username]
             user.username = new_username
 
+        # Password change
+        changes["password"] = ["<old password>", "<new password>"]  # Do NOT log plaintext
+
+        # Apply updates
         user.set_password(new_password)
         user.save()
 
+        # ---- Write Audit Log ----
+        _audit(
+            actor=request.user,
+            action="change pass",
+            target=official if official else user,
+            reason="User updated username and/or password",
+            changes=_audit_safe(changes),
+        )
+
         return Response({"success": True, "message": "Username and password updated successfully"})
+
     
 #========================================== Login Tracker ==============================
 class LoginTrackerListAPIView(APIView):

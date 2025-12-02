@@ -533,7 +533,7 @@ export default function VictimDetails() {
                           label="Work Address"
                           value={person.cont_work_address}
                         />
-                      </div>
+                      </React.Fragment>
                     ))
                   ) : (
                     <p className="text-sm text-gray-500 italic">
