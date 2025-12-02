@@ -1,6 +1,5 @@
 // src/pages/nurse/Questions/AddQuestion.js
-import { useState, useEffect } from "react";
-import Select from "react-select";
+import { useState, useEffect,useRef } from "react";import Select from "react-select";
 import { motion, AnimatePresence } from "framer-motion";
 import api from "../../../api/axios";
 
@@ -28,6 +27,8 @@ export default function AddQuestion({ onClose }) {
   const [selectedNumbers, setSelectedNumbers] = useState([]);
   const [sessionTypes, setSessionTypes] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
+  const questionRefs = useRef({});
+
 
   // Load category + answer type
   useEffect(() => {
@@ -130,11 +131,29 @@ export default function AddQuestion({ onClose }) {
   };
 
   // Step 2 → Step 3
-  const handleQuestionsContinue = () => {
-    if (questions.some((q) => !q.ques_question_text || !q.ques_answer_type)) {
-      alert("Please fill in all question fields.");
-      return;
-    }
+   const handleQuestionsContinue = () => {
+    const missingIndex = questions.findIndex(
+        (q) => !q.ques_question_text || !q.ques_answer_type
+      );
+
+      if (missingIndex !== -1) {
+        alert("Please fill in all question fields.");
+
+        const el = questionRefs.current[missingIndex];
+
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+          // highlight
+          el.classList.add("ring-4", "ring-red-300");
+          setTimeout(() => {
+            el.classList.remove("ring-4", "ring-red-300");
+          }, 1500);
+        }
+
+        return;
+      }
+
     setStep(3);
   };
 
@@ -237,6 +256,7 @@ export default function AddQuestion({ onClose }) {
                 {questions.map((q, idx) => (
                   <div
                     key={idx}
+                    ref={(el) => (questionRefs.current[idx] = el)}
                     className="border p-3 rounded bg-gray-50 relative"
                   >
                     {questions.length > 1 && (
