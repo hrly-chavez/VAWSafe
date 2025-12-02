@@ -1,6 +1,7 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState,useEffect  } from "react";
 import Webcam from "react-webcam";
 import api from "../../../../api/axios";
+import * as faceapi from "face-api.js";
 
 export default function ForgotPasswordModal({ onClose }) {
   const webcamRef = useRef(null);
@@ -10,9 +11,7 @@ export default function ForgotPasswordModal({ onClose }) {
 
   const [officialData, setOfficialData] = useState(null);
   const [resetToken, setResetToken] = useState(null);
-
-  
-
+  const [isCentered, setIsCentered] = useState(false);
   const [email, setEmail] = useState("");
 
   // Step 1: Capture face and verify
@@ -69,6 +68,43 @@ export default function ForgotPasswordModal({ onClose }) {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const video = document.getElementById("forgotpass-webcam");
+      if (!video) return;
+
+      const detection = await faceapi.detectSingleFace(
+        video,
+        new faceapi.TinyFaceDetectorOptions()
+      );
+
+      if (!detection) {
+        setIsCentered(false);
+        return;
+      }
+
+      const { box } = detection;
+      const vW = video.videoWidth;
+      const vH = video.videoHeight;
+
+      const cx = box.x + box.width / 2;
+      const cy = box.y + box.height / 2;
+
+      const targetX = vW / 2;
+      const targetY = vH / 2;
+
+      const toleranceX = vW * 0.1;
+      const toleranceY = vH * 0.1;
+
+      const centered =
+        Math.abs(cx - targetX) < toleranceX &&
+        Math.abs(cy - targetY) < toleranceY;
+
+      setIsCentered(centered);
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Step 2: Verify email & get reset token
   const handleVerifyEmail = async () => {
@@ -101,7 +137,12 @@ export default function ForgotPasswordModal({ onClose }) {
       setLoading(false);
     }
   };
-
+  useEffect(() => {
+    const loadModels = async () => {
+      await faceapi.nets.tinyFaceDetector.loadFromUri("/models/");
+    };
+    loadModels();
+  }, []);
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center">
@@ -123,24 +164,40 @@ export default function ForgotPasswordModal({ onClose }) {
         {/* Step 1: Capture Face */}
         {step === "capture" && (
           <>
-            <Webcam
-              ref={webcamRef}
-              screenshotFormat="image/jpeg"
-              className="rounded-lg border border-neutral-200 w-full h-[300px] object-cover"
-              videoConstraints={{ facingMode: "user" }}
-              mirrored
-            />
+            <div className="relative w-full rounded-lg overflow-hidden border border-neutral-200 h-[300px]">
+              <Webcam
+                ref={webcamRef}
+                screenshotFormat="image/jpeg"
+                className="w-full h-full object-cover"
+                videoConstraints={{ facingMode: "user" }}
+                id="forgotpass-webcam"
+                mirrored
+              />
+
+              {/* FACE OVERLAY */}
+              <img
+                src="/face_guide.png"
+                alt="face guide"
+                className={`absolute inset-0 w-full h-full object-contain pointer-events-none transition-all duration-300 ${
+                  isCentered ? "opacity-100 drop-shadow-[0_0_8px_#22c55e]" : "opacity-60"
+                }`}
+              />
+            </div>
+
             <button
-              onClick={captureAndVerify}
-              disabled={loading}
-              className={`w-full rounded-lg px-4 py-2 text-white transition ${
-                loading
-                  ? "bg-emerald-600/70 cursor-not-allowed"
-                  : "bg-emerald-600 hover:bg-emerald-700"
-              }`}
-            >
-              {loading ? "Verifying..." : "Verify Face"}
-            </button>
+                onClick={captureAndVerify}
+                disabled={loading || !isCentered}
+                className={`w-full rounded-lg px-4 py-2 text-white transition ${
+                  loading
+                    ? "bg-emerald-600/70 cursor-not-allowed"
+                    : isCentered
+                      ? "bg-emerald-600 hover:bg-emerald-700"
+                      : "bg-gray-400 cursor-not-allowed"
+                }`}
+              >
+                {loading ? "Verifying..." : "Verify Face"}
+              </button>
+
           </>
         )}
 
