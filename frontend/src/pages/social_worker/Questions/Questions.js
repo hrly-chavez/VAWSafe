@@ -359,6 +359,53 @@ export default function Questions() {
         </div>
       </div>
 
+      {/* Pagination Summary + Controls */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between text-sm">
+          <p className="text-gray-600">
+            Showing {startIndex + 1} to{" "}
+            {Math.min(startIndex + pageSize, filteredQuestions.length)} of{" "}
+            {filteredQuestions.length} entries
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-2 py-1 rounded ${currentPage === 1
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-[#292D96] text-white hover:bg-blue-700"
+                }`}
+            >
+              &laquo;
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-2 py-1 rounded ${currentPage === i + 1
+                    ? "bg-[#292D96] text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={`px-2 py-1 rounded ${currentPage === totalPages
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-[#292D96] text-white hover:bg-blue-700"
+                }`}
+            >
+              &raquo;
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Add Modal */}
       {showAddModal && (
         <AddQuestion

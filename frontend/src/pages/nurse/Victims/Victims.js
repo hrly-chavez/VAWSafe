@@ -4,9 +4,7 @@ import axios from "axios";
 import SearchVictimFacial from "./SearchVictimFacial";
 import {
   MagnifyingGlassIcon,
-  EyeIcon,
-  PencilSquareIcon,
-  TrashIcon,
+  EyeIcon
 } from "@heroicons/react/24/solid";
 import api from "../../../api/axios";
 
@@ -16,6 +14,8 @@ export default function NurseVictims() {
   const [showFacialModal, setShowFacialModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,12 +48,20 @@ export default function NurseVictims() {
     return fullName.includes(searchQuery.toLowerCase());
   });
 
+  const totalPages = Math.ceil(filteredVictims.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const currentVictims = filteredVictims.slice(startIndex, startIndex + pageSize);
+
   return (
     <div className="w-full px-6">
-      {/* Title */}
-      <h2 className="text-xl font-bold text-[#292D96] pt-6 mb-4">
-        VAWC Victims
-      </h2>
+
+      {/* Header */}
+      <header className="mb-8">
+        <h1 className="text-3xl font-extrabold text-gray-800">Women Victim-Survivor</h1>
+        <p className="text-gray-500 mt-1">
+          Accessing all case records for timely intervention.
+        </p>
+      </header>
 
       {/* Search Bar */}
       <div className="mt-4 w-full flex flex-wrap justify-between items-center gap-4">
@@ -77,49 +85,41 @@ export default function NurseVictims() {
       </div>
 
       {/* Table container */}
-      <div className="mt-6 bg-white rounded-xl shadow-md border border-neutral-200">
-        <div className="overflow-auto max-h-[480px] rounded-xl">
-          <table className="min-w-full table-fixed border border-neutral-200">
-            <thead className="sticky top-0 z-10 bg-gray-100 text-gray-700 text-sm font-semibold">
+      <div className="mt-6 bg-white rounded-xl shadow border border-neutral-200 overflow-hidden">
+        <div className="rounded-xl">
+          <table className="min-w-full table-fixed border-collapse text-sm">
+            <thead className="sticky top-0 z-10 bg-gray-100 text-gray-700 font-semibold shadow">
               <tr>
-                <th className="border border-neutral-200 px-4 py-3 text-left">Victim No.</th>
-                <th className="border border-neutral-200 px-4 py-3 text-left">Victim Name</th>
-                <th className="border border-neutral-200 px-4 py-3 text-left">Age</th>
-                <th className="border border-neutral-200 px-4 py-3 text-left">Address</th>
-                <th className="border border-neutral-200 px-4 py-3 text-left">Type of Violence</th>
-                <th className="border border-neutral-200 px-4 py-3 text-left">Emergency Contact</th>
-                <th className="border border-neutral-200 px-4 py-3 text-center">Actions</th>
+                <th className="w-24 px-3 py-2 text-left border">Victim No.</th>
+                <th className="w-48 px-3 py-2 text-left border">Victim Name</th>
+                <th className="w-20 px-3 py-2 text-left border">Age</th>
+                <th className="w-48 px-3 py-2 text-left border">Address</th>
+                <th className="w-48 px-3 py-2 text-left border">Type of Violence</th>
+                <th className="w-40 px-3 py-2 text-left border">Emergency Contact</th>
+                <th className="w-32 px-3 py-2 text-center border">Actions</th>
               </tr>
             </thead>
-
-            <tbody className="text-sm text-neutral-800">
-              {loading && (
+            <tbody className="text-gray-800">
+              {loading ? (
                 <tr>
-                  <td colSpan={5} className="border border-neutral-200 px-4 py-6 text-center text-neutral-500">
+                  <td colSpan={7} className="px-3 py-4 text-center text-neutral-500">
                     Loading victims…
                   </td>
                 </tr>
-              )}
-
-              {!loading && error && (
+              ) : error ? (
                 <tr>
-                  <td colSpan={5} className="border border-neutral-200 px-4 py-6 text-center text-red-600">
+                  <td colSpan={7} className="px-3 py-4 text-center text-red-600">
                     {error}
                   </td>
                 </tr>
-              )}
-
-              {!loading && !error && filteredVictims.length === 0 && (
+              ) : currentVictims.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="border border-neutral-200 px-4 py-6 text-center text-neutral-500 italic">
+                  <td colSpan={7} className="px-3 py-4 text-center text-neutral-500 italic">
                     No victims found.
                   </td>
                 </tr>
-              )}
-
-              {!loading &&
-                !error &&
-                filteredVictims.map((v, index) => {
+              ) : (
+                currentVictims.map((v, index) => {
                   const fullName = [
                     v.vic_first_name,
                     v.vic_middle_name || "",
@@ -128,49 +128,80 @@ export default function NurseVictims() {
                   ]
                     .filter(Boolean)
                     .join(" ");
-
                   const rowBg = index % 2 === 0 ? "bg-white" : "bg-gray-50";
-
                   return (
-                    <tr key={v.vic_id} className={rowBg}>
-                      <td className="border border-neutral-200 px-4 py-3">{v.vic_id}</td>
-                      <td className="border border-neutral-200 px-4 py-3">{fullName}</td>
-                      <td className="border border-neutral-200 px-4 py-3">{v.age || "N/A"}</td>
-                      <td className="border border-neutral-200 px-4 py-3">{v.vic_birth_place || "N/A"}</td>
-                      <td className="border border-neutral-200 px-4 py-3">{v.violence_type || "N/A"}</td>
-                      <td className="border border-neutral-200 px-4 py-3">{v.vic_contact_number || "N/A"}</td>
-                      <td className="border border-neutral-200 px-4 py-3 text-center">
-                        <div className="flex justify-center gap-4">
-                          <Link to={`/nurse/victims/${v.vic_id}`} className="text-[#10b981] hover:text-[#059669]">
+                    <tr key={v.vic_id} className={`${rowBg} hover:bg-blue-50 transition`}>
+                      <td className="px-3 py-2 border">{v.vic_id}</td>
+                      <td className="px-3 py-2 border whitespace-normal break-words">{fullName}</td>
+                      <td className="px-3 py-2 border">{v.age || "N/A"}</td>
+                      <td className="px-3 py-2 border whitespace-normal break-words">{v.vic_birth_place || "N/A"}</td>
+                      <td className="px-3 py-2 border whitespace-normal break-words">{v.violence_type || "N/A"}</td>
+                      <td className="px-3 py-2 border">{v.vic_contact_number || "N/A"}</td>
+                      <td className="px-3 py-2 border text-center">
+                        <div className="flex justify-center gap-3">
+                          {/* View Detail */}
+                          <Link
+                            to={`/nurse/victims/${v.vic_id}`}
+                            className="text-green-600 hover:text-green-800"
+                          >
                             <EyeIcon className="h-5 w-5" />
                           </Link>
-                          <button className="text-[#f1c40f] hover:text-[#caa40d]">
-                            <PencilSquareIcon className="h-5 w-5" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (window.confirm("Are you sure you want to delete this victim?")) {
-                                axios
-                                  .delete(`http://127.0.0.1:8000/api/nurse/victims/${v.vic_id}/`)
-                                  .then(() => {
-                                    setVictims(victims.filter((x) => x.vic_id !== v.vic_id));
-                                  })
-                                  .catch((err) => console.error("Error deleting victim", err));
-                              }
-                            }}
-                            className="text-[#e74c3c] hover:text-[#b33a2d]"
-                          >
-                            <TrashIcon className="h-5 w-5" />
-                          </button>
                         </div>
                       </td>
                     </tr>
                   );
-                })}
+                })
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between text-sm">
+          <p className="text-gray-600">
+            Showing {startIndex + 1} to{" "}
+            {Math.min(startIndex + pageSize, filteredVictims.length)} of{" "}
+            {filteredVictims.length} entries
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-2 py-1 rounded ${currentPage === 1
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-[#292D96] text-white hover:bg-blue-700"
+                }`}
+            >
+              &laquo;
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-2 py-1 rounded ${currentPage === i + 1
+                  ? "bg-[#292D96] text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={`px-2 py-1 rounded ${currentPage === totalPages
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-[#292D96] text-white hover:bg-blue-700"
+                }`}
+            >
+              &raquo;
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal injected here */}
       {showFacialModal && (
