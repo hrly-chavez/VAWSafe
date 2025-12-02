@@ -274,7 +274,7 @@ export default function VictimDetailPage() {
               </span>
             </div>
             <p className="text-sm text-gray-600 mt-2">
-              Victim ID: {get(victim, ["vic_id"])}
+              Victim Code: {get(victim, ["code"])}
             </p>
           </div>
         </section>
