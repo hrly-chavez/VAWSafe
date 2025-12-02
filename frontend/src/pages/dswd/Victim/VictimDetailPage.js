@@ -45,6 +45,8 @@ const iconMap = {
   "Educational Attainment": <AcademicCapIcon className="h-4 w-4 text-gray-500" />,
   "Last School Attended": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
   "School Address": <MapPinIcon className="h-4 w-4 text-gray-500" />,
+  "School Type": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
+  "School Years": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
 
   // Contact Person
   "Full Name": <UserIcon className="h-4 w-4 text-gray-500" />,
@@ -301,6 +303,11 @@ export default function VictimDetails() {
                   <Info label="Occupation" value={get(victim, ["vic_occupation"])} />
                   <Info label="Monthly Income" value={victim?.vic_income ? `₱${parseFloat(victim.vic_income).toLocaleString()}` : "—"} />
                   <Info label="Skills" value={get(victim, ["vic_skills"])} />
+                  <Info label="Previous Skills" value={get(victim, ["previous_skills"])} />
+                  <Info label="Type of Training" value={get(victim, ["type_of_training"])} />
+                  <Info label="Training Location" value={get(victim, ["training_where"])} />
+                  <Info label="Training Time" value={get(victim, ["training_when"])} />
+                  <Info label="Employment Experience" value={get(victim, ["employment_experience"])} />
                 </div>
               </div>
 
@@ -313,6 +320,12 @@ export default function VictimDetails() {
                   <Info label="Educational Attainment" value={get(victim, ["vic_educational_attainment"])} />
                   <Info label="Last School Attended" value={get(victim, ["vic_last_school_attended"])} />
                   <Info label="School Address" value={get(victim, ["vic_last_school_address"])} />
+                  <Info label="School Type" value={get(victim, ["vic_school_type"])} />
+                  <Info label="School Years" value={get(victim, ["vic_school_years"])} />
+                  <Info label="Subject Interest" value={get(victim, ["subject_interest"])} />
+                  <Info label="Honors" value={get(victim, ["honors"])} />
+                  <Info label="Hobbies" value={get(victim, ["hobbies"])} />
+                  <Info label="Vocational Interest" value={get(victim, ["vocational_interest"])} />
                 </div>
               </div>
 
