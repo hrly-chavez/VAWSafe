@@ -22,7 +22,12 @@ export default function PsychometricianVictims() {
     const loadVictims = async () => {
       try {
         const res = await api.get("/api/psychometrician/victims/");
-        setVictims(Array.isArray(res.data) ? res.data : []);
+        // setVictims(Array.isArray(res.data) ? res.data : []);
+        setVictims(
+          Array.isArray(res.data)
+            ? res.data.sort((a, b) => b.vic_id - a.vic_id)
+            : []
+        );
       } catch (err) {
         console.error("Error fetching victims:", err);
         setError("Failed to load victims.");
