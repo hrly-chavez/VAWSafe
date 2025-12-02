@@ -33,8 +33,7 @@ class VictimListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Victim
-        fields = ["vic_id", "vic_first_name", "vic_middle_name", "vic_last_name", 
-                  "vic_extension", "vic_sex", "vic_birth_place", "age"]
+        fields = "__all__"
 
     def get_age(self, obj):
         if obj.vic_birth_date:
