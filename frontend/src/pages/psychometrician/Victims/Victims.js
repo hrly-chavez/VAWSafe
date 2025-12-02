@@ -78,13 +78,13 @@ export default function PsychometricianVictims() {
             className="w-full text-sm text-neutral-900 outline-none"
           />
         </div>
-        <button
+        {/* <button
           onClick={() => setShowFacialModal(true)}
           className="h-10 bg-[#10b981] px-4 text-white rounded-[10px] transition duration-200 hover:bg-[#059669] flex items-center gap-2"
         >
           <MagnifyingGlassIcon className="h-5 w-5 text-white" />
           Facial Search
-        </button>
+        </button> */}
       </div>
 
       {/* Table container */}
