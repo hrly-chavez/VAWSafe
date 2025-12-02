@@ -21,6 +21,16 @@ export const VICTIM_FIELDS = [
   "vic_current_address",
   "vic_contact_number",
   "vic_provincial_address",
+
+  "subject_interest",
+  "honors",
+  "hobbies",
+  "vocational_interest",
+  "previous_skills",
+  "type_of_training",
+  "training_where",
+  "training_when",
+  "employment_experience",
 ];
 
 export const INCIDENT_KEYS = [

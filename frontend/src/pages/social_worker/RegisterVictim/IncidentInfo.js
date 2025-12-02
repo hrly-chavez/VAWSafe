@@ -3,16 +3,16 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 export const PHYSICAL_DESCRIPTION_OPTIONS = [
-    { key: "dirty_looking", label: "Dirty looking" },
-    { key: "skin_disease", label: "With skin disease" },
-    { key: "light_skin", label: "Light skin" },
-    { key: "small_build", label: "Small in build" },
-    { key: "medium_build", label: "Medium build" },
-    { key: "big_build", label: "Big build" },
-    { key: "thin", label: "Thin" },
-    { key: "average_weight", label: "Average in weight" },
-    { key: "obese", label: "Obese" },
-  ];
+  { key: "dirty_looking", label: "Dirty looking" },
+  { key: "skin_disease", label: "With skin disease" },
+  { key: "light_skin", label: "Light skin" },
+  { key: "small_build", label: "Small in build" },
+  { key: "medium_build", label: "Medium build" },
+  { key: "big_build", label: "Big build" },
+  { key: "thin", label: "Thin" },
+  { key: "average_weight", label: "Average in weight" },
+  { key: "obese", label: "Obese" },
+];
 
 export const MANNER_TOWARDS_WORKER_OPTIONS = [
   { key: "friendly", label: "Friendly and easily relates" },
@@ -56,15 +56,14 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
   };
 
   useEffect(() => {
-    setFormDataState(prev => ({
+    setFormDataState((prev) => ({
       ...prev,
       physical_description: prev.physical_description || {},
       physical_description_other: prev.physical_description_other || "",
       manner_towards_worker: prev.manner_towards_worker || {},
-      manner_towards_worker_other: prev.manner_towards_worker_other || ""
+      manner_towards_worker_other: prev.manner_towards_worker_other || "",
     }));
   }, []);
-
 
   const handleChange = (field, value) => {
     setFormDataState((prev) => ({
@@ -225,7 +224,7 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
       <div className="mt-6">
         <h2 className="font-semibold text-lg">Physical Description</h2>
 
-        {PHYSICAL_DESCRIPTION_OPTIONS.map(item => (
+        {PHYSICAL_DESCRIPTION_OPTIONS.map((item) => (
           <label key={item.key} className="flex items-center gap-2 mt-1">
             <input
               type="checkbox"
@@ -233,12 +232,12 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
               onChange={(e) => {
                 const checked = e.target.checked;
 
-                setFormDataState(prev => ({
+                setFormDataState((prev) => ({
                   ...prev,
                   physical_description: {
                     ...prev.physical_description,
                     [item.key]: checked,
-                  }
+                  },
                 }));
               }}
             />
@@ -254,9 +253,9 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
             className="border rounded p-2 w-full"
             value={formDataState.physical_description_other || ""}
             onChange={(e) =>
-              setFormDataState(prev => ({
+              setFormDataState((prev) => ({
                 ...prev,
-                physical_description_other: e.target.value
+                physical_description_other: e.target.value,
               }))
             }
           />
@@ -265,9 +264,11 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
 
       {/* manner towards worker */}
       <div className="mt-6">
-        <h2 className="font-semibold text-lg">Manner of relating to Social Worker</h2>
+        <h2 className="font-semibold text-lg">
+          Manner of relating to Social Worker
+        </h2>
 
-        {MANNER_TOWARDS_WORKER_OPTIONS.map(item => (
+        {MANNER_TOWARDS_WORKER_OPTIONS.map((item) => (
           <label key={item.key} className="flex items-center gap-2 mt-1">
             <input
               type="checkbox"
@@ -275,12 +276,12 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
               onChange={(e) => {
                 const checked = e.target.checked;
 
-                setFormDataState(prev => ({
+                setFormDataState((prev) => ({
                   ...prev,
                   manner_towards_worker: {
                     ...prev.manner_towards_worker,
                     [item.key]: checked,
-                  }
+                  },
                 }));
               }}
             />
@@ -296,9 +297,9 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
             className="border rounded p-2 w-full"
             value={formDataState.manner_towards_worker_other || ""}
             onChange={(e) =>
-              setFormDataState(prev => ({
+              setFormDataState((prev) => ({
                 ...prev,
-                manner_towards_worker_other: e.target.value
+                manner_towards_worker_other: e.target.value,
               }))
             }
           />
@@ -340,6 +341,7 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
           type="text"
           rows={3}
           className="input w-full"
+          value={formDataState.incident_description || ""}
           onChange={(e) => handleChange("incident_description", e.target.value)}
         ></textarea>
       </div>
@@ -354,7 +356,10 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
           type="text"
           rows={3}
           className="input w-full"
-          onChange={(e) => handleChange("incident_observations_about_survivor", e.target.value)}
+          value={formDataState.incident_observations_about_survivor || ""}
+          onChange={(e) =>
+            handleChange("incident_observations_about_survivor", e.target.value)
+          }
         ></textarea>
       </div>
 
@@ -367,7 +372,10 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
           type="text"
           rows={3}
           className="input w-full"
-          onChange={(e) => handleChange("incident_circumstances", e.target.value)}
+          value={formDataState.incident_circumstances || ""}
+          onChange={(e) =>
+            handleChange("incident_circumstances", e.target.value)
+          }
         ></textarea>
       </div>
 
@@ -380,7 +388,10 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
           type="text"
           rows={3}
           className="input w-full"
-          onChange={(e) => handleChange("incident_recommendation", e.target.value)}
+          value={formDataState.incident_recommendation || ""}
+          onChange={(e) =>
+            handleChange("incident_recommendation", e.target.value)
+          }
         ></textarea>
       </div>
     </div>

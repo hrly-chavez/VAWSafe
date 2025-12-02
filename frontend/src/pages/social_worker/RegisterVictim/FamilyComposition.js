@@ -49,6 +49,7 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
           onChange={(e) => updateMember(index, "fam_lname", e.target.value)}
           className="border p-2 rounded"
         />
+
         <select
           value={member.fam_extension}
           onChange={(e) => updateMember(index, "fam_extension", e.target.value)}
@@ -119,15 +120,6 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
           <option value="Divorced">Divorced</option>
         </select>
 
-        <input
-          type="text"
-          placeholder="Educational Attainment"
-          value={member.fam_educational_attainment}
-          onChange={(e) =>
-            updateMember(index, "fam_educational_attainment", e.target.value)
-          }
-          className="border p-2 rounded"
-        />
         <select
           value={member.fam_educational_attainment}
           onChange={(e) =>
@@ -152,6 +144,16 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
           <option value="College Graduate">College Graduate</option>
           <option value="Post-Graduate">Post-Graduate</option>
         </select>
+
+        <input
+          type="text"
+          placeholder="Occupation"
+          value={member.fam_occupation}
+          onChange={(e) =>
+            updateMember(index, "fam_occupation", e.target.value)
+          }
+          className="border p-2 rounded"
+        />
 
         <select
           value={member.fam_income}

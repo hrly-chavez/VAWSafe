@@ -18,24 +18,28 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
             className="input"
             type="text"
             placeholder="First Name"
+            value={formDataState.cont_fname || ""}
             onChange={(e) => handleChange("cont_fname", e.target.value)}
           />
           <input
             className="input"
             type="text"
             placeholder="Middle Name"
+            value={formDataState.cont_mname || ""}
             onChange={(e) => handleChange("cont_mname", e.target.value)}
           />
           <input
             className="input"
             type="text"
             placeholder="Last Name"
+            value={formDataState.cont_lname || ""}
             onChange={(e) => handleChange("cont_lname", e.target.value)}
           />
           <input
             className="input"
             type="text"
             placeholder="Extension (e.g. Jr., III)"
+            value={formDataState.cont_ext || ""}
             onChange={(e) => handleChange("cont_ext", e.target.value)}
           />
         </div>
@@ -50,12 +54,14 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
           <input
             className="input"
             type="date"
+            value={formDataState.cont_birth_date || ""}
             onChange={(e) => handleChange("cont_birth_date", e.target.value)}
           />
           <input
             className="input"
             type="text"
             placeholder="Birth Place"
+            value={formDataState.cont_birth_place || ""}
             onChange={(e) => handleChange("cont_birth_place", e.target.value)}
           />
         </div>
@@ -68,6 +74,7 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
         </label>
         <select
           className="input w-full"
+          value={formDataState.cont_sex || ""}
           onChange={(e) => handleChange("cont_sex", e.target.value)}
         >
           <option value="">Select Sex</option>
@@ -84,6 +91,7 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
           </label>
           <select
             className="input w-full"
+            value={formDataState.cont_civil_status || ""}
             onChange={(e) => handleChange("cont_civil_status", e.target.value)}
           >
             <option>Select Civil Status</option>
@@ -106,6 +114,7 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
             className="input"
             type="text"
             placeholder="e.g. Siblings"
+            value={formDataState.cont_victim_relationship || ""}
             onChange={(e) =>
               handleChange("cont_victim_relationship", e.target.value)
             }
@@ -123,6 +132,7 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
             className="input"
             type="text"
             placeholder="e.g. 09123456789"
+            value={formDataState.cont_contact_number || ""}
             onChange={(e) =>
               handleChange("cont_contact_number", e.target.value)
             }
@@ -140,6 +150,7 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
             className="input"
             type="text"
             placeholder="e.g. Samar Leyte"
+            value={formDataState.cont_prov_address || ""}
             onChange={(e) => handleChange("cont_prov_address", e.target.value)}
           />
         </div>
@@ -155,6 +166,7 @@ export default function ContactPerson({ formDataState, setFormDataState }) {
             className="input"
             type="text"
             placeholder="e.g. IT Park"
+            value={formDataState.cont_work_address || ""}
             onChange={(e) => handleChange("cont_work_address", e.target.value)}
           />
         </div>
