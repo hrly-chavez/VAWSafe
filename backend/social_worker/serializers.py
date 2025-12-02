@@ -95,6 +95,7 @@ class FamilyMemberSerializer(serializers.ModelSerializer):
 
 class ContactPersonSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
+    full_name = serializers.SerializerMethodField() 
     
     class Meta:
         model = ContactPerson
@@ -109,6 +110,9 @@ class ContactPersonSerializer(serializers.ModelSerializer):
                 - ((today.month, today.day) < (obj.cont_birth_date.month, obj.cont_birth_date.day))
             )
         return None
+    
+    def get_full_name(self, obj):
+        return obj.full_name  # uses your model property
 
 class PerpetratorSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
