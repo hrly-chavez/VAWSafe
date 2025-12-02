@@ -1,11 +1,12 @@
 // src/components/PerpetratorInfo.js
 import { useEffect } from "react";
 import { NATIONALITIES } from "./helpers/Nationalities";
+import { formatPHNumber } from "./helpers/input-validators";
 
 export default function PerpetratorInfo({
   formDataState,
   setFormDataState,
-  isLocked
+  isLocked,
 }) {
   const handleChange = (field, value) =>
     setFormDataState((prev) => ({ ...prev, [field]: value }));
@@ -22,9 +23,8 @@ export default function PerpetratorInfo({
           Full Name
         </label>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
@@ -34,7 +34,7 @@ export default function PerpetratorInfo({
           />
 
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
@@ -44,7 +44,7 @@ export default function PerpetratorInfo({
           />
 
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
@@ -54,7 +54,7 @@ export default function PerpetratorInfo({
           />
 
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
@@ -72,7 +72,7 @@ export default function PerpetratorInfo({
         </label>
         <div>
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
@@ -90,7 +90,7 @@ export default function PerpetratorInfo({
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="date"
@@ -99,7 +99,7 @@ export default function PerpetratorInfo({
           />
 
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
@@ -116,8 +116,8 @@ export default function PerpetratorInfo({
           Sex
         </label>
         <select
-        readOnly={isLocked}
-            disabled={isLocked}
+          readOnly={isLocked}
+          disabled={isLocked}
           className="input w-full"
           value={formDataState.per_sex || ""}
           onChange={(e) => handleChange("per_sex", e.target.value)}
@@ -134,8 +134,8 @@ export default function PerpetratorInfo({
           Religion
         </label>
         <select
-        readOnly={isLocked}
-            disabled={isLocked}
+          readOnly={isLocked}
+          disabled={isLocked}
           className="input w-full"
           value={formDataState.per_religion || ""}
           onChange={(e) => handleChange("per_religion", e.target.value)}
@@ -157,7 +157,7 @@ export default function PerpetratorInfo({
         </label>
         <div>
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
@@ -177,7 +177,7 @@ export default function PerpetratorInfo({
             Educational Attainment
           </label>
           <select
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input w-full"
             value={formDataState.per_educational_attainment || ""}
@@ -212,7 +212,7 @@ export default function PerpetratorInfo({
             Known Address
           </label>
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
@@ -229,13 +229,13 @@ export default function PerpetratorInfo({
             Contact Number
           </label>
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
             placeholder="e.g. 09123456789"
             value={formDataState.per_contact_number || ""}
-            onChange={(e) => handleChange("per_contact_number", e.target.value)}
+            onChange={(e) => handleChange("per_contact_number", formatPHNumber(e.target.value))}
           />
         </div>
       </div>
@@ -246,8 +246,8 @@ export default function PerpetratorInfo({
           Main Occupation
         </label>
         <input
-        readOnly={isLocked}
-            disabled={isLocked}
+          readOnly={isLocked}
+          disabled={isLocked}
           className="input w-full"
           type="text"
           placeholder="Main Occupation"
