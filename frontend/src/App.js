@@ -35,9 +35,9 @@ const SocialWorkerProfile = lazy(() => import("./pages/social_worker/Profile/Soc
 
 //DSWD
 const DSWDDashboard = lazy(() =>import("./pages/dswd/Dashboard/DSWDDashboard"));
-const DSWDVAWCVictims = lazy(() =>import("./pages/dswd/Victim/DSWDVAWCVictims"));
-const DSWDVictimDetail = lazy(() =>import("./pages/dswd/Victim/VictimDetails"));
-const DSWDSearchVictim = lazy(() => import("./pages/dswd/Victim/SearchVictim"));
+const DSWDVAWCVictims = lazy(() =>import("./pages/dswd/Victim/Victim"));
+const DSWDVictimDetail = lazy(() =>import("./pages/dswd/Victim/VictimDetailPage"));
+const DSWDSearchVictim = lazy(() => import("./pages/dswd/Victim/SearchVictimFacial"));
 const DSWDViewOfficials = lazy(() =>import("./pages/dswd/AccountManagement/ViewOfficials"));
 const DSWDPendingAccount = lazy(() =>import("./pages/dswd/AccountManagement/PendingAccount"));
 const DSWDSocialWorkers = lazy(() =>import("./pages/dswd/SocialWorker/DSWDSocialWorkers"));

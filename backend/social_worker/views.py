@@ -441,7 +441,7 @@ def register_victim(request):
 class victim_list(generics.ListAPIView):
     serializer_class = VictimListSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker']
+    allowed_roles = ['Social Worker', 'DSWD']
 
     def get_queryset(self):
         # Allow all authenticated users with valid roles to see all victims
@@ -532,7 +532,7 @@ class victim_detail(generics.RetrieveAPIView):
 class VictimIncidentsView(generics.ListAPIView):
     serializer_class = IncidentInformationSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker", "Nurse", "Psychometrician", "Home Life"]
+    allowed_roles = ["Social Worker", "Nurse", "Psychometrician", "Home Life", "DSWD"]
 
     def get_queryset(self):
         vic_id = self.kwargs.get("vic_id")
@@ -2120,7 +2120,7 @@ class SocialWorkerMonthlyReportViewSet(viewsets.ModelViewSet):
 class NurseMonthlyReportListView(generics.ListAPIView):
     serializer_class = NurseMonthlyReportSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker", "Nurse"]
+    allowed_roles = ["Social Worker", "Nurse", "DSWD"]
 
     def get_queryset(self):
         vic_id = self.kwargs["vic_id"]
@@ -2134,7 +2134,7 @@ class NurseMonthlyReportListView(generics.ListAPIView):
 class PsychComprehensiveReportListView(generics.ListAPIView):
     serializer_class = ComprehensivePsychReportSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker", "Psychometrician"]
+    allowed_roles = ["Social Worker", "Psychometrician", "DSWD"]
 
     def get_queryset(self):
         vic_id = self.kwargs["vic_id"]
@@ -2147,7 +2147,7 @@ class PsychComprehensiveReportListView(generics.ListAPIView):
 class PsychMonthlyProgressReportListView(generics.ListAPIView):
     serializer_class = MonthlyPsychProgressReportSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker", "Psychometrician"]
+    allowed_roles = ["Social Worker", "Psychometrician", "DSWD"]
 
     def get_queryset(self):
         vic_id = self.kwargs["vic_id"]
