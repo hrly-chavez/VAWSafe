@@ -46,10 +46,9 @@ export default function Sidebar({ sidebarOpen, toggleSidebar, notificationCount 
 
     if (role === "psychometrician") {
       return [
-        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/psychometrician", },
+        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/psychometrician", showBadge: true },
         { icon: "/images/heart.png", label: "Women Survivors", path: "/psychometrician/victims", },
         { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/psychometrician/sessions", },
-        { icon: "/images/peace.png", label: "Services", path: "/psychometrician/services", },
         { icon: "/images/question_mark.png", label: "Questions", path: "/psychometrician/questions" },
         // { icon: "/images/case.png", label: "Case Records",path: "/psychometrician/case-records",},
         // { icon: "/images/calendar.png", label: "My Schedule",path: "/psychometrician/schedule",},
@@ -145,12 +144,12 @@ export default function Sidebar({ sidebarOpen, toggleSidebar, notificationCount 
         {/* Logo */}
         <div className="px-6 py-5 border-b border-[#292D96]/20 flex flex-col items-center">
           <img
-            src="/images/header2.png"  
+            src="/images/header2.png"
             alt="VAWSAFE Logo"
             className="h-26 w-auto"
           />
           <p className="text-xs text-gray-400 uppercase tracking-wide text-center">
-            {user?.role || "User"} 
+            {user?.role || "User"}
           </p>
         </div>
 

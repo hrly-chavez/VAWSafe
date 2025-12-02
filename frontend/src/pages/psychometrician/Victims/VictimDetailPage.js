@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import api from "../../../api/axios";
-import Navbar from "../../Navbar";
 import VictimCases from "./VictimCases";
 import SessionDetails from "./SessionDetails";
 import SessionCard from "./SessionCard";
@@ -10,7 +9,6 @@ import Modal from "../../../components/Modal";
 import ReportModal from "../../../components/ReportModal";
 import PsychometricianReportForm from "../../../components/PsychometricianReportForm";
 import PsychometricianMonthlyReport from "../../../components/PsychometricianMonthlyReport";
-
 
 import {
   GlobeAltIcon,
@@ -94,10 +92,23 @@ export default function VictimDetailPage() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showAddReportModal, setShowAddReportModal] = useState(false);
   const [openReportsIndex, setOpenReportsIndex] = useState(null);
+  const [openRole, setOpenRole] = useState(null);
 
   const [reportType, setReportType] = useState(null);
   const [currentOfficialId, setCurrentOfficialId] = useState(null);
   const [userRole, setUserRole] = useState(null);
+
+  const groupedReports = {
+    "Social Worker": reportsList.filter(r => r.report_type?.toLowerCase().includes("social worker")),
+    "Nurse": reportsList.filter(r => r.report_type?.toLowerCase().includes("nurse")),
+    "Psychometrician": reportsList.filter(r => r.report_type?.toLowerCase().includes("psychometrician")),
+  };
+
+  const roleColors = {
+    "Social Worker": "border-yellow-400 bg-yellow-50",
+    Nurse: "border-blue-400 bg-blue-50",
+    Psychometrician: "border-red-400 bg-red-50",
+  };
 
   // Helpers
   const get = (obj, keys, fallback = "—") => {
@@ -339,6 +350,7 @@ export default function VictimDetailPage() {
                   <Info
                     label="Occupation"
                     value={get(victim, ["vic_occupation"])}
+                    icon={iconMap["Occupation"]}
                   />
                   <Info
                     label="Monthly Income"
@@ -347,27 +359,37 @@ export default function VictimDetailPage() {
                         ? `₱${parseFloat(victim.vic_income).toLocaleString()}`
                         : "—"
                     }
+                    icon={iconMap["Monthly Income"]}
                   />
-                  <Info label="Skills" value={get(victim, ["vic_skills"])} />
+                  <Info
+                    label="Skills"
+                    value={get(victim, ["vic_skills"])}
+                    icon={iconMap["Skills"]}
+                  />
                   <Info
                     label="Previous Skills"
                     value={get(victim, ["previous_skills"])}
+                    icon={iconMap["Previous Skills"]}
                   />
                   <Info
                     label="Type of Training"
                     value={get(victim, ["type_of_training"])}
+                    icon={iconMap["Type of Training"]}
                   />
                   <Info
                     label="Training Location"
                     value={get(victim, ["training_where"])}
+                    icon={iconMap["Training Location"]}
                   />
                   <Info
                     label="Training Time"
                     value={get(victim, ["training_when"])}
+                    icon={iconMap["Training Time"]}
                   />
                   <Info
                     label="Employment Experience"
                     value={get(victim, ["employment_experience"])}
+                    icon={iconMap["Employment Experience"]}
                   />
                 </div>
               </div>
@@ -383,32 +405,47 @@ export default function VictimDetailPage() {
                   <Info
                     label="Educational Attainment"
                     value={get(victim, ["vic_educational_attainment"])}
+                    icon={iconMap["Educational Attainment"]}
                   />
                   <Info
                     label="Last School Attended"
                     value={get(victim, ["vic_last_school_attended"])}
+                    icon={iconMap["Last School Attended"]}
                   />
                   <Info
                     label="School Address"
                     value={get(victim, ["vic_last_school_address"])}
+                    icon={iconMap["School Address"]}
                   />
                   <Info
                     label="School Type"
                     value={get(victim, ["vic_school_type"])}
+                    icon={iconMap["School Type"]}
                   />
                   <Info
                     label="School Years"
                     value={get(victim, ["vic_school_years"])}
+                    icon={iconMap["School Years"]}
                   />
                   <Info
                     label="Subject Interest"
                     value={get(victim, ["subject_interest"])}
+                    icon={iconMap["Subject Interest"]}
                   />
-                  <Info label="Honors" value={get(victim, ["honors"])} />
-                  <Info label="Hobbies" value={get(victim, ["hobbies"])} />
+                  <Info
+                    label="Honors"
+                    value={get(victim, ["honors"])}
+                    icon={iconMap["Honors"]}
+                  />
+                  <Info
+                    label="Hobbies"
+                    value={get(victim, ["hobbies"])}
+                    icon={iconMap["Hobbies"]}
+                  />
                   <Info
                     label="Vocational Interest"
                     value={get(victim, ["vocational_interest"])}
+                    icon={iconMap["Vocational Interest"]}
                   />
                 </div>
               </div>
@@ -422,15 +459,15 @@ export default function VictimDetailPage() {
                   {victim.contact_persons?.length > 0 ? (
                     victim.contact_persons.map((person, index) => (
                       <React.Fragment key={index}>
-                        <Info label="Full Name" value={person.full_name} />
-                        <Info label="Relationship" value={person.cont_victim_relationship} />
-                        <Info label="Contact Number" value={person.cont_contact_number} />
-                        <Info label="Birth Date" value={person.cont_birth_date} />
-                        <Info label="Birth Place" value={person.cont_birth_place} />
-                        <Info label="Civil Status" value={person.cont_civil_status} />
-                        <Info label="Provincial Address" value={person.cont_prov_address} />
-                        <Info label="Sex" value={person.cont_sex} />
-                        <Info label="Work Address" value={person.cont_work_address} />
+                        <Info label="Full Name" value={person.full_name} icon={iconMap["Full Name"]} />
+                        <Info label="Relationship" value={person.cont_victim_relationship} icon={iconMap["Relationship"]} />
+                        <Info label="Contact Number" value={person.cont_contact_number} icon={iconMap["Contact Number (Contact Person)"]} />
+                        <Info label="Birth Date" value={person.cont_birth_date} icon={iconMap["Birth Date"]} />
+                        <Info label="Birth Place" value={person.cont_birth_place} icon={iconMap["Birth Place"]} />
+                        <Info label="Civil Status" value={person.cont_civil_status} icon={iconMap["Civil Status"]} />
+                        <Info label="Provincial Address" value={person.cont_prov_address} icon={iconMap["Provincial Address"]} />
+                        <Info label="Sex" value={person.cont_sex} icon={iconMap["Sex"]} />
+                        <Info label="Work Address" value={person.cont_work_address} icon={iconMap["Work Address"]} />
                       </React.Fragment>
                     ))
                   ) : (
@@ -450,14 +487,14 @@ export default function VictimDetailPage() {
                   {victim.family_members?.length > 0 ? (
                     victim.family_members.map((member, index) => (
                       <React.Fragment key={index}>
-                        <Info label="Full Name" value={member.full_name} />
-                        <Info label="Relationship" value={member.fam_victim_relationship} />
-                        <Info label="Sex" value={member.fam_sex} />
-                        <Info label="Civil Status" value={member.fam_civil_status} />
-                        <Info label="Educational Attainment" value={member.fam_educational_attainment} />
-                        <Info label="Occupation" value={member.fam_occupation} />
-                        <Info label="Income" value={member.fam_income} />
-                        <Info label="Birth Date" value={member.fam_birth_date} />
+                        <Info label="Full Name" value={member.full_name} icon={iconMap["Full Name"]} />
+                        <Info label="Relationship" value={member.fam_victim_relationship} icon={iconMap["Relationship"]} />
+                        <Info label="Sex" value={member.fam_sex} icon={iconMap["Sex"]} />
+                        <Info label="Civil Status" value={member.fam_civil_status} icon={iconMap["Civil Status"]} />
+                        <Info label="Educational Attainment" value={member.fam_educational_attainment} icon={iconMap["Educational Attainment"]} />
+                        <Info label="Occupation" value={member.fam_occupation} icon={iconMap["Occupation"]} />
+                        <Info label="Income" value={member.fam_income} icon={iconMap["Income"]} />
+                        <Info label="Birth Date" value={member.fam_birth_date} icon={iconMap["Birth Date"]} />
                       </React.Fragment>
                     ))
                   ) : (
@@ -551,109 +588,120 @@ export default function VictimDetailPage() {
           {/* Reports Tab */}
           {activeTab === "reports" && (
             <div className="space-y-10">
-              <div className="bg-white border rounded-xl shadow-md p-6">
-                {incidentList.length === 0 ? (
-                  <p className="text-sm text-gray-500 italic">No case records found for this victim.</p>
-                ) : (
-                  incidentList.map((incident, index) => {
-                    const incidentReports = reportsList.filter((r) => r.incident === incident.incident_id);
-                    return (
-                      <div key={incident.incident_id} className="border rounded-md p-4 shadow-sm bg-gray-50 mb-6">
-                        <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
-                          <div>
-                            <span className="font-medium text-gray-800">Case No:</span>{" "}
-                            {incident.incident_num || "—"}
-                          </div>
+              {incidentList.length === 0 ? (
+                <p className="text-sm text-gray-500 italic">No case records found for this victim.</p>
+              ) : (
+                incidentList.map((incident, index) => {
+                  const incidentReports = reportsList.filter((r) => r.incident === incident.incident_id);
+                  return (
+                    <div key={incident.incident_id} className="border rounded-md p-4 shadow-sm bg-gray-50 mb-6">
+                      <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
+                        <div>
+                          <span className="font-medium text-gray-800">Case No:</span>{" "}
+                          {incident.incident_num || "—"}
+                        </div>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => {
+                              const isSame = openReportsIndex === index;
+                              setOpenReportsIndex(isSame ? null : index);
+                              setSelectedIncident(incident);
+                            }}
+                            className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
+                          >
+                            {openReportsIndex === index ? "Hide Reports" : "View Reports"}
+                          </button>
+
+                          {/* Add Report */}
                           <div className="flex gap-3">
                             <button
+                              disabled={!incident}
                               onClick={() => {
-                                const isSame = openReportsIndex === index;
-                                setOpenReportsIndex(isSame ? null : index);
+                                setShowReportModal(false);
                                 setSelectedIncident(incident);
+                                setSelectedReport(null);
+                                setReportType("comprehensive");
+                                setShowAddReportModal(true);
                               }}
-                              className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
+                              className="inline-flex items-center gap-2 rounded-md border border-blue-600 text-blue-600 px-3 py-1.5 text-sm font-medium hover:bg-blue-600 hover:text-white transition"
                             >
-                              {openReportsIndex === index ? "Hide Reports" : "View Reports"}
+                              + Add Comprehensive Report
                             </button>
 
-                            {/* Add Report */}
-                            <div className="flex gap-3">
-                              <button
-                                disabled={!incident}
-                                onClick={() => {
-                                  setShowReportModal(false);
-                                  setSelectedIncident(incident);
-                                  setSelectedReport(null);
-                                  setReportType("comprehensive");
-                                  setShowAddReportModal(true);
-                                }}
-                                className="inline-flex items-center gap-2 rounded-md border border-blue-600 text-blue-600 px-3 py-1.5 text-sm font-medium hover:bg-blue-600 hover:text-white transition"
-                              >
-                                + Add Comprehensive Report
-                              </button>
-
-                              <button
-                                onClick={() => {
-                                  setShowReportModal(false);
-                                  setSelectedIncident(incident);
-                                  setSelectedReport(null);
-                                  setReportType("monthly");
-                                  setShowAddReportModal(true);
-                                }}
-                                className="inline-flex items-center gap-2 rounded-md border border-green-600 text-green-600 px-3 py-1.5 text-sm font-medium hover:bg-green-600 hover:text-white transition"
-                              >
-                                + Add Monthly Progress Report
-                              </button>
-                            </div>
+                            <button
+                              onClick={() => {
+                                setShowReportModal(false);
+                                setSelectedIncident(incident);
+                                setSelectedReport(null);
+                                setReportType("monthly");
+                                setShowAddReportModal(true);
+                              }}
+                              className="inline-flex items-center gap-2 rounded-md border border-green-600 text-green-600 px-3 py-1.5 text-sm font-medium hover:bg-green-600 hover:text-white transition"
+                            >
+                              + Add Monthly Progress Report
+                            </button>
                           </div>
                         </div>
-
-                        {openReportsIndex === index && (
-                          <div className="mt-3">
-                            {incidentReports.length === 0 ? (
-                              <p className="text-sm text-gray-500 italic">No reports available yet.</p>
-                            ) : (
-                              incidentReports.map((report) => (
-                                <div
-                                  key={report.id}
-                                  onClick={() => {
-                                    setSelectedReport(report);
-                                    setShowReportModal(true);
-                                  }}
-                                  className="bg-white border rounded-lg shadow-sm p-4 mt-3 cursor-pointer hover:shadow-md transition"
-                                >
-                                  <div className="flex items-center justify-between mb-2">
-                                    <h4
-                                      className={`text-md font-semibold ${report.report_type?.toLowerCase().includes("nurse")
-                                        ? "text-blue-600"
-                                        : report.report_type?.toLowerCase().includes("psychometrician")
-                                          ? "text-red-600"
-                                          : report.report_type?.toLowerCase().includes("social worker")
-                                            ? "text-yellow-500"
-                                            : "text-[#292D96]"
-                                        }`}
-                                    >
-                                      {report.report_type} Report —{" "}
-                                      {new Date(report.report_month).toLocaleString("en-US", {
-                                        year: "numeric",
-                                        month: "long",
-                                        day: "numeric",
-                                      })}
-                                    </h4>
-                                  </div>
-                                  <p className="text-xs text-gray-500">
-                                    Prepared by: {report.prepared_by_name}
-                                  </p>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        )}
                       </div>
-                    );
-                  })
-                )}
-              </div>
+
+                      {openReportsIndex === index && (
+                        <div className="mt-3 space-y-6">
+                          {["Social Worker", "Nurse", "Psychometrician"].map((role) => {
+                            const roleReports = incidentReports.filter(r =>
+                              r.report_type?.toLowerCase().includes(role.toLowerCase())
+                            );
+                            return (
+                              <div key={role} className="border rounded-md overflow-hidden">
+                                {/* Dropdown header */}
+                                <button
+                                  onClick={() => setOpenRole(openRole === role ? null : role)}
+                                  className={`w-full flex justify-between items-center font-semibold px-6 py-4 text-base ${roleColors[role]}`}
+                                >
+                                  <span>{role} Reports</span>
+                                  <span>{openRole === role ? "−" : "+"}</span>
+                                </button>
+
+                                {/* Dropdown content */}
+                                {openRole === role && (
+                                  <div className="bg-white px-4 py-3 space-y-3">
+                                    {roleReports.length === 0 ? (
+                                      <p className="text-sm text-gray-500 italic">No {role} reports available.</p>
+                                    ) : (
+                                      roleReports.map((report) => (
+                                        <div
+                                          key={report.id}
+                                          onClick={() => {
+                                            setSelectedReport(report);
+                                            setShowReportModal(true);
+                                          }}
+                                          className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition"
+                                        >
+                                          <div className="flex items-center justify-between mb-1">
+                                            <h4 className="text-sm font-semibold text-gray-800">
+                                              {report.report_type} —{" "}
+                                              {new Date(report.report_month).toLocaleDateString("en-US", {
+                                                year: "numeric",
+                                                month: "long",
+                                                day: "numeric",
+                                              })}
+                                            </h4>
+                                          </div>
+                                          <p className="text-xs text-gray-500">Prepared by: {report.prepared_by_name}</p>
+                                        </div>
+                                      ))
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+
 
               {/* Report Modal */}
               {showReportModal && !showAddReportModal && selectedReport && (
@@ -736,12 +784,56 @@ export default function VictimDetailPage() {
   );
 }
 
-// Reusable Info component
-function Info({ label, value }) {
+function Info({ label, value, icon }) {
   return (
-    <div>
-      <p className="text-xs text-gray-500">{label}</p>
-      <p className="font-medium text-gray-800">{value || "—"}</p>
+    <div className="flex items-start gap-2">
+      {icon}
+      <div>
+        <p className="text-xs text-gray-500">{label}</p>
+        <p className="font-medium text-gray-800">{value || "—"}</p>
+      </div>
+    </div>
+  );
+}
+
+function ReportDropdown({ title, reports, autoOpen, onSelect }) {
+  const [open, setOpen] = useState(autoOpen);
+
+  return (
+    <div className="mb-6 border rounded-lg shadow-sm overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full text-left px-5 py-3 font-semibold flex items-center justify-between border-b bg-gray-100"
+      >
+        <span>{title} Reports</span>
+        <span className="text-lg">{open ? "−" : "+"}</span>
+      </button>
+
+      {open && (
+        <div className="p-4 space-y-3">
+          {reports.length === 0 ? (
+            <p className="text-sm text-gray-500 italic">No reports available.</p>
+          ) : (
+            reports.map((report) => (
+              <div
+                key={report.id}
+                onClick={() => onSelect(report)}
+                className="bg-white border rounded-lg shadow-sm p-3 cursor-pointer hover:shadow-md transition"
+              >
+                <h4 className="text-sm font-semibold text-gray-800">
+                  {report.report_type} —{" "}
+                  {new Date(report.report_month).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </h4>
+                <p className="text-xs text-gray-500">Prepared by: {report.prepared_by_name}</p>
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
