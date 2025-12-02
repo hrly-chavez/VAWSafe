@@ -27,7 +27,12 @@ export default function DSWDVAWCVictims() {
 
       try {
         const res = await api.get("/api/dswd/victims/");
-        setVictims(Array.isArray(res.data) ? res.data : []);
+        // setVictims(Array.isArray(res.data) ? res.data : []);
+        setVictims(
+        Array.isArray(res.data)
+          ? res.data.sort((a, b) => b.vic_id - a.vic_id)
+          : []
+      );
       } catch (e) {
         console.error("Error fetching victims:", e);
         setError("Failed to load victims.");
