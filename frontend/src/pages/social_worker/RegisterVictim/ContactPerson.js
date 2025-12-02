@@ -1,4 +1,10 @@
-export default function ContactPerson({ formDataState, setFormDataState, isLocked }) {
+import { formatPHNumber } from "./helpers/input-validators";
+
+export default function ContactPerson({
+  formDataState,
+  setFormDataState,
+  isLocked,
+}) {
   const handleChange = (field, value) => {
     setFormDataState((prev) => ({
       ...prev,
@@ -15,7 +21,7 @@ export default function ContactPerson({ formDataState, setFormDataState, isLocke
         </label>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
@@ -24,7 +30,7 @@ export default function ContactPerson({ formDataState, setFormDataState, isLocke
             onChange={(e) => handleChange("cont_fname", e.target.value)}
           />
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
@@ -33,7 +39,7 @@ export default function ContactPerson({ formDataState, setFormDataState, isLocke
             onChange={(e) => handleChange("cont_mname", e.target.value)}
           />
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
@@ -42,7 +48,7 @@ export default function ContactPerson({ formDataState, setFormDataState, isLocke
             onChange={(e) => handleChange("cont_lname", e.target.value)}
           />
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
@@ -60,7 +66,7 @@ export default function ContactPerson({ formDataState, setFormDataState, isLocke
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="date"
@@ -68,7 +74,7 @@ export default function ContactPerson({ formDataState, setFormDataState, isLocke
             onChange={(e) => handleChange("cont_birth_date", e.target.value)}
           />
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
@@ -85,8 +91,8 @@ export default function ContactPerson({ formDataState, setFormDataState, isLocke
           Sex
         </label>
         <select
-        readOnly={isLocked}
-            disabled={isLocked}
+          readOnly={isLocked}
+          disabled={isLocked}
           className="input w-full"
           value={formDataState.cont_sex || ""}
           onChange={(e) => handleChange("cont_sex", e.target.value)}
@@ -104,7 +110,7 @@ export default function ContactPerson({ formDataState, setFormDataState, isLocke
             Civil Status
           </label>
           <select
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input w-full"
             value={formDataState.cont_civil_status || ""}
@@ -127,7 +133,7 @@ export default function ContactPerson({ formDataState, setFormDataState, isLocke
         </label>
         <div>
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
@@ -147,14 +153,17 @@ export default function ContactPerson({ formDataState, setFormDataState, isLocke
             Contact Number
           </label>
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
             placeholder="e.g. 09123456789"
             value={formDataState.cont_contact_number || ""}
             onChange={(e) =>
-              handleChange("cont_contact_number", e.target.value)
+              handleChange(
+                "cont_contact_number",
+                formatPHNumber(e.target.value)
+              )
             }
           />
         </div>
@@ -167,7 +176,7 @@ export default function ContactPerson({ formDataState, setFormDataState, isLocke
             Provincial Address
           </label>
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"
@@ -185,7 +194,7 @@ export default function ContactPerson({ formDataState, setFormDataState, isLocke
             Work Address
           </label>
           <input
-          readOnly={isLocked}
+            readOnly={isLocked}
             disabled={isLocked}
             className="input"
             type="text"

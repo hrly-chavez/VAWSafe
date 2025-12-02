@@ -1,6 +1,7 @@
 //VictimInfo.js
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { formatPHNumber } from "./helpers/input-validators";
 
 export default function VictimInfo({
   formDataState,
@@ -519,7 +520,9 @@ export default function VictimInfo({
           type="text"
           placeholder="Contact Number"
           value={formDataState.vic_contact_number || ""}
-          onChange={(e) => handleChange("vic_contact_number", e.target.value)}
+          onChange={(e) =>
+            handleChange("vic_contact_number", formatPHNumber(e.target.value))
+          }
         />
       </div>
 
