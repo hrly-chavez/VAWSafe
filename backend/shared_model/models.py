@@ -6,6 +6,7 @@ from fernet_fields import EncryptedCharField, EncryptedDateField, EncryptedInteg
 from django.contrib.auth import get_user_model
 from shared_model.storage import EncryptedFileSystemStorage
 from datetime import date
+from django.utils import timezone
 
 #para ni sa file encryption sa mga filepath
 encrypted_storage = EncryptedFileSystemStorage()
@@ -320,10 +321,39 @@ class Victim(models.Model):
     vic_last_school_attended = EncryptedCharField(max_length=512, null=True, blank=True)
     vic_last_school_address = EncryptedCharField(max_length=512, null=True, blank=True)
     vic_occupation = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_income = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    vic_income = models.CharField(max_length=100, blank=True, null=True)
     vic_skills = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_contact_number = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_provincial_address = EncryptedCharField(max_length=512, blank=True, null=True)
+
+    subject_interest = EncryptedCharField(max_length=512, blank=True, null=True)
+    honors = EncryptedCharField(max_length=512, blank=True, null=True)
+    hobbies = EncryptedCharField(max_length=512, blank=True, null=True)
+    vocational_interest = EncryptedCharField(max_length=512, blank=True, null=True)
+    previous_skills = EncryptedCharField(max_length=512, blank=True, null=True)
+    type_of_training = EncryptedCharField(max_length=512, blank=True, null=True)
+    training_where = EncryptedCharField(max_length=512, blank=True, null=True)
+    training_when = EncryptedCharField(max_length=512, blank=True, null=True)
+    employment_experience = EncryptedCharField(max_length=512, blank=True, null=True)
+    code = models.CharField(max_length=20, unique=True, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            prefix1 = "RHW"
+            prefix2 = "FO7"
+            current_year = timezone.now().year
+
+            # Count existing victims for the same year
+            count_this_year = Victim.objects.filter(
+                code__contains=f"{prefix1}-{prefix2}-{current_year}-"
+            ).count()
+
+            next_number = count_this_year + 1
+            formatted_number = str(next_number).zfill(3)  # 001, 002, etc.
+
+            self.code = f"{prefix1}-{prefix2}-{current_year}-{formatted_number}"
+
+        super().save(*args, **kwargs)
     
     # present address
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, related_name="victim_address", null=True, blank=True)
@@ -549,7 +579,7 @@ class FamilyMember(models.Model):
     fam_civil_status = models.CharField(max_length=50, null=True, blank=True)
     fam_educational_attainment = models.CharField(max_length=50, null=True, blank=True)
     fam_occupation = models.CharField(max_length=50, null=True, blank=True)
-    fam_income = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    fam_income = models.CharField(max_length=50, null=True, blank=True)
 
     # foreign key
     victim = models.ForeignKey(Victim, on_delete=models.CASCADE, blank=True, null=True, related_name="family_members")

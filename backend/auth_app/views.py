@@ -787,6 +787,10 @@ class face_login(APIView):
             if ip_fails >= MAX_FAILED_PER_IP:
                 block_ip(ip)
                 logger.warning(f"IP {ip} blocked due to {ip_fails} failed login attempts")
+                return Response(
+                    {"detail": "Too many attempts from this IP. Try again later."},
+                    status=status.HTTP_429_TOO_MANY_REQUESTS
+                )
 
             accuracy = best_score * 100 if best_score > 0 else 0
             print(
@@ -993,10 +997,18 @@ class CookieTokenObtainPairView(APIView):
             if ip_fails >= MAX_FAILED_PER_IP:
                 block_ip(ip)
                 logger.warning(f"IP {ip} blocked due to {ip_fails} failed login attempts")
+                return Response(
+                    {"detail": "Too many attempts from this IP. Try again later."},
+                    status=status.HTTP_429_TOO_MANY_REQUESTS
+                )
 
             if user_fails >= MAX_FAILED_PER_USERNAME:
                 lockout_user(username)
                 logger.warning(f"User {username} locked out due to {user_fails} failed attempts")
+                return Response(
+                    {"detail": "Account temporarily locked due to too many failed login attempts."},
+                    status=status.HTTP_423_LOCKED
+                )
 
             # log the failed attempt
             LoginTracker.objects.create(

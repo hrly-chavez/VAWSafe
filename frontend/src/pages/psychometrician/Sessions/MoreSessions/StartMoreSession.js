@@ -1,5 +1,5 @@
 // src/pages/psychometrician/Sessions/MoreSessions/StartMoreSession.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../../../api/axios";
 import Select from "react-select";
@@ -20,6 +20,8 @@ const StartMoreSession = () => {
   const [loading, setLoading] = useState(true);
   const [finishing, setFinishing] = useState(false);
   const [error, setError] = useState("");
+  const questionRefs = useRef({});
+
 
   // Fetch session data and service categories
   useEffect(() => {
@@ -120,8 +122,23 @@ const StartMoreSession = () => {
           (!q.sq_value || q.sq_value.trim() === "")
       );
 
-      if (missingRequired.length > 0) {
+       if (missingRequired.length > 0) {
         alert("Please answer all REQUIRED questions before finishing this session.");
+
+        // Scroll to the FIRST missing required question
+        const firstMissing = missingRequired[0];
+        const element = questionRefs.current[firstMissing.sq_id];
+
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+
+          // Highlight temporarily
+          element.classList.add("ring-4", "ring-red-300");
+          setTimeout(() => {
+            element.classList.remove("ring-4", "ring-red-300");
+          }, 1500);
+        }
+
         setFinishing(false);
         return;
       }
@@ -192,6 +209,7 @@ const StartMoreSession = () => {
               {qs.map((q, index) => (
                 <motion.div
                   key={q.sq_id}
+                  ref={(el) => (questionRefs.current[q.sq_id] = el)}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
@@ -300,131 +318,6 @@ const StartMoreSession = () => {
     </div>
   </div>
 );
-
-  // return (
-  //   <div className="max-w-5xl mx-auto p-6 bg-white rounded-xl shadow-md space-y-8">
-  //     <h2 className="text-2xl font-bold text-blue-800 border-b pb-2">
-  //       {session?.sess_type_display?.[0]?.name} Session
-  //     </h2>
-
-
-  //     {/* Render role sections (even if only one role exists) */}
-  //     {roles.map((role) => {
-  //       const grouped = questionsByRole[role] || {};
-  //       return (
-  //         <div key={role} className="mb-6">
-  //           <div className="bg-green-50 border-l-4 border-green-600 px-4 py-2 rounded-t-md">
-  //             <h5 className="text-md font-semibold text-green-800">{role} Section</h5>
-  //           </div>
-
-  //           <div className="border border-t-0 rounded-b-md p-3 bg-white shadow-sm">
-  //             <AnimatePresence>
-  //               {Object.entries(grouped).map(([category, qs]) => (
-  //                 <div key={category} className="mb-4">
-  //                   <div className="mb-2">
-  //                     <h6 className="font-semibold text-gray-700">{category}</h6>
-  //                   </div>
-  //                   {qs.map((q, index) => (
-  //                     <motion.div
-  //                       key={q.sq_id}
-  //                       initial={{ opacity: 0, x: -20 }}
-  //                       animate={{ opacity: 1, x: 0 }}
-  //                       exit={{ opacity: 0, x: 20 }}
-  //                       transition={{ duration: 0.22, delay: index * 0.04 }}
-  //                       className="p-3 border rounded mb-3 bg-gray-50"
-  //                     >
-  //                       <div className="flex items-center gap-2 mb-2">
-  //                         <p className="font-medium text-gray-800">
-  //                           {q.sq_question_text_snapshot || q.question_text || q.sq_custom_text}
-  //                         </p>
-
-  //                         {q.sq_is_required && (
-  //                           <span className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded">
-  //                             REQUIRED
-  //                           </span>
-  //                         )}
-  //                       </div>
-
-  //                       {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Yes/No" && (
-  //                         <select
-  //                           value={q.sq_value || ""}
-  //                           onChange={(e) =>
-  //                             handleAnswerChange(q.sq_id, "sq_value", e.target.value)
-  //                           }
-  //                           className="w-full border rounded p-2"
-  //                         >
-  //                           <option value="">Select...</option>
-  //                           <option value="Yes">Yes</option>
-  //                           <option value="No">No</option>
-  //                         </select>
-  //                       )}
-
-  //                       {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) === "Text" && (
-  //                         <textarea
-  //                           value={q.sq_value || ""}
-  //                           onChange={(e) =>
-  //                             handleAnswerChange(q.sq_id, "sq_value", e.target.value)
-  //                           }
-  //                           className="w-full border rounded p-2"
-  //                           rows={3}
-  //                           placeholder="Enter your answer..."
-  //                         />
-  //                       )}
-
-  //                       {/* Show notes only if the question type is not Text */}
-  //                       {(q.sq_answer_type_snapshot || q.question_answer_type || q.sq_custom_answer_type) !== "Text" && (
-  //                         <input
-  //                           type="text"
-  //                           value={q.sq_note || ""}
-  //                           onChange={(e) =>
-  //                             handleAnswerChange(q.sq_id, "sq_note", e.target.value)
-  //                           }
-  //                           className="w-full border rounded p-2 mt-2"
-  //                           placeholder="Additional notes (if any)..."
-  //                         />
-  //                       )}
-  //                     </motion.div>
-  //                   ))}
-  //                 </div>
-  //               ))}
-  //             </AnimatePresence>
-  //           </div>
-
-  //           {/* Per-role feedback box */}
-  //           <div className="p-4 bg-gray-50 border rounded-md shadow-sm mt-3">
-  //             <h3 className="text-lg font-semibold text-green-800">{role} Feedback</h3>
-  //             <textarea
-  //               value={feedback}
-  //               onChange={(e) => setFeedback(e.target.value)}
-  //               className="w-full border rounded-md p-3 text-sm text-gray-800"
-  //               rows={4}
-  //               placeholder="Write your feedback about this role's part..."
-  //             />
-  //           </div>
-  //         </div>
-  //       );
-  //     })}
-
-  //     {/* Finish Button */}
-  //     <div className="flex justify-end gap-4 mt-6">
-  //       <button
-  //         onClick={() => navigate(-1)}
-  //         className="px-6 py-2 rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300"
-  //       >
-  //         Back
-  //       </button>
-  //       <button
-  //         onClick={handleFinishSession}
-  //         disabled={finishing}
-  //         className={`px-6 py-2 rounded-md font-semibold text-white flex items-center justify-center gap-2 transition ${
-  //           finishing ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
-  //         }`}
-  //       >
-  //         {finishing ? "Finishing..." : "Finish Session"}
-  //       </button>
-  //     </div>
-  //   </div>
-  // );
 };
 
 export default StartMoreSession;

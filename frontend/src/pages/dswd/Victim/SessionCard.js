@@ -1,4 +1,4 @@
-// src/pages/nurse/Victims/SessionCard.js
+// src/pages/social_worker/Victims/SessionCard.js
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -41,10 +41,10 @@ const orderedRoles = roleOrder.filter((r) => grouped[r] && grouped[r].length > 0
 
 // Show how many sessions each group has
 const roleTitles = {
-  Shared: `👥 Shared Session(s)`,
+  Shared: `👥 Shared Session`,
   "Social Worker": `Social Worker Session(s) — Total: ${grouped["Social Worker"]?.length || 0}`,
   Psychometrician: `Psychometrician Session(s) — Total: ${grouped["Psychometrician"]?.length || 0}`,
-  Nurse: `Nurse Consultation(s) — Total: ${grouped["Nurse"]?.length || 0}`,
+  Nurse: `Nurse Session(s) — Total: ${grouped["Nurse"]?.length || 0}`,
   "Home Life": `Home Life Session(s) — Total: ${grouped["Home Life"]?.length || 0}`,
   Unassigned: `Other Session(s) — Total: ${grouped["Unassigned"]?.length || 0}`,
 };
@@ -142,7 +142,7 @@ const roleTitles = {
         );
       })}
 
-      {/* Create Session Button */}
+      {/* Create Session Button
       {(() => {
         const session1 = (incident.sessions || []).find((s) => s.sess_num === 1);
         const canCreate = session1 && session1.sess_status === "Done";
@@ -152,7 +152,7 @@ const roleTitles = {
               <button
                 onClick={() =>
                   navigate(
-                    `/nurse/more-sessions/create/${incident.incident_id}`
+                    `/social_worker/more-sessions/create/${incident.incident_id}`
                   )
                 }
                 className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-4 py-2 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
@@ -163,7 +163,7 @@ const roleTitles = {
           );
         }
         return null;
-      })()}
+      })()} */}
     </div>
   );
 }

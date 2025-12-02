@@ -24,67 +24,91 @@ export default function StartSession() {
   const [myFeedback, setMyFeedback] = useState("");
   const [openRoles, setOpenRoles] = useState([]);
   const roleRefs = useRef({});
+  const startedRef = React.useRef(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
   useEffect(() => {
-    const loadSession = async () => {
-      try {
-        const detailRes = await api.get(`/api/nurse/sessions/${sess_id}/`);
-        const sess = detailRes.data;
+        let mounted = true;
+    
+        const loadSession = async () => {
+          try {
+            const detailRes = await api.get(`/api/nurse/sessions/${sess_id}/`);
+            const sess = detailRes.data;
+    
+            // === PENDING SESSION - only call start() once ===
+            if (sess.sess_status === "Pending") {
+              if (!startedRef.current) {
+                startedRef.current = true; // prevent duplicate calls
+    
+                const response = await api.post(`/api/nurse/sessions/${sess_id}/start/`);
+                const data = response.data;
+    
+                const myRole =
+                  data?.my_progress?.official_role ||
+                  data?.my_progress?.role ||
+                  "";
+    
+                if (!mounted) return;
+    
+                setSession(data);
+                setQuestions(data.questions || []);
+                setProgress(data.my_progress || null);
+                setMyFeedback(data?.my_progress?.notes || "");
+                setRole(myRole);
+                setIsDone(Boolean(data?.my_progress?.is_done));
+    
+                // Open ONLY my role
+                setOpenRoles(myRole ? [myRole] : []);
+                return;
+              }
+            }
+    
+            // === ONGOING SESSION ===
+            if (sess.sess_status === "Ongoing") {
+              const myRole =
+                sess?.my_progress?.official_role ||
+                sess?.my_progress?.role ||
+                "";
+    
+              if (!mounted) return;
+    
+              setSession(sess);
+              setQuestions(sess.questions || []);
+              setProgress(sess.my_progress || null);
+              setMyFeedback(sess?.my_progress?.notes || "");
+              setRole(myRole);
+              setIsDone(Boolean(sess?.my_progress?.is_done));
+    
+              // Open ONLY my role
+              setOpenRoles(myRole ? [myRole] : []);
+              return;
+            }
+    
+            // === FINISHED ===
+              if (sess.sess_status === "Done") {
+                alert("This session is already finished.");
+                navigate(-1);
+                return;
+              }
+    
+          } catch (err) {
+            console.error("Failed to load session", err);
+            if (mounted) alert("Could not load session.");
+          } finally {
+            if (mounted) setLoading(false);
+          }
+        };
+    
+        loadSession();
+    
+        return () => { mounted = false; };
+    
+      }, [sess_id, navigate]);
 
-        if (sess.sess_status === "Pending") {
-          const response = await api.post(`/api/nurse/sessions/${sess_id}/start/`);
-          const data = response.data;
-          setSession(data);
-          setQuestions(data.questions || []);
-
-          // OPEN ALL ROLES BY DEFAULT
-          const allRoles = new Set();
-          (data.questions || []).forEach((q) => {
-            const r = q.assigned_role || q.question_category_name || null;
-            if (r) allRoles.add(r);
-          });
-          setOpenRoles([...allRoles]);
-
-          setProgress(data.my_progress || null);
-          setMyFeedback(data?.my_progress?.notes || "");
-          const myRole = data?.my_progress?.official_role || data?.my_progress?.role || "";
-          setRole(myRole || "");
-          setIsDone(Boolean(data?.my_progress?.is_done));
-        } else if (sess.sess_status === "Ongoing") {
-          setSession(sess);
-          setQuestions(sess.questions || []);
-
-          // OPEN ALL ROLES BY DEFAULT
-          const allRoles = new Set();
-          (sess.questions || []).forEach((q) => {
-            const r = q.assigned_role || q.question_category_name || null;
-            if (r) allRoles.add(r);
-          });
-          setOpenRoles([...allRoles]);
-
-          setProgress(sess.my_progress || null);
-          setMyFeedback(sess?.my_progress?.notes || "");
-          const myRole = sess?.my_progress?.official_role || sess?.my_progress?.role || "";
-          setRole(myRole || "");
-          setIsDone(Boolean(sess?.my_progress?.is_done));
-        } else {
-          alert("This consultation is already finished.");
-          navigate(-1);
-        }
-      } catch (err) {
-        console.error("Failed to load consultation", err);
-        alert("Could not load consultation.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadSession();
-  }, [sess_id, navigate]);
-
+      
   const handleChange = (sq_id, field, value) => {
     setQuestions((prev) =>
       prev.map((q) => (q.sq_id === sq_id ? { ...q, [field]: value } : q))
@@ -131,11 +155,41 @@ export default function StartSession() {
         isQuestionEditable(q) &&
         (!q.sq_value || q.sq_value.trim() === "")
     );
-
+    // Alert message
     if (missingRequired.length > 0) {
-      alert("Please answer all REQUIRED questions before finishing this consultation.");
-      return; // stop finish flow
-    }
+      const firstMissing = missingRequired[0];
+
+      // Determine the role of the missing question
+      const missingRole =
+        firstMissing.assigned_role ||
+        firstMissing.question_category_name ||
+        null;
+
+      // 1. Auto-open that role section
+      if (missingRole) {
+        setOpenRoles((prev) =>
+          prev.includes(missingRole) ? prev : [...prev, missingRole]
+        );
+      }
+
+      // 2. Scroll to the missing question (use sq_id data attribute)
+      setTimeout(() => {
+        const el = document.querySelector(`[data-question-id="${firstMissing.sq_id}"]`);
+
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+
+          // 3. Highlight effect (temporary ring)
+          el.classList.add("ring-4", "ring-red-400", "transition", "duration-500");
+          setTimeout(() => {
+            el.classList.remove("ring-4", "ring-red-400");
+          }, 1500);
+        }
+      }, 350);
+
+      alert("Please answer all REQUIRED questions before finishing this session.");
+      return;
+  }
 
 
     const response = await api.post(`/api/nurse/sessions/${sess_id}/finish/`, payload);
@@ -389,6 +443,7 @@ useEffect(() => {
                             return (
                               <motion.div
                                 key={q.sq_id}
+                                data-question-id={q.sq_id}
                                 initial={{ opacity: 0, x: -12 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 12 }}

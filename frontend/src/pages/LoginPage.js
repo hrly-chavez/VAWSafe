@@ -349,15 +349,16 @@ const LoginPage = () => {
 
       // 🔹 Handle blocked IP or locked user
       if (response.status === 429) {
-        setMessage("Too many attempts. Please wait and try again.");
+        setBackendErrors({ username: "", password: "Too many attempts. Please wait and try again." });
         setLoading(false);
         return;
       }
       if (response.status === 423) {
-        setMessage("Account temporarily locked. Contact administrator.");
+        setBackendErrors({ username: "", password: "Account temporarily locked. Contact administrator." });
         setLoading(false);
         return;
       }
+
 
       // Only parse JSON if not blocked
       const data = await response.json();

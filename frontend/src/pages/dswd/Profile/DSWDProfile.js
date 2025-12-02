@@ -12,28 +12,40 @@ export default function DSWDProfile() {
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
 
-  // Dummy audit log data
-  const dummyAuditLogs = [
-    {
-      timestamp: "2025-11-28T23:55:51",
-      action: "Logged in",
-      device_info: "Chrome on Windows 11",
-      ip_address: "192.168.1.10",
-    },
-    {
-      timestamp: "2025-11-28T22:30:12",
-      action: "Changed password",
-      device_info: "Edge on Windows 11",
-      ip_address: "192.168.1.11",
-    },
-    {
-      timestamp: "2025-11-27T19:15:00",
-      action: "Viewed victim case",
-      device_info: "Firefox on Ubuntu",
-      ip_address: "192.168.1.12",
-    },
-  ];
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState("");
 
+  // Helper function to make changes human-readable
+  const formatChange = (field, value) => {
+    const fieldLabels = {
+      of_fname: "First Name",
+      of_lname: "Last Name",
+      of_m_initial: "Middle Initial",
+      of_suffix: "Suffix",
+      of_sex: "Sex",
+      of_dob: "Date of Birth",
+      of_pob: "Place of Birth",
+      of_contact: "Contact",
+      of_email: "Email",
+      deleted_at: "Deleted At",
+      username: "Username",
+      // add more fields as needed
+    };
+
+    const label = fieldLabels[field] || field;
+
+    if (Array.isArray(value) && value.length === 2) {
+      return `${label} changed from ${value[0]} to ${value[1]}`;
+    } else if (Array.isArray(value) && value.length === 1) {
+      return `${label} set to ${value[0]}`;
+    } else {
+      return `${label} changed to ${value}`;
+    }
+  };
+
+
+  // Fetch profile
   useEffect(() => {
     api
       .get("/api/dswd/profile/retrieve/")
@@ -47,6 +59,24 @@ export default function DSWDProfile() {
         setLoading(false);
       });
   }, []);
+
+  // Fetch audit logs once profile data is available
+  useEffect(() => {
+    if (!officialData) return;
+
+    setAuditLoading(true);
+    api
+      .get(`/api/dswd/profile/${officialData.of_id}/audits/`)
+      .then((res) => {
+        setAuditLogs(res.data); // array of audit logs
+        setAuditLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to fetch audit logs:", err);
+        setAuditError("Unable to load audit logs.");
+        setAuditLoading(false);
+      });
+  }, [officialData]);
 
   if (loading) return <div className="p-6 text-gray-600">Loading...</div>;
   if (error) return <div className="p-6 text-red-500">{error}</div>;
@@ -122,24 +152,19 @@ export default function DSWDProfile() {
         {/* Tabs Navigation */}
         <div className="px-6 md:px-8 mt-6 border-b border-gray-300">
           <nav className="flex space-x-6">
-            <button
-              onClick={() => setActiveTab("profile")}
-              className={`py-2 border-b-2 transition duration-200 ${activeTab === "profile"
-                ? "border-[#292D96] text-[#292D96] font-semibold"
-                : "border-transparent text-gray-600 hover:text-[#292D96]"
+            {["profile", "audit"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`py-2 border-b-2 transition duration-200 ${
+                  activeTab === tab
+                    ? "border-[#292D96] text-[#292D96] font-semibold"
+                    : "border-transparent text-gray-600 hover:text-[#292D96]"
                 }`}
-            >
-              Full Profile
-            </button>
-            <button
-              onClick={() => setActiveTab("audit")}
-              className={`py-2 border-b-2 transition duration-200 ${activeTab === "audit"
-                ? "border-[#292D96] text-[#292D96] font-semibold"
-                : "border-transparent text-gray-600 hover:text-[#292D96]"
-                }`}
-            >
-              Audit Log
-            </button>
+              >
+                {tab === "profile" ? "Full Profile" : "Audit Logs"}
+              </button>
+            ))}
           </nav>
         </div>
 
@@ -167,28 +192,6 @@ export default function DSWDProfile() {
                     <p className="text-gray-500">Email Address</p>
                     <p className="text-gray-800">{officialData.of_email}</p>
                   </div>
-                  <div className="pb-2 border-b border-gray-200">
-                    <p className="text-gray-500">Date of Birth</p>
-                    <p className="text-gray-800">{officialData.of_dob || "N/A"}</p>
-                  </div>
-                  <div className="pb-2 border-b border-gray-200">
-                    <p className="text-gray-500">Place of Birth</p>
-                    <p className="text-gray-800">{officialData.of_pob || "N/A"}</p>
-                  </div>
-                  <div className="md:col-span-2 pb-2 border-b border-gray-200">
-                    <p className="text-gray-500">Full Address</p>
-                    <p className="text-gray-800 font-medium">
-                      {[
-                        officialData.address?.street,
-                        officialData.address?.sitio,
-                        officialData.address?.barangay_name,
-                        officialData.address?.municipality_name,
-                        officialData.address?.province_name,
-                      ]
-                        .filter(Boolean)
-                        .join(", ") || "N/A"}
-                    </p>
-                  </div>
                 </div>
               </div>
 
@@ -198,14 +201,13 @@ export default function DSWDProfile() {
                 <div className="flex items-center p-4 bg-green-50 rounded-lg border border-green-300">
                   <CheckBadgeIcon className="h-6 w-6 text-green-600 mr-3" />
                   <p className="text-gray-700 text-sm">
-                    Account is <strong>{officialData.status || "Approved"}</strong> and <strong>Active</strong>.
-                    Last login:{" "}
+                    Account is <strong>Active</strong>. Last login:{" "}
                     {officialData.last_login
                       ? new Date(officialData.last_login).toLocaleString("en-PH", {
-                        timeZone: "Asia/Manila",
-                        dateStyle: "long",
-                        timeStyle: "short",
-                      })
+                          timeZone: "Asia/Manila",
+                          dateStyle: "long",
+                          timeStyle: "short",
+                        })
                       : "N/A"}
                   </p>
                 </div>
@@ -214,39 +216,62 @@ export default function DSWDProfile() {
           )}
 
           {activeTab === "audit" && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-bold text-gray-800">Audit Log</h2>
-              <table className="w-full text-sm border border-gray-300 rounded-lg overflow-hidden">
-                <thead className="bg-gray-100 text-gray-600">
-                  <tr>
-                    <th className="px-4 py-2 text-left">Timestamp</th>
-                    <th className="px-4 py-2 text-left">Action</th>
-                    <th className="px-4 py-2 text-left">Device</th>
-                    <th className="px-4 py-2 text-left">IP Address</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dummyAuditLogs.map((log, idx) => (
-                    <tr key={idx} className="border-t">
-                      <td className="px-4 py-2">
-                        {new Date(log.timestamp).toLocaleString("en-PH", {
-                          timeZone: "Asia/Manila",
-                          dateStyle: "long",
-                          timeStyle: "medium",
-                        })}
-                      </td>
-                      <td className="px-4 py-2">{log.action}</td>
-                      <td className="px-4 py-2">{log.device_info}</td>
-                      <td className="px-4 py-2">{log.ip_address}</td>
-                    </tr>
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold mb-4 text-gray-800">Audit Logs</h2>
+
+              {auditLoading ? (
+                <p className="text-gray-500">Loading audit logs...</p>
+              ) : auditError ? (
+                <p className="text-red-500">{auditError}</p>
+              ) : auditLogs.length === 0 ? (
+                <p className="text-gray-500">No audit logs found.</p>
+              ) : (
+                <div className="space-y-4">
+                  {auditLogs.map((log, idx) => (
+                    <div
+                      key={idx}
+                      className="p-4 bg-gray-50 border rounded-lg shadow-sm hover:bg-gray-100 transition"
+                    >
+                      {/* Header: Action by Actor */}
+                      <div className="flex justify-between text-sm mb-1">
+                        <div>
+                          <span className="font-medium capitalize">{log.action}</span>{" "}
+                          <span className="opacity-70">by</span>{" "}
+                          <span className="font-medium">{log.actor_name || "System"}</span>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(log.created_at).toLocaleString("en-PH")}
+                        </div>
+                      </div>
+
+                      {/* Reason */}
+                      {log.reason && (
+                        <div className="text-xs text-gray-700 mb-1">
+                          <span className="font-medium">Reason:</span> {log.reason}
+                        </div>
+                      )}
+
+                      {/* Changes (hide for create, archive, unarchive) */}
+                      {!["create", "archive", "unarchive"].includes(log.action) && log.changes && (
+                        <div className="mt-2 text-xs">
+                          <span className="font-medium">Changes:</span>
+                          <ul className="list-disc ml-5 mt-1">
+                            {Object.entries(log.changes).map(([field, value], index) => (
+                              <li key={index}>{formatChange(field, value)}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              )}
             </div>
           )}
+
         </div>
 
-        {/* Action Buttons */}
+        {/* Edit & Change Password Buttons */}
         <div className="px-6 md:px-8 pb-8">
           <div className="mt-6 flex flex-wrap gap-3">
             <button
@@ -273,10 +298,7 @@ export default function DSWDProfile() {
             onSave={handleSaveProfile}
           />
         )}
-
-        {showChangePassword && (
-          <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
-        )}
+        {showChangePassword && <ChangePasswordModal onClose={() => setShowChangePassword(false)} />}
       </div>
     </div>
   );

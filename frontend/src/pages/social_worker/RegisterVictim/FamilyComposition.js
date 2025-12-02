@@ -49,18 +49,29 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
           onChange={(e) => updateMember(index, "fam_lname", e.target.value)}
           className="border p-2 rounded"
         />
-        <input
-          type="text"
-          placeholder="Extension"
+
+        <select
           value={member.fam_extension}
           onChange={(e) => updateMember(index, "fam_extension", e.target.value)}
           className="border p-2 rounded"
-        />
+        >
+          <option value="">Select Extension</option>
+          <option value="Jr.">Jr.</option>
+          <option value="Sr.">Sr.</option>
+          <option value="II">II</option>
+          <option value="III">III</option>
+          <option value="IV">IV</option>
+          <option value="V">V</option>
+          <option value="None">None</option>
+        </select>
+
         <input
           type="date"
           placeholder="Birth Date"
           value={member.fam_birth_date}
-          onChange={(e) => updateMember(index, "fam_birth_date", e.target.value)}
+          onChange={(e) =>
+            updateMember(index, "fam_birth_date", e.target.value)
+          }
           className="border p-2 rounded"
         />
         <select
@@ -72,41 +83,90 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
           <option value="Male">Male</option>
           <option value="Female">Female</option>
         </select>
-        <input
-          type="text"
-          placeholder="Victim Relationship"
+        <select
           value={member.fam_victim_relationship}
-          onChange={(e) => updateMember(index, "fam_victim_relationship", e.target.value)}
+          onChange={(e) =>
+            updateMember(index, "fam_victim_relationship", e.target.value)
+          }
           className="border p-2 rounded"
-        />
-        <input
-          type="text"
-          placeholder="Civil Status"
+        >
+          <option value="">Select Relationship</option>
+          <option value="Mother">Mother</option>
+          <option value="Father">Father</option>
+          <option value="Sibling">Sibling</option>
+          <option value="Son">Son</option>
+          <option value="Daughter">Daughter</option>
+          <option value="Spouse">Spouse</option>
+          <option value="Partner">Partner</option>
+          <option value="Grandparent">Grandparent</option>
+          <option value="Aunt">Aunt</option>
+          <option value="Uncle">Uncle</option>
+          <option value="Cousin">Cousin</option>
+          <option value="Other">Other</option>
+        </select>
+
+        <select
           value={member.fam_civil_status}
-          onChange={(e) => updateMember(index, "fam_civil_status", e.target.value)}
+          onChange={(e) =>
+            updateMember(index, "fam_civil_status", e.target.value)
+          }
           className="border p-2 rounded"
-        />
-        <input
-          type="text"
-          placeholder="Educational Attainment"
+        >
+          <option value="">Select Civil Status</option>
+          <option value="Single">Single</option>
+          <option value="Married">Married</option>
+          <option value="Widowed">Widowed</option>
+          <option value="Separated">Separated</option>
+          <option value="Divorced">Divorced</option>
+        </select>
+
+        <select
           value={member.fam_educational_attainment}
-          onChange={(e) => updateMember(index, "fam_educational_attainment", e.target.value)}
+          onChange={(e) =>
+            updateMember(index, "fam_educational_attainment", e.target.value)
+          }
           className="border p-2 rounded"
-        />
+        >
+          <option value="">Select Educational Attainment</option>
+          <option value="No Formal Education">No Formal Education</option>
+          <option value="Elementary Level">Elementary Level</option>
+          <option value="Elementary Graduate">Elementary Graduate</option>
+          <option value="High School Level">High School Level</option>
+          <option value="High School Graduate">High School Graduate</option>
+          <option value="Senior High School Level">
+            Senior High School Level
+          </option>
+          <option value="Senior High School Graduate">
+            Senior High School Graduate
+          </option>
+          <option value="Vocational/Technical">Vocational/Technical</option>
+          <option value="College Level">College Level</option>
+          <option value="College Graduate">College Graduate</option>
+          <option value="Post-Graduate">Post-Graduate</option>
+        </select>
+
         <input
           type="text"
           placeholder="Occupation"
           value={member.fam_occupation}
-          onChange={(e) => updateMember(index, "fam_occupation", e.target.value)}
+          onChange={(e) =>
+            updateMember(index, "fam_occupation", e.target.value)
+          }
           className="border p-2 rounded"
         />
-        <input
-          type="text"
-          placeholder="Income"
+
+        <select
           value={member.fam_income}
           onChange={(e) => updateMember(index, "fam_income", e.target.value)}
           className="border p-2 rounded"
-        />
+        >
+          <option value="">Select Income Range</option>
+          <option value="Below ₱5,000">Below ₱5,000</option>
+          <option value="₱5,000 – ₱10,000">₱5,000 – ₱10,000</option>
+          <option value="₱10,001 – ₱20,000">₱10,001 – ₱20,000</option>
+          <option value="₱20,001 – ₱30,000">₱20,001 – ₱30,000</option>
+          <option value="Above ₱30,000">Above ₱30,000</option>
+        </select>
       </div>
     </div>
   );
@@ -133,8 +193,6 @@ export default function FamilyComposition({ formDataState, setFormDataState }) {
 
   return (
     <div className="overflow-x-auto p-4">
-      <h2 className="text-xl font-semibold mb-4">Family Member Information</h2>
-
       <button
         onClick={addMember}
         className="bg-blue-500 text-white px-4 py-2 rounded mb-4 hover:bg-blue-600"
