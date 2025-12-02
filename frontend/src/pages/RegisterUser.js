@@ -3,6 +3,8 @@ import { useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import { XMarkIcon } from '@heroicons/react/24/solid';
 import * as faceapi from "face-api.js";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const RegisterUser = ({ onClose, defaultRole }) => {
   const MAX_PHOTOS = 3;
@@ -347,6 +349,20 @@ const RegisterUser = ({ onClose, defaultRole }) => {
           password: data.password,
           role: data.role,
         });
+
+        //wala pa ni gamitong kay need pa makita ang username ug password
+        toast.success(
+          "Official created successfully. Check email for Username and Password",
+          {
+            position: "top-right",
+            autoClose: 5000,
+          }
+        );
+
+        // Close modal AFTER toast shows
+        setTimeout(() => {
+          onClose();
+        }, 2000);
 
         // Reset form
         setPhotos([]);
@@ -754,6 +770,8 @@ const RegisterUser = ({ onClose, defaultRole }) => {
           </form>
         </div>
       </div>
+
+      <ToastContainer />
     </div>
   );
 };

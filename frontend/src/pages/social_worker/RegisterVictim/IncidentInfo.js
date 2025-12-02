@@ -26,7 +26,7 @@ export const MANNER_TOWARDS_WORKER_OPTIONS = [
   { key: "aloof", label: "Aloof" },
 ];
 
-export default function IncidentInfo({ formDataState, setFormDataState }) {
+export default function IncidentInfo({ formDataState, setFormDataState, isLocked }) {
   const VIOLENCE_OPTIONS = {
     "Physical Violence": [],
     "Physical Abused": ["Rape", "Acts of lasciviousness", "Incest"],
@@ -185,6 +185,8 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
           Type Of Violence
         </label>
         <select
+        readOnly={isLocked}
+            disabled={isLocked}
           className="input"
           value={formDataState.violence_type || ""}
           onChange={(e) => handleChange("violence_type", e.target.value)}
@@ -206,6 +208,8 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
               Violence Subtype
             </label>
             <select
+            readOnly={isLocked}
+            disabled={isLocked}
               className="input"
               value={formDataState.violence_subtype || ""}
               onChange={(e) => handleChange("violence_subtype", e.target.value)}
@@ -227,6 +231,8 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
         {PHYSICAL_DESCRIPTION_OPTIONS.map((item) => (
           <label key={item.key} className="flex items-center gap-2 mt-1">
             <input
+            readOnly={isLocked}
+            disabled={isLocked}
               type="checkbox"
               checked={formDataState.physical_description?.[item.key] || false}
               onChange={(e) => {
@@ -249,6 +255,8 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
         <div className="mt-3">
           <label className="block">Others (specify):</label>
           <input
+          readOnly={isLocked}
+            disabled={isLocked}
             type="text"
             className="border rounded p-2 w-full"
             value={formDataState.physical_description_other || ""}
@@ -271,6 +279,8 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
         {MANNER_TOWARDS_WORKER_OPTIONS.map((item) => (
           <label key={item.key} className="flex items-center gap-2 mt-1">
             <input
+            readOnly={isLocked}
+            disabled={isLocked}
               type="checkbox"
               checked={formDataState.manner_towards_worker?.[item.key] || false}
               onChange={(e) => {
@@ -293,6 +303,8 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
         <div className="mt-3">
           <label className="block">Others (specify):</label>
           <input
+          readOnly={isLocked}
+            disabled={isLocked}
             type="text"
             className="border rounded p-2 w-full"
             value={formDataState.manner_towards_worker_other || ""}
@@ -313,6 +325,8 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
             Date of the Incident
           </label>
           <input
+          readOnly={isLocked}
+            disabled={isLocked}
             type="date"
             className="input w-full"
             value={formDataState.incident_date || ""}
@@ -324,6 +338,8 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
             Time of the Incident
           </label>
           <input
+          readOnly={isLocked}
+            disabled={isLocked}
             type="time"
             className="input w-full"
             value={formDataState.incident_time || ""}
@@ -338,6 +354,8 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
           Problem Presented
         </label>
         <textarea
+        readOnly={isLocked}
+            disabled={isLocked}
           type="text"
           rows={3}
           className="input w-full"
@@ -353,6 +371,8 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
           Behavioral, Strengths, Weakness)
         </label>
         <textarea
+        readOnly={isLocked}
+            disabled={isLocked}
           type="text"
           rows={3}
           className="input w-full"
@@ -369,6 +389,8 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
           CIRCUMSTANCES/ BACKGROUND SURROUNDING THE PROBLEM:
         </label>
         <textarea
+        readOnly={isLocked}
+            disabled={isLocked}
           type="text"
           rows={3}
           className="input w-full"
@@ -385,6 +407,8 @@ export default function IncidentInfo({ formDataState, setFormDataState }) {
           PLAN OF ACTION/ RECOMMENDATION:
         </label>
         <textarea
+        readOnly={isLocked}
+            disabled={isLocked}
           type="text"
           rows={3}
           className="input w-full"

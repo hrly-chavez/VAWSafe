@@ -467,6 +467,11 @@ class ContactPerson(models.Model):
             - self.cont_birth_date.year
             - ((today.month, today.day) < (self.cont_birth_date.month, self.cont_birth_date.day))
         )
+    
+    @property
+    def full_name(self):
+        parts = [self.cont_fname, self.cont_mname, self.cont_lname, getattr(self, "cont_ext", None)]
+        return " ".join(filter(None, parts))
 
 class IncidentInformation(models.Model): #Case in the frontend
     INCIDENT_CHOICES = [

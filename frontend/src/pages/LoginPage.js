@@ -15,6 +15,8 @@ import {
 } from "@heroicons/react/24/solid";
 import { AuthContext } from "../context/AuthContext";
 import api from "../api/axios";
+import CryptoJS from "crypto-js";
+
 
 const LoginPage = () => {
   const webcamRef = useRef(null);
@@ -61,6 +63,13 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   // Keep a ref to track cancellation
   const loginCancelledRef = useRef(false);
+
+  //para sa rememberme
+  const [rememberMe, setRememberMe] = useState(false);
+  const [usernameSuggestions, setUsernameSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+
 
   // Adding error state for LogIn
   const [loginErrors, setLoginErrors] = useState({
@@ -115,6 +124,18 @@ const LoginPage = () => {
 
     return () => clearInterval(slideTimerRef.current);
   }, []);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("rememberMe");
+    if (stored) {
+      const { username: savedUsername, password: savedPassword } = JSON.parse(stored);
+      setUsername(savedUsername);
+      const decryptedPassword = CryptoJS.AES.decrypt(savedPassword, 'secret-key').toString(CryptoJS.enc.Utf8);
+      setPassword(decryptedPassword);
+      setRememberMe(true);
+    }
+  }, []);
+
 
   const MAX_FRAMES = 10;
   const INTERVAL = 200;
@@ -280,6 +301,8 @@ const LoginPage = () => {
           official_id: loginData.official_id,
         });
 
+
+
         // ✅ Fetch full user info including profile photo
         try {
           const meRes = await api.get("/api/auth/me/"); // ensure CSRF token if needed
@@ -370,6 +393,32 @@ const LoginPage = () => {
           name: data.name,
           official_id: data.official_id,
         });
+
+        // Store credentials if Remember Me is checked
+        if (rememberMe) {
+          // Retrieve existing saved accounts
+          const saved = JSON.parse(localStorage.getItem("rememberMeList")) || [];
+
+          // Encrypt password
+          const encryptedPassword = CryptoJS.AES.encrypt(password, 'secret-key').toString();
+
+          // Check if username already exists
+          const existsIndex = saved.findIndex(u => u.username === username);
+
+          if (existsIndex > -1) {
+            saved[existsIndex].password = encryptedPassword;
+          } else {
+            saved.push({ username, password: encryptedPassword });
+          }
+
+          // Save updated list
+          localStorage.setItem("rememberMeList", JSON.stringify(saved));
+        } else {
+          // Optional: remove this account from list if unchecked
+          const saved = JSON.parse(localStorage.getItem("rememberMeList")) || [];
+          const updated = saved.filter(u => u.username !== username);
+          localStorage.setItem("rememberMeList", JSON.stringify(updated));
+        }
 
         try {
           const meRes = await api.get("/api/auth/me/");
@@ -519,7 +568,24 @@ const LoginPage = () => {
                         placeholder="Username"
                         value={username}
                         onChange={(e) => {
-                          setUsername(e.target.value);
+                          const val = e.target.value;
+                          setUsername(val);
+
+                          // Filter saved usernames
+                          const saved = JSON.parse(localStorage.getItem("rememberMeList")) || [];
+                          const matches = saved.filter((u) => u.username.toLowerCase().includes(val.toLowerCase()));
+                          setUsernameSuggestions(matches);
+                          setShowSuggestions(matches.length > 0);
+                        }}
+                        onFocus={() => {
+                          // Show suggestions if username exists
+                          const saved = JSON.parse(localStorage.getItem("rememberMeList")) || [];
+                          const matches = saved.filter((u) => u.username.toLowerCase().includes(username.toLowerCase()));
+                          setUsernameSuggestions(matches);
+                          setShowSuggestions(matches.length > 0);
+                        }}
+                        onBlur={() => {
+                          setTimeout(() => setShowSuggestions(false), 150); // delay to allow click
                         }}
                         className="bg-transparent w-full outline-none placeholder-gray-400"
                       />
@@ -527,6 +593,23 @@ const LoginPage = () => {
                         <ExclamationCircleIcon className="absolute right-3 top-2.5 h-5 w-5 text-red-500 animate-shake" />
                       )}
                     </div>
+                    {showSuggestions && usernameSuggestions.length > 0 && (
+                      <ul className="absolute w-full bg-white border border-gray-200 rounded shadow-md max-h-40 overflow-y-auto z-50">
+                        {usernameSuggestions.map((item, i) => (
+                          <li
+                            key={i}
+                            onClick={() => {
+                              setUsername(item.username);
+                              setPassword(CryptoJS.AES.decrypt(item.password, 'secret-key').toString(CryptoJS.enc.Utf8));
+                              setShowSuggestions(false);
+                            }}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-gray-700"
+                          >
+                            {item.username}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     {(loginErrors.username || backendErrors.username) && (
                       <p className="text-red-500 text-sm mt-1">
                         {loginErrors.username || backendErrors.username}
@@ -557,6 +640,17 @@ const LoginPage = () => {
                       </p>
                     )}
                   </div>
+
+                  <div className="flex items-center gap-2 w-full">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                    <label className="text-gray-700 text-sm">Remember Me</label>
+                  </div>
+
 
                   {/* Login Buttons */}
                   <button

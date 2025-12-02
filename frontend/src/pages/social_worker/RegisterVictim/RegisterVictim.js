@@ -233,7 +233,7 @@ export default function RegisterVictim() {
                 {openSections[key] && (
                   <div className="mt-4 border-l-4 border-blue-500 pl-4">
                     {key === "evidences" ? (
-                      <Component files={evidenceFiles} setFiles={setEvidenceFiles} />
+                      <Component files={evidenceFiles} setFiles={setEvidenceFiles} isLocked={isLocked}/>
                     ) : (
                       <Component formDataState={formDataState} setFormDataState={setFormDataState} victimPhotos={victimPhotos} isLocked={isLocked}/>
                     )}

@@ -14,21 +14,26 @@ const emptyMember = {
   fam_income: "",
 };
 
-function FamilyMember({ index, member, updateMember, onRemove }) {
+function FamilyMember({ index, member, updateMember, onRemove, isLocked }) {
   return (
     <div className="p-4 border rounded-lg shadow-sm bg-gray-50 my-2">
       <div className="flex justify-between items-center mb-2">
         <h3 className="font-semibold">Family Member #{index + 1}</h3>
-        <button
-          onClick={() => onRemove(index)}
-          className="text-red-500 hover:text-red-700 font-medium"
-        >
-          Remove
-        </button>
+
+        {!isLocked && (
+          <button
+            onClick={() => onRemove(index)}
+            className="text-red-500 hover:text-red-700 font-medium"
+          >
+            Remove
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
         <input
+          readOnly={isLocked}
+          disabled={isLocked}
           type="text"
           placeholder="First Name"
           value={member.fam_fname}
@@ -36,6 +41,8 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
           className="border p-2 rounded"
         />
         <input
+          readOnly={isLocked}
+          disabled={isLocked}
           type="text"
           placeholder="Middle Name"
           value={member.fam_mname}
@@ -43,6 +50,8 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
           className="border p-2 rounded"
         />
         <input
+          readOnly={isLocked}
+          disabled={isLocked}
           type="text"
           placeholder="Last Name"
           value={member.fam_lname}
@@ -51,6 +60,8 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
         />
 
         <select
+          readOnly={isLocked}
+          disabled={isLocked}
           value={member.fam_extension}
           onChange={(e) => updateMember(index, "fam_extension", e.target.value)}
           className="border p-2 rounded"
@@ -62,10 +73,12 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
           <option value="III">III</option>
           <option value="IV">IV</option>
           <option value="V">V</option>
-          <option value="None">None</option>
+          <option value="">None</option>
         </select>
 
         <input
+          readOnly={isLocked}
+          disabled={isLocked}
           type="date"
           placeholder="Birth Date"
           value={member.fam_birth_date}
@@ -74,7 +87,10 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
           }
           className="border p-2 rounded"
         />
+
         <select
+          readOnly={isLocked}
+          disabled={isLocked}
           value={member.fam_sex}
           onChange={(e) => updateMember(index, "fam_sex", e.target.value)}
           className="border p-2 rounded"
@@ -83,7 +99,10 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
           <option value="Male">Male</option>
           <option value="Female">Female</option>
         </select>
+
         <select
+          readOnly={isLocked}
+          disabled={isLocked}
           value={member.fam_victim_relationship}
           onChange={(e) =>
             updateMember(index, "fam_victim_relationship", e.target.value)
@@ -106,6 +125,8 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
         </select>
 
         <select
+          readOnly={isLocked}
+          disabled={isLocked}
           value={member.fam_civil_status}
           onChange={(e) =>
             updateMember(index, "fam_civil_status", e.target.value)
@@ -121,6 +142,8 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
         </select>
 
         <select
+          readOnly={isLocked}
+          disabled={isLocked}
           value={member.fam_educational_attainment}
           onChange={(e) =>
             updateMember(index, "fam_educational_attainment", e.target.value)
@@ -146,6 +169,8 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
         </select>
 
         <input
+          readOnly={isLocked}
+          disabled={isLocked}
           type="text"
           placeholder="Occupation"
           value={member.fam_occupation}
@@ -156,6 +181,8 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
         />
 
         <select
+          readOnly={isLocked}
+          disabled={isLocked}
           value={member.fam_income}
           onChange={(e) => updateMember(index, "fam_income", e.target.value)}
           className="border p-2 rounded"
@@ -172,7 +199,11 @@ function FamilyMember({ index, member, updateMember, onRemove }) {
   );
 }
 
-export default function FamilyComposition({ formDataState, setFormDataState }) {
+export default function FamilyComposition({
+  formDataState,
+  setFormDataState,
+  isLocked,
+}) {
   const members = formDataState.familyMembers || [];
 
   const addMember = () => {
@@ -193,15 +224,18 @@ export default function FamilyComposition({ formDataState, setFormDataState }) {
 
   return (
     <div className="overflow-x-auto p-4">
-      <button
-        onClick={addMember}
-        className="bg-blue-500 text-white px-4 py-2 rounded mb-4 hover:bg-blue-600"
-      >
-        + Add Family Member
-      </button>
+      {!isLocked && (
+        <button
+          onClick={addMember}
+          className="bg-blue-500 text-white px-4 py-2 rounded mb-4 hover:bg-blue-600"
+        >
+          + Add Family Member
+        </button>
+      )}
 
       {members.map((member, index) => (
         <FamilyMember
+          isLocked={isLocked}
           key={index}
           index={index}
           member={member}

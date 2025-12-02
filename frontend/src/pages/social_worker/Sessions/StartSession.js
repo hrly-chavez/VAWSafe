@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import NextSessionModal from "./NextSessionModal";
 import CaseSessionFollowup from "./CaseSessionFollowup";
 import { useRef } from "react";
-
 import Select from "react-select";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 
 export default function StartSession() {
   const { sess_id } = useParams();
@@ -32,81 +34,81 @@ export default function StartSession() {
 
 
     useEffect(() => {
-    let mounted = true;
-    const loadSession = async () => {
-      try {
-        const detailRes = await api.get(`/api/social_worker/sessions/${sess_id}/`);
-        const sess = detailRes.data;
+      let mounted = true;
+      const loadSession = async () => {
+        try {
+          const detailRes = await api.get(`/api/social_worker/sessions/${sess_id}/`);
+          const sess = detailRes.data;
 
-        // === PENDING SESSION - only call start() once ===
-        if (sess.sess_status === "Pending") {
-          if (!startedRef.current) {
-            startedRef.current = true; // prevent duplicate calls
+          // === PENDING SESSION - only call start() once ===
+          if (sess.sess_status === "Pending") {
+            if (!startedRef.current) {
+              startedRef.current = true; // prevent duplicate calls
 
-            const response = await api.post(`/api/social_worker/sessions/${sess_id}/start/`);
-            const data = response.data;
+              const response = await api.post(`/api/social_worker/sessions/${sess_id}/start/`);
+              const data = response.data;
 
+              const myRole =
+                data?.my_progress?.official_role ||
+                data?.my_progress?.role ||
+                "";
+
+              if (!mounted) return;
+
+              setSession(data);
+              setQuestions(data.questions || []);
+              setProgress(data.my_progress || null);
+              setMyFeedback(data?.my_progress?.notes || "");
+              setRole(myRole);
+              setIsDone(Boolean(data?.my_progress?.is_done));
+
+              // Open ONLY my role
+              setOpenRoles(myRole ? [myRole] : []);
+              return
+            }
+          }
+
+          // === ONGOING SESSION ===
+          if (sess.sess_status === "Ongoing") {
             const myRole =
-              data?.my_progress?.official_role ||
-              data?.my_progress?.role ||
+              sess?.my_progress?.official_role ||
+              sess?.my_progress?.role ||
               "";
 
             if (!mounted) return;
 
-            setSession(data);
-            setQuestions(data.questions || []);
-            setProgress(data.my_progress || null);
-            setMyFeedback(data?.my_progress?.notes || "");
+            setSession(sess);
+            setQuestions(sess.questions || []);
+            setProgress(sess.my_progress || null);
+            setMyFeedback(sess?.my_progress?.notes || "");
             setRole(myRole);
-            setIsDone(Boolean(data?.my_progress?.is_done));
+            setIsDone(Boolean(sess?.my_progress?.is_done));
 
             // Open ONLY my role
             setOpenRoles(myRole ? [myRole] : []);
             return;
           }
+
+          // === FINISHED ===
+                if (sess.sess_status === "Done") {
+                  alert("This session is already finished.");
+                  navigate(-1);
+                  return;
+                }
+
+        } catch (err) {
+          console.error("Failed to load session", err);
+          if (mounted) alert("Could not load session.");
+        } finally {
+          if (mounted) setLoading(false);
         }
+      };
 
-        // === ONGOING SESSION ===
-        if (sess.sess_status === "Ongoing") {
-          const myRole =
-            sess?.my_progress?.official_role ||
-            sess?.my_progress?.role ||
-            "";
+      loadSession();
 
-          if (!mounted) return;
+      return () => { mounted = false; };
 
-          setSession(sess);
-          setQuestions(sess.questions || []);
-          setProgress(sess.my_progress || null);
-          setMyFeedback(sess?.my_progress?.notes || "");
-          setRole(myRole);
-          setIsDone(Boolean(sess?.my_progress?.is_done));
-
-          // Open ONLY my role
-          setOpenRoles(myRole ? [myRole] : []);
-          return;
-        }
-
-        // === FINISHED ===
-              if (sess.sess_status === "Done") {
-                alert("This session is already finished.");
-                navigate(-1);
-                return;
-              }
-
-      } catch (err) {
-        console.error("Failed to load session", err);
-        if (mounted) alert("Could not load session.");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-
-    loadSession();
-
-    return () => { mounted = false; };
-
-  }, [sess_id, navigate]);
+    }, [sess_id, navigate]);
 
 
   const handleChange = (sq_id, field, value) => {
@@ -187,7 +189,7 @@ export default function StartSession() {
         }
       }, 350);
 
-      alert("Please answer all REQUIRED questions before finishing this session.");
+      toast.warning("Please answer all REQUIRED questions before finishing.");
       return;
   }
 
@@ -205,23 +207,20 @@ export default function StartSession() {
 
     //  Unified redirect behavior (always go to victim page)
     if (all_finished || session_completed) {
-      alert(
-        "All assigned officials have completed this session.\n" +
-        "The session is now marked as done.\n" +
-        "Redirecting to the victim’s profile..."
+      toast.success(
+        "All officials have finished. Session is now marked as done. Redirecting..."
       );
     } else {
-      alert(
-        "Your part of this shared session has been completed.\n" +
-        "You’ll now be redirected to the victim’s profile."
-      );
+      toast.info(
+          "Your part of this shared session is completed. Redirecting..."
+        );
     }
 
     //  Redirect regardless of completion state
     if (victimId) {
       setTimeout(() => {
         navigate(`/social_worker/victims/${victimId}`);
-      }, 1000);
+      }, 3200);
     } else {
       navigate("/social_worker/victims");
     }
@@ -233,7 +232,8 @@ export default function StartSession() {
         err?.response?.data?.error ||
         "Failed to finish session. Please ensure all required questions are answered.";
 
-      alert(msg);
+      toast.error(msg);
+
   }
 };
 
@@ -577,6 +577,7 @@ useEffect(() => {
           Back
         </button>
       </div>
+      <ToastContainer position="top-center" autoClose={3000} />
     </div>
   );
 }
