@@ -6,6 +6,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../../../../api/axios";
 import Select from "react-select";
 import PreviewMappedQuestions from "./PreviewMappedQuestions";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
 
 
 const forbiddenForSocialWorker = [
@@ -77,6 +81,31 @@ const CreateSession = () => {
 
     loadQuestions();
   }, [selectedType, summary]);
+  const proceedToStartSession = async () => {
+    setStarting(true);
+    try {
+      const createRes = await api.post("/api/social_worker/more-sessions/", {
+        incident_id: summary.incident_id,
+        sess_type: [selectedType.value],
+      });
+
+      const newSession = createRes.data;
+      const sessId = newSession.sess_id;
+
+      await api.post(`/api/social_worker/sessions/${sessId}/start/`);
+
+      toast.success("Session created successfully!");
+
+      setTimeout(() => {
+        navigate(`/social_worker/more-sessions/${sessId}/start`);
+      }, 1200);
+    } catch (err) {
+      console.error("Failed to start session", err);
+      toast.error("Failed to start session. Please try again.");
+    } finally {
+      setStarting(false);
+    }
+  };
 
   if (loading) return <p className="p-6 text-gray-600">Loading session form...</p>;
   if (error) return <p className="p-6 text-red-600">{error}</p>;
@@ -135,36 +164,22 @@ const CreateSession = () => {
             }`}
             onClick={async () => {
               if (!selectedType || !summary) return;
+              confirmAlert({
+                title: "Start Session",
+                message: "Are you sure you want to start this session?",
+                buttons: [
+                  {
+                    label: "Yes",
+                    onClick: () => proceedToStartSession(),
+                  },
+                  {
+                    label: "No",
+                    onClick: () => {},
+                  },
+                ],
+              });
+              return;
 
-              //  Confirmation prompt
-              const confirmed = window.confirm(
-                "Are you sure you want to start this session?"
-              );
-
-              if (!confirmed) return;
-
-              setStarting(true);
-              try {
-                // Step 1: Create a new session
-                const createRes = await api.post("/api/social_worker/more-sessions/", {
-                  incident_id: summary.incident_id,
-                  sess_type: [selectedType.value],
-                });
-
-                const newSession = createRes.data;
-                const sessId = newSession.sess_id;
-
-                // Step 2: Start the session (hydrate role-based questions)
-                await api.post(`/api/social_worker/sessions/${sessId}/start/`);
-
-                // Step 3: Redirect to StartMoreSession
-                navigate(`/social_worker/more-sessions/${sessId}/start`);
-              } catch (err) {
-                console.error("Failed to start session", err);
-                alert("Failed to start session. Please try again.");
-              } finally {
-                setStarting(false);
-              }
             }}
 
           >
@@ -193,6 +208,7 @@ const CreateSession = () => {
             {starting ? "Starting..." : "Start Session"}
           </button>
       </div>
+      <ToastContainer position="top-center" autoClose={3000} />
     </div>
   );
 };
