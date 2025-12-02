@@ -205,7 +205,8 @@ export default function ViewSessions() {
       {/* Mapped Questions Preview */}
       <SessionTypeQuestionPreview
         sessionNum={session.sess_num}
-        selectedTypes={sess_type_display?.map((t) => t.id) || []} //  fixed
+        selectedTypes={sess_type_display?.map((t) => t.id) || []} 
+        userRole={role}
       />
 
       {/* If finished, show read-only indicator */}

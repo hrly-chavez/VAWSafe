@@ -31,6 +31,7 @@ from docxtpl import DocxTemplate
 from calendar import month_name
 from pathlib import Path
 from collections import Counter
+#from win32com import client
 
 # helpers
 def format_abuse_checklist(incident_data):
@@ -136,6 +137,20 @@ def format_physical_observation(data):
 
     return "\n".join(lines)
 
+#helper function para sa password sa docs (OPTIONAL PA)
+# def protect_docx_with_password(file_path, password):
+#     """
+#     Opens a Word document and sets a password for opening it.
+#     Windows only, requires MS Word installed.
+#     """
+#     word = client.Dispatch("Word.Application")
+#     word.Visible = False
+#     doc = word.Documents.Open(file_path)
+#     doc.Password = password  # Set password to open
+#     doc.Save()
+#     doc.Close()
+#     word.Quit()
+
 def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=None, incident_data=None, perpetrator_data=None, contact_person_data=None, family_members=None):
     """
     Generates:
@@ -145,6 +160,8 @@ def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=
 
     desktop = os.path.join(os.path.expanduser("~"), "Desktop")
     root_templates = os.path.join(desktop, "Templates")
+    #PASSWORD = "VAWSafe123!"  # Choose a secure password
+
 
     # Construct full name for folder
     first_name = victim_serializer_data.get("vic_first_name", "")
@@ -199,6 +216,9 @@ def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=
         save_path = os.path.join(consent_out, template_file)
         tpl.save(save_path)
         generated_files.append(save_path)
+        
+        # Protect the file
+        #protect_docx_with_password(save_path, PASSWORD)
 
     # 6. Render intake form (separate folder)
     if os.path.exists(intake_template):
@@ -208,6 +228,10 @@ def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=
         save_path = os.path.join(sw_out, "Intake-Sheet.docx")
         tpl.save(save_path)
         generated_files.append(save_path)
+
+        
+        # Protect the file
+        #protect_docx_with_password(save_path, PASSWORD)
     else:
         print(f"Intake template not found: {intake_template}")
 
@@ -522,7 +546,7 @@ class VictimIncidentsView(generics.ListAPIView):
 class search_victim_facial(APIView):
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['DSWD', 'Social Worker']
+    allowed_roles = ['DSWD', 'Social Worker', 'Psychometrician', 'Nurse']
 
     def decrypt_temp_file(self, encrypted_path):
         """Decrypt .enc image into a temporary .jpg file."""
@@ -553,7 +577,7 @@ class search_victim_facial(APIView):
         if not uploaded_file:
             return Response({"error": "No image uploaded."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Save the temporary image
+        # Save the temporary uploaded image
         try:
             temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
             temp_image.write(uploaded_file.read())
@@ -566,30 +590,26 @@ class search_victim_facial(APIView):
         best_match = None
         best_sample = None
         lowest_distance = float("inf")
-        decrypted_temp_files = []  # List to keep track of decrypted temp files
+        decrypted_temp_files = []
+
+        face_detection_failed = False  # <-- Track if uploaded face could not be detected
 
         try:
-            # Check the role and filter VictimFaceSample accordingly
-            if user_role == "DSWD":
-                # DSWD can view all victims
-                victim_samples = VictimFaceSample.objects.select_related("victim")
-            elif user_role == "Social Worker":
-                # Social Worker can only view assigned victims via the session model
-                victim_samples = VictimFaceSample.objects.filter(
-                    victim__incidents__sessions__assigned_official=request.user.official
-                ).select_related("victim")
+            # 🔥 ALL ROLES: View all victims
+            victim_samples = VictimFaceSample.objects.select_related("victim")
 
             for sample in victim_samples:
                 try:
-                    # Check if the photo is encrypted (.enc)
                     photo_path = sample.photo.path
+
+                    # Check encrypted photo
                     if photo_path.lower().endswith(".enc"):
                         decrypted_photo_path = self.decrypt_temp_file(photo_path)
                         if decrypted_photo_path:
                             photo_path = decrypted_photo_path
-                            decrypted_temp_files.append(decrypted_photo_path)  # Track decrypted files
+                            decrypted_temp_files.append(decrypted_photo_path)
                         else:
-                            continue  # Skip this sample if decryption fails
+                            continue
 
                     # Perform face verification
                     result = DeepFace.verify(
@@ -600,16 +620,32 @@ class search_victim_facial(APIView):
                     )
 
                     victim = sample.victim
-                    print(f"[DEBUG] Compared with {victim.vic_first_name} {victim.vic_last_name}, distance: {result['distance']:.4f}, verified: {result['verified']}")
+                    print(
+                        f"[DEBUG] Compared with {victim.vic_first_name} {victim.vic_last_name}, "
+                        f"distance: {result['distance']:.4f}, verified: {result['verified']}"
+                    )
 
                     if result["verified"] and result["distance"] < lowest_distance:
                         lowest_distance = result["distance"]
                         best_match = victim
                         best_sample = sample
 
+                except ValueError as ve:
+                    # This happens if DeepFace fails to detect a face
+                    if "Face could not be detected" in str(ve):
+                        face_detection_failed = True
+                        break  # Stop further comparison, uploaded face not detected
+                    print(f"[WARN] Skipping {sample.victim.vic_first_name} {sample.victim.vic_last_name} due to error: {str(ve)}")
+                    continue
                 except Exception as ve:
                     print(f"[WARN] Skipping {sample.victim.vic_first_name} {sample.victim.vic_last_name} due to error: {str(ve)}")
                     continue
+
+            if face_detection_failed:
+                return Response({
+                    "match": False,
+                    "message": "Face could not be detected. Please provide a clear face image."
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             if best_match:
                 serializer = VictimDetailSerializer(best_match, context={"request": request})
@@ -619,11 +655,10 @@ class search_victim_facial(APIView):
                     "victim_data": serializer.data
                 }, status=status.HTTP_200_OK)
 
-            # No match found
             return Response({
                 "match": False,
-                "message": "The Victim is not yet registered."
-            }, status=status.HTTP_404_NOT_FOUND)
+                "message": "No victim match found."
+            }, status=status.HTTP_200_OK)
 
         except Exception as e:
             traceback.print_exc()
@@ -634,14 +669,14 @@ class search_victim_facial(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
         finally:
-            # Clean up the temporary image files
+            # Clean up the temporary detection files
             if chosen_frame and os.path.exists(chosen_frame):
                 os.remove(chosen_frame)
 
-            # Clean up decrypted temp files after comparison
             for f in decrypted_temp_files:
                 if os.path.exists(f):
                     os.remove(f)
+
 
 
 #========================================SESSIONS====================================================
@@ -2046,7 +2081,7 @@ def generate_monthly_consolidated_report(report_instance):
 class SocialWorkerMonthlyReportViewSet(viewsets.ModelViewSet):
     serializer_class = SocialWorkerMonthlyReportSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker"]
+    allowed_roles = ["Social Worker", "DSWD"]
 
     def get_queryset(self):
         vic_id = self.kwargs["vic_id"]

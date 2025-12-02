@@ -2,6 +2,7 @@ import axios from "axios";
 import { useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
 import { XMarkIcon } from '@heroicons/react/24/solid';
+import * as faceapi from "face-api.js";
 
 const RegisterUser = ({ onClose, defaultRole }) => {
   const MAX_PHOTOS = 3;
@@ -26,7 +27,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
   const [of_contact, setContact] =useState("");
   const [of_email, setEmail] = useState("");
   const [of_role, setRole] = useState(defaultRole || ""); // will update if DSWD missing
-
+  const [isCentered, setIsCentered] = useState(false); 
   
 
   const [provinces, setProvinces] = useState([]);
@@ -52,6 +53,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
   const sexRef = useRef(null);
   const dobRef = useRef(null);
   const pobRef = useRef(null);
+  const roleRef = useRef(null);
   const contactRef = useRef(null);
   const provinceRef = useRef(null);
   const municipalityRef = useRef(null);
@@ -68,8 +70,6 @@ const RegisterUser = ({ onClose, defaultRole }) => {
         if (!res.data.dswd_exists) {
           setRole("DSWD");
           setDswdExists(false);
-        } else {
-          setRole(defaultRole || "DSWD");
         }
       } catch (err) {
         console.error("Failed to check DSWD existence:", err);
@@ -111,6 +111,20 @@ const RegisterUser = ({ onClose, defaultRole }) => {
     }
   }, [selectedMunicipality]);
 
+  // Default DOB = exactly 18 years ago
+  useEffect(() => {
+    const today = new Date();
+    const eighteenYearsAgo = new Date(
+      today.getFullYear() - 18,
+      today.getMonth(),
+      today.getDate()
+    )
+      .toISOString()
+      .split("T")[0];
+
+    setDob(eighteenYearsAgo);
+  }, []);
+
   const [regErrors, setRegErrors] = useState({
     of_fname: "",
     of_lname: "",
@@ -121,6 +135,50 @@ const RegisterUser = ({ onClose, defaultRole }) => {
   const [loading, setLoading] = useState(false);
 
   const inputStyle = "px-4 py-2 rounded-lg bg-white border border-gray-300 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400";
+
+  useEffect(() => {
+    const loadModels = async () => {
+      await faceapi.nets.tinyFaceDetector.loadFromUri("/models/");
+    };
+    loadModels();
+  }, []);
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const video = document.getElementById("register-webcam");
+      if (!video) return;
+
+      const detection = await faceapi.detectSingleFace(
+        video,
+        new faceapi.TinyFaceDetectorOptions()
+      );
+
+      if (!detection) {
+        setIsCentered(false);
+        return;
+      }
+
+      const { box } = detection;
+      const vW = video.videoWidth;
+      const vH = video.videoHeight;
+
+      const centerX = box.x + box.width / 2;
+      const centerY = box.y + box.height / 2;
+
+      const targetX = vW / 2;
+      const targetY = vH / 2;
+
+      const toleranceX = vW * 0.1;
+      const toleranceY = vH * 0.1;
+
+      const centered =
+        Math.abs(centerX - targetX) < toleranceX &&
+        Math.abs(centerY - targetY) < toleranceY;
+
+      setIsCentered(centered);
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const capturePhoto = () => {
     const screenshot = webcamRef.current?.getScreenshot();
@@ -166,13 +224,35 @@ const RegisterUser = ({ onClose, defaultRole }) => {
     };
     let hasError = false;
 
+    
+
     // Basic field validations
     if (!of_fname.trim()) { newErrors.of_fname = "Required"; hasError = true; }
     if (!of_lname.trim()) { newErrors.of_lname = "Required"; hasError = true; }
     if (!of_email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(of_email)) { newErrors.of_email = "Valid email required"; hasError = true; }
     if (!sex.trim()) { newErrors.sex = "Required"; hasError = true; }
     if (!of_role.trim()) { newErrors.of_role = "Required"; hasError = true; }
-    if (!of_dob.trim()) { newErrors.of_dob = "Required"; hasError = true; }
+    // DOB validation with age restriction
+    if (!of_dob.trim()) {
+      newErrors.of_dob = "Required";
+      hasError = true;
+    } else {
+      const birth = new Date(of_dob);
+      const today = new Date();
+      const age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      const dayDiff = today.getDate() - birth.getDate();
+
+      let actualAge = age;
+      if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+        actualAge -= 1;
+      }
+
+      if (actualAge < 18) {
+        newErrors.of_dob = "Applicants must be at least 18 years old.";
+        hasError = true;
+      }
+    }
     if (!of_pob.trim()) { newErrors.of_pob = "Required"; hasError = true; }
     if (!of_contact.trim() || !/^\d{11}$/.test(of_contact)) { newErrors.of_contact = "Must be 11 digits"; hasError = true; }
     if (!selectedProvince || !selectedMunicipality || !selectedBarangay || !sitio.trim() || !street.trim()) {
@@ -191,6 +271,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
       else if (newErrors.sex) sexRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       else if (newErrors.of_dob) dobRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       else if (newErrors.of_pob) pobRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      else if (newErrors.of_role) roleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       else if (newErrors.of_contact) contactRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       else if (newErrors.address) provinceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -421,9 +502,13 @@ const RegisterUser = ({ onClose, defaultRole }) => {
                 <label className="font-medium text-sm mb-1">Contact Number</label>
                 <input 
                   type="text" 
-                  placeholder="09123456789" 
+                  placeholder="Enter 11-digit mobile number" 
                   value={of_contact}
                   onChange={(e) => setContact(e.target.value)}
+                  maxLength={11}
+                  onInput={(e) => {
+                    e.target.value = e.target.value.replace(/\D/g, ""); // remove non-numeric chars
+                  }}
                   className={inputStyle} 
                   ref={contactRef} />
                   {regErrors.of_contact && <p className="text-red-500 text-sm">{regErrors.of_contact}</p>}
@@ -452,6 +537,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
                             ))}
                           </select>
                         </div>
+                        {regErrors.of_role && <p className="text-red-500 text-sm">{regErrors.of_role}</p>}
                       </div>
                     ) : (
                       // Case 1.2: If defaultRole is a single string, display it as a readonly input
@@ -473,6 +559,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
                         value={of_role}
                         onChange={(e) => setRole(e.target.value)}
                         className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                        ref={roleRef}
                       >
                         <option value="">Select Role</option>
                         <option value="Nurse">Nurse</option>
@@ -579,33 +666,52 @@ const RegisterUser = ({ onClose, defaultRole }) => {
             <div className="mt-6 w-full flex flex-col items-center gap-4">
               <h3 className="text-xl font-semibold text-gray-800 text-center">Face Capture</h3>
 
-              <div className="w-full max-w-[480px] mx-auto">
-                <Webcam
-                  ref={webcamRef}
-                  screenshotFormat="image/jpeg"
-                  className="rounded-lg shadow-md w-full h-[480px] object-cover border border-gray-300"
-                  videoConstraints={{ width: 480, height: 480, facingMode: "user" }}
-                />
+              <div className="flex justify-center mb-4 w-full">
+                <div className="relative w-full max-w-[480px] rounded-lg overflow-hidden border border-gray-300 shadow-md">
+                  <Webcam
+                    ref={webcamRef}
+                    screenshotFormat="image/jpeg"
+                    className="w-full h-[480px] object-cover"
+                    videoConstraints={{ width: 480, height: 480, facingMode: "user" }}
+                    id="register-webcam"
+                  />
+
+                  {/* FACE OVERLAY */}
+                  <img
+                    src="/face_guide.png"
+                    alt="Face guide"
+                    className={`absolute inset-0 w-full h-full object-contain pointer-events-none transition-all duration-300 ${
+                      isCentered ? "opacity-100 drop-shadow-[0_0_10px_#22c55e]" : "opacity-60"
+                    }`}
+                  />
+                </div>
               </div>
+
 
               <button
                 type="button"
                 onClick={capturePhoto}
-                className="max-w-[240px] w-full py-2 bg-orange-500 text-white rounded-lg shadow hover:bg-orange-600 transition"
+                disabled={!isCentered}
+                className={`max-w-[240px] w-full py-2 rounded-lg shadow transition
+                  ${isCentered
+                    ? "bg-orange-500 text-white hover:bg-orange-600"
+                    : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  }`}
               >
                 Capture Photo {currentIndex + 1}/{MAX_PHOTOS}
               </button>
+
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-[720px] mx-auto">
                 {photos.map((photo, index) => (
                   <div key={index} className="flex flex-col items-center">
                     <img src={photo} className="rounded border border-gray-300 w-full h-auto object-cover" />
-                    <button
+                    {/* <button
                       onClick={() => removePhoto(index)}
                       className="mt-2 w-full py-1 bg-red-600 text-white rounded hover:bg-red-700 transition"
                     >
                       Remove
-                    </button>
+                    </button> */}
                   </div>
                 ))}
               </div>
