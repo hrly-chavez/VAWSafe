@@ -530,24 +530,18 @@ def generate_session_docx(session, current_official=None):
         root_templates = os.path.join(desktop, "Templates")
 
         # Output directory
-        out_dir = os.path.join(root_templates, safe_full_name, "Nurse")
+        out_dir = os.path.join(root_templates, safe_full_name, "nurse")
         os.makedirs(out_dir, exist_ok=True)
 
         # -----------------------------
         # 2. Choose Template
         # -----------------------------
-        is_first_session = (session.sess_num or 1) == 1
 
-        if is_first_session:
-            template_file = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
-            output_file_name = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
+        template_file = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
+        output_file_name = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
 
         template_path = os.path.join(root_templates, "nurse", template_file)
 
-        if is_first_session:
-            template_file = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
-            output_file_name = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
-        
         # -----------------------------
         # 3. If TEMPLATE MISSING: Skip gracefully
         # -----------------------------
