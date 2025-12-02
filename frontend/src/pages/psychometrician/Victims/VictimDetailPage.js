@@ -1,15 +1,80 @@
+// src/pages/psychometrician/VictimDetailPage.js
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import Navbar from "../../Navbar";
 import api from "../../../api/axios";
+import Navbar from "../../Navbar";
 import VictimCases from "./VictimCases";
 import SessionDetails from "./SessionDetails";
 import SessionCard from "./SessionCard";
-import SectionHeader from "../../../components/SectionHeader";
-import ReportModal from "../../../components/ReportModal";
 import Modal from "../../../components/Modal";
+import ReportModal from "../../../components/ReportModal";
 import PsychometricianReportForm from "../../../components/PsychometricianReportForm";
 import PsychometricianMonthlyReport from "../../../components/PsychometricianMonthlyReport";
+
+
+import {
+  GlobeAltIcon,
+  UserIcon,
+  CalendarIcon,
+  BuildingLibraryIcon,
+  PhoneIcon,
+  MapPinIcon,
+  HomeIcon,
+  FlagIcon,
+  AcademicCapIcon,
+  BriefcaseIcon,
+  CurrencyDollarIcon,
+  WrenchScrewdriverIcon,
+  UserGroupIcon,
+  ClockIcon,
+  BookOpenIcon,
+  TrophyIcon,
+  SparklesIcon,
+  CogIcon,
+} from "@heroicons/react/24/solid";
+
+const iconMap = {
+  // Personal Info
+  "Full Name": <UserIcon className="h-4 w-4 text-gray-500" />,
+  Sex: <UserIcon className="h-4 w-4 text-gray-500" />,
+  "Birth Date": <CalendarIcon className="h-4 w-4 text-gray-500" />,
+  "Birth Place": <MapPinIcon className="h-4 w-4 text-gray-500" />,
+  "Civil Status": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
+  Religion: <GlobeAltIcon className="h-4 w-4 text-gray-500" />,
+  Nationality: <FlagIcon className="h-4 w-4 text-gray-500" />,
+  "Contact Number": <PhoneIcon className="h-4 w-4 text-gray-500" />,
+  "Current Address": <HomeIcon className="h-4 w-4 text-gray-500" />,
+  "Provincial Address": <HomeIcon className="h-4 w-4 text-gray-500" />,
+  "Work Address": <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
+
+  // Education
+  "Educational Attainment": <AcademicCapIcon className="h-4 w-4 text-gray-500" />,
+  "Last School Attended": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
+  "School Address": <MapPinIcon className="h-4 w-4 text-gray-500" />,
+  "School Type": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
+  "School Years": <CalendarIcon className="h-4 w-4 text-gray-500" />,
+  "Subject Interest": <BookOpenIcon className="h-4 w-4 text-gray-500" />,
+  Honors: <TrophyIcon className="h-4 w-4 text-gray-500" />,
+  Hobbies: <SparklesIcon className="h-4 w-4 text-gray-500" />,
+  "Vocational Interest": <CogIcon className="h-4 w-4 text-gray-500" />,
+
+  // Experience / Skills / Training
+  Occupation: <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
+  "Monthly Income": <CurrencyDollarIcon className="h-4 w-4 text-gray-500" />,
+  Skills: <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />,
+  "Previous Skills": <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />,
+  "Type of Training": <AcademicCapIcon className="h-4 w-4 text-gray-500" />,
+  "Training Location": <MapPinIcon className="h-4 w-4 text-gray-500" />,
+  "Training Time": <ClockIcon className="h-4 w-4 text-gray-500" />,
+  "Employment Experience": <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
+
+  // Contact Person
+  Relationship: <UserGroupIcon className="h-4 w-4 text-gray-500" />,
+  "Contact Number (Contact Person)": <PhoneIcon className="h-4 w-4 text-gray-500" />,
+
+  // Family Members
+  Income: <CurrencyDollarIcon className="h-4 w-4 text-gray-500" />,
+};
 
 export default function VictimDetailPage() {
   const { vic_id } = useParams();
@@ -30,74 +95,29 @@ export default function VictimDetailPage() {
   const [showAddReportModal, setShowAddReportModal] = useState(false);
   const [openReportsIndex, setOpenReportsIndex] = useState(null);
 
-  // "comprehensive" or "monthly"
   const [reportType, setReportType] = useState(null);
-
   const [currentOfficialId, setCurrentOfficialId] = useState(null);
   const [userRole, setUserRole] = useState(null);
 
-  const fetchMe = async () => {
+  // Helpers
+  const get = (obj, keys, fallback = "—") => {
+    for (const k of keys) {
+      if (obj && obj[k] != null && obj[k] !== "") return obj[k];
+    }
+    return fallback;
+  };
+
+  // Fetch incidents
+  const fetchIncidents = async () => {
     try {
-      const res = await api.get("/api/me/");
-      // Normalize the ID field
-      setCurrentOfficialId(res.data.of_id ?? res.data.official_id);
-      setUserRole(res.data.role?.toLowerCase());
+      const res = await api.get(`/api/psychometrician/case/${vic_id}/`);
+      if (Array.isArray(res.data)) setIncidentList(res.data);
     } catch (err) {
-      console.error("Failed to fetch current official", err);
+      console.error("Failed to fetch incidents", err);
     }
   };
 
-  const handleSubmitComprehensiveReport = async (data) => {
-    if (!selectedIncident) {
-      console.error("No incident selected, cannot submit report");
-      return;
-    }
-    try {
-      await api.post(`/api/psychometrician/victims/${vic_id}/comprehensive-reports/`, {
-        ...data,
-        incident: selectedIncident?.incident_id,
-      });
-
-      await fetchReports(); // refresh list
-
-      setShowAddReportModal(false);
-      setActiveTab("reports");
-    } catch (err) {
-      console.error("Failed to submit comprehensive report", err.response?.data || err);
-    }
-  };
-
-  const handleSubmitMonthlyReport = async (data) => {
-    try {
-      await api.post(`/api/psychometrician/victims/${vic_id}/monthly-progress-reports/`, {
-        ...data,
-        incident: selectedIncident?.incident_id,
-        report_month: new Date().toISOString().split("T")[0],
-      });
-
-      await fetchReports(); // refresh list
-
-      // auto-expand the case section for the incident you just saved
-      setOpenReportsIndex(
-        incidentList.findIndex(i => i.incident_id === selectedIncident.incident_id)
-      );
-
-      // close the add form and go back to reports tab
-      setShowAddReportModal(false);
-      setActiveTab("reports");
-
-    } catch (err) {
-      console.error("Failed to submit monthly progress report", err.response?.data || err);
-    }
-  };
-
-  useEffect(() => {
-    document.body.style.overflow = showModal ? "hidden" : "auto";
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, [showModal]);
-
+  // Fetch reports
   const fetchReports = async () => {
     try {
       const nurseRes = await api.get(`/api/nurse/victims/${vic_id}/monthly-reports/`);
@@ -117,24 +137,48 @@ export default function VictimDetailPage() {
         ...(Array.isArray(psychMonthlyRes.data) ? psychMonthlyRes.data.map(r => normalize(r, "Psychometrician Monthly")) : []),
       ];
 
-      // Sort by report_month descending (true chronological order)
       combined.sort((a, b) => new Date(b.report_month) - new Date(a.report_month));
-
       setReportsList(combined);
     } catch (err) {
       console.error("Failed to fetch reports", err);
     }
   };
 
-  const fetchIncidents = async () => {
+  // Submit handlers
+  const handleSubmitComprehensiveReport = async (data) => {
+    if (!selectedIncident) return;
     try {
-      const res = await api.get(`/api/psychometrician/case/${vic_id}/`);
-      if (Array.isArray(res.data)) setIncidentList(res.data);
+      await api.post(`/api/psychometrician/victims/${vic_id}/comprehensive-reports/`, {
+        ...data,
+        incident: selectedIncident?.incident_id,
+      });
+      await fetchReports();
+      setShowAddReportModal(false);
+      setActiveTab("reports");
     } catch (err) {
-      console.error("Failed to fetch incidents", err);
+      console.error("Failed to submit comprehensive report", err.response?.data || err);
     }
   };
 
+  const handleSubmitMonthlyReport = async (data) => {
+    try {
+      await api.post(`/api/psychometrician/victims/${vic_id}/monthly-progress-reports/`, {
+        ...data,
+        incident: selectedIncident?.incident_id,
+        report_month: new Date().toISOString().split("T")[0],
+      });
+      await fetchReports();
+      setOpenReportsIndex(
+        incidentList.findIndex(i => i.incident_id === selectedIncident.incident_id)
+      );
+      setShowAddReportModal(false);
+      setActiveTab("reports");
+    } catch (err) {
+      console.error("Failed to submit monthly progress report", err.response?.data || err);
+    }
+  };
+
+  // Initial load
   useEffect(() => {
     const fetchVictim = async () => {
       try {
@@ -155,13 +199,6 @@ export default function VictimDetailPage() {
     }
   }, [vic_id]);
 
-  const get = (obj, keys, fallback = "—") => {
-    for (const k of keys) {
-      if (obj && obj[k] != null && obj[k] !== "") return obj[k];
-    }
-    return fallback;
-  };
-
   const fullName = victim
     ? [
       get(victim, ["vic_first_name"]),
@@ -176,391 +213,518 @@ export default function VictimDetailPage() {
   if (!victim) return <p>No victim data found.</p>;
 
   return (
-    <div className="min-h-screen bg-white relative">
-      <Navbar />
+    <div className="min-h-screen p-4 sm:p-8 flex justify-center bg-gray-100 font-inter">
+      <div className="w-full max-w-6xl bg-white shadow-xl rounded-xl overflow-hidden border border-gray-200">
+        {/* Victim Profile Header */}
+        <header className="h-24 rounded-t-xl bg-[#292D96]"></header>
 
-      <div className="px-6 py-10 max-w-screen-lg mx-auto space-y-10">
-        {/* Profile Photo */}
-        <div className="flex justify-center">
-          <img
-            src={get(victim, ["vic_photo"], "")}
-            alt="Victim"
-            className="h-[220px] w-[220px] object-cover rounded-full border-4 border-white shadow-xl"
-          />
-        </div>
-
-        {/* Name + ID */}
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-[#292D96]">{fullName}</h2>
-          <p className="text-sm text-gray-500 mt-1">Victim ID: {get(victim, ["vic_id"])}</p>
-        </div>
+        {/* Profile Section */}
+        <section className="px-6 md:px-8 flex flex-row items-start gap-6">
+          <div className="-mt-16">
+            <img
+              src={get(victim, ["vic_photo"], "")}
+              alt="Victim"
+              className="w-40 h-40 rounded-full border-4 border-white bg-gray-200 object-cover shadow-lg"
+            />
+          </div>
+          <div className="mt-2 flex flex-col justify-center">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl font-bold text-gray-800">{fullName}</h1>
+              <span className="inline-block px-3 py-1.5 text-sm font-medium rounded-full bg-blue-100 text-blue-700">
+                Registered Victim
+              </span>
+            </div>
+            <p className="text-sm text-gray-600 mt-2">
+              Victim ID: {get(victim, ["vic_id"])}
+            </p>
+          </div>
+        </section>
 
         {/* Tabs */}
-        <div className="flex justify-center gap-6 border-b border-gray-300 text-base font-semibold">
-          {["details", "case", "reports"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 transition ${activeTab === tab
-                ? "border-b-2 border-[#292D96] text-[#292D96]"
-                : "text-gray-500 hover:text-[#292D96]"
-                }`}
-            >
-              {tab === "details" ? "Details" : tab === "case" ? "Case Details" : "Reports"}
-            </button>
-          ))}
+        <div className="px-6 md:px-8 mt-8">
+          <div className="flex border-b border-gray-300 bg-white">
+            {["details", "case", "reports"].map((tab) => {
+              const isActive = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-2 text-sm font-semibold rounded-t-md transition-colors duration-200 ${isActive
+                    ? "bg-[#292D96] text-white border border-gray-300 border-b-0"
+                    : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#292D96] border border-gray-300"
+                    }`}
+                >
+                  {tab === "details" && "Details"}
+                  {tab === "case" && "Case Details"}
+                  {tab === "reports" && "Reports"}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Details Tab */}
-        {activeTab === "details" && (
-          <div className="space-y-10">
-            {/* PERSONAL INFO */}
-            <div className="bg-white border rounded-xl shadow-md p-6">
-              <SectionHeader icon="/images/id-card.png" title="Personal Info" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700">
-                <div><p className="text-xs text-gray-500">Sex</p><p className="font-medium">{get(victim, ["vic_sex"])}</p></div>
-                <div><p className="text-xs text-gray-500">Civil Status</p><p className="font-medium">{get(victim, ["vic_civil_status"])}</p></div>
-                <div><p className="text-xs text-gray-500">Birth Date</p><p className="font-medium">{get(victim, ["vic_birth_date"])}</p></div>
-                <div><p className="text-xs text-gray-500">Birth Place</p><p className="font-medium">{get(victim, ["vic_birth_place"])}</p></div>
-                <div><p className="text-xs text-gray-500">Religion</p><p className="font-medium">{get(victim, ["vic_religion"])}</p></div>
-                <div><p className="text-xs text-gray-500">Nationality</p><p className="font-medium">{get(victim, ["vic_nationality"])}</p></div>
-              </div>
-              <div className="mt-6 text-sm text-gray-700">
-                <p className="text-xs text-gray-500">Contact Number</p>
-                <p className="font-medium">{get(victim, ["vic_contact_number"])}</p>
-              </div>
-              <div className="mt-6 text-sm text-gray-700">
-                <p className="text-xs text-gray-500">Provincial Address</p>
-                <p className="font-medium">{get(victim, ["vic_provincial_address"])}</p>
-              </div>
-              <div className="mt-6 text-sm text-gray-700">
-                <p className="text-xs text-gray-500">Current Address</p>
-                <p className="text-sm font-medium text-gray-800 bg-gray-50 border rounded-md p-3 whitespace-pre-wrap break-words">
-                  {get(victim, ["vic_current_address"], "—")}
-                </p>
-              </div>
-            </div>
+        <div className="px-6 md:px-8 bg-white rounded-b-md">
+          {activeTab === "details" && (
+            <div className="space-y-8 pt-4">
+              {/* Personal Information */}
+              <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                {/* Title bar with gray background */}
+                <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Personal Information
+                  </h2>
+                </div>
 
-            {/* EXPERIENCE */}
-            <div className="bg-white border rounded-xl shadow-md p-6">
-              <SectionHeader icon="/images/portfolio.png" title="Experience" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700">
-                <div>
-                  <p className="text-xs text-gray-500">Occupation</p>
-                  <p className="font-medium">{get(victim, ["vic_occupation"])}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Monthly Income</p>
-                  <p className="font-medium">
-                    {victim?.vic_income ? `₱${parseFloat(victim.vic_income).toLocaleString()}` : "—"}
-                  </p>
-                </div>
-                <div className="md:col-span-2">
-                  <p className="text-xs text-gray-500">Skills</p>
-                  <p className="font-medium">{get(victim, ["vic_skills"])}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* EDUCATION */}
-            <div className="bg-white border rounded-xl shadow-md p-6">
-              <SectionHeader icon="/images/graduation.png" title="Education" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700">
-                <div>
-                  <p className="text-xs text-gray-500">Educational Attainment</p>
-                  <p className="font-medium">{get(victim, ["vic_educational_attainment"])}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Last School Attended</p>
-                  <p className="font-medium">{get(victim, ["vic_last_school_attended"])}</p>
-                </div>
-                <div className="md:col-span-2">
-                  <p className="text-xs text-gray-500">School Address</p>
-                  <p className="font-medium">{get(victim, ["vic_last_school_address"])}</p>
+                {/* Content */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm p-6">
+                  <Info
+                    label="Sex"
+                    value={get(victim, ["vic_sex"])}
+                    icon={<UserIcon className="h-4 w-4 text-gray-500" />}
+                  />
+                  <Info
+                    label="Civil Status"
+                    value={get(victim, ["vic_civil_status"])}
+                    icon={
+                      <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />
+                    }
+                  />
+                  <Info
+                    label="Birth Date"
+                    value={get(victim, ["vic_birth_date"])}
+                    icon={<CalendarIcon className="h-4 w-4 text-gray-500" />}
+                  />
+                  <Info
+                    label="Birth Place"
+                    value={get(victim, ["vic_birth_place"])}
+                    icon={<MapPinIcon className="h-4 w-4 text-gray-500" />}
+                  />
+                  <Info
+                    label="Religion"
+                    value={get(victim, ["vic_religion"])}
+                    icon={<GlobeAltIcon className="h-4 w-4 text-gray-500" />}
+                  />
+                  <Info
+                    label="Nationality"
+                    value={get(victim, ["vic_nationality"])}
+                    icon={<FlagIcon className="h-4 w-4 text-gray-500" />}
+                  />
+                  <Info
+                    label="Contact Number"
+                    value={get(victim, ["vic_contact_number"])}
+                    icon={<PhoneIcon className="h-4 w-4 text-gray-500" />}
+                  />
+                  <Info
+                    label="Current Address"
+                    value={get(victim, ["vic_current_address"])}
+                    icon={<HomeIcon className="h-4 w-4 text-gray-500" />}
+                  />
+                  <Info
+                    label="Provincial Address"
+                    value={get(victim, ["vic_provincial_address"])}
+                    icon={<HomeIcon className="h-4 w-4 text-gray-500" />}
+                  />
                 </div>
               </div>
+
+              {/* Experience */}
+              <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Experience
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm p-6">
+                  <Info
+                    label="Occupation"
+                    value={get(victim, ["vic_occupation"])}
+                  />
+                  <Info
+                    label="Monthly Income"
+                    value={
+                      victim?.vic_income
+                        ? `₱${parseFloat(victim.vic_income).toLocaleString()}`
+                        : "—"
+                    }
+                  />
+                  <Info label="Skills" value={get(victim, ["vic_skills"])} />
+                  <Info
+                    label="Previous Skills"
+                    value={get(victim, ["previous_skills"])}
+                  />
+                  <Info
+                    label="Type of Training"
+                    value={get(victim, ["type_of_training"])}
+                  />
+                  <Info
+                    label="Training Location"
+                    value={get(victim, ["training_where"])}
+                  />
+                  <Info
+                    label="Training Time"
+                    value={get(victim, ["training_when"])}
+                  />
+                  <Info
+                    label="Employment Experience"
+                    value={get(victim, ["employment_experience"])}
+                  />
+                </div>
+              </div>
+
+              {/* Education */}
+              <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Education
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm p-6">
+                  <Info
+                    label="Educational Attainment"
+                    value={get(victim, ["vic_educational_attainment"])}
+                  />
+                  <Info
+                    label="Last School Attended"
+                    value={get(victim, ["vic_last_school_attended"])}
+                  />
+                  <Info
+                    label="School Address"
+                    value={get(victim, ["vic_last_school_address"])}
+                  />
+                  <Info
+                    label="School Type"
+                    value={get(victim, ["vic_school_type"])}
+                  />
+                  <Info
+                    label="School Years"
+                    value={get(victim, ["vic_school_years"])}
+                  />
+                  <Info
+                    label="Subject Interest"
+                    value={get(victim, ["subject_interest"])}
+                  />
+                  <Info label="Honors" value={get(victim, ["honors"])} />
+                  <Info label="Hobbies" value={get(victim, ["hobbies"])} />
+                  <Info
+                    label="Vocational Interest"
+                    value={get(victim, ["vocational_interest"])}
+                  />
+                </div>
+              </div>
+
+              {/* Contact Person */}
+              <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
+                  <h2 className="text-lg font-semibold text-gray-800">Contact Person</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm p-6">
+                  {victim.contact_persons?.length > 0 ? (
+                    victim.contact_persons.map((person, index) => (
+                      <React.Fragment key={index}>
+                        <Info label="Full Name" value={person.full_name} />
+                        <Info label="Relationship" value={person.cont_victim_relationship} />
+                        <Info label="Contact Number" value={person.cont_contact_number} />
+                        <Info label="Birth Date" value={person.cont_birth_date} />
+                        <Info label="Birth Place" value={person.cont_birth_place} />
+                        <Info label="Civil Status" value={person.cont_civil_status} />
+                        <Info label="Provincial Address" value={person.cont_prov_address} />
+                        <Info label="Sex" value={person.cont_sex} />
+                        <Info label="Work Address" value={person.cont_work_address} />
+                      </React.Fragment>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">
+                      No contact person information available.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Family Members */}
+              <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
+                  <h2 className="text-lg font-semibold text-gray-800">Family Members</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm p-6">
+                  {victim.family_members?.length > 0 ? (
+                    victim.family_members.map((member, index) => (
+                      <React.Fragment key={index}>
+                        <Info label="Full Name" value={member.full_name} />
+                        <Info label="Relationship" value={member.fam_victim_relationship} />
+                        <Info label="Sex" value={member.fam_sex} />
+                        <Info label="Civil Status" value={member.fam_civil_status} />
+                        <Info label="Educational Attainment" value={member.fam_educational_attainment} />
+                        <Info label="Occupation" value={member.fam_occupation} />
+                        <Info label="Income" value={member.fam_income} />
+                        <Info label="Birth Date" value={member.fam_birth_date} />
+                      </React.Fragment>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500 italic">
+                      No family member information available.
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
+          )}
 
-            {/* CONTACT PERSON */}
-            <div className="bg-white border rounded-xl shadow-md p-6">
-              <SectionHeader icon="/images/contact_member.png" title="Contact Person" />
-              {victim.contact_persons?.length > 0 ? (
-                victim.contact_persons.map((person, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700 mb-4">
-                    <div>
-                      <p className="text-xs text-gray-500">Full Name</p>
-                      <p className="font-medium">{person.full_name}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Relationship</p>
-                      <p className="font-medium">{person.cont_victim_relationship}</p>
-                    </div>
-                    <div className="md:col-span-2">
-                      <p className="text-xs text-gray-500">Contact Number</p>
-                      <p className="font-medium">{person.cont_contact_number}</p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500 italic">No contact person information available.</p>
-              )}
-            </div>
+          {/* Case Tab */}
+          {activeTab === "case" && (
+            <div className="space-y-8 pt-4">
+              <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                {/* Title bar with gray background */}
+                <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Case Information
+                  </h2>
+                </div>
 
-            {/* FAMILY MEMBERS */}
-            <div className="bg-white border rounded-xl shadow-md p-6">
-              <SectionHeader icon="/images/family.png" title="Family Members" />
-              {victim.family_members?.length > 0 ? (
-                victim.family_members.map((member, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700 mb-6">
-                    <div><p className="text-xs text-gray-500">Full Name</p><p className="font-medium">{member.full_name}</p></div>
-                    <div><p className="text-xs text-gray-500">Relationship</p><p className="font-medium">{member.fam_victim_relationship}</p></div>
-                    <div><p className="text-xs text-gray-500">Sex</p><p className="font-medium">{member.fam_sex}</p></div>
-                    <div><p className="text-xs text-gray-500">Civil Status</p><p className="font-medium">{member.fam_civil_status}</p></div>
-                    <div><p className="text-xs text-gray-500">Educational Attainment</p><p className="font-medium">{member.fam_educational_attainment}</p></div>
-                    <div><p className="text-xs text-gray-500">Occupation</p><p className="font-medium">{member.fam_occupation}</p></div>
-                    <div><p className="text-xs text-gray-500">Income</p><p className="font-medium">{member.fam_income}</p></div>
-                    <div><p className="text-xs text-gray-500">Birth Date</p><p className="font-medium">{member.fam_birth_date}</p></div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500 italic">No family member information available.</p>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Case Tab */}
-        {activeTab === "case" && (
-          <div className="space-y-10">
-            <div className="bg-white border rounded-xl shadow-md p-6">
-              <SectionHeader icon="/images/case_details.png" title="Case Information" />
-              {incidentList.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">No case records found for this victim.</p>
-              ) : (
-                incidentList.map((incident, index) => (
-                  <div key={incident.incident_id} className="border rounded-md p-4 shadow-sm bg-gray-50 mb-6">
-                    <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
-                      <div>
-                        <span className="font-medium text-gray-800">Case No:</span>{" "}
-                        {incident.incident_num || "—"}
-                      </div>
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => {
-                            setSelectedIncident(incident);
-                            setShowModal(true);
-                          }}
-                          className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
-                        >
-                          View Case Details
-                        </button>
-                        <button
-                          onClick={() => {
-                            const isSame = openSessionIndex === index;
-                            setOpenSessionIndex(isSame ? null : index);
-                            setSelectedSessionIndex(null);
-                          }}
-                          className="inline-flex items-center gap-2 rounded-md border border-green-600 text-green-600 px-3 py-1.5 text-sm font-medium hover:bg-green-600 hover:text-white transition"
-                        >
-                          {openSessionIndex === index ? "Hide Sessions" : "View Sessions"}
-                        </button>
-                      </div>
-                    </div>
-                    {openSessionIndex === index && (
-                      <SessionCard
-                        incident={incident}
-                        onSelectSession={(id) => setSelectedSessionIndex(id)}
-                        onCreateSession={() =>
-                          navigate(`/psychometrician/more-sessions/create/${incident.incident_id}`)
-                        }
-                        navigate={navigate}
-                      />
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Reports Tab */}
-        {activeTab === "reports" && (
-          <div className="space-y-10">
-            <div className="bg-white border rounded-xl shadow-md p-6">
-              <SectionHeader icon="/images/case_details.png" title="Reports" />
-              {incidentList.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">No case records found for this victim.</p>
-              ) : (
-                incidentList.map((incident, index) => {
-                  const incidentReports = reportsList.filter((r) => r.incident === incident.incident_id);
-                  return (
-                    <div key={incident.incident_id} className="border rounded-md p-4 shadow-sm bg-gray-50 mb-6">
-                      <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
-                        <div>
-                          <span className="font-medium text-gray-800">Case No:</span>{" "}
-                          {incident.incident_num || "—"}
-                        </div>
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => {
-                              const isSame = openReportsIndex === index;
-                              setOpenReportsIndex(isSame ? null : index);
-                              setSelectedIncident(incident);
-                            }}
-                            className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
-                          >
-                            {openReportsIndex === index ? "Hide Reports" : "View Reports"}
-                          </button>
-
-                          {/* Add Report */}
+                {/* Content */}
+                <div className="p-6">
+                  {incidentList.length === 0 ? (
+                    <p className="text-sm text-gray-500 italic">
+                      No case records found for this victim.
+                    </p>
+                  ) : (
+                    incidentList.map((incident, index) => (
+                      <div
+                        key={index}
+                        className="border rounded-md p-4 shadow-sm bg-white mb-4"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
+                          <div>
+                            <span className="font-medium text-gray-800">
+                              Case No:
+                            </span>{" "}
+                            {incident.incident_num || "—"}
+                          </div>
                           <div className="flex gap-3">
                             <button
-                              disabled={!incident}
                               onClick={() => {
-                                setShowReportModal(false);
                                 setSelectedIncident(incident);
-                                setSelectedReport(null);
-                                setReportType("comprehensive");
-                                setShowAddReportModal(true);
+                                setShowModal(true);
                               }}
-                              className="inline-flex items-center gap-2 rounded-md border border-blue-600 text-blue-600 px-3 py-1.5 text-sm font-medium hover:bg-blue-600 hover:text-white transition"
+                              className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
                             >
-                              + Add Comprehensive Report
+                              View Case Details
                             </button>
-
                             <button
                               onClick={() => {
-                                setShowReportModal(false);
-                                setSelectedIncident(incident);
-                                setSelectedReport(null);
-                                setReportType("monthly");
-                                setShowAddReportModal(true);
+                                const isSame = openSessionIndex === index;
+                                setOpenSessionIndex(isSame ? null : index);
+                                setSelectedSessionIndex(null);
                               }}
                               className="inline-flex items-center gap-2 rounded-md border border-green-600 text-green-600 px-3 py-1.5 text-sm font-medium hover:bg-green-600 hover:text-white transition"
                             >
-                              + Add Monthly Progress Report
+                              {openSessionIndex === index
+                                ? "Hide Sessions"
+                                : "View Sessions"}
                             </button>
                           </div>
                         </div>
-                      </div>
 
-                      {openReportsIndex === index && (
-                        <div className="mt-3">
-                          {incidentReports.length === 0 ? (
-                            <p className="text-sm text-gray-500 italic">No reports available yet.</p>
-                          ) : (
-                            incidentReports.map((report) => (
-                              <div
-                                key={report.id}
+                        {/* Sessions inline list */}
+                        {openSessionIndex === index && (
+                          <SessionCard
+                            incident={incident}
+                            onSelectSession={(id) =>
+                              setSelectedSessionIndex(id)
+                            }
+                            onCreateSession={() =>
+                              navigate(
+                                `/psychometrician/more-sessions/create/${incident.incident_id}`
+                              )
+                            }
+                            naavigate={navigate}
+                          />
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Reports Tab */}
+          {activeTab === "reports" && (
+            <div className="space-y-10">
+              <div className="bg-white border rounded-xl shadow-md p-6">
+                {incidentList.length === 0 ? (
+                  <p className="text-sm text-gray-500 italic">No case records found for this victim.</p>
+                ) : (
+                  incidentList.map((incident, index) => {
+                    const incidentReports = reportsList.filter((r) => r.incident === incident.incident_id);
+                    return (
+                      <div key={incident.incident_id} className="border rounded-md p-4 shadow-sm bg-gray-50 mb-6">
+                        <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
+                          <div>
+                            <span className="font-medium text-gray-800">Case No:</span>{" "}
+                            {incident.incident_num || "—"}
+                          </div>
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => {
+                                const isSame = openReportsIndex === index;
+                                setOpenReportsIndex(isSame ? null : index);
+                                setSelectedIncident(incident);
+                              }}
+                              className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
+                            >
+                              {openReportsIndex === index ? "Hide Reports" : "View Reports"}
+                            </button>
+
+                            {/* Add Report */}
+                            <div className="flex gap-3">
+                              <button
+                                disabled={!incident}
                                 onClick={() => {
-                                  setSelectedReport(report);
-                                  setShowReportModal(true);
+                                  setShowReportModal(false);
+                                  setSelectedIncident(incident);
+                                  setSelectedReport(null);
+                                  setReportType("comprehensive");
+                                  setShowAddReportModal(true);
                                 }}
-                                className="bg-white border rounded-lg shadow-sm p-4 mt-3 cursor-pointer hover:shadow-md transition"
+                                className="inline-flex items-center gap-2 rounded-md border border-blue-600 text-blue-600 px-3 py-1.5 text-sm font-medium hover:bg-blue-600 hover:text-white transition"
                               >
-                                <div className="flex items-center justify-between mb-2">
-                                  <h4
-                                    className={`text-md font-semibold ${report.report_type?.toLowerCase().includes("nurse")
-                                      ? "text-blue-600"
-                                      : report.report_type?.toLowerCase().includes("psychometrician")
-                                        ? "text-red-600"
-                                        : report.report_type?.toLowerCase().includes("social worker")
-                                          ? "text-yellow-500"
-                                          : "text-[#292D96]"
-                                      }`}
-                                  >
-                                    {report.report_type} Report —{" "}
-                                    {new Date(report.report_month).toLocaleString("en-US", {
-                                      year: "numeric",
-                                      month: "long",
-                                      day: "numeric",
-                                    })}
-                                  </h4>
-                                </div>
-                                <p className="text-xs text-gray-500">
-                                  Prepared by: {report.prepared_by_name}
-                                </p>
-                              </div>
-                            ))
-                          )}
+                                + Add Comprehensive Report
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  setShowReportModal(false);
+                                  setSelectedIncident(incident);
+                                  setSelectedReport(null);
+                                  setReportType("monthly");
+                                  setShowAddReportModal(true);
+                                }}
+                                className="inline-flex items-center gap-2 rounded-md border border-green-600 text-green-600 px-3 py-1.5 text-sm font-medium hover:bg-green-600 hover:text-white transition"
+                              >
+                                + Add Monthly Progress Report
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  );
-                })
+
+                        {openReportsIndex === index && (
+                          <div className="mt-3">
+                            {incidentReports.length === 0 ? (
+                              <p className="text-sm text-gray-500 italic">No reports available yet.</p>
+                            ) : (
+                              incidentReports.map((report) => (
+                                <div
+                                  key={report.id}
+                                  onClick={() => {
+                                    setSelectedReport(report);
+                                    setShowReportModal(true);
+                                  }}
+                                  className="bg-white border rounded-lg shadow-sm p-4 mt-3 cursor-pointer hover:shadow-md transition"
+                                >
+                                  <div className="flex items-center justify-between mb-2">
+                                    <h4
+                                      className={`text-md font-semibold ${report.report_type?.toLowerCase().includes("nurse")
+                                        ? "text-blue-600"
+                                        : report.report_type?.toLowerCase().includes("psychometrician")
+                                          ? "text-red-600"
+                                          : report.report_type?.toLowerCase().includes("social worker")
+                                            ? "text-yellow-500"
+                                            : "text-[#292D96]"
+                                        }`}
+                                    >
+                                      {report.report_type} Report —{" "}
+                                      {new Date(report.report_month).toLocaleString("en-US", {
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                      })}
+                                    </h4>
+                                  </div>
+                                  <p className="text-xs text-gray-500">
+                                    Prepared by: {report.prepared_by_name}
+                                  </p>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Report Modal */}
+              {showReportModal && !showAddReportModal && selectedReport && (
+                <Modal title="View Report" onClose={() => setShowReportModal(false)}>
+                  <ReportModal
+                    report={selectedReport}
+                    userRole={userRole}
+                    currentOfficialId={currentOfficialId}
+                    onClose={() => setShowReportModal(false)}
+                    onEdit={() => {
+                      setShowReportModal(false);
+                      setSelectedReport(selectedReport);
+
+                      if (selectedReport.reason_for_referral) {
+                        // Comprehensive Psychometrician Report
+                        setReportType("comprehensive");
+                      } else if (selectedReport.presentation) {
+                        // Monthly Psychometrician Progress Report
+                        setReportType("monthly");
+                      }
+
+                      setShowAddReportModal(true);
+                    }}
+                  />
+                </Modal>
+              )}
+
+              {/* Add Report Modal */}
+              {showAddReportModal && !showReportModal && (
+                <Modal onClose={() => setShowAddReportModal(false)}>
+                  {reportType === "comprehensive" ? (
+                    <PsychometricianReportForm
+                      victim={victim}
+                      incident={selectedIncident}
+                      onSubmit={handleSubmitComprehensiveReport}
+                      onClose={() => setShowAddReportModal(false)}
+                    />
+                  ) : (
+                    <PsychometricianMonthlyReport
+                      victim={victim}
+                      incident={selectedIncident}
+                      onSubmit={handleSubmitMonthlyReport}
+                      onClose={() => setShowAddReportModal(false)}
+                    />
+                  )}
+                </Modal>
               )}
             </div>
+          )}
 
-            {/* Report Modal */}
-            {showReportModal && !showAddReportModal && selectedReport && (
-              <Modal title="View Report" onClose={() => setShowReportModal(false)}>
-                <ReportModal
-                  report={selectedReport}
-                  userRole={userRole}
-                  currentOfficialId={currentOfficialId}
-                  onClose={() => setShowReportModal(false)}
-                  onEdit={() => {
-                    setShowReportModal(false);
-                    setSelectedReport(selectedReport);
-
-                    if (selectedReport.reason_for_referral) {
-                      // Comprehensive Psychometrician Report
-                      setReportType("comprehensive");
-                    } else if (selectedReport.presentation) {
-                      // Monthly Psychometrician Progress Report
-                      setReportType("monthly");
-                    }
-
-                    setShowAddReportModal(true);
-                  }}
-                />
-              </Modal>
-            )}
-
-            {/* Add Report Modal */}
-            {showAddReportModal && !showReportModal && (
-              <Modal onClose={() => setShowAddReportModal(false)}>
-                {reportType === "comprehensive" ? (
-                  <PsychometricianReportForm
-                    victim={victim}
-                    incident={selectedIncident}
-                    onSubmit={handleSubmitComprehensiveReport}
-                    onClose={() => setShowAddReportModal(false)}
-                  />
-                ) : (
-                  <PsychometricianMonthlyReport
-                    victim={victim}
-                    incident={selectedIncident}
-                    onSubmit={handleSubmitMonthlyReport}
-                    onClose={() => setShowAddReportModal(false)}
-                  />
-                )}
-              </Modal>
-            )}
+          {/* Back Button */}
+          <div className="flex justify-end mt-10 px-6 md:px-8 mb-8">
+            <Link
+              to="/psychometrician/victims"
+              className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-4 py-2 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
+            >
+              ← Back to List
+            </Link>
           </div>
-        )}
-
-        {/* Back Button */}
-        <div className="flex justify-end mt-10">
-          <Link
-            to="/psychometrician/victims"
-            className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-4 py-2 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
-          >
-            ← Back to List
-          </Link>
         </div>
       </div>
 
-      {/* Modals */}
+      {/* Case Modal */}
       {showModal && selectedIncident && (
         <VictimCases
           selectedIncident={selectedIncident}
-          onClose={() => {
-            setShowModal(false);
-            setSelectedIncident(null);
-          }}
+          onClose={() => { setShowModal(false); setSelectedIncident(null); }}
         />
       )}
+
+      {/* Session Modal */}
       {selectedSessionIndex && (
         <SessionDetails
           sessionId={selectedSessionIndex}
@@ -568,6 +732,16 @@ export default function VictimDetailPage() {
           onSessionCompleted={() => fetchIncidents()}
         />
       )}
+    </div>
+  );
+}
+
+// Reusable Info component
+function Info({ label, value }) {
+  return (
+    <div>
+      <p className="text-xs text-gray-500">{label}</p>
+      <p className="font-medium text-gray-800">{value || "—"}</p>
     </div>
   );
 }

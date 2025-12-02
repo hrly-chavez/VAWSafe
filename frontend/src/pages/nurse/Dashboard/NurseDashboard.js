@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import { NotificationContext } from "../../../context/NotificationContext";
 import { Link } from "react-router-dom";
-import { Line, Bar } from "react-chartjs-2";
 import {
     FolderIcon,
     CheckCircleIcon,
@@ -211,13 +210,13 @@ export default function NurseDashboard() {
                         These sessions require attention based on schedule status.
                     </p>
 
-                    <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 scrollbar-hide">
+                    <div className="space-y-4 pr-2">
                         {[...notifications.map(n => ({ ...n, typeLabel: "Upcoming", color: "blue" })),
                         ...overdueSessions.map(n => ({ ...n, typeLabel: "Overdue", color: "red" }))
                         ].map((n, idx) => (
                             <Link
                                 key={idx}
-                                to={`/nurse/sessions/${n.id}`}   // ✅ navigate to ViewSessions.js
+                                to={`/nurse/sessions/${n.id}`}
                                 className="block"
                             >
                                 <div
