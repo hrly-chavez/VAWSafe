@@ -602,7 +602,7 @@ def generate_session_docx(session, current_official=None):
 
     except Exception as e:
         # GLOBAL CATCH — never block user
-        print(f"[ERROR] Psychometrician docx generation failed: {e}")
+        print(f"[ERROR] Nurse docx generation failed: {e}")
         return None  # Always allow session to succeed
 
 @api_view(["POST"])

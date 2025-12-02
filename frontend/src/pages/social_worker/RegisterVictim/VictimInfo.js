@@ -2,7 +2,11 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-export default function VictimInfo({ formDataState, setFormDataState }) {
+export default function VictimInfo({
+  formDataState,
+  setFormDataState,
+  isLocked,
+}) {
   const handleChange = (key, value) => {
     if (key.includes(".")) {
       const [outerKey, innerKey] = key.split(".");
@@ -116,6 +120,23 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
   const inputStyle =
     "px-4 py-2 rounded-lg bg-white border border-gray-300 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-400";
 
+  // date validator
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  const minYear = new Date();
+  minYear.setFullYear(minYear.getFullYear() - 120); // 120 years ago
+  const minDate = minYear.toISOString().split("T")[0];
+
+  const handleDateChange = (e) => {
+    let inputDate = e.target.value;
+
+    // Clamp to today if user types a future date
+    if (inputDate > today) {
+      inputDate = today;
+    }
+
+    handleChange("vic_birth_date", inputDate);
+  };
+
   return (
     <div className="bg-white p-6 rounded-xl shadow-md space-y-6">
       <h2 className="text-2xl font-bold text-blue-800 border-b pb-2 tracking-wide">
@@ -129,6 +150,8 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
         </label>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <input
+            readOnly={isLocked}
+            disabled={isLocked}
             className="input"
             type="text"
             placeholder="First Name"
@@ -184,7 +207,9 @@ export default function VictimInfo({ formDataState, setFormDataState }) {
             className="input"
             type="date"
             value={formDataState.vic_birth_date || ""}
-            onChange={(e) => handleChange("vic_birth_date", e.target.value)}
+            min={minDate}
+            max={today}
+            onChange={handleDateChange}
           />
 
           <input
