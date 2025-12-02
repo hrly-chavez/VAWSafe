@@ -158,9 +158,9 @@ const StartMoreSession = () => {
 
       setTimeout(() => {
         if (victimId) {
-          navigate(`/social_worker/victims/${victimId}`);
+          navigate(`/psychometrician/victims/${victimId}`);
         } else {
-          navigate("/social_worker/victims");
+          navigate("/psychometrician/victims");
         }
       }, 3000);
 
