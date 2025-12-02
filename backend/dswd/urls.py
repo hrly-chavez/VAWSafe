@@ -60,6 +60,8 @@ urlpatterns = [
 
     #login tracker
     path("login-tracker/", LoginTrackerListAPIView.as_view(), name="login-tracker"),
+    path("login-tracker/cleanup/", LoginTrackerCleanupAPIView.as_view()),
+
 
     path('', include(router.urls)),
 ]# + router.urls

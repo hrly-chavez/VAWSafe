@@ -9,7 +9,33 @@ export default function LoginTracker() {
   const [roleFilter, setRoleFilter] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10); // default display
+  const [pageSize, setPageSize] = useState(10); // default 
+  
+  useEffect(() => {
+    if (logs.length > 0) {
+      const now = new Date();
+      const fourteenDays = 14 * 24 * 60 * 60 * 1000;
+
+      const hasOldLogs = logs.some((log) => {
+        const logTime = new Date(log.login_time).getTime();
+        return now - logTime > fourteenDays;
+      });
+
+      if (hasOldLogs) {
+        cleanupOldLogs();
+      }
+    }
+  }, [logs]);
+
+  async function cleanupOldLogs() {
+    try {
+      await api.delete("/api/dswd/login-tracker/cleanup/");
+      loadLogs(); // refresh UI after cleanup
+    } catch (error) {
+      console.error("Cleanup failed:", error);
+    }
+  }
+
 
   useEffect(() => {
     loadLogs();
