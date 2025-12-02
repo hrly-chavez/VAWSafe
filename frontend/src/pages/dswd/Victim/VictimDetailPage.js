@@ -86,8 +86,6 @@ export default function VictimDetails() {
 
   const [victim, setVictim] = useState(null);
   const [incidentList, setIncidentList] = useState([]);
-  const [familyMembers, setFamilyMembers] = useState([]);
-  const [contactPersons, setContactPersons] = useState([]);
 
   const [selectedIncident, setSelectedIncident] = useState(null);
   const [selectedSessionIndex, setSelectedSessionIndex] = useState(null);
@@ -150,28 +148,6 @@ export default function VictimDetails() {
         );
       } finally {
         setLoading(false);
-      }
-    };
-
-    const fetchFamilyMembers = async () => {
-      try {
-        const res = await api.get(
-          `/api/social_worker/victims/${vic_id}/family-members/`
-        );
-        setFamilyMembers(res.data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    const fetchContactPersons = async () => {
-      try {
-        const res = await api.get(
-          `/api/social_worker/victims/${vic_id}/contact-persons/`
-        );
-        setContactPersons(res.data);
-      } catch (err) {
-        console.error(err);
       }
     };
 
@@ -255,8 +231,6 @@ export default function VictimDetails() {
 
     if (vic_id) {
       fetchVictim();
-      fetchFamilyMembers();
-      fetchContactPersons();
       fetchIncidents();
       fetchReports();
     }
