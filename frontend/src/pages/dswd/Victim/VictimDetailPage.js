@@ -44,8 +44,12 @@ const iconMap = {
   "Work Address": <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
 
   // Education
-  "Educational Attainment": <AcademicCapIcon className="h-4 w-4 text-gray-500" />,
-  "Last School Attended": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
+  "Educational Attainment": (
+    <AcademicCapIcon className="h-4 w-4 text-gray-500" />
+  ),
+  "Last School Attended": (
+    <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />
+  ),
   "School Address": <MapPinIcon className="h-4 w-4 text-gray-500" />,
   "School Type": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
   "School Years": <CalendarIcon className="h-4 w-4 text-gray-500" />,
@@ -58,7 +62,9 @@ const iconMap = {
   Occupation: <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
   "Monthly Income": <CurrencyDollarIcon className="h-4 w-4 text-gray-500" />,
   Skills: <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />,
-  "Previous Skills": <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />,
+  "Previous Skills": (
+    <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />
+  ),
   "Type of Training": <AcademicCapIcon className="h-4 w-4 text-gray-500" />,
   "Training Location": <MapPinIcon className="h-4 w-4 text-gray-500" />,
   "Training Time": <ClockIcon className="h-4 w-4 text-gray-500" />,
@@ -66,12 +72,13 @@ const iconMap = {
 
   // Contact Person
   Relationship: <UserGroupIcon className="h-4 w-4 text-gray-500" />,
-  "Contact Number (Contact Person)": <PhoneIcon className="h-4 w-4 text-gray-500" />,
+  "Contact Number (Contact Person)": (
+    <PhoneIcon className="h-4 w-4 text-gray-500" />
+  ),
 
   // Family Members
   Income: <CurrencyDollarIcon className="h-4 w-4 text-gray-500" />,
 };
-
 
 export default function VictimDetails() {
   const { vic_id } = useParams();
@@ -391,7 +398,7 @@ export default function VictimDetails() {
                   />
                   <Info
                     label="Current Address"
-                    value={get(victim, ["vic_current_address"])}
+                    value={get(victim, ["address"])}
                     icon={<HomeIcon className="h-4 w-4 text-gray-500" />}
                   />
                   <Info
@@ -497,15 +504,36 @@ export default function VictimDetails() {
                     victim.contact_persons.map((person, index) => (
                       <React.Fragment key={index}>
                         <Info label="Full Name" value={person.full_name} />
-                        <Info label="Relationship" value={person.cont_victim_relationship} />
-                        <Info label="Contact Number" value={person.cont_contact_number} />
-                        <Info label="Birth Date" value={person.cont_birth_date} />
-                        <Info label="Birth Place" value={person.cont_birth_place} />
-                        <Info label="Civil Status" value={person.cont_civil_status} />
-                        <Info label="Provincial Address" value={person.cont_prov_address} />
+                        <Info
+                          label="Relationship"
+                          value={person.cont_victim_relationship}
+                        />
+                        <Info
+                          label="Contact Number (Contact Person)"
+                          value={person.cont_contact_number}
+                        />
+                        <Info
+                          label="Birth Date"
+                          value={person.cont_birth_date}
+                        />
+                        <Info
+                          label="Birth Place"
+                          value={person.cont_birth_place}
+                        />
+                        <Info
+                          label="Civil Status"
+                          value={person.cont_civil_status}
+                        />
+                        <Info
+                          label="Provincial Address"
+                          value={person.cont_prov_address}
+                        />
                         <Info label="Sex" value={person.cont_sex} />
-                        <Info label="Work Address" value={person.cont_work_address} />
-                      </React.Fragment>
+                        <Info
+                          label="Work Address"
+                          value={person.cont_work_address}
+                        />
+                      </div>
                     ))
                   ) : (
                     <p className="text-sm text-gray-500 italic">
