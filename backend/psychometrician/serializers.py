@@ -61,9 +61,7 @@ class ContactPersonSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ContactPerson
-        fields = [
-            "__all__"
-        ]
+        fields = "__all__"
 
     def get_full_name(self, obj):
         parts = [obj.cont_fname, obj.cont_mname, obj.cont_lname, obj.cont_ext]
@@ -75,9 +73,7 @@ class FamilyMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FamilyMember
-        fields = [
-            "__all__"
-        ]
+        fields = "__all__"
 
     def get_full_name(self, obj):
         parts = [obj.fam_fname, obj.fam_mname, obj.fam_lname, obj.fam_extension]
@@ -87,6 +83,9 @@ class VictimDetailSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
     face_samples = VictimFaceSampleSerializer(many=True, read_only=True)
     incidents = IncidentWithPerpetratorSerializer(many=True, read_only=True)
+    contact_persons = serializers.SerializerMethodField()
+    family_members = FamilyMemberSerializer(many=True, read_only=True)
+
     class Meta:
         model = Victim
         fields = "__all__"
@@ -100,6 +99,11 @@ class VictimDetailSerializer(serializers.ModelSerializer):
                 - ((today.month, today.day) < (obj.vic_birth_date.month, obj.vic_birth_date.day))
             )
         return None
+    
+    def get_contact_persons(self, obj):
+        # collect all contact persons for this victim's incidents
+        contact_persons = ContactPerson.objects.filter(incident__vic_id=obj)
+        return ContactPersonSerializer(contact_persons, many=True).data
     
     def get_contact_persons(self, obj):
         # collect all contact persons linked via incidents
