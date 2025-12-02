@@ -50,3 +50,5 @@ backend/.env
 **/.env
 backend/backups/
 backend/shared_model/migrations/__init__.py
+
+backend/package-lock.json
