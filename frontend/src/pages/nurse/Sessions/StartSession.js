@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import NextSessionModal from "./NextSessionModal";
 import CaseSessionFollowup from "./CaseSessionFollowup";
 import { useRef } from "react";
-
 import Select from "react-select";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 
 export default function StartSession() {
   const { sess_id } = useParams();
@@ -189,7 +191,7 @@ export default function StartSession() {
         }
       }, 350);
 
-      alert("Please answer all REQUIRED questions before finishing this session.");
+      toast.warning("Please answer all REQUIRED questions before finishing.");
       return;
   }
 
@@ -206,15 +208,12 @@ export default function StartSession() {
 
     //  Unified redirect behavior (always go to victim page)
     if (all_finished || session_completed) {
-      alert(
-        "All assigned officials have completed this consultation.\n" +
-        "The consultation is now marked as done.\n" +
-        "Redirecting to the victim’s profile..."
+      toast.success(
+        "All officials have finished. Session is now marked as done. Redirecting..."
       );
     } else {
-      alert(
-        "Your part of this shared consultation has been completed.\n" +
-        "You’ll now be redirected to the victim’s profile."
+       toast.info(
+        "Your part of this shared session is completed. Redirecting..."
       );
     }
 
@@ -222,7 +221,7 @@ export default function StartSession() {
     if (victimId) {
       setTimeout(() => {
         navigate(`/nurse/victims/${victimId}`);
-      }, 1000);
+      }, 3200);
     } else {
       navigate("/nurse/victims");
     }
@@ -234,7 +233,8 @@ export default function StartSession() {
         err?.response?.data?.error ||
         "Failed to finish consultation. Please ensure all required questions are answered.";
 
-      alert(msg);
+      toast.error(msg);
+
   }
 };
 
@@ -581,6 +581,7 @@ useEffect(() => {
           Back
         </button>
       </div>
+      <ToastContainer position="top-center" autoClose={3000} />
     </div>
   );
 }
