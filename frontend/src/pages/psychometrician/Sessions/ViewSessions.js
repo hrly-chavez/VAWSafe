@@ -15,6 +15,7 @@ export default function ViewSessions() {
   const [loading, setLoading] = useState(true);
   const [isDone, setIsDone] = useState(false);
   const [role, setRole] = useState("");
+  const [starting, setStarting] = useState(false);
 
   //  Fetch session
   useEffect(() => {
@@ -220,13 +221,60 @@ export default function ViewSessions() {
         <div className="flex justify-end gap-3 mt-6 border-t pt-4">
           {/* Hide Start/Continue if official already finished */}
             {!isDone && session.sess_status === "Pending" && (
-              <button
-                onClick={() => navigate(`/psychometrician/sessions/${sess_id}/start`)}
-                className="px-5 py-2 bg-green-600 text-white rounded-md font-medium hover:bg-green-700 transition"
-              >
-                Start Session
-              </button>
-            )}
+            <button
+              disabled={starting}
+              onClick={async () => {
+                setStarting(true);
+
+                try {
+                  // Step 1 — Start session (hydrate questions, set ongoing, etc.)
+                  await api.post(`/api/social_worker/sessions/${sess_id}/start/`);
+
+                  // Step 2 — Small delay to allow backend to fully commit
+                  await new Promise((resolve) => setTimeout(resolve, 350));
+
+                  // Step 3 — Navigate after backend is ready
+                  navigate(`/social_worker/sessions/${sess_id}/start`);
+                } catch (err) {
+                  console.error("Failed to start session", err);
+                  alert("Failed to start this session. Please try again.");
+                } finally {
+                  setStarting(false);
+                }
+              }}
+              className={`px-5 py-2 rounded-md font-medium text-white flex items-center gap-2 transition ${
+                starting
+                  ? "bg-green-400 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700"
+              }`}
+            >
+              {starting && (
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  ></path>
+                </svg>
+              )}
+
+              {starting ? "Starting..." : "Start Session"}
+            </button>
+          )}
+
 
             {!isDone && session.sess_status === "Ongoing" && (
               <button

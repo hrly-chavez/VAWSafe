@@ -4,6 +4,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../../../../api/axios";
 import Select from "react-select";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 
 const StartMoreSession = () => {
   const { sess_id } = useParams();
@@ -122,7 +125,7 @@ const StartMoreSession = () => {
       );
 
       if (missingRequired.length > 0) {
-        alert("Please answer all REQUIRED questions before finishing this session.");
+        toast.warning("Please answer all REQUIRED questions before finishing.");
 
         // Scroll to the FIRST missing required question
         const firstMissing = missingRequired[0];
@@ -145,7 +148,7 @@ const StartMoreSession = () => {
       // Proceed with API call
       const response = await api.post(`/api/nurse/sessions/${sess_id}/finish/`, payload);
 
-      alert("consultation completed successfully!");
+      toast.success("Consultation completed successfully!");
 
       const victimId =
         response?.data?.session?.incident?.vic_id?.vic_id ||
@@ -153,11 +156,14 @@ const StartMoreSession = () => {
         session?.incident?.vic_id?.vic_id ||
         null;
 
-      if (victimId) {
-        navigate(`/nurse/victims/${victimId}`);
-      } else {
-        navigate("/nurse/victims");
-      }
+      setTimeout(() => {
+        if (victimId) {
+          navigate(`/social_worker/victims/${victimId}`);
+        } else {
+          navigate("/social_worker/victims");
+        }
+      }, 3000);
+
 
     } catch (err) {
       console.error("Failed to finish consultation", err);
@@ -166,7 +172,7 @@ const StartMoreSession = () => {
         err?.response?.data?.error ||
         "Failed to finish consultation. Please ensure all required questions are answered.";
 
-      alert(msg);
+      toast.error(msg);
     } finally {
       setFinishing(false);
     }
@@ -313,6 +319,7 @@ const StartMoreSession = () => {
         {finishing ? "Finishing..." : "Finish Session"}
       </button>
     </div>
+    <ToastContainer position="top-center" autoClose={2500} />
   </div>
 );
 
