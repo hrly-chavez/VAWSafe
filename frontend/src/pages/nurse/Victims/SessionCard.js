@@ -143,27 +143,37 @@ const roleTitles = {
       })}
 
       {/* Create Session Button */}
-      {/* {(() => {
-        const session1 = (incident.sessions || []).find((s) => s.sess_num === 1);
-        const canCreate = session1 && session1.sess_status === "Done";
-        if (canCreate) {
-          return (
-            <div className="flex justify-end mt-6">
-              <button
-                onClick={() =>
-                  navigate(
-                    `/nurse/more-sessions/create/${incident.incident_id}`
-                  )
-                }
-                className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-4 py-2 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
-              >
-                + Create New Session
-              </button>
-            </div>
-          );
-        }
-        return null;
-      })()} */}
+      {(() => {
+          const session1 = (incident.sessions || []).find((s) => s.sess_num === 1);
+
+          // Show button ONLY when:
+          // 1) Session 1 is Done
+          // 2) Case status is NOT Done
+          const canCreate =
+            session1 &&
+            session1.sess_status === "Done" &&
+            incident.incident_status !== "Done";
+
+          if (canCreate) {
+            return (
+              <div className="flex justify-end mt-6">
+                <button
+                  onClick={() =>
+                    navigate(
+                      `/social_worker/more-sessions/create/${incident.incident_id}`
+                    )
+                  }
+                  className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-4 py-2 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
+                >
+                  + Create New Consultation
+                </button>
+              </div>
+            );
+          }
+
+          return null;
+        })()}
+
     </div>
   );
 }
