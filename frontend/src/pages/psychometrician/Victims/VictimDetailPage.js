@@ -537,7 +537,7 @@ export default function VictimDetailPage() {
                                 `/psychometrician/more-sessions/create/${incident.incident_id}`
                               )
                             }
-                            naavigate={navigate}
+                            navigate={navigate}
                           />
                         )}
                       </div>
