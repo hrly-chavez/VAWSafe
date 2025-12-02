@@ -290,7 +290,7 @@ export default function SocialWorkerVictims() {
           <table className="min-w-full table-fixed border border-neutral-200">
             <thead className="sticky top-0 z-10 bg-gray-100 text-gray-700 text-sm font-semibold">
               <tr>
-                <th className="border px-4 py-3 text-left">Victim No.</th>
+                <th className="border px-4 py-3 text-left">Victim Code</th>
                 <th className="border px-4 py-3 text-left">Victim Name</th>
                 <th className="border px-4 py-3 text-left">Age</th>
                 <th className="border px-4 py-3 text-left">Address</th>
@@ -341,7 +341,7 @@ export default function SocialWorkerVictims() {
 
                   return (
                     <tr key={v.vic_id} className={rowBg}>
-                      <td className="border px-4 py-3">{v.vic_id}</td>
+                      <td className="border px-4 py-3">{v.code}</td>
                       <td className="border px-4 py-3">{fullName}</td>
                       <td className="border px-4 py-3">{v.age || "N/A"}</td>
                       <td className="border px-4 py-3">{v.vic_birth_place || "N/A"}</td>
