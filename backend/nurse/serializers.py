@@ -856,10 +856,17 @@ class VictimSummarySerializer(serializers.Serializer):
     total_victims = serializers.IntegerField()
 
 class SessionSummarySerializer(serializers.Serializer):
+    # Raw counts
     total_assigned_sessions = serializers.IntegerField()
     sessions_this_week = serializers.IntegerField()
     pending_sessions = serializers.IntegerField()
     ongoing_sessions = serializers.IntegerField()
+
+    # Percentages
+    total_assigned_percent = serializers.FloatField()
+    sessions_week_percent = serializers.FloatField()
+    pending_percent = serializers.FloatField()
+    ongoing_percent = serializers.FloatField()
 
 class IncidentSummarySerializer(serializers.Serializer):
     # Mirrors DSWD IncidentSummarySerializer but simplified for Nurse
@@ -882,4 +889,4 @@ class MonthlyReportRowSerializer(serializers.Serializer):
 
 class ViolenceTypeSerializer(serializers.Serializer):
     type = serializers.CharField()
-    count = serializers.IntegerField() 
+    count = serializers.IntegerField()

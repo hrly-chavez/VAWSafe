@@ -168,7 +168,7 @@ export default function DSWDDashboard() {
       ctx.fillStyle = "#000000";
       ctx.textAlign = "left";
       ctx.textBaseline = "top";
-      ctx.fillText("Monthly Victim Reports", left - 40, top - 30); // ✅ move 40px left
+      ctx.fillText("Monthly Victim Reports", left - 40, top - 30); 
 
       // Legend on the right
       const legend = chart.legend;
@@ -452,7 +452,7 @@ export default function DSWDDashboard() {
       },
       datalabels: {
         display: true,
-        color: "#ffffff",   // ✅ white text inside slices
+        color: "#ffffff",   
         font: {
           family: "Inter, sans-serif",
           weight: "bold",
@@ -581,19 +581,19 @@ export default function DSWDDashboard() {
       <div className="min-h-screen text-white font-inter space-y-10">
 
         <style>
-          {`
-    @keyframes waveFlow {
-      0%   { transform: translateX(0) scaleY(1); }
-      25%  { transform: translateX(-20px) scaleY(1.3); }
-      50%  { transform: translateX(-40px) scaleY(0.7); }
-      75%  { transform: translateX(-60px) scaleY(1.1); }
-      100% { transform: translateX(-100px) scaleY(1); }
-    }
-    .wave-animated {
-      animation: waveFlow 6s linear infinite;
-      transform-origin: center;
-    }
-  `}
+                    {`
+                @keyframes waveFlow {
+                  0%   { transform: translateX(0) scaleY(1); }
+                  25%  { transform: translateX(-20px) scaleY(1.3); }
+                  50%  { transform: translateX(-40px) scaleY(0.7); }
+                  75%  { transform: translateX(-60px) scaleY(1.1); }
+                  100% { transform: translateX(-100px) scaleY(1); }
+                }
+                .wave-animated {
+                  animation: waveFlow 6s linear infinite;
+                  transform-origin: center;
+                }
+              `}
         </style>
 
         {/* KPI CARDS */}

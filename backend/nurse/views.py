@@ -1553,18 +1553,46 @@ class NurseDashboardAPIView(APIView):
         total_victims = Victim.objects.count()
         victim_summary = {"total_victims": total_victims}
 
-        # Session Summary
+        # Sessions
         sessions = Session.objects.filter(assigned_official=official)
         week_ahead = today + timedelta(days=7)
 
+        total_assigned = sessions.count()
+        sessions_this_week_count = sessions.filter(
+            sess_next_sched__date__range=[today, week_ahead]
+        ).count()
+        pending_count = sessions.filter(sess_status="Pending").count()
+        ongoing_count = sessions.filter(sess_status="Ongoing").count()
+
+        # Percentages
+        total_assigned_percent = (
+            (total_assigned / total_victims * 100) if total_victims > 0 else 0
+        )
+        sessions_week_percent = (
+            (sessions_this_week_count / 7 * 100) if 7 > 0 else 0
+        )
+        pending_percent = (
+            (pending_count / total_assigned * 100) if total_assigned > 0 else 0
+        )
+        ongoing_percent = (
+            (ongoing_count / total_assigned * 100) if total_assigned > 0 else 0
+        )
+
         session_summary = {
-            "total_assigned_sessions": sessions.count(),
-            "sessions_this_week": sessions.filter(sess_next_sched__date__range=[today, week_ahead]).count(),
-            "pending_sessions": sessions.filter(sess_status="Pending").count(),
-            "ongoing_sessions": sessions.filter(sess_status="Ongoing").count(),
+            "total_assigned_sessions": total_assigned,
+            "total_assigned_percent": round(total_assigned_percent, 1),
+
+            "sessions_this_week": sessions_this_week_count,
+            "sessions_week_percent": round(sessions_week_percent, 1),
+
+            "pending_sessions": pending_count,
+            "pending_percent": round(pending_percent, 1),
+
+            "ongoing_sessions": ongoing_count,
+            "ongoing_percent": round(ongoing_percent, 1),
         }
 
-        # Incident Summary (violence types + status counts)
+        # Incident Summary
         incidents = IncidentInformation.objects.all()
         violence_types = Counter(i.violence_type for i in incidents if i.violence_type)
         violence_types_dict = dict(violence_types)
@@ -1580,7 +1608,7 @@ class NurseDashboardAPIView(APIView):
             "status_types": status_types,
         }
 
-        # Monthly Report Rows (with violence type breakdown)
+        # Monthly Report Rows
         report_rows = []
         for i in range(1, 13):
             month_incidents = [
@@ -1617,7 +1645,7 @@ class NurseDashboardAPIView(APIView):
         return Response({
             "victim_summary": VictimSummarySerializer(victim_summary).data,
             "session_summary": session_summary,
-            "incident_summary": incident_summary,  
+            "incident_summary": incident_summary,
             "monthly_report_rows": monthly_report_data,
             "upcoming_sessions": [
                 {

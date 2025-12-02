@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 
-export default function Sidebar({ sidebarOpen, toggleSidebar }) {
+export default function Sidebar({ sidebarOpen, toggleSidebar, notificationCount = 0 }) {
   // AuthContext in the cookie-based setup exposes { user, logout, bootstrapped }
   const { user, logout } = useContext(AuthContext);
   const [openDropdownIndex, setOpenDropdownIndex] = useState(null);
@@ -30,7 +30,7 @@ export default function Sidebar({ sidebarOpen, toggleSidebar }) {
         { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/dswd" },
         { icon: "/images/heart.png", label: "Women Survivors", path: "/dswd/victims", },
         { icon: "/images/account-settings.png", label: "Account Management", path: "/dswd/account-management", },
-        { icon: "/images/account-settings.png", label: "Login Tracker", path: "/dswd/login-tracker", },
+        { icon: "/images/history.png", label: "Login Tracker", path: "/dswd/login-tracker", },
         // { icon: "/images/customer.png", label: "Social Workers", path: "/dswd/social-workers" },
         // { icon: "/images/founder.png", label: "VAW Desk Officer", path: "/dswd/vawdesk-officer" },
         // { icon: "/images/peace.png", label: "Services",path: "/dswd/services",},
@@ -46,10 +46,10 @@ export default function Sidebar({ sidebarOpen, toggleSidebar }) {
 
     if (role === "psychometrician") {
       return [
-        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/psychometrician",},
-        { icon: "/images/heart.png", label: "Women Survivors",path: "/psychometrician/victims",},
-        { icon: "/images/meeting.png", label: "Scheduled Sessions",path: "/psychometrician/sessions",},
-        { icon: "/images/peace.png", label: "Services",path: "/psychometrician/services",},
+        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/psychometrician", },
+        { icon: "/images/heart.png", label: "Women Survivors", path: "/psychometrician/victims", },
+        { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/psychometrician/sessions", },
+        { icon: "/images/peace.png", label: "Services", path: "/psychometrician/services", },
         { icon: "/images/question_mark.png", label: "Questions", path: "/psychometrician/questions" },
         // { icon: "/images/case.png", label: "Case Records",path: "/psychometrician/case-records",},
         // { icon: "/images/calendar.png", label: "My Schedule",path: "/psychometrician/schedule",},
@@ -58,13 +58,13 @@ export default function Sidebar({ sidebarOpen, toggleSidebar }) {
 
     if (role === "social worker") {
       return [
-        { icon: "/images/dashboardnew.png", label: "Dashboard",path: "/social_worker",},
-        { icon: "/images/add.png", label: "Register Victim", path: "/social_worker/register-victim",},
-        { icon: "/images/heart.png", label: "Women Survivors",path: "/social_worker/victims",},
-        { icon: "/images/meeting.png",label: "Scheduled Sessions",path: "/social_worker/sessions",},
+        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/social_worker", },
+        { icon: "/images/add.png", label: "Register Victim", path: "/social_worker/register-victim", },
+        { icon: "/images/heart.png", label: "Women Survivors", path: "/social_worker/victims", },
+        { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/social_worker/sessions", },
         { icon: "/images/question_mark.png", label: "Questions", path: "/social_worker/questions" },
         // { icon: "/images/case.png", label: "Case Records",path: "/social_worker/case-records",},
-        
+
         // { icon: "/images/calendar.png", label: "My Schedule",path: "/social_worker/schedule",},
         // { icon: "/images/peace.png", label: "Services", path: "/social_worker/services",},
       ];
@@ -72,9 +72,9 @@ export default function Sidebar({ sidebarOpen, toggleSidebar }) {
 
     if (role === "nurse") {
       return [
-        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/nurse",},
-        { icon: "/images/heart.png", label: "Women Survivors",path: "/nurse/victims",},
-        { icon: "/images/meeting.png",label: "Scheduled Consultations",path: "/nurse/sessions",},
+        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/nurse", showBadge: true },
+        { icon: "/images/heart.png", label: "Women Survivors", path: "/nurse/victims", },
+        { icon: "/images/meeting.png", label: "Scheduled Consultations", path: "/nurse/sessions", },
         { icon: "/images/question_mark.png", label: "Questions", path: "/nurse/questions" },
         // { icon: "/images/case.png", label: "Case Records",path: "/nurse/case-records",},
         // { icon: "/images/peace.png",label: "Services", path: "/nurse/services",},
@@ -84,12 +84,12 @@ export default function Sidebar({ sidebarOpen, toggleSidebar }) {
 
     if (role === "vawdesk" || role === "desk officer") {
       return [
-        { icon: "/images/dashboardnew.png",label: "Dashboard", path: "/desk_officer",},
-        { icon: "/images/add.png", label: "Register Victim",path: "/desk_officer/register_victim",},
-        { icon: "/images/heart.png", label: "Women Survivors", path: "/desk_officer/victims",},
-        { icon: "/images/customer.png", label: "Social Workers",path: "/desk_officer/social-workers",},
-        { icon: "/images/peace.png", label: "Services", path: "/desk_officer/services",},
-        { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/desk_officer/session",},
+        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/desk_officer", },
+        { icon: "/images/add.png", label: "Register Victim", path: "/desk_officer/register_victim", },
+        { icon: "/images/heart.png", label: "Women Survivors", path: "/desk_officer/victims", },
+        { icon: "/images/customer.png", label: "Social Workers", path: "/desk_officer/social-workers", },
+        { icon: "/images/peace.png", label: "Services", path: "/desk_officer/services", },
+        { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/desk_officer/session", },
         // { icon: "/images/case.png", label: "Case Records", path: "/desk_officer/case-records" },
       ];
     }
@@ -140,20 +140,22 @@ export default function Sidebar({ sidebarOpen, toggleSidebar }) {
   h-[calc(100vh-40px)] sm:h-[calc(100vh-70px)]
   z-[60] pointer-events-auto
   sm:translate-x-0 shadow-xl border-r border-[#292D96]/30
+  flex flex-col
 `}>
-
         {/* Logo */}
-        <div className="px-6 py-5 border-b border-[#292D96]/20">
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-wide text-white">
-            VAWSAFE
-          </h1>
-          <p className="text-xs text-gray-400 mt-1 uppercase tracking-wide">
-            {user?.role || "User"} Dashboard
+        <div className="px-6 py-5 border-b border-[#292D96]/20 flex flex-col items-center">
+          <img
+            src="/images/header2.png"  
+            alt="VAWSAFE Logo"
+            className="h-26 w-auto"
+          />
+          <p className="text-xs text-gray-400 uppercase tracking-wide text-center">
+            {user?.role || "User"} 
           </p>
         </div>
 
-        {/* Menu */}
-        <nav className="mt-4 space-y-1 px-2 overflow-visible">
+        {/* Menu area grows to fill space */}
+        <nav className="mt-1 space-y-1 px-2 flex-grow overflow-y-auto">
           {sidebarItems.map((item, idx) => {
             const isActive = location.pathname === item.path;
             const activeClasses = isActive
@@ -240,23 +242,33 @@ export default function Sidebar({ sidebarOpen, toggleSidebar }) {
 
             return (
               <Link key={idx} to={item.path} className="group block no-underline">
-                <div className={`flex items-center gap-3 px-4 py-3 rounded-md transition hover:bg-[#3F3F64] hover:scale-[1.02] hover:shadow-md mb-2 ${activeClasses}`}>
-                  <img
-                    src={item.icon}
-                    alt={item.label}
-                    className="h-[22px] w-[22px] object-contain opacity-80 group-hover:opacity-100 transition"
-                  />
-                  <span className="text-sm font-medium text-white group-hover:text-white">
-                    {item.label}
-                  </span>
+                <div className={`flex items-center justify-between px-4 py-3 rounded-md transition hover:bg-[#3F3F64] hover:scale-[1.02] hover:shadow-md mb-2 ${activeClasses}`}>
+                  {/* Left side: icon + label */}
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={item.icon}
+                      alt={item.label}
+                      className="h-[22px] w-[22px] object-contain opacity-80 group-hover:opacity-100 transition"
+                    />
+                    <span className="text-sm font-medium text-white group-hover:text-white">
+                      {item.label}
+                    </span>
+                  </div>
+
+                  {/* Right side: badge */}
+                  {item.showBadge && notificationCount > 0 && (
+                    <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-[2px] rounded-full">
+                      {notificationCount}
+                    </span>
+                  )}
                 </div>
               </Link>
             );
           })}
         </nav>
 
-        {/* Profile Footer */}
-        <div className="mt-auto px-4 py-5 border-t border-[#292D96]/20 flex items-center justify-between">
+        {/* Footer pinned at bottom */}
+        <div className="px-4 py-5 border-t border-[#292D96]/20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {user?.of_photo ? (
               <img
