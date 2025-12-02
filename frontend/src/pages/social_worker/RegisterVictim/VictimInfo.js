@@ -177,14 +177,22 @@ export default function VictimInfo({
             value={formDataState.vic_last_name || ""}
             onChange={(e) => handleChange("vic_last_name", e.target.value)}
           />
-          <input
+          <select
             readOnly={isLocked}
             disabled={isLocked}
             className="input"
-            type="text"
             value={formDataState.vic_extension || ""}
             onChange={(e) => handleChange("vic_extension", e.target.value)}
-          />
+          >
+            <option value="">Select Extension</option>
+            <option value="Jr.">Jr.</option>
+            <option value="Sr.">Sr.</option>
+            <option value="II">II</option>
+            <option value="III">III</option>
+            <option value="IV">IV</option>
+            <option value="V">V</option>
+            <option value="">None</option>
+          </select>
         </div>
       </div>
 
