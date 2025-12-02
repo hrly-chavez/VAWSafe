@@ -6,6 +6,7 @@ from fernet_fields import EncryptedCharField, EncryptedDateField, EncryptedInteg
 from django.contrib.auth import get_user_model
 from shared_model.storage import EncryptedFileSystemStorage
 from datetime import date
+from django.utils import timezone
 
 #para ni sa file encryption sa mga filepath
 encrypted_storage = EncryptedFileSystemStorage()
@@ -334,6 +335,25 @@ class Victim(models.Model):
     training_where = EncryptedCharField(max_length=512, blank=True, null=True)
     training_when = EncryptedCharField(max_length=512, blank=True, null=True)
     employment_experience = EncryptedCharField(max_length=512, blank=True, null=True)
+    code = models.CharField(max_length=20, unique=True, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            prefix1 = "RHW"
+            prefix2 = "FO7"
+            current_year = timezone.now().year
+
+            # Count existing victims for the same year
+            count_this_year = Victim.objects.filter(
+                code__contains=f"{prefix1}-{prefix2}-{current_year}-"
+            ).count()
+
+            next_number = count_this_year + 1
+            formatted_number = str(next_number).zfill(3)  # 001, 002, etc.
+
+            self.code = f"{prefix1}-{prefix2}-{current_year}-{formatted_number}"
+
+        super().save(*args, **kwargs)
     
     # present address
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, related_name="victim_address", null=True, blank=True)
