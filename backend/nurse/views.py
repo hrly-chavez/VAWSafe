@@ -530,7 +530,7 @@ def generate_session_docx(session, current_official=None):
         root_templates = os.path.join(desktop, "Templates")
 
         # Output directory
-        out_dir = os.path.join(root_templates, safe_full_name, "psychometrician")
+        out_dir = os.path.join(root_templates, safe_full_name, "Nurse")
         os.makedirs(out_dir, exist_ok=True)
 
         # -----------------------------
@@ -539,27 +539,20 @@ def generate_session_docx(session, current_official=None):
         is_first_session = (session.sess_num or 1) == 1
 
         if is_first_session:
-            template_file = "IPA-FORMAT-RHW.docx"
-            output_file_name = "IPA-FORMAT-RHW.docx"
-        else:
-            template_file = "Individual-Sessions-Report-RHW.docx"
-            output_file_name = f"Individual-Sessions-Report-RHW-{session.sess_num}.docx"
+            template_file = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
+            output_file_name = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
 
-        template_path = os.path.join(root_templates, "psychometrician", template_file)
+        template_path = os.path.join(root_templates, "nurse", template_file)
 
         if is_first_session:
             template_file = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
             output_file_name = "Inital-Medical-Assessement-and-Medical-History-Regional-Haven-for-Women-with-Bagong-Pilipinas-Logo.docx"
-        # else part can be removed since nurse doesnt have individual sessions forms but visits regarding health
-        else:
-            template_file = "Individual-Sessions-Report-RHW.docx"  # Your second session template
-            output_file_name = f"Individual-Sessions-Report-RHW-{session.sess_num}.docx"
         
         # -----------------------------
         # 3. If TEMPLATE MISSING: Skip gracefully
         # -----------------------------
         if not os.path.exists(template_path):
-            print(f"[WARNING] Missing Psychometrician template: {template_path}")
+            print(f"[WARNING] Missing Nurse template: {template_path}")
             return None  # do not block finish_session
 
         # -----------------------------
