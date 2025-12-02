@@ -51,7 +51,6 @@ export default function Sidebar({ sidebarOpen, toggleSidebar }) {
         { icon: "/images/meeting.png", label: "Scheduled Sessions",path: "/psychometrician/sessions",},
         { icon: "/images/peace.png", label: "Services",path: "/psychometrician/services",},
         { icon: "/images/question_mark.png", label: "Questions", path: "/psychometrician/questions" },
-        { icon: "/images/logout.png", label: "Log Out", path: "/login",isLogout: true,},
         // { icon: "/images/case.png", label: "Case Records",path: "/psychometrician/case-records",},
         // { icon: "/images/calendar.png", label: "My Schedule",path: "/psychometrician/schedule",},
       ];
@@ -64,7 +63,6 @@ export default function Sidebar({ sidebarOpen, toggleSidebar }) {
         { icon: "/images/heart.png", label: "Women Survivors",path: "/social_worker/victims",},
         { icon: "/images/meeting.png",label: "Scheduled Sessions",path: "/social_worker/sessions",},
         { icon: "/images/question_mark.png", label: "Questions", path: "/social_worker/questions" },
-        { icon: "/images/logout.png", label: "Log Out", path: "/login",isLogout: true,},
         // { icon: "/images/case.png", label: "Case Records",path: "/social_worker/case-records",},
         
         // { icon: "/images/calendar.png", label: "My Schedule",path: "/social_worker/schedule",},
@@ -92,7 +90,6 @@ export default function Sidebar({ sidebarOpen, toggleSidebar }) {
         { icon: "/images/customer.png", label: "Social Workers",path: "/desk_officer/social-workers",},
         { icon: "/images/peace.png", label: "Services", path: "/desk_officer/services",},
         { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/desk_officer/session",},
-        { icon: "/images/logout.png", label: "Log Out", path: "/login",isLogout: true,},
         // { icon: "/images/case.png", label: "Case Records", path: "/desk_officer/case-records" },
       ];
     }
