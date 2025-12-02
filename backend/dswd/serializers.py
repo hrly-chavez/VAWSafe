@@ -599,7 +599,7 @@ class ServicesSerializer(serializers.ModelSerializer):
             else:
                 instance.service_address = Address.objects.create(**service_address_data)
 
-        # ✅ Allow DSWD to update is_active
+        # Allow DSWD to update is_active
         request = self.context.get("request")
         user = getattr(request, "user", None)
         if not (user and hasattr(user, "official") and user.official.of_role == "DSWD"):

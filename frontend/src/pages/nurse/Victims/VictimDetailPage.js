@@ -1,12 +1,10 @@
 // src/pages/nurse/Victims/VictimDetailPage.js
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import Navbar from "../../Navbar";
 import api from "../../../api/axios";
 import VictimCases from "./VictimCases";
 import SessionDetails from "./SessionDetails";
 import SessionCard from "./SessionCard";
-import SectionHeader from "../../../components/SectionHeader";
 import ReportModal from "../../../components/ReportModal";
 import Modal from "../../../components/Modal";
 import NurseReportForm from "../../../components/NurseReportForm";
@@ -92,6 +90,11 @@ export default function VictimDetailPage() {
   const [selectedReport, setSelectedReport] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showAddReportModal, setShowAddReportModal] = useState(false);
+  const [openReportsIndex, setOpenReportsIndex] = useState(null);
+  const [openRole, setOpenRole] = useState(null);
+
+  const [reportType, setReportType] = useState(null);
+  const [currentOfficialId, setCurrentOfficialId] = useState(null);
 
   const groupedReports = {
     "Social Worker": reportsList.filter(r => r.report_type?.toLowerCase().includes("social worker")),
@@ -107,7 +110,7 @@ export default function VictimDetailPage() {
 
   const userRole = "Nurse";
 
-  // ✅ Only nurse report submission
+  // Only nurse report submission
   const handleSubmitNurseReport = async (data) => {
     try {
       const res = await api.post(`/api/nurse/victims/${vic_id}/monthly-reports/`, {
@@ -595,107 +598,105 @@ export default function VictimDetailPage() {
             </div>
           )}
 
+          {/* Reports Tab */}
           {activeTab === "reports" && (
             <div className="space-y-10">
-              <div className="bg-white border rounded-xl shadow-md p-6">
-                <SectionHeader icon="/images/case_details.png" title="Reports" />
+              {incidentList.length === 0 ? (
+                <p className="text-sm text-gray-500 italic">No case records found for this victim.</p>
+              ) : (
+                incidentList.map((incident, index) => {
+                  const incidentReports = reportsList.filter((r) => r.incident === incident.incident_id);
+                  return (
+                    <div key={incident.incident_id} className="border rounded-md p-4 shadow-sm bg-gray-50 mb-6">
+                      <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
+                        <div>
+                          <span className="font-medium text-gray-800">Case No:</span>{" "}
+                          {incident.incident_num || "—"}
+                        </div>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => {
+                              const isSame = openReportsIndex === index;
+                              setOpenReportsIndex(isSame ? null : index);
+                              setSelectedIncident(incident);
+                            }}
+                            className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
+                          >
+                            {openReportsIndex === index ? "Hide Reports" : "View Reports"}
+                          </button>
 
-                {incidentList.length === 0 ? (
-                  <p className="text-sm text-gray-500 italic">
-                    No case records found for this victim.
-                  </p>
-                ) : (
-                  incidentList.map((incident, index) => {
-                    const incidentReports = reportsList.filter(
-                      (r) => r.incident === incident.incident_id
-                    );
-
-                    const isOpen = openSessionIndex === index; // reuse or create a new state like openReportsIndex
-
-                    return (
-                      <div
-                        key={incident.incident_id}
-                        className="border rounded-md p-4 shadow-sm bg-gray-50 mb-6"
-                      >
-                        <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
-                          <div>
-                            <span className="font-medium text-gray-800">Case No:</span>{" "}
-                            {incident.incident_num || "—"}
-                          </div>
-                          <div className="flex gap-3">
+                          {/* Add Report */}
+                          {userRole === "Nurse" && (
                             <button
                               onClick={() => {
-                                const isSame = openSessionIndex === index;
-                                setOpenSessionIndex(isSame ? null : index);
+                                setShowReportModal(false);
                                 setSelectedIncident(incident);
+                                setSelectedReport(null);
+                                setShowAddReportModal(true);
                               }}
-                              className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
+                              className="inline-flex items-center gap-2 rounded-md border border-green-600 text-green-600 px-3 py-1.5 text-sm font-medium hover:bg-green-600 hover:text-white transition"
                             >
-                              {isOpen ? "Hide Reports" : "View Reports"}
+                              + Add Monthly Report
                             </button>
-                            {userRole && (
-                              <button
-                                onClick={() => {
-                                  setShowReportModal(false);
-                                  setSelectedIncident(incident);
-                                  setSelectedReport(null);
-                                  setShowAddReportModal(true);
-                                }}
-                                className="inline-flex items-center gap-2 rounded-md border border-green-600 text-green-600 px-3 py-1.5 text-sm font-medium hover:bg-green-600 hover:text-white transition"
-                              >
-                                + Add Monthly Report
-                              </button>
-                            )}
-                          </div>
+                          )}
                         </div>
-
-                        {/* Reports list for this incident */}
-                        {isOpen && (
-                          <div className="mt-3">
-                            {incidentReports.length === 0 ? (
-                              <p className="text-sm text-gray-500 italic">
-                                No reports available yet.
-                              </p>
-                            ) : (
-                              incidentReports.map((report) => (
-                                <div
-                                  key={report.id}
-                                  onClick={() => {
-                                    setSelectedReport(report);
-                                    setShowReportModal(true);
-                                  }}
-                                  className="bg-white border rounded-lg shadow-sm p-4 mt-3 cursor-pointer hover:shadow-md transition"
-                                >
-                                  <h4
-                                    className={`text-md font-semibold ${report.report_type?.toLowerCase().includes("nurse")
-                                      ? "text-blue-600"
-                                      : report.report_type?.toLowerCase().includes("psychometrician")
-                                        ? "text-red-600"
-                                        : report.report_type?.toLowerCase().includes("social worker")
-                                          ? "text-yellow-500"
-                                          : "text-[#292D96]"
-                                      }`}
-                                  >
-                                    {report.report_type} Report —{" "}
-                                    {new Date(report.report_month).toLocaleString("en-US", {
-                                      year: "numeric",
-                                      month: "long",
-                                      day: "numeric",
-                                    })}
-                                  </h4>
-                                  <p className="text-xs text-gray-500">
-                                    Prepared by: {report.prepared_by_name}
-                                  </p>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        )}
                       </div>
-                    );
-                  })
-                )}
-              </div>
+
+                      {openReportsIndex === index && (
+                        <div className="mt-3 space-y-6">
+                          {["Social Worker", "Nurse", "Psychometrician"].map((role) => {
+                            const roleReports = incidentReports.filter(r =>
+                              r.report_type?.toLowerCase().includes(role.toLowerCase())
+                            );
+                            return (
+                              <div key={role} className="border rounded-md overflow-hidden">
+                                {/* Dropdown header */}
+                                <button
+                                  onClick={() => setOpenRole(openRole === role ? null : role)}
+                                  className={`w-full flex justify-between items-center font-semibold px-6 py-4 text-base ${roleColors[role]}`}
+                                >
+                                  <span>{role} Reports</span>
+                                  <span>{openRole === role ? "−" : "+"}</span>
+                                </button>
+
+                                {/* Dropdown content */}
+                                {openRole === role && (
+                                  <div className="bg-white px-4 py-3 space-y-3">
+                                    {roleReports.length === 0 ? (
+                                      <p className="text-sm text-gray-500 italic">No {role} reports available.</p>
+                                    ) : (
+                                      roleReports.map((report) => (
+                                        <div
+                                          key={report.id}
+                                          onClick={() => {
+                                            setSelectedReport(report);
+                                            setShowReportModal(true);
+                                          }}
+                                          className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition"
+                                        >
+                                          <h4 className="text-sm font-semibold text-gray-800 mb-1">
+                                            {report.report_type} —{" "}
+                                            {new Date(report.report_month).toLocaleDateString("en-US", {
+                                              year: "numeric",
+                                              month: "long",
+                                              day: "numeric",
+                                            })}
+                                          </h4>
+                                          <p className="text-xs text-gray-500">Prepared by: {report.prepared_by_name}</p>
+                                        </div>
+                                      ))
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
 
               {/* Report Modal */}
               {showReportModal && !showAddReportModal && selectedReport && (
@@ -722,13 +723,27 @@ export default function VictimDetailPage() {
             </div>
           )}
 
-          {/* Back Button */}
-          <div className="flex justify-end mt-10">
+          {/* Back Button at the bottom */}
+          <div className="flex justify-end mt-10 px-6 md:px-8 mb-8">
             <Link
               to="/nurse/victims"
               className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-4 py-2 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
             >
-              ← Back to List
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-5 h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 19.5L8.25 12l7.5-7.5"
+                />
+              </svg>
+              Back to Victims
             </Link>
           </div>
         </div>

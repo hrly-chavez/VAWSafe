@@ -752,13 +752,27 @@ export default function VictimDetailPage() {
             </div>
           )}
 
-          {/* Back Button */}
+          {/* Back Button at the bottom */}
           <div className="flex justify-end mt-10 px-6 md:px-8 mb-8">
             <Link
               to="/psychometrician/victims"
               className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-4 py-2 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
             >
-              ← Back to List
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-5 h-5"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15.75 19.5L8.25 12l7.5-7.5"
+                />
+              </svg>
+              Back to Victims
             </Link>
           </div>
         </div>
