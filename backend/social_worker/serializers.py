@@ -491,6 +491,8 @@ class IncidentInformationSerializer(serializers.ModelSerializer):
 class VictimListSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
     incidents = IncidentInformationSerializer(many=True, read_only=True)
+    address = AddressSerializer(read_only=True)
+    full_address = serializers.SerializerMethodField()  # <-- NEW FIELD
 
     class Meta:
         model = Victim
@@ -505,6 +507,21 @@ class VictimListSerializer(serializers.ModelSerializer):
                 - ((today.month, today.day) < (obj.vic_birth_date.month, obj.vic_birth_date.day))
             )
         return None
+    
+    def get_full_address(self, obj):
+        address = obj.address
+        if not address:
+            return None
+
+        parts = [
+            address.street,
+            address.sitio,
+            address.barangay.name if address.barangay else None,
+            address.municipality.name if address.municipality else None,
+            address.province.name if address.province else None,
+        ]
+
+        return ", ".join([p for p in parts if p])
 
 class EvidenceSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()

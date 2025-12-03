@@ -21,7 +21,7 @@ export default function NurseVictims() {
   useEffect(() => {
     const loadVictims = async () => {
       try {
-        const res = await api.get("/api/nurse/victims/");
+        const res = await api.get("/api/social_worker/victims/");
         // setVictims(Array.isArray(res.data) ? res.data : []);
         setVictims(
         Array.isArray(res.data)
@@ -139,7 +139,7 @@ export default function NurseVictims() {
                       <td className="px-3 py-2 border">{v.code}</td>
                       <td className="px-3 py-2 border whitespace-normal break-words">{fullName}</td>
                       <td className="px-3 py-2 border">{v.age || "N/A"}</td>
-                      <td className="px-3 py-2 border whitespace-normal break-words">{v.vic_birth_place || "N/A"}</td>
+                      <td className="px-3 py-2 border whitespace-normal break-words">{v.full_address || "N/A"}</td>
                       {/* <td className="px-3 py-2 border whitespace-normal break-words">{v.violence_type || "N/A"}</td> */}
                       <td className="px-3 py-2 border">{v.vic_contact_number || "N/A"}</td>
                       <td className="px-3 py-2 border text-center">

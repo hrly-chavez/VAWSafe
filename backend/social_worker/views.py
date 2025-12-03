@@ -448,7 +448,7 @@ def evidence_view(request, pk):
 class victim_list(generics.ListAPIView):
     serializer_class = VictimListSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker', 'DSWD']
+    allowed_roles = ['Social Worker', 'DSWD', 'Nurse', 'Psychometrician']
 
     def get_queryset(self):
         # Allow all authenticated users with valid roles to see all victims
