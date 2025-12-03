@@ -662,6 +662,7 @@ class IncidentSummarySerializer(serializers.Serializer):
 
 class MonthlyReportRowSerializer(serializers.Serializer):
     month = serializers.CharField()
+    year = serializers.IntegerField()
     totalVictims = serializers.IntegerField()
     Physical_Violence = serializers.IntegerField(source="Physical Violence")
     Physical_Abused = serializers.IntegerField(source="Physical Abused")

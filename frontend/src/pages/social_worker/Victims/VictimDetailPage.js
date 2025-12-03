@@ -100,9 +100,7 @@ export default function VictimDetailPage() {
   const [selectedReport, setSelectedReport] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showAddReportModal, setShowAddReportModal] = useState(false);
-  const [openReportsIndex, setOpenReportsIndex] = useState(null);
   const [openRole, setOpenRole] = useState(null);
-
   const [reportType, setReportType] = useState(null);
   const [currentOfficialId, setCurrentOfficialId] = useState(null);
 
@@ -282,13 +280,13 @@ export default function VictimDetailPage() {
 
   const fullName = victim
     ? [
-        get(victim, ["vic_first_name"]),
-        get(victim, ["vic_middle_name"]),
-        get(victim, ["vic_last_name"]),
-        get(victim, ["vic_extension"]),
-      ]
-        .filter(Boolean)
-        .join(" ")
+      get(victim, ["vic_first_name"]),
+      get(victim, ["vic_middle_name"]),
+      get(victim, ["vic_last_name"]),
+      get(victim, ["vic_extension"]),
+    ]
+      .filter(Boolean)
+      .join(" ")
     : "";
 
   if (loading) return <p>Loading victim details...</p>;
@@ -332,11 +330,10 @@ export default function VictimDetailPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-2 text-sm font-semibold rounded-t-md transition-colors duration-200 ${
-                    isActive
-                      ? "bg-[#292D96] text-white border border-gray-300 border-b-0"
-                      : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#292D96] border border-gray-300"
-                  }`}
+                  className={`px-6 py-2 text-sm font-semibold rounded-t-md transition-colors duration-200 ${isActive
+                    ? "bg-[#292D96] text-white border border-gray-300 border-b-0"
+                    : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#292D96] border border-gray-300"
+                    }`}
                 >
                   {tab === "details" && "Details"}
                   {tab === "case" && "Case Details"}
@@ -657,16 +654,13 @@ export default function VictimDetailPage() {
             <div className="space-y-8 pt-4">
               <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
                 {/* Title bar with gray background */}
-                <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
+                <div className="flex items-center justify-between px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
                   <h2 className="text-lg font-semibold text-gray-800">
                     Case Information
                   </h2>
 
                   <button
-                    onClick={() =>
-                      // navigate(`/social_worker/create-case/${victimId}`)
-                      console.log(1)
-                    }
+                    onClick={() => navigate(`/social_worker/create-case/${vic_id}`)}
                     className="inline-flex items-center gap-2 rounded-md bg-[#292D96] text-white px-4 py-2 text-sm font-medium shadow-sm hover:bg-[#1f2375] transition"
                   >
                     + Create New Case
@@ -742,159 +736,157 @@ export default function VictimDetailPage() {
 
           {/* Reports Tab */}
           {activeTab === "reports" && (
-            <div className="space-y-10 mt-10">
-              {incidentList.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">
-                  No case records found for this victim.
-                </p>
-              ) : (
-                incidentList.map((incident, index) => {
-                  const incidentReports = reportsList.filter(
-                    (r) => r.incident === incident.incident_id
-                  );
+            <div className="space-y-8 pt-4">
+              <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                {/* Title bar with gray background */}
+                <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Monthly Reports
+                  </h2>
+                </div>
+                <div className="p-6">
+                  {incidentList.length === 0 ? (
+                    <p className="text-sm text-gray-500 italic">
+                      No case records found for this victim.
+                    </p>
+                  ) : (
+                    incidentList.map((incident, index) => {
+                      const incidentReports = reportsList.filter(
+                        (r) => r.incident === incident.incident_id
+                      );
 
-                  return (
-                    <div
-                      key={incident.incident_id}
-                      className="border rounded-md p-4 shadow-sm bg-gray-50 mb-6"
-                    >
-                      <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
-                        <div>
-                          <span className="font-medium text-gray-800">
-                            Case No:
-                          </span>{" "}
-                          {incident.incident_num || "—"}
-                        </div>
-                        <div className="flex gap-3">
-                          <button
-                            onClick={() => {
-                              const isSame = openReportsIndex === index;
-                              setOpenReportsIndex(isSame ? null : index);
-                              setSelectedIncident(incident);
-                            }}
-                            className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
-                          >
-                            {openReportsIndex === index
-                              ? "Hide Reports"
-                              : "View Reports"}
-                          </button>
+                      return (
+                        <div
+                          key={incident.incident_id}
+                          className="border rounded-md p-4 shadow-sm bg-gray-50 mb-6"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
+                            <div>
+                              <span className="font-medium text-gray-800">
+                                Case No:
+                              </span>{" "}
+                              {incident.incident_num || "—"}
+                            </div>
+                            <div className="flex gap-3">
 
-                          {/* Add Report */}
-                          {userRole === "Social Worker" && (
-                            <button
-                              onClick={() => {
-                                setShowReportModal(false);
-                                setSelectedIncident(incident);
-                                setSelectedReport(null);
-                                setShowAddReportModal(true);
-                              }}
-                              className="inline-flex items-center gap-2 rounded-md border border-green-600 text-green-600 px-3 py-1.5 text-sm font-medium hover:bg-green-600 hover:text-white transition"
-                            >
-                              + Add Monthly Report
-                            </button>
-                          )}
-                        </div>
-                      </div>
 
-                      {openReportsIndex === index && (
-                        <div className="mt-3 space-y-6">
-                          {["Social Worker", "Nurse", "Psychometrician"].map(
-                            (role) => {
-                              const roleReports = incidentReports.filter((r) =>
-                                r.report_type
-                                  ?.toLowerCase()
-                                  .includes(role.toLowerCase())
-                              );
-                              return (
-                                <div
-                                  key={role}
-                                  className="border rounded-md overflow-hidden"
+                              {/* Add Report */}
+                              {userRole === "Social Worker" && (
+                                <button
+                                  onClick={() => {
+                                    setShowReportModal(false);
+                                    setSelectedIncident(incident);
+                                    setSelectedReport(null);
+                                    setShowAddReportModal(true);
+                                  }}
+                                  className="inline-flex items-center gap-2 rounded-md border border-green-600 text-green-600 px-3 py-1.5 text-sm font-medium hover:bg-green-600 hover:text-white transition"
                                 >
-                                  {/* Dropdown header */}
-                                  <button
-                                    onClick={() =>
-                                      setOpenRole(
-                                        openRole === role ? null : role
-                                      )
-                                    }
-                                    className={`w-full flex justify-between items-center font-semibold px-6 py-4 text-base ${roleColors[role]}`}
+                                  + Add Monthly Report
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+
+                          <div className="mt-3 space-y-6">
+                            {["Social Worker", "Nurse", "Psychometrician"].map(
+                              (role) => {
+                                const roleReports = incidentReports.filter((r) =>
+                                  r.report_type
+                                    ?.toLowerCase()
+                                    .includes(role.toLowerCase())
+                                );
+                                return (
+                                  <div
+                                    key={role}
+                                    className="border rounded-md overflow-hidden"
                                   >
-                                    <span>{role} Reports</span>
-                                    <span>{openRole === role ? "−" : "+"}</span>
-                                  </button>
+                                    {/* Dropdown header */}
+                                    <button
+                                      onClick={() =>
+                                        setOpenRole(
+                                          openRole === role ? null : role
+                                        )
+                                      }
+                                      className={`w-full flex justify-between items-center font-semibold px-6 py-4 text-base ${roleColors[role]}`}
+                                    >
+                                      <span>{role} Reports</span>
+                                      <span>{openRole === role ? "−" : "+"}</span>
+                                    </button>
 
-                                  {/* Dropdown content */}
-                                  {openRole === role && (
-                                    <div className="bg-white px-4 py-3 space-y-3">
-                                      {roleReports.length === 0 ? (
-                                        <p className="text-sm text-gray-500 italic">
-                                          No {role} reports available.
-                                        </p>
-                                      ) : (
-                                        roleReports.map((report) => (
-                                          <div
-                                            key={report.id}
-                                            onClick={() => {
-                                              setSelectedReport(report);
-                                              setShowReportModal(true);
-                                            }}
-                                            className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition"
-                                          >
-                                            <h4 className="text-sm font-semibold text-gray-800 mb-1">
-                                              {report.report_type} —{" "}
-                                              {new Date(
-                                                report.report_month
-                                              ).toLocaleDateString("en-US", {
-                                                year: "numeric",
-                                                month: "long",
-                                                day: "numeric",
-                                              })}
-                                            </h4>
-                                            <p className="text-xs text-gray-500">
-                                              Prepared by:{" "}
-                                              {report.prepared_by_name}
-                                            </p>
-                                          </div>
-                                        ))
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            }
-                          )}
+                                    {/* Dropdown content */}
+                                    {openRole === role && (
+                                      <div className="bg-white px-4 py-3 space-y-3">
+                                        {roleReports.length === 0 ? (
+                                          <p className="text-sm text-gray-500 italic">
+                                            No {role} reports available.
+                                          </p>
+                                        ) : (
+                                          roleReports.map((report) => (
+                                            <div
+                                              key={report.id}
+                                              onClick={() => {
+                                                setSelectedReport(report);
+                                                setShowReportModal(true);
+                                              }}
+                                              className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition"
+                                            >
+                                              <h4 className="text-sm font-semibold text-gray-800 mb-1">
+                                                {report.report_type} —{" "}
+                                                {new Date(
+                                                  report.report_month
+                                                ).toLocaleDateString("en-US", {
+                                                  year: "numeric",
+                                                  month: "long",
+                                                  day: "numeric",
+                                                })}
+                                              </h4>
+                                              <p className="text-xs text-gray-500">
+                                                Prepared by:{" "}
+                                                {report.prepared_by_name}
+                                              </p>
+                                            </div>
+                                          ))
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              }
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
+                      );
+                    })
+                  )}
 
-              {/* Report Modal */}
-              {showReportModal && !showAddReportModal && selectedReport && (
-                <Modal
-                  title="View Report"
-                  onClose={() => setShowReportModal(false)}
-                >
-                  <ReportModal
-                    report={selectedReport}
-                    userRole={userRole}
-                    onClose={() => setShowReportModal(false)}
-                  />
-                </Modal>
-              )}
+                  {/* Report Modal */}
+                  {showReportModal && !showAddReportModal && selectedReport && (
+                    <Modal
+                      title="View Report"
+                      onClose={() => setShowReportModal(false)}
+                    >
+                      <ReportModal
+                        report={selectedReport}
+                        userRole={userRole}
+                        onClose={() => setShowReportModal(false)}
+                      />
+                    </Modal>
+                  )}
 
-              {/* Add Report Modal */}
-              {showAddReportModal && !showReportModal && (
-                <Modal onClose={() => setShowAddReportModal(false)}>
-                  <SocialWorkerReportForm
-                    victim={victim}
-                    incident={selectedIncident}
-                    onSubmit={handleSubmitSocialWorkerReport}
-                    onClose={() => setShowAddReportModal(false)}
-                  />
-                </Modal>
-              )}
+                  {/* Add Report Modal */}
+                  {showAddReportModal && !showReportModal && (
+                    <Modal onClose={() => setShowAddReportModal(false)}>
+                      <SocialWorkerReportForm
+                        victim={victim}
+                        incident={selectedIncident}
+                        onSubmit={handleSubmitSocialWorkerReport}
+                        onClose={() => setShowAddReportModal(false)}
+                      />
+                    </Modal>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

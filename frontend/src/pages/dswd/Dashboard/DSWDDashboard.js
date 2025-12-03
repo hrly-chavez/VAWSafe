@@ -43,6 +43,7 @@ export default function DSWDDashboard() {
   const [incidentStats, setIncidentStats] = useState({});
   const [reportRows, setReportRows] = useState([]);
   const [monthlyVictimData, setMonthlyVictimData] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(2025);
   const [violenceTypeData, setViolenceTypeData] = useState({
     labels: [],
     datasets: [],
@@ -168,7 +169,7 @@ export default function DSWDDashboard() {
       ctx.fillStyle = "#000000";
       ctx.textAlign = "left";
       ctx.textBaseline = "top";
-      ctx.fillText("Monthly Victim Reports", left - 40, top - 30); 
+      ctx.fillText("Monthly Victim Reports", left - 40, top - 30);
 
       // Legend on the right
       const legend = chart.legend;
@@ -193,7 +194,7 @@ export default function DSWDDashboard() {
     datasets: [
       {
         label: "2025 Victims",
-        data: monthlyVictimData,
+        data: reportRows.filter(r => r.year === 2025).map(r => r.totalVictims),
         borderColor: "#10B981",
         backgroundColor: "rgba(16,185,129,0.2)",
         pointBackgroundColor: "#10B981",
@@ -205,8 +206,8 @@ export default function DSWDDashboard() {
         tension: 0.4,
       },
       {
-        label: "2024 Victims",
-        data: [0, 1, 0, 2, 1, 0, 0, 1, 0, 3, 2, 1],
+        label: "2026 Victims",
+        data: reportRows.filter(r => r.year === 2026).map(r => r.totalVictims),
         borderColor: "#8B5CF6",
         backgroundColor: "rgba(139,92,246,0.2)",
         pointBackgroundColor: "#8B5CF6",
@@ -452,7 +453,7 @@ export default function DSWDDashboard() {
       },
       datalabels: {
         display: true,
-        color: "#ffffff",   
+        color: "#ffffff",
         font: {
           family: "Inter, sans-serif",
           weight: "bold",
@@ -581,7 +582,7 @@ export default function DSWDDashboard() {
       <div className="min-h-screen text-white font-inter space-y-10">
 
         <style>
-                    {`
+          {`
                 @keyframes waveFlow {
                   0%   { transform: translateX(0) scaleY(1); }
                   25%  { transform: translateX(-20px) scaleY(1.3); }
@@ -720,15 +721,12 @@ export default function DSWDDashboard() {
               </label>
               <select
                 id="yearFilter"
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white shadow-sm focus:outline-none text-gray-700"
-                defaultValue=""
               >
-                <option value="" disabled>
-                  By Year
-                </option>
-                <option value="2025">2025</option>
-                <option value="2024">2024</option>
-                <option value="2023">2023</option>
+                <option value={2025}>2025</option>
+                <option value={2026}>2026</option>
               </select>
             </div>
           </div>
@@ -751,21 +749,15 @@ export default function DSWDDashboard() {
             </thead>
 
             <tbody>
-              {reportRows.length === 0 ? (
+              {reportRows.filter(r => r.year === selectedYear).length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={10}
-                    className="px-4 py-6 text-center text-gray-500 italic border border-gray-300"
-                  >
+                  <td colSpan={10} className="px-4 py-6 text-center text-gray-500 italic border border-gray-300">
                     No reports found.
                   </td>
                 </tr>
               ) : (
-                reportRows.map((row, idx) => (
-                  <tr
-                    key={idx}
-                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                  >
+                reportRows.filter(r => r.year === selectedYear).map((row, idx) => (
+                  <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                     <td className="px-4 py-2 border border-gray-300 font-medium">{row.month}</td>
                     <td className="px-4 py-2 border border-gray-300 text-center">{row.Physical_Violence || ""}</td>
                     <td className="px-4 py-2 border border-gray-300 text-center">{row.Physical_Abused || ""}</td>

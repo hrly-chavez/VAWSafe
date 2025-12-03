@@ -625,46 +625,56 @@ export default function VictimDetails() {
           {/* Reports Tab (view-only) */}
           {activeTab === "reports" && (
             <div className="space-y-8 pt-4">
-              <ReportDropdown
-                title="Social Worker"
-                colorClass={roleColors["Social Worker"]}
-                reports={groupedReports["Social Worker"]}
-                onSelect={(report) => {
-                  setSelectedReport(report);
-                  setShowReportModal(true);
-                }}
-              />
-              <ReportDropdown
-                title="Nurse"
-                colorClass={roleColors["Nurse"]}
-                reports={groupedReports["Nurse"]}
-                onSelect={(report) => {
-                  setSelectedReport(report);
-                  setShowReportModal(true);
-                }}
-              />
-              <ReportDropdown
-                title="Psychometrician"
-                colorClass={roleColors["Psychometrician"]}
-                reports={groupedReports["Psychometrician"]}
-                onSelect={(report) => {
-                  setSelectedReport(report);
-                  setShowReportModal(true);
-                }}
-              />
-
-              {showReportModal && selectedReport && (
-                <Modal
-                  title="View Report"
-                  onClose={() => setShowReportModal(false)}
-                >
-                  <ReportModal
-                    report={selectedReport}
-                    userRole="DSWD"
-                    onClose={() => setShowReportModal(false)}
+              <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                {/* Title bar with gray background */}
+                <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Monthly Reports
+                  </h2>
+                </div>
+                <div className="p-6">
+                  <ReportDropdown
+                    title="Social Worker"
+                    colorClass={roleColors["Social Worker"]}
+                    reports={groupedReports["Social Worker"]}
+                    onSelect={(report) => {
+                      setSelectedReport(report);
+                      setShowReportModal(true);
+                    }}
                   />
-                </Modal>
-              )}
+                  <ReportDropdown
+                    title="Nurse"
+                    colorClass={roleColors["Nurse"]}
+                    reports={groupedReports["Nurse"]}
+                    onSelect={(report) => {
+                      setSelectedReport(report);
+                      setShowReportModal(true);
+                    }}
+                  />
+                  <ReportDropdown
+                    title="Psychometrician"
+                    colorClass={roleColors["Psychometrician"]}
+                    reports={groupedReports["Psychometrician"]}
+                    onSelect={(report) => {
+                      setSelectedReport(report);
+                      setShowReportModal(true);
+                    }}
+                  />
+
+                  {showReportModal && selectedReport && (
+                    <Modal
+                      title="View Report"
+                      onClose={() => setShowReportModal(false)}
+                    >
+                      <ReportModal
+                        report={selectedReport}
+                        userRole="DSWD"
+                        onClose={() => setShowReportModal(false)}
+                      />
+                    </Modal>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>

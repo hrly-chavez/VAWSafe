@@ -41,12 +41,13 @@ export default function ReportModal({ report, userRole, currentOfficialId, onClo
     Array.isArray(val) ? val.join(", ") : val || "—";
 
   return (
-    <div className="bg-white border rounded-xl shadow-md p-6 space-y-8 text-sm text-gray-700">
+    <div className="bg-white border rounded-xl shadow-md p-6 text-sm text-gray-700 
+                max-h-[80vh] overflow-y-scroll space-y-4">
       {/* Header */}
       <SectionHeader icon="/images/case_details.png" title={`${report.report_type || "Report"}`} />
 
       {/* Common Info */}
-      <div className="space-y-4">
+      <div className="space-y-2">
         <p className="text-xs text-gray-500">Report Month</p>
         <p className="font-medium">
           {report.report_month
@@ -65,8 +66,8 @@ export default function ReportModal({ report, userRole, currentOfficialId, onClo
       {report.report_type?.toLowerCase().includes("nurse") && (
         <>
           <div className="bg-gray-50 border rounded-lg p-4 space-y-2">
-            <h3 className="text-md font-semibold text-[#292D96]">Vitals & Measurements</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <h3 className="text-md font-semibold text-[#292D96] mb-2">Vitals & Measurements</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div><p className="text-xs text-gray-500">Height</p><p className="font-medium">{report.height} cm</p></div>
               <div><p className="text-xs text-gray-500">Weight</p><p className="font-medium">{report.weight} kg</p></div>
               <div>
@@ -85,7 +86,7 @@ export default function ReportModal({ report, userRole, currentOfficialId, onClo
           </div>
 
           <div className="bg-gray-50 border rounded-lg p-4 space-y-2">
-            <h3 className="text-md font-semibold text-[#292D96]">Medical Summary & Observations</h3>
+            <h3 className="text-md font-semibold text-[#292D96] mb-2">Medical Summary & Observations</h3>
             <p className="whitespace-pre-wrap bg-white border rounded-md p-3 text-gray-800">
               {report.report_info || "—"}
             </p>
@@ -95,7 +96,7 @@ export default function ReportModal({ report, userRole, currentOfficialId, onClo
 
       {/* Psychometrician Comprehensive Report */}
       {report.report_type?.toLowerCase().includes("comprehensive") && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="bg-gray-50 border rounded-lg p-4">
             <h3 className="text-md font-semibold text-[#292D96] mb-2">Reason for Referral</h3>
             <p className="whitespace-pre-wrap bg-white border rounded-md p-3 text-gray-800">
@@ -135,7 +136,7 @@ export default function ReportModal({ report, userRole, currentOfficialId, onClo
 
       {/* Psychometrician Comprehensive Report */}
       {report.report_type?.toLowerCase().includes("comprehensive") && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {["reason_for_referral", "brief_history", "behavioral_observation", "test_results_discussion", "recommendations"].map((field, idx) => (
             <div key={idx} className="bg-gray-50 border rounded-lg p-4">
               <h3 className="text-md font-semibold text-[#292D96] mb-2">
@@ -151,7 +152,7 @@ export default function ReportModal({ report, userRole, currentOfficialId, onClo
 
       {/* Psychometrician Monthly Progress Report */}
       {report.report_type?.toLowerCase().includes("monthly") && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {renderCheckboxGroup("Presentation",
             ["Oriented/alert", "Disorganized", "Tangential", "Preoccupied", "Circumstantial"],
             report.presentation, report.presentation_other)}
@@ -243,7 +244,7 @@ export default function ReportModal({ report, userRole, currentOfficialId, onClo
 
       {/* Social Worker Monthly Report */}
       {report.report_type?.toLowerCase().includes("social worker") && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="bg-gray-50 border rounded-lg p-4">
             <h3 className="text-md font-semibold text-[#292D96] mb-2">Social Service</h3>
             <p className="whitespace-pre-wrap bg-white border rounded-md p-3 text-gray-800">
@@ -275,7 +276,7 @@ export default function ReportModal({ report, userRole, currentOfficialId, onClo
       )}
 
       {/* Action Buttons */}
-      <div className="flex justify-end gap-3 mt-6">
+      <div className="flex justify-end gap-3 bg-white py-2">
         {userRole === "nurse" &&
           report.report_type?.toLowerCase().includes("nurse") &&
           String(report.prepared_by_id) === String(currentOfficialId) && (
@@ -306,13 +307,6 @@ export default function ReportModal({ report, userRole, currentOfficialId, onClo
               Edit Report
             </button>
           )}
-
-        <button
-          onClick={onClose}
-          className="px-4 py-2 text-sm font-medium border border-gray-400 text-gray-600 rounded-md hover:bg-gray-100 transition"
-        >
-          Close
-        </button>
       </div>
     </div>
   );

@@ -1432,10 +1432,12 @@ class DSWDDashboardAPIView(APIView):
                 inc for inc in incidents
                 if getattr(inc, "incident_date", None)
                 and inc.incident_date.month == i
-                and inc.incident_date.year == today.year
+                # instead of only today.year, allow multiple years
+                and inc.incident_date.year in [2025, 2026]
             ]
             report_rows.append({
                 "month": month_name[i],
+                "year": today.year,  
                 "totalVictims": len(month_incidents),
                 "Physical Violence": sum(1 for inc in month_incidents if getattr(inc, "violence_type", None) == "Physical Violence"),
                 "Physical Abused": sum(1 for inc in month_incidents if getattr(inc, "violence_type", None) == "Physical Abused"),

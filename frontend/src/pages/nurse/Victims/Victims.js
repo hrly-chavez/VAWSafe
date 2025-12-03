@@ -24,10 +24,10 @@ export default function NurseVictims() {
         const res = await api.get("/api/social_worker/victims/");
         // setVictims(Array.isArray(res.data) ? res.data : []);
         setVictims(
-        Array.isArray(res.data)
-          ? res.data.sort((a, b) => b.vic_id - a.vic_id)
-          : []
-      );
+          Array.isArray(res.data)
+            ? res.data.sort((a, b) => b.vic_id - a.vic_id)
+            : []
+        );
       } catch (err) {
         console.error("Error fetching victims:", err);
         setError("Failed to load victims.");
@@ -91,15 +91,14 @@ export default function NurseVictims() {
 
       {/* Table container */}
       <div className="mt-6 bg-white rounded-xl shadow border border-neutral-200 overflow-hidden">
-        <div className="rounded-xl">
+        <div className="rounded-xl overflow-x-auto">
           <table className="min-w-full table-fixed border-collapse text-sm">
             <thead className="sticky top-0 z-10 bg-gray-100 text-gray-700 font-semibold shadow">
               <tr>
                 <th className="w-24 px-3 py-2 text-left border">Code</th>
-                <th className="w-48 px-3 py-2 text-left border">Name</th>
+                <th className="w-56 px-3 py-2 text-left border">Name</th>
                 <th className="w-20 px-3 py-2 text-left border">Age</th>
-                <th className="w-48 px-3 py-2 text-left border">Address</th>
-                {/* <th className="w-48 px-3 py-2 text-left border">Type of Violence</th> */}
+                <th className="w-64 px-3 py-2 text-left border">Address</th>
                 <th className="w-40 px-3 py-2 text-left border">Contact</th>
                 <th className="w-32 px-3 py-2 text-center border">Actions</th>
               </tr>
@@ -107,19 +106,19 @@ export default function NurseVictims() {
             <tbody className="text-gray-800">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-3 py-4 text-center text-neutral-500">
+                  <td colSpan={6} className="px-3 py-4 text-center text-neutral-500">
                     Loading victims…
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan={7} className="px-3 py-4 text-center text-red-600">
+                  <td colSpan={6} className="px-3 py-4 text-center text-red-600">
                     {error}
                   </td>
                 </tr>
               ) : currentVictims.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-3 py-4 text-center text-neutral-500 italic">
+                  <td colSpan={6} className="px-3 py-4 text-center text-neutral-500 italic">
                     No victims found.
                   </td>
                 </tr>
@@ -136,15 +135,13 @@ export default function NurseVictims() {
                   const rowBg = index % 2 === 0 ? "bg-white" : "bg-gray-50";
                   return (
                     <tr key={v.vic_id} className={`${rowBg} hover:bg-blue-50 transition`}>
-                      <td className="px-3 py-2 border">{v.code}</td>
-                      <td className="px-3 py-2 border whitespace-normal break-words">{fullName}</td>
+                      <td className="px-3 py-2 border truncate">{v.code}</td>
+                      <td className="px-3 py-2 border break-words">{fullName}</td>
                       <td className="px-3 py-2 border">{v.age || "N/A"}</td>
-                      <td className="px-3 py-2 border whitespace-normal break-words">{v.full_address || "N/A"}</td>
-                      {/* <td className="px-3 py-2 border whitespace-normal break-words">{v.violence_type || "N/A"}</td> */}
-                      <td className="px-3 py-2 border">{v.vic_contact_number || "N/A"}</td>
+                      <td className="px-3 py-2 border break-words">{v.full_address || "N/A"}</td>
+                      <td className="px-3 py-2 border truncate">{v.vic_contact_number || "N/A"}</td>
                       <td className="px-3 py-2 border text-center">
                         <div className="flex justify-center gap-3">
-                          {/* View Detail */}
                           <Link
                             to={`/nurse/victims/${v.vic_id}`}
                             className="text-green-600 hover:text-green-800"

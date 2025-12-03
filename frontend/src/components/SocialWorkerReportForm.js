@@ -7,7 +7,7 @@ const tabs = [
   { key: "homelife_service", label: "Homelife Service" },
 ];
 
-export default function SocialWorkerReportForm({ victim, incident, onSubmit, onClose }) {
+export default function SocialWorkerReportForm({ onSubmit, onClose }) {
   const [formData, setFormData] = useState({
     social_service: "",
     medical_service: "",
@@ -32,11 +32,9 @@ export default function SocialWorkerReportForm({ victim, incident, onSubmit, onC
     if (format === "bullet") {
       newText += "\n•\tItem 1\n•\tItem 2\n•\tItem 3\n";
     }
-
     if (format === "number") {
       newText += "\n1.\tItem 1\n2.\tItem 2\n3.\tItem 3\n";
     }
-
     if (format === "letter") {
       newText += "\na.\tItem 1\nb.\tItem 2\nc.\tItem 3\n";
     }
@@ -45,23 +43,14 @@ export default function SocialWorkerReportForm({ victim, incident, onSubmit, onC
   };
 
   return (
-    <form onSubmit={handleSubmit} className="text-sm text-gray-700">
+    <form
+      onSubmit={handleSubmit}
+      className="text-sm text-gray-700 max-h-[80vh] overflow-y-auto p-4"
+    >
       {/* Title */}
-      <div className="mb-8 text-center">
+      <div className="mb-6 text-center">
         <h2 className="text-2xl font-bold text-[#292D96]">Social Worker's Report</h2>
         <p className="text-xs text-gray-500 mt-1">Monthly Progress Documentation</p>
-      </div>
-
-      {/* Victim Info */}
-      <div className="mb-6">
-        <p className="text-xs text-gray-500">Client Name:</p>
-        <p className="font-medium text-lg">{victim.full_name || "—"}</p>
-        {incident && (
-          <>
-            <p className="text-xs text-gray-500 mt-2">Case No.:</p>
-            <p className="font-medium">{incident.incident_num || "—"}</p>
-          </>
-        )}
       </div>
 
       {/* Tab Navigation */}
@@ -128,7 +117,7 @@ export default function SocialWorkerReportForm({ victim, incident, onSubmit, onC
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-end gap-3">
+      <div className="flex justify-end gap-3 sticky bottom-0 bg-white py-2">
         <button
           type="button"
           onClick={onClose}

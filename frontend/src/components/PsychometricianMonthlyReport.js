@@ -68,20 +68,18 @@ export default function PsychometricianMonthlyReport({ victim, incident, onSubmi
     const handleSubmit = (e) => { e.preventDefault(); onSubmit(formData); };
 
     return (
-        <form onSubmit={handleSubmit} className="text-sm text-gray-700 space-y-8">
-            <div className="text-center">
+        <form onSubmit={handleSubmit} className="text-sm text-gray-700 space-y-4 max-h-[80vh] overflow-y-scroll p-4">
+            <div className="text-center mb-4">
                 <h2 className="text-2xl font-bold text-[#292D96]">Monthly Progress Report</h2>
                 <p className="text-xs text-gray-500 mt-1">Psychometrician's Assessment</p>
             </div>
-
-            <div><p className="text-xs text-gray-500">Client Name:</p><p className="font-medium text-lg">{victim?.full_name || "—"}</p></div>
 
             {/* 1. Presentation */}
             {/* 2. Affect */}
             {/* 3. Mood */}
             {/* 4. Interpersonal */}
             {["presentation", "affect", "mood", "interpersonal"].map((group) => (
-                <div key={group} className="bg-white border rounded-lg shadow-sm p-4">
+                <div key={group} className="bg-white border rounded-lg shadow-sm p-3">
                     <SectionHeader icon="/images/clipboard.png" title={group.charAt(0).toUpperCase() + group.slice(1)} />
                     <div className="grid grid-cols-2 gap-2 mt-2">
                         {checkboxGroups[group].map((opt) => (
@@ -96,7 +94,7 @@ export default function PsychometricianMonthlyReport({ victim, incident, onSubmi
             ))}
 
             {/* 5. Safety Issues */}
-            <div className="bg-white border rounded-lg shadow-sm p-4">
+            <div className="bg-white border rounded-lg shadow-sm p-3">
                 <SectionHeader icon="/images/warning.png" title="Safety Issues" />
                 <div className="grid grid-cols-2 gap-2 mt-2">
                     {["None", "Suicidal Ideation", "Homicidal Ideation", "Other"].map((opt) => (
@@ -111,7 +109,7 @@ export default function PsychometricianMonthlyReport({ victim, incident, onSubmi
 
             {/* Client Has (conditional) */}
             {formData.safety_issues.some(issue => ["Suicidal Ideation", "Homicidal Ideation", "Other"].includes(issue)) && (
-                <div className="bg-white border rounded-lg shadow-sm p-4">
+                <div className="bg-white border rounded-lg shadow-sm p-3">
                     <SectionHeader icon="/images/clipboard.png" title="Client Has" />
                     <div className="grid grid-cols-2 gap-2 mt-2">
                         {["Intention to act", "Plan to act", "Means to act"].map((opt) => (
@@ -136,7 +134,7 @@ export default function PsychometricianMonthlyReport({ victim, incident, onSubmi
             ))}
 
             {/* 9. On Medication */}
-            <div className="bg-white border rounded-lg shadow-sm p-4">
+            <div className="bg-white border rounded-lg shadow-sm p-3">
                 <SectionHeader icon="/images/pill.png" title="Medication" />
                 <label className="flex items-center gap-2 mt-2">
                     <input
@@ -171,7 +169,7 @@ export default function PsychometricianMonthlyReport({ victim, incident, onSubmi
             </div>
 
             {/* 10. Subjective Reports */}
-            <div className="bg-white border rounded-lg shadow-sm p-4">
+            <div className="bg-white border rounded-lg shadow-sm p-3">
                 <SectionHeader icon="/images/clipboard.png" title="Subjective Reports" />
                 <div className="grid grid-cols-2 gap-2 mt-2">
                     {checkboxGroups.subjective_reports.map((opt) => (
@@ -196,7 +194,7 @@ export default function PsychometricianMonthlyReport({ victim, incident, onSubmi
             </div>
 
             {/* 11. Observations */}
-            <div className="bg-white border rounded-lg shadow-sm p-4">
+            <div className="bg-white border rounded-lg shadow-sm p-3">
                 <SectionHeader icon="/images/clipboard.png" title="Observations" />
                 <div className="grid grid-cols-2 gap-2 mt-2 pr-2">
                     {checkboxGroups.observations.map((opt) => (
@@ -221,7 +219,7 @@ export default function PsychometricianMonthlyReport({ victim, incident, onSubmi
             </div>
 
             {/* 12. Psychological Testing */}
-            <div className="bg-white border rounded-lg shadow-sm p-4">
+            <div className="bg-white border rounded-lg shadow-sm p-3">
                 <SectionHeader icon="/images/clipboard.png" title="Psychological Testing (if conducted)" />
                 <div className="grid grid-cols-2 gap-2 mt-2">
                     {checkboxGroups.psychological_testing.map((opt) => (
