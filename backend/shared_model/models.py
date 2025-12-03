@@ -279,16 +279,6 @@ class Victim(models.Model):
         ('DIVORCED', 'Divorced'),
     ]
 
-    EDUCATIONAL_ATTAINMENT_CHOICES = [
-        ('No Formal Education', 'No Formal Education'),
-        ('Elementary Level/Graduate', 'Elementary Level/Graduate'),
-        ('Junior High School Level/Graduate', 'Junior High School Level/Graduate'),
-        ('Senior High School Level/Graduate', 'Senior High School Level/Graduate'),
-        ('Technical/Vocational', 'Technical/Vocational'),
-        ('College Level/Graduate', 'College Level/Graduate'),
-        ('Post graduate', 'Post graduate'),
-    ]
-    
     RELIGION_CHOICES = [
         ('Roman Catholic', 'Roman Catholic'),
         ('Islam', 'Islam'),
@@ -316,7 +306,7 @@ class Victim(models.Model):
 
     vic_civil_status = EncryptedCharField(max_length=512, choices=CIVIL_STATUS_CHOICES, default='SINGLE')
     vic_religion = EncryptedCharField(max_length=512, choices=RELIGION_CHOICES, default='Roman Catholic')
-    vic_educational_attainment = EncryptedCharField(max_length=512, choices=EDUCATIONAL_ATTAINMENT_CHOICES, default='No Formal Education')
+    vic_educational_attainment = EncryptedCharField(max_length=512, default='No Formal Education')
     vic_school_type = EncryptedCharField(max_length=3, choices=SCHOOL_TYPE_CHOICES, null=True, blank=True)
     vic_school_years = models.PositiveSmallIntegerField(null=True, blank=True)
     vic_last_school_attended = EncryptedCharField(max_length=512, null=True, blank=True)
@@ -393,16 +383,6 @@ class VictimFaceSample(models.Model):
         return f"FaceSample for {self.victim.vic_first_name} {self.victim.vic_last_name}"
 
 class Perpetrator(models.Model):
-    EDUCATIONAL_ATTAINMENT_CHOICES = [
-        ('No Formal Education', 'No Formal Education'),
-        ('Elementary Level/Graduate', 'Elementary Level/Graduate'),
-        ('Junior High School Level/Graduate', 'Junior High School Level/Graduate'),
-        ('Senior High School Level/Graduate', 'Senior High School Level/Graduate'),
-        ('Technical/Vocational', 'Technical/Vocational'),
-        ('College Level/Graduate', 'College Level/Graduate'),
-        ('Post graduate', 'Post graduate'),
-    ]
-    
     perp_id = models.AutoField(primary_key=True)
     per_first_name = EncryptedCharField(max_length=512, blank=True, null=True)
     per_middle_name = EncryptedCharField(max_length=255, blank=True, null=True)
@@ -417,7 +397,7 @@ class Perpetrator(models.Model):
     per_birth_place = EncryptedCharField(max_length=512, blank=True, null=True)
     per_religion = EncryptedCharField(max_length=255, blank=True, null=True)
     per_victim_relationship = EncryptedCharField(max_length=255, blank=True, null=True)
-    per_educational_attainment = EncryptedCharField(max_length=512, choices=EDUCATIONAL_ATTAINMENT_CHOICES, default='No Formal Education')
+    per_educational_attainment = EncryptedCharField(max_length=512, null=True, blank=True, default='No Formal Education')
     per_known_address = EncryptedCharField(max_length=512, blank=True, null=True)
     per_contact_number = EncryptedCharField(max_length=512, blank=True, null=True)
     per_occupation = EncryptedCharField(max_length=512, blank=True, null=True)

@@ -448,7 +448,7 @@ def evidence_view(request, pk):
 class victim_list(generics.ListAPIView):
     serializer_class = VictimListSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ['Social Worker', 'DSWD']
+    allowed_roles = ['Social Worker', 'DSWD', 'Nurse', 'Psychometrician']
 
     def get_queryset(self):
         # Allow all authenticated users with valid roles to see all victims
@@ -971,11 +971,13 @@ def generate_session_docx(session, current_official=None):
         # -----------------------------
         # 2. Choose Template
         # -----------------------------
-        is_first_session = (session.sess_num or 1) == 1
 
-        if is_first_session:
-            print("[INFO] First session → skipping docx generation (no template).")
-            return None
+        # Check if session includes "Case Closure"
+        is_case_closure = session.sess_type.filter(name="Case Closure").exists()
+
+        if is_case_closure:
+            template_file = "Certification-Discharged-Slip.docx"
+            output_file_name = "Certification-Discharged-Slip.docx"
         else:
             template_file = "SS-INDIVIDUAL-SESSION-TEMPLATE.docx"
             output_file_name = f"SS-INDIVIDUAL-SESSION-TEMPLATE-{session.sess_num}.docx"

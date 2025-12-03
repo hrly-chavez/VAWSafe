@@ -1231,6 +1231,23 @@ class VerifyEmailView(APIView):
             "uid": uid,
             "reset_token": token,
         }, status=status.HTTP_200_OK)
+    
+def custom_password_rules(password):
+    errors = []
+
+    if len(password) < 16:
+        errors.append("Password must be at least 16 characters long.")
+    if not any(c.isupper() for c in password):
+        errors.append("Password must contain at least one uppercase letter.")
+    if not any(c.islower() for c in password):
+        errors.append("Password must contain at least one lowercase letter.")
+    if not any(c.isdigit() for c in password):
+        errors.append("Password must contain at least one number.")
+    if not any(c in "!@#$%^&*(),.?\":{}|<>" for c in password):
+        errors.append("Password must contain at least one special character.")
+
+    return errors
+
 
 
 # ✅ Step 3: Reset Password
@@ -1243,47 +1260,49 @@ class ResetPasswordView(APIView):
         new_password = request.data.get("new_password")
 
         if not (uidb64 and token and new_password):
-            return Response({"error": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Missing required fields"}, status=status.HTTP_200_OK)
 
+        # Decode user
         try:
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = get_user_model().objects.get(pk=uid)
-        except (get_user_model().DoesNotExist, ValueError, TypeError):
-            return Response({"error": "Invalid link"}, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            return Response({"error": "Invalid link"}, status=status.HTTP_200_OK)
 
+        # Token check
         if not default_token_generator.check_token(user, token):
-            return Response({"error": "Invalid or expired token"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Invalid or expired token"}, status=status.HTTP_200_OK)
 
-        # Validate password strength
+        # ----- CUSTOM PASSWORD RULES -----
+        custom_errors = custom_password_rules(new_password)
+        if custom_errors:
+            return Response({"error": custom_errors}, status=status.HTTP_200_OK)
+        # ----------------------------------
+
         try:
             validate_password(new_password, user)
         except ValidationError as e:
-            return Response({"error": e.messages}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": e.messages}, status=status.HTTP_200_OK)
 
-        # Apply new password
+        # Set new password
         user.set_password(new_password)
         user.save()
 
-        # ------------- AUDIT LOGGING -------------
+        # AUDIT LOG...
         official = getattr(user, "official", None)
 
-        changes = {
-            "password": ["<old password>", "<new password>"]
-        }
+        changes = {"password": ["<old password>", "<new password>"]}
 
         _audit(
-            actor=user,  # Password reset is initiated by user via link
+            actor=user,
             action="change pass",
             target=official if official else user,
             reason="Password reset via email link",
             changes=_audit_safe(changes),
         )
-        # ------------------------------------------
 
-        return Response(
-            {"success": True, "message": "Password reset successful"},
-            status=status.HTTP_200_OK
-        )
+        return Response({"success": True, "message": "Password reset successful"})
+
 
 # class ResetPasswordView(APIView):
 #     permission_classes = [AllowAny]

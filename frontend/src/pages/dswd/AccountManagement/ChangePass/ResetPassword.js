@@ -19,9 +19,38 @@ export default function ResetPasswordPage() {
     const strength = zxcvbn(password);
     setPasswordStrength(strength.score); // Score between 0-4
   };
+  const validatePasswordRules = (password) => {
+    const errors = [];
 
+    if (password.length < 16) {
+      errors.push("• Must be at least 16 characters long");
+    }
+    if (!/[A-Z]/.test(password)) {
+      errors.push("• Must contain at least 1 uppercase letter");
+    }
+    if (!/[a-z]/.test(password)) {
+      errors.push("• Must contain at least 1 lowercase letter");
+    }
+    if (!/[0-9]/.test(password)) {
+      errors.push("• Must contain at least 1 number");
+    }
+    if (!/[!@#$%^&*(),.?\":{}|<>]/.test(password)) {
+      errors.push("• Must contain at least 1 special character");
+    }
+
+    return errors;
+  };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const validationErrors = validatePasswordRules(newPassword);
+
+    if (validationErrors.length > 0) {
+      setMessage(validationErrors.join("\n"));
+      return;
+    }
+
     try {
       await api.post("/api/dswd/reset-pass/", {
         uid,
@@ -31,9 +60,12 @@ export default function ResetPasswordPage() {
       setMessage("Password reset successful!");
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
-      setMessage("Invalid or expired link.");
+      setMessage(
+        err.response?.data?.error || "Invalid or expired link."
+      );
     }
   };
+
 
   const getStrengthLabel = (score) => {
     switch (score) {
@@ -51,6 +83,9 @@ export default function ResetPasswordPage() {
         return "";
     }
   };
+
+  
+
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">
