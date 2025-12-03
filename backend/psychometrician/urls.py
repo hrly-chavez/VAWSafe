@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     # --- Dashboard ---
     path("dashboard/summary/", PsychometricianDashboardAPIView.as_view(), name="psychometrician-dashboard-summary"),
+    path("api/evidence/<int:pk>/view/", evidence_view, name="evidence_view"),
     
     # --- Existing endpoints ---
     path("victims/", victim_list.as_view(), name="victim-list"),

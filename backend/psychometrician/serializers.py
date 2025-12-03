@@ -1,3 +1,4 @@
+from django.urls import reverse
 from rest_framework import serializers
 from shared_model.models import *
 from datetime import date
@@ -298,6 +299,20 @@ class SessionSerializer(serializers.ModelSerializer):
     def get_location(self, obj):
         return obj.sess_location or None
 
+class EvidenceSerializer(serializers.ModelSerializer):
+    file_url = serializers.SerializerMethodField()
+
+    def get_file_url(self, obj):
+        url = reverse("evidence_view", args=[obj.pk])
+        request = self.context.get("request")
+        if request:
+            return request.build_absolute_uri(url)
+        return url  # fallback relative URL
+
+    class Meta:
+        model = Evidence
+        fields = ["id", "description", "uploaded_at", "file_url"]
+
 class IncidentInformationSerializer(serializers.ModelSerializer):
     """
     Displays incident info along with all linked sessions for debugging.
@@ -305,6 +320,7 @@ class IncidentInformationSerializer(serializers.ModelSerializer):
     """
     sessions = serializers.SerializerMethodField()
     perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)
+    evidences = serializers.SerializerMethodField()
 
     class Meta:
         model = IncidentInformation
@@ -330,6 +346,15 @@ class IncidentInformationSerializer(serializers.ModelSerializer):
             s._prefetched_progress = list(s.progress.select_related("official").all())
 
         return SessionSerializer(queryset, many=True, context={"request": self.context.get("request")}).data
+    
+    def get_evidences(self, obj):
+        qs = Evidence.objects.filter(incident=obj)
+        # ✅ forward the request context so get_file_url works
+        return EvidenceSerializer(
+            qs,
+            many=True,
+            context={"request": self.context.get("request")}
+        ).data
 
 class SessionTypeQuestionSerializer(serializers.ModelSerializer): 
     """
