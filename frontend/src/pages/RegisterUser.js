@@ -309,19 +309,19 @@ const RegisterUser = ({ onClose, defaultRole }) => {
       }
 
       // Step 1: Check if the face already exists
-      //unya nani i push if dli na dev phase
-      // const checkResponse = await fetch("http://localhost:8000/api/auth/search-official/", {
-      //   method: "POST",
-      //   body: formData,
-      // });
+      // unya nani i push if dli na dev phase
+      const checkResponse = await fetch("http://localhost:8000/api/auth/search-official/", {
+        method: "POST",
+        body: formData,
+      });
 
-      // const checkData = await checkResponse.json();
+      const checkData = await checkResponse.json();
 
-      // // If a match is found (verified = true), stop registration
-      // if (checkData.match && checkData.match === true) {
-      //   alert("A matching official was found. Registration cannot proceed.");
-      //   return;  // Stop further submission
-      // }
+      // If a match is found (verified = true), stop registration
+      if (checkData.match && checkData.match === true) {
+        alert("A matching official was found. Registration cannot proceed.");
+        return;  // Stop further submission
+      }
 
       // Step 2: Proceed to register the user if no match is found
       const response = await fetch("http://localhost:8000/api/auth/add-user/", {
