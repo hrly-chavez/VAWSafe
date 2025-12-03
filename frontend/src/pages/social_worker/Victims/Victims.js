@@ -139,7 +139,7 @@ export default function SocialWorkerVictims() {
                       <td className="px-3 py-2 border">{v.code}</td>
                       <td className="px-3 py-2 border whitespace-normal break-words">{fullName}</td>
                       <td className="px-3 py-2 border">{v.age || "N/A"}</td>
-                      <td className="px-3 py-2 border whitespace-normal break-words">{v.vic_birth_place || "N/A"}</td>
+                      <td className="px-3 py-2 border whitespace-normal break-words">{v.full_address || "N/A"}</td>
                       {/* <td className="px-3 py-2 border whitespace-normal break-words">{v.violence_type || "N/A"}</td> */}
                       <td className="px-3 py-2 border">{v.vic_contact_number || "N/A"}</td>
                       <td className="px-3 py-2 border text-center">

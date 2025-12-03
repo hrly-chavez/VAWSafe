@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import SectionHeader from "../../../components/SectionHeader";
 import api from "../../../api/axios";
-import { CheckBadgeIcon } from "@heroicons/react/24/solid";
+import { CheckBadgeIcon, UserIcon, PhoneIcon, EnvelopeIcon, CalendarIcon, MapPinIcon } from "@heroicons/react/24/solid";
 
 export default function ViewOfficials() {
   const { of_id } = useParams();
@@ -17,7 +16,6 @@ export default function ViewOfficials() {
   const [auditsLoading, setAuditsLoading] = useState(false);
   const [auditsError, setAuditsError] = useState("");
 
-  // Helper function to make changes human-readable
   const formatChange = (field, value) => {
     const fieldLabels = {
       of_fname: "First Name",
@@ -31,11 +29,8 @@ export default function ViewOfficials() {
       of_email: "Email",
       deleted_at: "Deleted At",
       username: "Username",
-      // add more fields as needed
     };
-
     const label = fieldLabels[field] || field;
-
     if (Array.isArray(value) && value.length === 2) {
       return `${label} changed from ${value[0]} to ${value[1]}`;
     } else if (Array.isArray(value) && value.length === 1) {
@@ -44,7 +39,6 @@ export default function ViewOfficials() {
       return `${label} changed to ${value}`;
     }
   };
-
 
   useEffect(() => {
     api.get(`/api/dswd/officials/${of_id}/`)
@@ -82,160 +76,176 @@ export default function ViewOfficials() {
       <div className="w-full max-w-6xl bg-white shadow-xl rounded-xl overflow-hidden border border-gray-200">
 
         {/* Header */}
-        <header className="h-40 rounded-t-xl bg-[#292D96] flex items-start p-6">
-          <h1 className="text-3xl font-bold text-white shadow-sm">DSWD Official Details</h1>
-        </header>
+        <header className="h-24 rounded-t-xl bg-[#292D96]"></header>
 
-        {/* Profile Info */}
-        <section className="px-6 md:px-8 -mt-16 flex flex-col md:flex-row items-start space-y-6 md:space-y-0 md:space-x-8">
-          <div className="flex-shrink-0 w-full md:w-auto flex flex-col items-center md:items-start">
+        {/* Profile Section */}
+        <section className="px-6 md:px-8 flex flex-row items-start gap-6">
+          <div className="-mt-16">
             <img
               src={official.of_photo || "https://via.placeholder.com/160"}
               alt="Official"
-              className="w-32 h-32 rounded-full border-4 border-white ring-4 ring-[#F59E0B] bg-gray-200 object-cover shadow-lg"
+              className="w-40 h-40 rounded-full border-4 border-white bg-gray-200 object-cover shadow-lg"
             />
-            <h1 className="text-3xl font-bold mt-4 text-gray-800">{official.full_name}</h1>
-            <p className="text-lg text-[#292D96] font-medium">{official.of_role || "Unassigned"}</p>
-            <div className="mt-2 flex space-x-2 items-center">
-              <span
-                className={`px-3 py-1 text-xs font-bold rounded-full uppercase bg-green-500 text-white
-                  ${official.deleted_at ? "bg-red-500" : "bg-green-500"}`}
-              >
+          </div>
+          <div className="mt-2 flex flex-col justify-center">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl font-bold text-gray-800">{official.full_name}</h1>
+              <span className={`inline-block px-3 py-1.5 text-sm font-medium rounded-full ${official.deleted_at ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
                 {official.deleted_at ? "Archived" : "Active"}
               </span>
-              <p className="text-sm text-gray-500">Email: {official.of_email || "N/A"}</p>
             </div>
+            <p className="text-sm text-gray-600 mt-2">{official.of_role || "Unassigned"}</p>
+            <p className="text-sm text-gray-600">Email: {official.of_email || "N/A"}</p>
           </div>
         </section>
 
-        {/* Tabs Navigation */}
-        <div className="px-6 md:px-8 mt-6 border-b border-gray-300">
-          <nav className="flex space-x-6">
-            <button
-              onClick={() => setActiveTab("details")}
-              className={`py-2 border-b-2 transition duration-200 ${activeTab === "details"
-                  ? "border-[#292D96] text-[#292D96] font-semibold"
-                  : "border-transparent text-gray-600 hover:text-[#292D96]"
-                }`}
-            >
-              Full Profile
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab("audits");
-                loadAudits();
-              }}
-              className={`py-2 border-b-2 transition duration-200 ${activeTab === "audits"
-                  ? "border-[#292D96] text-[#292D96] font-semibold"
-                  : "border-transparent text-gray-600 hover:text-[#292D96]"
-                }`}
-            >
-              Audit Log
-            </button>
-          </nav>
+        {/* Tabs */}
+        <div className="px-6 md:px-8 mt-8">
+          <div className="flex border-b border-gray-300 bg-white">
+            {["details", "audits"].map((tab) => {
+              const isActive = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    if (tab === "audits") loadAudits();
+                  }}
+                  className={`px-6 py-2 text-sm font-semibold rounded-t-md transition-colors duration-200 ${isActive
+                      ? "bg-[#292D96] text-white border border-gray-300 border-b-0"
+                      : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#292D96] border border-gray-300"
+                    }`}
+                >
+                  {tab === "details" ? "Details" : "Audit Logs"}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Tab Content */}
-        <div className="p-6 md:p-8">
+        <div className="px-6 md:px-8 bg-white rounded-b-md">
           {activeTab === "details" && (
-            <div className="space-y-8">
+            <div className="space-y-8 pt-4">
               {/* Personal Info */}
-              <div>
-                <SectionHeader icon="/images/id-card.png" title="Personal Info" />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm bg-gray-50 p-4 rounded-lg shadow-inner border border-gray-200">
-                  <div>
-                    <p className="text-gray-500">Sex</p>
-                    <p className="text-gray-800 font-medium">{official.of_sex || "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Date of Birth</p>
-                    <p className="text-gray-800 font-medium">{official.of_dob || "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Place of Birth</p>
-                    <p className="text-gray-800 font-medium">{official.of_pob || "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500">Contact</p>
-                    <p className="text-gray-800 font-medium">{official.of_contact || "—"}</p>
-                  </div>
-                  <div className="md:col-span-2">
-                    <p className="text-gray-500">Full Address</p>
-                    <p className="text-gray-800 font-medium">
-                      {[
+              <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
+                  <h2 className="text-lg font-semibold text-gray-800">Personal Information</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm p-6">
+                  <Info label="Sex" value={official.of_sex} icon={<UserIcon className="h-4 w-4 text-gray-500" />} />
+                  <Info label="Date of Birth" value={official.of_dob} icon={<CalendarIcon className="h-4 w-4 text-gray-500" />} />
+                  <Info label="Place of Birth" value={official.of_pob} icon={<MapPinIcon className="h-4 w-4 text-gray-500" />} />
+                  <Info label="Contact" value={official.of_contact} icon={<PhoneIcon className="h-4 w-4 text-gray-500" />} />
+                  <Info label="Email" value={official.of_email} icon={<EnvelopeIcon className="h-4 w-4 text-gray-500" />} />
+                  {/* Full Address */}
+                  <Info
+                    label="Full Address"
+                    value={
+                      [
                         official.address?.street,
                         official.address?.sitio,
                         official.address?.barangay_name,
                         official.address?.municipality_name,
                         official.address?.province_name,
-                      ].filter(Boolean).join(", ") || "—"}
-                    </p>
-                  </div>
+                      ].filter(Boolean).join(", ") || "—"
+                    }
+                    icon={<MapPinIcon className="h-4 w-4 text-gray-500" />}
+                  />
                 </div>
               </div>
             </div>
           )}
-
           {activeTab === "audits" && (
-            <div className="space-y-6">
-              <h2 className="text-xl font-bold text-gray-800">Audit Log</h2>
-              {auditsLoading && <p className="text-gray-500 text-sm">Loading audits…</p>}
-              {auditsError && <p className="text-red-500 text-sm">{auditsError}</p>}
-              {!auditsLoading && !auditsError && audits.length === 0 && (
-                <p className="text-gray-500 text-sm">No audit entries.</p>
-              )}
-              {audits.map((a) => (
-                <div
-                  key={a.id}
-                  className="border rounded-md p-4 shadow-sm bg-gray-50 mb-4 hover:bg-gray-100 transition"
-                >
-                  {/* Header: Action by Actor */}
-                  <div className="flex justify-between text-sm">
-                    <div>
-                      <span className="font-medium capitalize">{a.action}</span>{" "}
-                      <span className="opacity-70">by</span>{" "}
-                      <span className="font-medium">{a.actor_name || "System"}</span>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(a.created_at).toLocaleString()}
-                    </div>
-                  </div>
-
-                  {/* Reason */}
-                  {a.reason && (
-                    <div className="mt-1 text-xs">
-                      <span className="font-medium">Reason:</span> {a.reason}
-                    </div>
-                  )}
-
-                  {/* Changes (hide for create, archive, unarchive) */}
-                  {!["create", "archive", "unarchive"].includes(a.action) && a.changes && (
-                    <div className="mt-2 text-xs">
-                      <span className="font-medium">Changes:</span>
-                      <ul className="list-disc ml-5 mt-1">
-                        {Object.entries(a.changes).map(([field, value], index) => (
-                          <li key={index}>{formatChange(field, value)}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
+            <div className="space-y-8 pt-4">
+              <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                {/* Title bar */}
+                <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
+                  <h2 className="text-lg font-semibold text-gray-800">Audit Logs</h2>
                 </div>
-              ))}
+
+                {/* Content */}
+                <div className="p-6 space-y-4">
+                  {auditsLoading && <p className="text-gray-500">Loading audits…</p>}
+                  {auditsError && <p className="text-red-500">{auditsError}</p>}
+                  {!auditsLoading && !auditsError && audits.length === 0 && (
+                    <p className="text-gray-500 italic">No audit entries.</p>
+                  )}
+
+                  {audits.map((a) => (
+                    <div
+                      key={a.id}
+                      className="p-4 bg-white border rounded-lg shadow-sm hover:bg-gray-50 transition"
+                    >
+                      {/* Header: Action by Actor */}
+                      <div className="flex justify-between text-sm mb-1">
+                        <div>
+                          <span className="font-medium capitalize">{a.action}</span>{" "}
+                          <span className="opacity-70">by</span>{" "}
+                          <span className="font-medium">{a.actor_name || "System"}</span>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(a.created_at).toLocaleString("en-PH")}
+                        </div>
+                      </div>
+
+                      {/* Reason */}
+                      {a.reason && (
+                        <div className="mt-1 text-xs">
+                          <span className="font-medium">Reason:</span> {a.reason}
+                        </div>
+                      )}
+
+                      {/* Changes (hide for create, archive, unarchive) */}
+                      {!["create", "archive", "unarchive"].includes(a.action) && a.changes && (
+                        <div className="mt-2 text-xs">
+                          <span className="font-medium">Changes:</span>
+                          <ul className="list-disc ml-5 mt-1">
+                            {Object.entries(a.changes).map(([field, value], index) => (
+                              <li key={index}>{formatChange(field, value)}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
-
-
-          {/* Back Button */}
-          <div className="flex justify-end mt-10">
-            <button
-              onClick={() => navigate(-1)}
-              className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-4 py-2 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
-            >
-              ← Back to List
-            </button>
-          </div>
         </div>
+
+        {/* Back Button */}
+        <div className="flex justify-end mt-10 px-6 md:px-8 mb-8">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-4 py-2 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="w-5 h-5"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+            Back to Officials
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Info({ label, value, icon }) {
+  return (
+    <div className="flex items-start gap-2">
+      {icon}
+      <div>
+        <p className="text-xs text-gray-500">{label}</p>
+        <p className="font-medium text-gray-800">{value || "—"}</p>
       </div>
     </div>
   );

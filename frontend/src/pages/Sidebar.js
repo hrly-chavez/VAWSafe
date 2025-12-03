@@ -58,7 +58,7 @@ export default function Sidebar({ sidebarOpen, toggleSidebar, notificationCount 
 
     if (role === "social worker") {
       return [
-        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/social_worker", },
+        { icon: "/images/dashboardnew.png", label: "Dashboard", path: "/social_worker", showBadge: true },
         { icon: "/images/add.png", label: "Register Victim", path: "/social_worker/register-victim", },
         { icon: "/images/heart.png", label: "Women Survivors", path: "/social_worker/victims", },
         { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/social_worker/sessions", },

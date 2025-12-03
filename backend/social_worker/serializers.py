@@ -126,6 +126,8 @@ class VictimDetailSerializer(serializers.ModelSerializer):
     incidents = IncidentWithPerpetratorSerializer(many=True, read_only=True)
     contact_persons = serializers.SerializerMethodField()
     family_members = FamilyMemberSerializer(many=True, read_only=True)
+    address = AddressSerializer(read_only=True)
+    full_address = serializers.SerializerMethodField()  # <-- NEW FIELD
 
     class Meta:
         model = Victim
@@ -145,6 +147,24 @@ class VictimDetailSerializer(serializers.ModelSerializer):
         # collect all contact persons for this victim's incidents
         contact_persons = ContactPerson.objects.filter(incident__vic_id=obj)
         return ContactPersonSerializer(contact_persons, many=True).data
+    
+    # --------------------------------------------------
+    # 🔥 HELPER: Build full address string from serializer output
+    # --------------------------------------------------
+    def get_full_address(self, obj):
+        address = obj.address
+        if not address:
+            return None
+
+        parts = [
+            address.street,
+            address.sitio,
+            address.barangay.name if address.barangay else None,
+            address.municipality.name if address.municipality else None,
+            address.province.name if address.province else None,
+        ]
+
+        return ", ".join([p for p in parts if p])
 #=====================================SESSIONS=============================================
 class SessionCRUDSerializer(serializers.ModelSerializer):
     """
@@ -471,6 +491,8 @@ class IncidentInformationSerializer(serializers.ModelSerializer):
 class VictimListSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
     incidents = IncidentInformationSerializer(many=True, read_only=True)
+    address = AddressSerializer(read_only=True)
+    full_address = serializers.SerializerMethodField()  # <-- NEW FIELD
 
     class Meta:
         model = Victim
@@ -485,6 +507,21 @@ class VictimListSerializer(serializers.ModelSerializer):
                 - ((today.month, today.day) < (obj.vic_birth_date.month, obj.vic_birth_date.day))
             )
         return None
+    
+    def get_full_address(self, obj):
+        address = obj.address
+        if not address:
+            return None
+
+        parts = [
+            address.street,
+            address.sitio,
+            address.barangay.name if address.barangay else None,
+            address.municipality.name if address.municipality else None,
+            address.province.name if address.province else None,
+        ]
+
+        return ", ".join([p for p in parts if p])
 
 class EvidenceSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()
@@ -993,18 +1030,27 @@ class ChangeLogSerializer(serializers.ModelSerializer):
 
 
 #============================= Social Worker Dashboard ======================================
-
 # --- Victim Summary ---
 class VictimSummarySerializer(serializers.Serializer):
     total_victims = serializers.IntegerField()
-
+    total_victims_percent = serializers.FloatField(required=False)  # optional if you want KPI %
 
 # --- Session Summary ---
 class SessionSummarySerializer(serializers.Serializer):
+    total_assigned_sessions = serializers.IntegerField()
+    total_assigned_percent = serializers.FloatField()
+
     sessions_this_week = serializers.IntegerField()
+    sessions_week_percent = serializers.FloatField()
+
     pending_sessions = serializers.IntegerField()
-    ongoing_sessions = serializers.IntegerField()   
-    done_sessions = serializers.IntegerField()      
+    pending_percent = serializers.FloatField()
+
+    ongoing_sessions = serializers.IntegerField()
+    ongoing_percent = serializers.FloatField()
+
+    done_sessions = serializers.IntegerField()
+    done_percent = serializers.FloatField(required=False)      
 
 
 # --- Monthly Report Row ---
