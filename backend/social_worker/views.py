@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.db.models import Q
 from django.db import transaction
-from django.http import Http404
+from django.http import FileResponse, Http404
 from deepface import DeepFace
 from .serializers import *
 import time
@@ -437,7 +437,14 @@ def register_victim(request):
         transaction.set_rollback(True)
         return Response({"success": False, "error": str(e)},
                         status=status.HTTP_400_BAD_REQUEST)
- 
+
+def evidence_view(request, pk):
+    try:
+        evidence = Evidence.objects.get(pk=pk)
+        return FileResponse(evidence.file.open(), content_type="image/jpeg")
+    except Evidence.DoesNotExist:
+        raise Http404
+
 class victim_list(generics.ListAPIView):
     serializer_class = VictimListSerializer
     permission_classes = [IsAuthenticated, IsRole]
