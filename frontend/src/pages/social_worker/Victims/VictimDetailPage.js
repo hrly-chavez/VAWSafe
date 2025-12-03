@@ -401,7 +401,7 @@ export default function VictimDetailPage() {
                   />
                   <Info
                     label="Current Address"
-                    value={get(victim, ["vic_current_address"])}
+                    value={get(victim, ["full_address"])}
                     icon={<HomeIcon className="h-4 w-4 text-gray-500" />}
                   />
                   <Info
