@@ -11,15 +11,15 @@ export default function Sidebar({ sidebarOpen, toggleSidebar, notificationCount 
   const location = useLocation();
 
   const handleLogout = async () => {
-    const confirmed = window.confirm("Are you sure you want to log out?");
-    if (!confirmed) return;
-    try {
-      // call backend /api/auth/logout/ inside this logout()
-      await logout();
-    } finally {
-      navigate("/login", { replace: true });
-    }
-  };
+  try {
+    await logout(); // clear session on backend
+  } finally {
+    // simulate a short pause/refresh before redirect
+    setTimeout(() => {
+      window.location.href = "/login"; // redirect smoothly
+    }, 500); // half-second pause feels like a refresh
+  }
+};
 
   // Build sidebar items by role taken directly from context user
   const getSidebarItems = () => {

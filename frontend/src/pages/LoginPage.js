@@ -364,7 +364,7 @@ const LoginPage = () => {
 
     try {
       const response = await apiFetch("http://localhost:8000/api/auth/manual-login/", {
-      // const response = await apiFetch("http://192.168.254.199:8000/api/auth/manual-login/", {
+        // const response = await apiFetch("http://192.168.254.199:8000/api/auth/manual-login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -641,16 +641,26 @@ const LoginPage = () => {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 w-full">
-                    <input
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="w-4 h-4"
-                    />
-                    <label className="text-gray-700 text-sm">Remember Me</label>
+                  {/* Remember Me */}
+                  <div className="flex items-center gap-2 w-full mt-2 pl-4">
+                    <div className="flex items-center justify-center w-5 h-5 rounded-md bg-gray-50 border border-gray-200 shadow-inner">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="w-4 h-4 accent-gray-400 cursor-pointer"
+                      />
+                    </div>
+                    <label className="text-xs text-gray-400 cursor-pointer">
+                      Remember Me
+                    </label>
+                    {rememberMe && (
+                      <span className="text-xs text-green-600 flex items-center gap-1">
+                        <CheckCircleIcon className="w-4 h-4" />
+                        Saved
+                      </span>
+                    )}
                   </div>
-
 
                   {/* Login Buttons */}
                   <button
@@ -690,17 +700,16 @@ const LoginPage = () => {
 
                 {message && (
                   <p
-                    className={`mt-4 text-sm font-medium ${
-                      loading
-                        ? "text-white animate-pulse"
-                        : blinkCaptured ||
-                          (typeof message === "string" && message.includes("✅"))
+                    className={`mt-4 text-sm font-medium ${loading
+                      ? "text-white animate-pulse"
+                      : blinkCaptured ||
+                        (typeof message === "string" && message.includes("✅"))
                         ? "text-green-400"
                         : message === "No blink detected. Please blink clearly." ||
                           message === "No face detected. Please position your face clearly in front of the camera."
-                        ? "text-red-400"
-                        : "text-white"
-                    }`}
+                          ? "text-red-400"
+                          : "text-white"
+                      }`}
                   >
                     {message}
                   </p>
@@ -764,17 +773,19 @@ const LoginPage = () => {
       </div>
 
       {/* Register Modal */}
-      {showRegisterModal && (
-        <RegisterUser
-          onClose={() => {
-            setShowRegisterModal(false);
-            setAutoDSWDRegister(false);
-          }}
-          defaultRole={autoDSWDRegister ? "DSWD" : "Social Worker"}
-        // defaultRole="DSWD" // always set "DSWD" as default role
-        />
-      )}
-    </div>
+      {
+        showRegisterModal && (
+          <RegisterUser
+            onClose={() => {
+              setShowRegisterModal(false);
+              setAutoDSWDRegister(false);
+            }}
+            defaultRole={autoDSWDRegister ? "DSWD" : "Social Worker"}
+          // defaultRole="DSWD" // always set "DSWD" as default role
+          />
+        )
+      }
+    </div >
 
   );
 };

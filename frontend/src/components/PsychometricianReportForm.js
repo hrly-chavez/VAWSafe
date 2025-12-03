@@ -50,15 +50,9 @@ export default function PsychometricianReportForm({ victim, incident, onSubmit, 
   return (
     <form onSubmit={handleSubmit} className="text-sm text-gray-700">
       {/* Title */}
-      <div className="mb-8 text-center">
+      <div className="mb-6 text-center">
         <h2 className="text-2xl font-bold text-[#292D96]">Psychometrician's Report</h2>
         <p className="text-xs text-gray-500 mt-1">Comprehensive Psychological Assessment</p>
-      </div>
-
-      {/* Victim Info */}
-      <div className="mb-6">
-        <p className="text-xs text-gray-500">Client Name:</p>
-        <p className="font-medium text-lg">{victim.full_name || "—"}</p>
       </div>
 
       {/* Tab Navigation */}
@@ -67,12 +61,11 @@ export default function PsychometricianReportForm({ victim, incident, onSubmit, 
           <button
             key={tab.key}
             type="button"
-            onClick={() => setActiveTab(tab.key)} // ✅ no listCount reset needed
-            className={`px-4 py-2 text-sm font-medium rounded-t-md ${
-              activeTab === tab.key
+            onClick={() => setActiveTab(tab.key)}
+            className={`px-4 py-2 text-sm font-medium rounded-t-md ${activeTab === tab.key
                 ? "bg-[#292D96] text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
+              }`}
           >
             {tab.label}
           </button>
