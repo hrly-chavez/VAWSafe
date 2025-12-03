@@ -729,7 +729,7 @@ export default function VictimDetailPage() {
                                 `/social_worker/more-sessions/create/${incident.incident_id}`
                               )
                             }
-                            naavigate={navigate}
+                            navigate={navigate}
                           />
                         )}
                       </div>
