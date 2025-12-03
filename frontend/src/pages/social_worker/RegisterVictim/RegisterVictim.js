@@ -39,6 +39,7 @@ const FIELD_LABELS = {
   violence_type: "Violence Type",
 
   per_first_name: "Perpetrator First Name",
+  per_middle_name: "Perpetrator Middle Name",
   per_last_name: "Perpetrator Last Name",
   per_sex: "Perpetrator Sex",
   per_birth_date: "Perpetrator Birth Date",
