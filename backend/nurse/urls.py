@@ -3,6 +3,7 @@ from .views import *
 from . import views
 
 urlpatterns = [
+    path("api/evidence/<int:pk>/view/", evidence_view, name="evidence_view"),
     # --- Existing endpoints ---
     path("victims/", victim_list.as_view(), name="victim-list"),
     path("victims/<int:vic_id>/", victim_detail.as_view(), name="victim-detail"),

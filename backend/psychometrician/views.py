@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.db.models import Q
 from django.db import transaction
-from django.http import Http404
+from django.http import FileResponse, Http404
 from deepface import DeepFace
 from .serializers import *
 import time
@@ -33,6 +33,13 @@ from io import BytesIO
 from django.forms.models import model_to_dict
 
 logger = logging.getLogger(__name__)
+
+def evidence_view(request, pk):
+    try:
+        evidence = Evidence.objects.get(pk=pk)
+        return FileResponse(evidence.file.open(), content_type="image/jpeg")
+    except Evidence.DoesNotExist:
+        raise Http404
 
 def cleanup_decrypted_file_later(file_path, victim_id, delay=10):
     """Helper function to delete the decrypted photo after a delay (in seconds)."""

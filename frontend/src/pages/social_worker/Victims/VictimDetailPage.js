@@ -47,8 +47,12 @@ const iconMap = {
   "Work Address": <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
 
   // Education
-  "Educational Attainment": <AcademicCapIcon className="h-4 w-4 text-gray-500" />,
-  "Last School Attended": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
+  "Educational Attainment": (
+    <AcademicCapIcon className="h-4 w-4 text-gray-500" />
+  ),
+  "Last School Attended": (
+    <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />
+  ),
   "School Address": <MapPinIcon className="h-4 w-4 text-gray-500" />,
   "School Type": <BuildingLibraryIcon className="h-4 w-4 text-gray-500" />,
   "School Years": <CalendarIcon className="h-4 w-4 text-gray-500" />,
@@ -61,7 +65,9 @@ const iconMap = {
   Occupation: <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
   "Monthly Income": <CurrencyDollarIcon className="h-4 w-4 text-gray-500" />,
   Skills: <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />,
-  "Previous Skills": <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />,
+  "Previous Skills": (
+    <WrenchScrewdriverIcon className="h-4 w-4 text-gray-500" />
+  ),
   "Type of Training": <AcademicCapIcon className="h-4 w-4 text-gray-500" />,
   "Training Location": <MapPinIcon className="h-4 w-4 text-gray-500" />,
   "Training Time": <ClockIcon className="h-4 w-4 text-gray-500" />,
@@ -69,7 +75,9 @@ const iconMap = {
 
   // Contact Person
   Relationship: <UserGroupIcon className="h-4 w-4 text-gray-500" />,
-  "Contact Number (Contact Person)": <PhoneIcon className="h-4 w-4 text-gray-500" />,
+  "Contact Number (Contact Person)": (
+    <PhoneIcon className="h-4 w-4 text-gray-500" />
+  ),
 
   // Family Members
   Income: <CurrencyDollarIcon className="h-4 w-4 text-gray-500" />,
@@ -99,9 +107,15 @@ export default function VictimDetailPage() {
   const [currentOfficialId, setCurrentOfficialId] = useState(null);
 
   const groupedReports = {
-    "Social Worker": reportsList.filter(r => r.report_type?.toLowerCase().includes("social worker")),
-    "Nurse": reportsList.filter(r => r.report_type?.toLowerCase().includes("nurse")),
-    "Psychometrician": reportsList.filter(r => r.report_type?.toLowerCase().includes("psychometrician")),
+    "Social Worker": reportsList.filter((r) =>
+      r.report_type?.toLowerCase().includes("social worker")
+    ),
+    Nurse: reportsList.filter((r) =>
+      r.report_type?.toLowerCase().includes("nurse")
+    ),
+    Psychometrician: reportsList.filter((r) =>
+      r.report_type?.toLowerCase().includes("psychometrician")
+    ),
   };
 
   const roleColors = {
@@ -114,12 +128,15 @@ export default function VictimDetailPage() {
 
   const handleSubmitSocialWorkerReport = async (data) => {
     try {
-      const res = await api.post(`/api/social_worker/victims/${vic_id}/reports/`, {
-        social_service: data.social_service,
-        medical_service: data.medical_service,
-        psychological_service: data.psychological_service,
-        homelife_service: data.homelife_service,
-      });
+      const res = await api.post(
+        `/api/social_worker/victims/${vic_id}/reports/`,
+        {
+          social_service: data.social_service,
+          medical_service: data.medical_service,
+          psychological_service: data.psychological_service,
+          homelife_service: data.homelife_service,
+        }
+      );
 
       setShowAddReportModal(false);
       await fetchReports();
@@ -147,7 +164,9 @@ export default function VictimDetailPage() {
 
       // Social Worker Reports
       try {
-        const swRes = await api.get(`/api/social_worker/victims/${vic_id}/reports/`);
+        const swRes = await api.get(
+          `/api/social_worker/victims/${vic_id}/reports/`
+        );
         socialWorkerData = Array.isArray(swRes.data) ? swRes.data : [];
       } catch (err) {
         console.error("Failed to fetch social worker reports", err);
@@ -155,7 +174,9 @@ export default function VictimDetailPage() {
 
       // Nurse Reports
       try {
-        const nurseRes = await api.get(`/api/social_worker/victims/${vic_id}/nurse-reports/`);
+        const nurseRes = await api.get(
+          `/api/social_worker/victims/${vic_id}/nurse-reports/`
+        );
         nurseData = Array.isArray(nurseRes.data) ? nurseRes.data : [];
       } catch (err) {
         console.error("Failed to fetch nurse reports", err);
@@ -163,18 +184,30 @@ export default function VictimDetailPage() {
 
       // Psychometrician Comprehensive Reports
       try {
-        const psychComRes = await api.get(`/api/social_worker/victims/${vic_id}/psych-comprehensive-reports/`);
+        const psychComRes = await api.get(
+          `/api/social_worker/victims/${vic_id}/psych-comprehensive-reports/`
+        );
         psychComData = Array.isArray(psychComRes.data) ? psychComRes.data : [];
       } catch (err) {
-        console.error("Failed to fetch psychometrician comprehensive reports", err);
+        console.error(
+          "Failed to fetch psychometrician comprehensive reports",
+          err
+        );
       }
 
       // Psychometrician Monthly Progress Reports
       try {
-        const psychMonthlyRes = await api.get(`/api/social_worker/victims/${vic_id}/psych-monthly-progress-reports/`);
-        psychMonthlyData = Array.isArray(psychMonthlyRes.data) ? psychMonthlyRes.data : [];
+        const psychMonthlyRes = await api.get(
+          `/api/social_worker/victims/${vic_id}/psych-monthly-progress-reports/`
+        );
+        psychMonthlyData = Array.isArray(psychMonthlyRes.data)
+          ? psychMonthlyRes.data
+          : [];
       } catch (err) {
-        console.error("Failed to fetch psychometrician monthly progress reports", err);
+        console.error(
+          "Failed to fetch psychometrician monthly progress reports",
+          err
+        );
       }
 
       // Normalize reports so ReportModal can render them consistently
@@ -182,19 +215,24 @@ export default function VictimDetailPage() {
         ...report,
         report_type: report.report_type ?? type,
         prepared_by_id: report.prepared_by_id ?? report.prepared_by?.id ?? null,
-        prepared_by_name: report.prepared_by_name ?? report.prepared_by?.full_name ?? "—",
+        prepared_by_name:
+          report.prepared_by_name ?? report.prepared_by?.full_name ?? "—",
         incident: report.incident?.id ?? report.incident ?? null,
       });
 
       const combined = [
-        ...socialWorkerData.map(r => normalize(r, "Social Worker")),
-        ...nurseData.map(r => normalize(r, "Nurse")),
-        ...psychComData.map(r => normalize(r, "Psychometrician Comprehensive")),
-        ...psychMonthlyData.map(r => normalize(r, "Psychometrician Monthly")),
+        ...socialWorkerData.map((r) => normalize(r, "Social Worker")),
+        ...nurseData.map((r) => normalize(r, "Nurse")),
+        ...psychComData.map((r) =>
+          normalize(r, "Psychometrician Comprehensive")
+        ),
+        ...psychMonthlyData.map((r) => normalize(r, "Psychometrician Monthly")),
       ];
 
       // Sort by report_month descending (true chronological order)
-      combined.sort((a, b) => new Date(b.report_month) - new Date(a.report_month));
+      combined.sort(
+        (a, b) => new Date(b.report_month) - new Date(a.report_month)
+      );
 
       setReportsList(combined);
     } catch (err) {
@@ -218,7 +256,11 @@ export default function VictimDetailPage() {
         const data = Array.isArray(res.data) ? res.data[0] : res.data;
         setVictim(data || null);
       } catch (err) {
-        setError(err?.response?.status ? `Error ${err.response.status}` : "Request failed");
+        setError(
+          err?.response?.status
+            ? `Error ${err.response.status}`
+            : "Request failed"
+        );
       } finally {
         setLoading(false);
       }
@@ -240,11 +282,13 @@ export default function VictimDetailPage() {
 
   const fullName = victim
     ? [
-      get(victim, ["vic_first_name"]),
-      get(victim, ["vic_middle_name"]),
-      get(victim, ["vic_last_name"]),
-      get(victim, ["vic_extension"]),
-    ].filter(Boolean).join(" ")
+        get(victim, ["vic_first_name"]),
+        get(victim, ["vic_middle_name"]),
+        get(victim, ["vic_last_name"]),
+        get(victim, ["vic_extension"]),
+      ]
+        .filter(Boolean)
+        .join(" ")
     : "";
 
   if (loading) return <p>Loading victim details...</p>;
@@ -274,7 +318,7 @@ export default function VictimDetailPage() {
               </span>
             </div>
             <p className="text-sm text-gray-600 mt-2">
-              Victim ID: {get(victim, ["vic_id"])}
+              Victim Code: {get(victim, ["code"])}
             </p>
           </div>
         </section>
@@ -288,10 +332,11 @@ export default function VictimDetailPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-2 text-sm font-semibold rounded-t-md transition-colors duration-200 ${isActive
-                    ? "bg-[#292D96] text-white border border-gray-300 border-b-0"
-                    : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#292D96] border border-gray-300"
-                    }`}
+                  className={`px-6 py-2 text-sm font-semibold rounded-t-md transition-colors duration-200 ${
+                    isActive
+                      ? "bg-[#292D96] text-white border border-gray-300 border-b-0"
+                      : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#292D96] border border-gray-300"
+                  }`}
                 >
                   {tab === "details" && "Details"}
                   {tab === "case" && "Case Details"}
@@ -481,21 +526,59 @@ export default function VictimDetailPage() {
               {/* Contact Person */}
               <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
-                  <h2 className="text-lg font-semibold text-gray-800">Contact Person</h2>
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Contact Person
+                  </h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm p-6">
                   {victim.contact_persons?.length > 0 ? (
                     victim.contact_persons.map((person, index) => (
                       <React.Fragment key={index}>
-                        <Info label="Full Name" value={person.full_name} icon={iconMap["Full Name"]} />
-                        <Info label="Relationship" value={person.cont_victim_relationship} icon={iconMap["Relationship"]} />
-                        <Info label="Contact Number" value={person.cont_contact_number} icon={iconMap["Contact Number (Contact Person)"]} />
-                        <Info label="Birth Date" value={person.cont_birth_date} icon={iconMap["Birth Date"]} />
-                        <Info label="Birth Place" value={person.cont_birth_place} icon={iconMap["Birth Place"]} />
-                        <Info label="Civil Status" value={person.cont_civil_status} icon={iconMap["Civil Status"]} />
-                        <Info label="Provincial Address" value={person.cont_prov_address} icon={iconMap["Provincial Address"]} />
-                        <Info label="Sex" value={person.cont_sex} icon={iconMap["Sex"]} />
-                        <Info label="Work Address" value={person.cont_work_address} icon={iconMap["Work Address"]} />
+                        <Info
+                          label="Full Name"
+                          value={person.full_name}
+                          icon={iconMap["Full Name"]}
+                        />
+                        <Info
+                          label="Relationship"
+                          value={person.cont_victim_relationship}
+                          icon={iconMap["Relationship"]}
+                        />
+                        <Info
+                          label="Contact Number"
+                          value={person.cont_contact_number}
+                          icon={iconMap["Contact Number (Contact Person)"]}
+                        />
+                        <Info
+                          label="Birth Date"
+                          value={person.cont_birth_date}
+                          icon={iconMap["Birth Date"]}
+                        />
+                        <Info
+                          label="Birth Place"
+                          value={person.cont_birth_place}
+                          icon={iconMap["Birth Place"]}
+                        />
+                        <Info
+                          label="Civil Status"
+                          value={person.cont_civil_status}
+                          icon={iconMap["Civil Status"]}
+                        />
+                        <Info
+                          label="Provincial Address"
+                          value={person.cont_prov_address}
+                          icon={iconMap["Provincial Address"]}
+                        />
+                        <Info
+                          label="Sex"
+                          value={person.cont_sex}
+                          icon={iconMap["Sex"]}
+                        />
+                        <Info
+                          label="Work Address"
+                          value={person.cont_work_address}
+                          icon={iconMap["Work Address"]}
+                        />
                       </React.Fragment>
                     ))
                   ) : (
@@ -509,20 +592,54 @@ export default function VictimDetailPage() {
               {/* Family Members */}
               <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
                 <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
-                  <h2 className="text-lg font-semibold text-gray-800">Family Members</h2>
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Family Members
+                  </h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm p-6">
                   {victim.family_members?.length > 0 ? (
                     victim.family_members.map((member, index) => (
                       <React.Fragment key={index}>
-                        <Info label="Full Name" value={member.full_name} icon={iconMap["Full Name"]} />
-                        <Info label="Relationship" value={member.fam_victim_relationship} icon={iconMap["Relationship"]} />
-                        <Info label="Sex" value={member.fam_sex} icon={iconMap["Sex"]} />
-                        <Info label="Civil Status" value={member.fam_civil_status} icon={iconMap["Civil Status"]} />
-                        <Info label="Educational Attainment" value={member.fam_educational_attainment} icon={iconMap["Educational Attainment"]} />
-                        <Info label="Occupation" value={member.fam_occupation} icon={iconMap["Occupation"]} />
-                        <Info label="Income" value={member.fam_income} icon={iconMap["Income"]} />
-                        <Info label="Birth Date" value={member.fam_birth_date} icon={iconMap["Birth Date"]} />
+                        <Info
+                          label="Full Name"
+                          value={member.full_name}
+                          icon={iconMap["Full Name"]}
+                        />
+                        <Info
+                          label="Relationship"
+                          value={member.fam_victim_relationship}
+                          icon={iconMap["Relationship"]}
+                        />
+                        <Info
+                          label="Sex"
+                          value={member.fam_sex}
+                          icon={iconMap["Sex"]}
+                        />
+                        <Info
+                          label="Civil Status"
+                          value={member.fam_civil_status}
+                          icon={iconMap["Civil Status"]}
+                        />
+                        <Info
+                          label="Educational Attainment"
+                          value={member.fam_educational_attainment}
+                          icon={iconMap["Educational Attainment"]}
+                        />
+                        <Info
+                          label="Occupation"
+                          value={member.fam_occupation}
+                          icon={iconMap["Occupation"]}
+                        />
+                        <Info
+                          label="Income"
+                          value={member.fam_income}
+                          icon={iconMap["Income"]}
+                        />
+                        <Info
+                          label="Birth Date"
+                          value={member.fam_birth_date}
+                          icon={iconMap["Birth Date"]}
+                        />
                       </React.Fragment>
                     ))
                   ) : (
@@ -544,6 +661,16 @@ export default function VictimDetailPage() {
                   <h2 className="text-lg font-semibold text-gray-800">
                     Case Information
                   </h2>
+
+                  <button
+                    onClick={() =>
+                      // navigate(`/social_worker/create-case/${victimId}`)
+                      console.log(1)
+                    }
+                    className="inline-flex items-center gap-2 rounded-md bg-[#292D96] text-white px-4 py-2 text-sm font-medium shadow-sm hover:bg-[#1f2375] transition"
+                  >
+                    + Create New Case
+                  </button>
                 </div>
 
                 {/* Content */}
@@ -617,7 +744,9 @@ export default function VictimDetailPage() {
           {activeTab === "reports" && (
             <div className="space-y-10 mt-10">
               {incidentList.length === 0 ? (
-                <p className="text-sm text-gray-500 italic">No case records found for this victim.</p>
+                <p className="text-sm text-gray-500 italic">
+                  No case records found for this victim.
+                </p>
               ) : (
                 incidentList.map((incident, index) => {
                   const incidentReports = reportsList.filter(
@@ -631,7 +760,9 @@ export default function VictimDetailPage() {
                     >
                       <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-700">
                         <div>
-                          <span className="font-medium text-gray-800">Case No:</span>{" "}
+                          <span className="font-medium text-gray-800">
+                            Case No:
+                          </span>{" "}
                           {incident.incident_num || "—"}
                         </div>
                         <div className="flex gap-3">
@@ -643,7 +774,9 @@ export default function VictimDetailPage() {
                             }}
                             className="inline-flex items-center gap-2 rounded-md border border-[#292D96] text-[#292D96] px-3 py-1.5 text-sm font-medium hover:bg-[#292D96] hover:text-white transition"
                           >
-                            {openReportsIndex === index ? "Hide Reports" : "View Reports"}
+                            {openReportsIndex === index
+                              ? "Hide Reports"
+                              : "View Reports"}
                           </button>
 
                           {/* Add Report */}
@@ -665,53 +798,71 @@ export default function VictimDetailPage() {
 
                       {openReportsIndex === index && (
                         <div className="mt-3 space-y-6">
-                          {["Social Worker", "Nurse", "Psychometrician"].map((role) => {
-                            const roleReports = incidentReports.filter(r =>
-                              r.report_type?.toLowerCase().includes(role.toLowerCase())
-                            );
-                            return (
-                              <div key={role} className="border rounded-md overflow-hidden">
-                                {/* Dropdown header */}
-                                <button
-                                  onClick={() => setOpenRole(openRole === role ? null : role)}
-                                  className={`w-full flex justify-between items-center font-semibold px-6 py-4 text-base ${roleColors[role]}`}
+                          {["Social Worker", "Nurse", "Psychometrician"].map(
+                            (role) => {
+                              const roleReports = incidentReports.filter((r) =>
+                                r.report_type
+                                  ?.toLowerCase()
+                                  .includes(role.toLowerCase())
+                              );
+                              return (
+                                <div
+                                  key={role}
+                                  className="border rounded-md overflow-hidden"
                                 >
-                                  <span>{role} Reports</span>
-                                  <span>{openRole === role ? "−" : "+"}</span>
-                                </button>
+                                  {/* Dropdown header */}
+                                  <button
+                                    onClick={() =>
+                                      setOpenRole(
+                                        openRole === role ? null : role
+                                      )
+                                    }
+                                    className={`w-full flex justify-between items-center font-semibold px-6 py-4 text-base ${roleColors[role]}`}
+                                  >
+                                    <span>{role} Reports</span>
+                                    <span>{openRole === role ? "−" : "+"}</span>
+                                  </button>
 
-                                {/* Dropdown content */}
-                                {openRole === role && (
-                                  <div className="bg-white px-4 py-3 space-y-3">
-                                    {roleReports.length === 0 ? (
-                                      <p className="text-sm text-gray-500 italic">No {role} reports available.</p>
-                                    ) : (
-                                      roleReports.map((report) => (
-                                        <div
-                                          key={report.id}
-                                          onClick={() => {
-                                            setSelectedReport(report);
-                                            setShowReportModal(true);
-                                          }}
-                                          className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition"
-                                        >
-                                          <h4 className="text-sm font-semibold text-gray-800 mb-1">
-                                            {report.report_type} —{" "}
-                                            {new Date(report.report_month).toLocaleDateString("en-US", {
-                                              year: "numeric",
-                                              month: "long",
-                                              day: "numeric",
-                                            })}
-                                          </h4>
-                                          <p className="text-xs text-gray-500">Prepared by: {report.prepared_by_name}</p>
-                                        </div>
-                                      ))
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
+                                  {/* Dropdown content */}
+                                  {openRole === role && (
+                                    <div className="bg-white px-4 py-3 space-y-3">
+                                      {roleReports.length === 0 ? (
+                                        <p className="text-sm text-gray-500 italic">
+                                          No {role} reports available.
+                                        </p>
+                                      ) : (
+                                        roleReports.map((report) => (
+                                          <div
+                                            key={report.id}
+                                            onClick={() => {
+                                              setSelectedReport(report);
+                                              setShowReportModal(true);
+                                            }}
+                                            className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition"
+                                          >
+                                            <h4 className="text-sm font-semibold text-gray-800 mb-1">
+                                              {report.report_type} —{" "}
+                                              {new Date(
+                                                report.report_month
+                                              ).toLocaleDateString("en-US", {
+                                                year: "numeric",
+                                                month: "long",
+                                                day: "numeric",
+                                              })}
+                                            </h4>
+                                            <p className="text-xs text-gray-500">
+                                              Prepared by:{" "}
+                                              {report.prepared_by_name}
+                                            </p>
+                                          </div>
+                                        ))
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            }
+                          )}
                         </div>
                       )}
                     </div>
@@ -721,7 +872,10 @@ export default function VictimDetailPage() {
 
               {/* Report Modal */}
               {showReportModal && !showAddReportModal && selectedReport && (
-                <Modal title="View Report" onClose={() => setShowReportModal(false)}>
+                <Modal
+                  title="View Report"
+                  onClose={() => setShowReportModal(false)}
+                >
                   <ReportModal
                     report={selectedReport}
                     userRole={userRole}
@@ -819,7 +973,9 @@ function ReportDropdown({ title, reports, autoOpen, onSelect }) {
       {open && (
         <div className="p-4 space-y-3">
           {reports.length === 0 ? (
-            <p className="text-sm text-gray-500 italic">No reports available.</p>
+            <p className="text-sm text-gray-500 italic">
+              No reports available.
+            </p>
           ) : (
             reports.map((report) => (
               <div
@@ -835,7 +991,9 @@ function ReportDropdown({ title, reports, autoOpen, onSelect }) {
                     day: "numeric",
                   })}
                 </h4>
-                <p className="text-xs text-gray-500">Prepared by: {report.prepared_by_name}</p>
+                <p className="text-xs text-gray-500">
+                  Prepared by: {report.prepared_by_name}
+                </p>
               </div>
             ))
           )}

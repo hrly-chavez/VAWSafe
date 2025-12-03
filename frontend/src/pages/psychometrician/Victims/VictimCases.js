@@ -82,7 +82,7 @@ export default function VictimCases({ selectedIncident, onClose }) {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm p-6">
               <InfoItem label="Case No" value={selectedIncident.incident_num} />
-              <InfoItem label="Status" value={selectedIncident.status} />
+              <InfoItem label="Status" value={selectedIncident.incident_status} />
               <InfoItem
                 label="Created At"
                 value={new Date(selectedIncident.created_at).toLocaleString()}
@@ -194,21 +194,32 @@ export default function VictimCases({ selectedIncident, onClose }) {
             </div>
             <div className="p-6">
               {selectedIncident.evidences?.length > 0 ? (
-                <div className="space-y-4 text-sm text-gray-700">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {selectedIncident.evidences.map((ev, idx) => (
-                    <div key={idx} className="border rounded-md p-3 bg-white">
+                    <div key={ev.id} className="border rounded-md p-3 bg-white">
                       <InfoItem label="Description" value={ev.description} />
                       <InfoItem
                         label="Uploaded At"
                         value={new Date(ev.uploaded_at).toLocaleString()}
                       />
+
+                      {/* Preview image */}
+                      <div className="mt-2">
+                        <img
+                          src={ev.file_url}
+                          alt={`Evidence ${idx + 1}`}
+                          className="w-full h-48 object-cover rounded border"
+                        />
+                      </div>
+
+                      {/* Link to full file */}
                       <a
-                        href={ev.file}
+                        href={ev.file_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-block mt-2 text-[#292D96] text-xs font-medium underline"
                       >
-                        View File
+                        View Full File
                       </a>
                     </div>
                   ))}

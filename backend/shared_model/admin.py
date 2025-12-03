@@ -187,6 +187,7 @@ admin.site.register(Victim)
 admin.site.register(FamilyMember)
 admin.site.register(IncidentInformation)
 admin.site.register(Address)
+admin.site.register(Evidence)
 
 admin.site.register(OfficialAvailability)
 admin.site.register(OfficialUnavailability)
