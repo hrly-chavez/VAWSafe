@@ -54,55 +54,53 @@ export default function Schedule({ victim, incident, back, next }) {
           : [],
       };
 
-    const res = await api.post("/api/social_worker/sessions/", payload);
+      const res = await api.post("/api/social_worker/sessions/", payload);
 
-    const readableDate = new Date(res.data.sess_next_sched).toLocaleString(
-      "en-US",
-      { dateStyle: "medium", timeStyle: "short" }
-    );
+      const readableDate = new Date(res.data.sess_next_sched).toLocaleString(
+        "en-US",
+        { dateStyle: "medium", timeStyle: "short" }
+      );
 
-    toast.success(`Session scheduled successfully! 📅 ${readableDate}`, {
-      position: "top-right",
-      autoClose: 2000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-    });
-
-    // Redirect after short delay to let user see toast
-    setTimeout(() => navigate("/social_worker/sessions"), 2000);
-  } catch (err) {
-    if (err.response?.data) {
-      console.error("Schedule error:", err.response.data);
-
-      // Extract backend error message (handles multiple formats)
-      const errorMsg =
-        typeof err.response.data === "object"
-          ? Object.values(err.response.data).flat().join(" ")
-          : err.response.data;
-
-      toast.error(`Failed to schedule session: ${errorMsg}`, {
+      toast.success(`Session scheduled successfully! 📅 ${readableDate}`, {
         position: "top-right",
-        autoClose: 4000,
+        autoClose: 2000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
         progress: undefined,
       });
-    } else {
-      toast.error("Failed to schedule session: " + err.message, {
-        position: "top-right",
-        autoClose: 4000,
-      });
+
+      // Redirect after short delay to let user see toast
+      setTimeout(() => navigate("/social_worker/sessions"), 2000);
+    } catch (err) {
+      if (err.response?.data) {
+        console.error("Schedule error:", err.response.data);
+
+        // Extract backend error message (handles multiple formats)
+        const errorMsg =
+          typeof err.response.data === "object"
+            ? Object.values(err.response.data).flat().join(" ")
+            : err.response.data;
+
+        toast.error(`Failed to schedule session: ${errorMsg}`, {
+          position: "top-right",
+          autoClose: 4000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+        });
+      } else {
+        toast.error("Failed to schedule session: " + err.message, {
+          position: "top-right",
+          autoClose: 4000,
+        });
+      }
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
-  }
-};
-
-
+  };
 
   // Load session types
   // useEffect(() => {
@@ -118,29 +116,29 @@ export default function Schedule({ victim, incident, back, next }) {
   //     .catch((err) => console.error("Failed to fetch session types", err));
   // }, []);
 
-    useEffect(() => {
-      api
-        .get("/api/social_worker/session-types/")
-        .then((res) => {
-          const options = res.data.map((t) => ({
-            value: t.id,
-            label: t.name,
-          }));
+  useEffect(() => {
+    api
+      .get("/api/social_worker/session-types/")
+      .then((res) => {
+        const options = res.data.map((t) => ({
+          value: t.id,
+          label: t.name,
+        }));
 
-          setSessionTypes(options);
+        setSessionTypes(options);
 
-          // Auto-select "Intake / Initial Assessment"
-          const intake = options.find(
-            (t) => t.label === "Intake / Initial Assessment"
-          );
+        // Auto-select "Intake / Initial Assessment"
+        const intake = options.find(
+          (t) => t.label === "Intake / Initial Assessment"
+        );
 
-          if (intake) {
-            setSelectedTypes([intake]);
-            setDisableSessionType(true); // Lock the dropdown
-          }
-        })
-        .catch((err) => console.error("Failed to fetch session types", err));
-    }, []);
+        if (intake) {
+          setSelectedTypes([intake]);
+          setDisableSessionType(true); // Lock the dropdown
+        }
+      })
+      .catch((err) => console.error("Failed to fetch session types", err));
+  }, []);
 
   // Load all Social Workers (with availability)
   const fetchSocialWorkers = async (query = "") => {
@@ -157,7 +155,6 @@ export default function Schedule({ victim, incident, back, next }) {
     }
   };
 
-
   useEffect(() => {
     const load = async () => {
       await fetchSocialWorkers();
@@ -166,28 +163,27 @@ export default function Schedule({ victim, incident, back, next }) {
   }, []);
 
   // Auto-select the LOGGED-IN Social Worker
-    useEffect(() => {
-      const loadLoggedIn = async () => {
-        try {
-          const me = await api.get("/api/auth/me/");
-          const swId = me.data?.user?.official_id;
+  useEffect(() => {
+    const loadLoggedIn = async () => {
+      try {
+        const me = await api.get("/api/auth/me/");
+        const swId = me.data?.user?.official_id;
 
-          // Auto-select logged-in SW
-          if (swId) {
-            setLoggedInSW(swId);
-            setSelectedOfficials((prev) =>
-              prev.includes(swId) ? prev : [...prev, swId]
-            );
-          }
-        } catch (err) {
-          console.error("Failed to fetch logged-in user", err);
+        // Auto-select logged-in SW
+        if (swId) {
+          setLoggedInSW(swId);
+          setSelectedOfficials((prev) =>
+            prev.includes(swId) ? prev : [...prev, swId]
+          );
         }
-      };
+      } catch (err) {
+        console.error("Failed to fetch logged-in user", err);
+      }
+    };
 
-      loadLoggedIn();
-    }, []);
+    loadLoggedIn();
+  }, []);
 
-  
   // Count roles among selected officials
   const selectedDetails = officials.filter((o) =>
     selectedOfficials.includes(o.of_id)
@@ -197,8 +193,7 @@ export default function Schedule({ victim, incident, back, next }) {
   const hasNurse = selectedDetails.some((o) => o.role === "Nurse");
   const hasPsych = selectedDetails.some((o) => o.role === "Psychometrician");
 
-  const disableSubmit =
-    !hasSW || !hasNurse || !hasPsych || isSubmitting;
+  const disableSubmit = !hasSW || !hasNurse || !hasPsych || isSubmitting;
 
   // Helper: Convert "HH:MM–HH:MM" to "hh:mm AM/PM – hh:mm AM/PM"
   const formatTo12Hour = (range) => {
@@ -257,12 +252,10 @@ export default function Schedule({ victim, incident, back, next }) {
           </div>
         </div>
 
-        
-
         {/* Type of Session */}
         <div>
           <label className="text-xs text-gray-600 block mb-1">
-            Type of Session (you can pick multiple)
+            Type of Session
           </label>
           {/* <Select
             options={sessionTypes}
@@ -281,22 +274,21 @@ export default function Schedule({ victim, incident, back, next }) {
             isDisabled={disableSessionType}
             placeholder="Intake / Initial Assessment"
           />
-
         </div>
 
         {/* === Placeholder Filters === */}
         <div className="border-t border-gray-200 pt-4 mt-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-2">
-            Assign  Official
+            Assign Official
           </h3>
           {/* Warning: Must select at least one official */}
           {selectedOfficials.length === 0 && (
             <p className="text-red-600 text-sm mb-2">
-              Please assign at least one official before scheduling the intake session.
+              Please assign at least one official before scheduling the intake
+              session.
             </p>
           )}
           <div className="flex flex-wrap gap-3 mb-3">
-          
             <input
               type="text"
               placeholder="Search by name..."
@@ -319,22 +311,21 @@ export default function Schedule({ victim, incident, back, next }) {
               <option value="Psychometrician">Psychometrician</option>
               {/* <option value="Home Life">Home Life</option> */}
             </select>
-
           </div>
 
           {/* Cards Section */}
           <WorkerCardSection
-          officials={officials.filter((w) =>roleFilter ? w.role === roleFilter : true)}
-          loadingSW={loadingSW}
-          selectedOfficials={selectedOfficials}
-          setSelectedOfficials={setSelectedOfficials}
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          fetchSocialWorkers={fetchSocialWorkers}
-        />
+            officials={officials.filter((w) =>
+              roleFilter ? w.role === roleFilter : true
+            )}
+            loadingSW={loadingSW}
+            selectedOfficials={selectedOfficials}
+            setSelectedOfficials={setSelectedOfficials}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            fetchSocialWorkers={fetchSocialWorkers}
+          />
         </div>
-
-        
       </div>
 
       {/* Actions */}
@@ -348,20 +339,20 @@ export default function Schedule({ victim, incident, back, next }) {
           </button>
         )}
         <button
-        onClick={handleSubmitSchedule}
-        disabled={disableSubmit}
-        className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold shadow transition-all 
-          ${disableSubmit
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
-          }`}>
-        <CheckCircleIcon className="h-5 w-5" />
-        {isSubmitting ? "Submitting..." : "Submit to Schedule Session"}
-      </button>
-
-        
+          onClick={handleSubmitSchedule}
+          disabled={disableSubmit}
+          className={`flex items-center gap-2 px-6 py-2 rounded-md font-semibold shadow transition-all 
+          ${
+            disableSubmit
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
+          }`}
+        >
+          <CheckCircleIcon className="h-5 w-5" />
+          {isSubmitting ? "Submitting..." : "Submit to Schedule Session"}
+        </button>
       </div>
-       {/* Toast container */}
+      {/* Toast container */}
       <ToastContainer />
     </div>
   );

@@ -8,7 +8,12 @@ const tabs = [
   { key: "recommendations", label: "Recommendations" },
 ];
 
-export default function PsychometricianReportForm({ victim, incident, onSubmit, onClose }) {
+export default function PsychometricianReportForm({
+  victim,
+  incident,
+  onSubmit,
+  onClose,
+}) {
   const [formData, setFormData] = useState({
     reason_for_referral: "",
     brief_history: "",
@@ -50,9 +55,13 @@ export default function PsychometricianReportForm({ victim, incident, onSubmit, 
   return (
     <form onSubmit={handleSubmit} className="text-sm text-gray-700">
       {/* Title */}
-      <div className="mb-6 text-center">
-        <h2 className="text-2xl font-bold text-[#292D96]">Psychometrician's Report</h2>
-        <p className="text-xs text-gray-500 mt-1">Comprehensive Psychological Assessment</p>
+      <div className="mb-8 text-center">
+        <h2 className="text-2xl font-bold text-[#292D96]">
+          Psychometrician's Report
+        </h2>
+        <p className="text-xs text-gray-500 mt-1">
+          Comprehensive Psychological Assessment
+        </p>
       </div>
 
       {/* Tab Navigation */}
@@ -112,7 +121,9 @@ export default function PsychometricianReportForm({ victim, incident, onSubmit, 
           name={activeTab}
           value={formData[activeTab]}
           onChange={handleChange}
-          placeholder={`Type your ${tabs.find((t) => t.key === activeTab)?.label.toLowerCase()} here...`}
+          placeholder={`Type your ${tabs
+            .find((t) => t.key === activeTab)
+            ?.label.toLowerCase()} here...`}
           className="w-full border border-gray-300 rounded-md p-3 text-base text-gray-800 resize-none h-72 focus:outline-none focus:ring-2 focus:ring-[#292D96]"
         />
       </div>
