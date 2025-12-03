@@ -965,18 +965,27 @@ class ChangeLogSerializer(serializers.ModelSerializer):
 
 
 #============================= Social Worker Dashboard ======================================
-
 # --- Victim Summary ---
 class VictimSummarySerializer(serializers.Serializer):
     total_victims = serializers.IntegerField()
-
+    total_victims_percent = serializers.FloatField(required=False)  # optional if you want KPI %
 
 # --- Session Summary ---
 class SessionSummarySerializer(serializers.Serializer):
+    total_assigned_sessions = serializers.IntegerField()
+    total_assigned_percent = serializers.FloatField()
+
     sessions_this_week = serializers.IntegerField()
+    sessions_week_percent = serializers.FloatField()
+
     pending_sessions = serializers.IntegerField()
-    ongoing_sessions = serializers.IntegerField()   
-    done_sessions = serializers.IntegerField()      
+    pending_percent = serializers.FloatField()
+
+    ongoing_sessions = serializers.IntegerField()
+    ongoing_percent = serializers.FloatField()
+
+    done_sessions = serializers.IntegerField()
+    done_percent = serializers.FloatField(required=False)      
 
 
 # --- Monthly Report Row ---

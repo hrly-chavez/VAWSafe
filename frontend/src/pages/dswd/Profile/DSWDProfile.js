@@ -2,7 +2,20 @@ import React, { useState, useEffect } from "react";
 import api from "../../../api/axios";
 import EditProfileModal from "./EditProfileModal";
 import ChangePasswordModal from "./ChangePasswordModal";
-import { CheckBadgeIcon } from "@heroicons/react/24/solid";
+import {
+  CheckBadgeIcon,
+  UserIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  BriefcaseIcon,
+} from "@heroicons/react/24/solid";
+
+const iconMap = {
+  "Full Name": <UserIcon className="h-4 w-4 text-gray-500" />,
+  "Official Role": <BriefcaseIcon className="h-4 w-4 text-gray-500" />,
+  "Contact Number": <PhoneIcon className="h-4 w-4 text-gray-500" />,
+  "Email Address": <EnvelopeIcon className="h-4 w-4 text-gray-500" />,
+};
 
 export default function DSWDProfile() {
   const [officialData, setOfficialData] = useState(null);
@@ -150,147 +163,122 @@ export default function DSWDProfile() {
         </section>
 
         {/* Tabs Navigation */}
-        <div className="px-6 md:px-8 mt-6 border-b border-gray-300">
-          <nav className="flex space-x-6">
-            {["profile", "audit"].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`py-2 border-b-2 transition duration-200 ${
-                  activeTab === tab
-                    ? "border-[#292D96] text-[#292D96] font-semibold"
-                    : "border-transparent text-gray-600 hover:text-[#292D96]"
-                }`}
-              >
-                {tab === "profile" ? "Full Profile" : "Audit Logs"}
-              </button>
-            ))}
-          </nav>
+        <div className="px-6 md:px-8 mt-8">
+          <div className="flex border-b border-gray-300 bg-white">
+            {["profile", "audit"].map((tab) => {
+              const isActive = activeTab === tab;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-2 text-sm font-semibold rounded-t-md transition-colors duration-200 ${isActive
+                    ? "bg-[#292D96] text-white border border-gray-300 border-b-0"
+                    : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#292D96] border border-gray-300"
+                    }`}
+                >
+                  {tab === "profile" ? "Full Profile" : "Audit Logs"}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Tab Content */}
-        <div className="p-6 md:p-8">
+        <div className="px-6 md:px-8 bg-white rounded-b-md">
           {activeTab === "profile" && (
-            <div className="space-y-8">
+            <div className="space-y-8 pt-4">
               {/* Personal & Contact Details */}
-              <div>
-                <h2 className="text-xl font-bold mb-4 text-gray-800">Personal & Contact Details</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm bg-gray-50 p-4 rounded-lg shadow-inner border border-gray-200">
-                  <div className="pb-2 border-b border-gray-200">
-                    <p className="text-gray-500">Full Name</p>
-                    <p className="text-gray-800 font-medium">{officialData.full_name}</p>
-                  </div>
-                  <div className="pb-2 border-b border-gray-200">
-                    <p className="text-gray-500">Official Role</p>
-                    <p className="text-[#292D96] font-medium">{officialData.of_role}</p>
-                  </div>
-                  <div className="pb-2 border-b border-gray-200">
-                    <p className="text-gray-500">Contact Number</p>
-                    <p className="text-gray-800">{officialData.of_contact || "N/A"}</p>
-                  </div>
-                  <div className="pb-2 border-b border-gray-200">
-                    <p className="text-gray-500">Email Address</p>
-                    <p className="text-gray-800">{officialData.of_email}</p>
-                  </div>
+              <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    Personal & Contact Details
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm p-6">
+                  <Info label="Full Name" value={officialData.full_name} />
+                  <Info label="Official Role" value={officialData.of_role} />
+                  <Info label="Contact Number" value={officialData.of_contact || "N/A"} />
+                  <Info label="Email Address" value={officialData.of_email} />
                 </div>
               </div>
 
               {/* Account Status */}
-              <div>
-                <h2 className="text-xl font-bold mb-4 text-gray-800">Account Status</h2>
-
-                {officialData.deleted_at ? (
-                  <div className="flex items-center p-4 bg-red-50 rounded-lg border border-red-300">
-                    <div className="h-6 w-6 text-red-600 mr-3" />
-                    <p className="text-gray-700 text-sm">
-                      Account is <strong>Deactivated</strong>.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex items-center p-4 bg-green-50 rounded-lg border border-green-300">
-                    <CheckBadgeIcon className="h-6 w-6 text-green-600 mr-3" />
-                    <p className="text-gray-700 text-sm">
-                      Account is <strong>Active</strong>.
-                    </p>
-                  </div>
-                )}
+              <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
+                  <h2 className="text-lg font-semibold text-gray-800">Account Status</h2>
+                </div>
+                <div className="p-6">
+                  {officialData.deleted_at ? (
+                    <div className="flex items-center gap-3 p-4 bg-red-50 rounded-lg border border-red-300">
+                      <span className="h-6 w-6 text-red-600 mr-3">✖</span>
+                      <p className="text-gray-700 text-sm">
+                        Account is <strong>Deactivated</strong>.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg border border-green-300">
+                      <CheckBadgeIcon className="h-6 w-6 text-green-600 mr-3" />
+                      <p className="text-gray-700 text-sm">
+                        Account is <strong>Active</strong>.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
 
           {activeTab === "audit" && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold mb-4 text-gray-800">Audit Logs</h2>
-
-              {auditLoading ? (
-                <p className="text-gray-500">Loading audit logs...</p>
-              ) : auditError ? (
-                <p className="text-red-500">{auditError}</p>
-              ) : auditLogs.length === 0 ? (
-                <p className="text-gray-500">No audit logs found.</p>
-              ) : (
-                <div className="space-y-4">
-                  {auditLogs.map((log, idx) => (
-                    <div
-                      key={idx}
-                      className="p-4 bg-gray-50 border rounded-lg shadow-sm hover:bg-gray-100 transition"
-                    >
-                      {/* Header: Action by Actor */}
-                      <div className="flex justify-between text-sm mb-1">
-                        <div>
-                          <span className="font-medium capitalize">{log.action}</span>{" "}
-                          <span className="opacity-70">by</span>{" "}
-                          <span className="font-medium">{log.actor_name || "System"}</span>
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {new Date(log.created_at).toLocaleString("en-PH")}
-                        </div>
-                      </div>
-
-                      {/* Reason */}
-                      {log.reason && (
-                        <div className="text-xs text-gray-700 mb-1">
-                          <span className="font-medium">Reason:</span> {log.reason}
-                        </div>
-                      )}
-
-                      {/* Changes (hide for create, archive, unarchive) */}
-                      {!["create", "archive", "unarchive"].includes(log.action) && log.changes && (
-                        <div className="mt-2 text-xs">
-                          <span className="font-medium">Changes:</span>
-                          <ul className="list-disc ml-5 mt-1">
-                            {Object.entries(log.changes).map(([field, value], index) => (
-                              <li key={index}>{formatChange(field, value)}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+            <div className="space-y-8 pt-4">
+              <div className="bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex items-center gap-3 px-6 py-3 bg-gray-100 border-b border-gray-200 rounded-t-xl">
+                  <h2 className="text-lg font-semibold text-gray-800">Audit Logs</h2>
                 </div>
-              )}
+                <div className="p-6 space-y-4">
+                  {auditLoading ? (
+                    <p className="text-gray-500">Loading audit logs...</p>
+                  ) : auditError ? (
+                    <p className="text-red-500">{auditError}</p>
+                  ) : auditLogs.length === 0 ? (
+                    <p className="text-gray-500">No audit logs found.</p>
+                  ) : (
+                    auditLogs.map((log, idx) => (
+                      <div
+                        key={idx}
+                        className="p-4 bg-white border rounded-lg shadow-sm hover:bg-gray-50 transition"
+                      >
+                        <div className="flex justify-between text-sm mb-1">
+                          <div>
+                            <span className="font-medium capitalize">{log.action}</span>{" "}
+                            <span className="opacity-70">by</span>{" "}
+                            <span className="font-medium">{log.actor_name || "System"}</span>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(log.created_at).toLocaleString("en-PH")}
+                          </div>
+                        </div>
+                        {log.reason && (
+                          <div className="text-xs text-gray-700 mb-1">
+                            <span className="font-medium">Reason:</span> {log.reason}
+                          </div>
+                        )}
+                        {!["create", "archive", "unarchive"].includes(log.action) && log.changes && (
+                          <div className="mt-2 text-xs">
+                            <span className="font-medium">Changes:</span>
+                            <ul className="list-disc ml-5 mt-1">
+                              {Object.entries(log.changes).map(([field, value], index) => (
+                                <li key={index}>{formatChange(field, value)}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
           )}
-
-        </div>
-
-        {/* Edit & Change Password Buttons */}
-        <div className="px-6 md:px-8 pb-8">
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button
-              onClick={() => setShowEditModal(true)}
-              className="bg-[#292D96] text-white px-5 py-2 rounded-lg hover:bg-indigo-700 transition shadow-sm"
-            >
-              Edit Profile
-            </button>
-
-            <button
-              onClick={() => setShowChangePassword(true)}
-              className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition shadow-sm"
-            >
-              Change Password / Username
-            </button>
-          </div>
         </div>
 
         {/* Modals */}
@@ -302,6 +290,18 @@ export default function DSWDProfile() {
           />
         )}
         {showChangePassword && <ChangePasswordModal onClose={() => setShowChangePassword(false)} />}
+      </div>
+    </div>
+  );
+}
+
+function Info({ label, value }) {
+  return (
+    <div className="flex items-start gap-2">
+      {iconMap[label]}
+      <div>
+        <p className="text-xs text-gray-500">{label}</p>
+        <p className="font-medium text-gray-800">{value || "—"}</p>
       </div>
     </div>
   );

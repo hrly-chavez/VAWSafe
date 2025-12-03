@@ -1934,23 +1934,50 @@ class SocialWorkerDashboardAPIView(APIView):
         today = date.today()
         official = getattr(request.user, "official", None)
 
-        # Victim Summary
+        # Victim Summary (cap at 100)
         total_victims = Victim.objects.count()
-        victim_summary = {"total_victims": total_victims}
+        capped_victims = min(total_victims, 100)
 
-        # Session Summary
+        # Add percentage (relative to cap of 100)
+        total_victims_percent = (capped_victims / 100 * 100) if capped_victims > 0 else 0
+
+        victim_summary = {
+            "total_victims": capped_victims,
+            "total_victims_percent": round(total_victims_percent, 1),
+        }
+
+        # Sessions
         sessions = Session.objects.filter(assigned_official=official)
         week_ahead = today + timedelta(days=7)
+
+        total_assigned = sessions.count()
         sessions_this_week = sessions.filter(sess_next_sched__date__range=[today, week_ahead]).count()
-        ongoing_sessions = sessions.filter(sess_status="Ongoing").count()   
+        ongoing_sessions = sessions.filter(sess_status="Ongoing").count()
         pending_sessions = sessions.filter(sess_status="Pending").count()
-        done_sessions = sessions.filter(sess_status="Done").count()       
+        done_sessions = sessions.filter(sess_status="Done").count()
+
+        # Percentages
+        total_assigned_percent = (total_assigned / capped_victims * 100) if capped_victims > 0 else 0
+        sessions_week_percent = (sessions_this_week / 7 * 100) if 7 > 0 else 0
+        pending_percent = (pending_sessions / total_assigned * 100) if total_assigned > 0 else 0
+        ongoing_percent = (ongoing_sessions / total_assigned * 100) if total_assigned > 0 else 0
+        done_percent = (done_sessions / total_assigned * 100) if total_assigned > 0 else 0
 
         session_summary = {
+            "total_assigned_sessions": total_assigned,
+            "total_assigned_percent": round(total_assigned_percent, 1),
+
             "sessions_this_week": sessions_this_week,
-            "ongoing_sessions": ongoing_sessions,
+            "sessions_week_percent": round(sessions_week_percent, 1),
+
             "pending_sessions": pending_sessions,
-            "done_sessions": done_sessions,   
+            "pending_percent": round(pending_percent, 1),
+
+            "ongoing_sessions": ongoing_sessions,
+            "ongoing_percent": round(ongoing_percent, 1),
+
+            "done_sessions": done_sessions,
+            "done_percent": round(done_percent, 1),
         }
 
         # Monthly Victim Reports (with violence type breakdown)
@@ -1997,7 +2024,7 @@ class SocialWorkerDashboardAPIView(APIView):
             "victim_summary": VictimSummarySerializer(victim_summary).data,
             "session_summary": SessionSummarySerializer(session_summary).data,
             "monthly_report_rows": monthly_report_data,
-            "violence_types": violence_types_dict,   
+            "violence_types": violence_types_dict,
             "upcoming_sessions": [
                 {
                     "id": s.pk,

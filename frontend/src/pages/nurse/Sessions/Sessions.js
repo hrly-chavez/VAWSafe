@@ -1,10 +1,7 @@
 // src/pages/nurse/Sessions/Sessions.js
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  MagnifyingGlassIcon,
-  EyeIcon,
-} from "@heroicons/react/24/solid";
+import { MagnifyingGlassIcon, EyeIcon } from "@heroicons/react/24/solid";
 import api from "../../../api/axios";
 
 export default function Sessions() {
@@ -13,16 +10,18 @@ export default function Sessions() {
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
 
   useEffect(() => {
     const loadSessions = async () => {
       try {
         const res = await api.get("/api/nurse/sessions/pending&Ongoing/");
         setSessions(
-            (Array.isArray(res.data) ? res.data : []).sort(
-              (a, b) => new Date(b.sess_next_sched) - new Date(a.sess_next_sched)
-            )
-          );
+          (Array.isArray(res.data) ? res.data : []).sort(
+            (a, b) => new Date(b.sess_next_sched) - new Date(a.sess_next_sched)
+          )
+        );
       } catch (err) {
         console.error("Failed to fetch sessions", err);
         setError("Failed to load sessions.");
@@ -60,19 +59,22 @@ export default function Sessions() {
     return `${h}:${m} ${suffix}`;
   };
 
+  // Pagination
+  const totalPages = Math.ceil(filtered.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const currentSessions = filtered.slice(startIndex, startIndex + pageSize);
+
   return (
     <div className="w-full px-6">
-      {/* Title */}
-      <h2 className="text-xl md:text-2xl font-bold text-[#292D96] pt-6 mb-2">
-        Sessions
-      </h2>
-      <p className="text-sm md:text-base text-gray-600 mb-6">
-        List of Scheduled Sessions
-      </p>
+      {/* Header */}
+      <header className="mb-8">
+        <h1 className="text-3xl font-extrabold text-gray-800">Consultations</h1>
+        <p className="text-gray-500 mt-1">VAWSAFE | Nurse | Consulation Management</p>
+      </header>
 
       {/* Search + Filter */}
-      <div className="mt-4 w-full flex flex-wrap justify-between items-center gap-4">
-        <div className="flex items-center w-full md:w-2/3 border border-neutral-300 rounded-lg px-3 py-2">
+      <div className="mb-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="flex items-center w-full md:w-1/3 border border-neutral-300 rounded-lg px-3 py-2 bg-white shadow-sm">
           <MagnifyingGlassIcon className="h-5 w-5 text-gray-500 mr-2" />
           <input
             type="text"
@@ -94,54 +96,49 @@ export default function Sessions() {
       </div>
 
       {/* Table */}
-      <div className="mt-6 bg-white rounded-xl shadow-md border border-neutral-200">
-        <div className="overflow-x-auto rounded-xl">
-
-          <table className="min-w-full table-fixed border border-neutral-200">
-            <thead className="sticky top-0 z-10 bg-gray-100 text-gray-700 text-sm font-semibold">
+      <div className="mt-6 bg-white rounded-xl shadow border border-neutral-200 overflow-hidden">
+        <div className="rounded-xl">
+          <table className="min-w-full table-fixed border-collapse text-sm">
+            <thead className="sticky top-0 z-10 bg-gray-100 text-gray-700 font-semibold shadow">
               <tr>
-                <th className="border px-4 py-3 text-left">Victim Name</th>
-                <th className="border px-4 py-3 text-left">Case No.</th>
-                <th className="border px-4 py-3 text-left">Session No.</th>
-                <th className="border px-4 py-3 text-left">Schedule Date</th>
-                <th className="border px-4 py-3 text-left">Status</th>
-                <th className="border px-4 py-3 text-left">Assigned Official(s)</th>
-                <th className="border px-4 py-3 text-center">Actions</th>
+                <th className="px-3 py-2 text-left border">Victim Name</th>
+                <th className="px-3 py-2 text-left border">Case No.</th>
+                <th className="px-3 py-2 text-left border">Session No.</th>
+                <th className="px-3 py-2 text-left border">Schedule Date</th>
+                <th className="px-3 py-2 text-left border">Status</th>
+                <th className="px-3 py-2 text-left border">Assigned Official(s)</th>
+                <th className="px-3 py-2 text-center border">Actions</th>
               </tr>
             </thead>
-            <tbody className="text-sm text-neutral-800">
-              {loading && (
+            <tbody className="text-gray-800">
+              {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-neutral-500">
-                    Loading sessions…
+                  <td colSpan={7} className="px-3 py-4 text-center text-neutral-500">
+                    Loading…
                   </td>
                 </tr>
-              )}
-              {!loading && error && (
+              ) : error ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-red-600">
+                  <td colSpan={7} className="px-3 py-4 text-center text-red-600">
                     {error}
                   </td>
                 </tr>
-              )}
-              {!loading && !error && filtered.length === 0 && (
+              ) : currentSessions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-neutral-500 italic">
+                  <td colSpan={7} className="px-3 py-4 text-center text-neutral-500 italic">
                     No sessions found.
                   </td>
                 </tr>
-              )}
-              {!loading &&
-                !error &&
-                filtered.map((s, idx) => {
+              ) : (
+                currentSessions.map((s, idx) => {
                   const rowBg = idx % 2 === 0 ? "bg-white" : "bg-gray-50";
                   return (
-                    <tr key={s.sess_id} className={rowBg}>
-                      <td className="border px-4 py-3">{s.victim_name || "—"}</td>
-                      <td className="border px-4 py-3">{s.case_no || "—"}</td>
-                      <td className="border px-4 py-3">{s.sess_num || "—"}</td>
-                      <td className="border px-4 py-3">{formatDate(s.sess_next_sched)}</td>
-                      <td className="border px-4 py-3">
+                    <tr key={s.sess_id} className={`${rowBg} hover:bg-blue-50 transition`}>
+                      <td className="px-3 py-2 border">{s.victim_name || "—"}</td>
+                      <td className="px-3 py-2 border">{s.case_no || "—"}</td>
+                      <td className="px-3 py-2 border">{s.sess_num || "—"}</td>
+                      <td className="px-3 py-2 border">{formatDate(s.sess_next_sched)}</td>
+                      <td className="px-3 py-2 border">
                         <span
                           className={`inline-block px-2 py-1 rounded text-xs font-semibold ${s.sess_status === "Pending"
                               ? "bg-yellow-100 text-yellow-700"
@@ -153,12 +150,12 @@ export default function Sessions() {
                           {s.sess_status}
                         </span>
                       </td>
-                      <td className="border px-4 py-3">
+                      <td className="px-3 py-2 border">
                         {s.official_names && s.official_names.length > 0
                           ? s.official_names.join(", ")
                           : "—"}
                       </td>
-                      <td className="border px-4 py-3 text-center">
+                      <td className="px-3 py-2 border text-center">
                         <Link
                           to={`/nurse/sessions/${s.sess_id}`}
                           className="text-[#10b981] hover:text-[#059669]"
@@ -168,11 +165,58 @@ export default function Sessions() {
                       </td>
                     </tr>
                   );
-                })}
+                })
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between text-sm">
+          <p className="text-gray-600">
+            Showing {startIndex + 1} to{" "}
+            {Math.min(startIndex + pageSize, filtered.length)} of {filtered.length} entries
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className={`px-2 py-1 rounded ${currentPage === 1
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-[#292D96] text-white hover:bg-blue-700"
+                }`}
+            >
+              &laquo;
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i + 1}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-2 py-1 rounded ${currentPage === i + 1
+                    ? "bg-[#292D96] text-white"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className={`px-2 py-1 rounded ${currentPage === totalPages
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-[#292D96] text-white hover:bg-blue-700"
+                }`}
+            >
+              &raquo;
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
