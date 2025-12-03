@@ -26,7 +26,29 @@ import {
   CONTACT_PERSON_FIELDS,
 } from "./helpers/form-keys";
 
-const REQUIRED_VICTIM_KEYS = ["vic_first_name", "vic_last_name", "vic_sex"];
+const FIELD_LABELS = {
+  vic_first_name: "First Name",
+  vic_last_name: "Last Name",
+  vic_sex: "Sex",
+  vic_birth_date: "Birth Date",
+  vic_birth_place: "Birth Place",
+  incident_date: "Incident Date",
+  incident_time: "Incident Time",
+  per_birth_date: "Perpetrator Birth Date",
+  cont_birth_date: "Contact Person Birth Date",
+  // add more as needed...
+};
+
+const REQUIRED_VICTIM_KEYS = [
+  "vic_first_name",
+  "vic_last_name",
+  "vic_sex",
+  "vic_birth_date",
+  "incident_date",
+  "incident_time",
+  "per_birth_date",
+  "cont_birth_date",
+];
 
 const hasAny = (state, keys) =>
   keys.some(
@@ -118,7 +140,8 @@ export default function RegisterVictim() {
 
       for (const k of REQUIRED_VICTIM_KEYS) {
         if (!formDataState[k]) {
-          setStatusMessage(` Missing required victim field: ${k}`);
+          const label = FIELD_LABELS[k] || k;
+          setStatusMessage(`❌ Missing required field: ${label}`);
           setLoading(false);
           return;
         }

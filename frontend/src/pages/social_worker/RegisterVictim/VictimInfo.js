@@ -220,26 +220,38 @@ export default function VictimInfo({
           Birth Details
         </label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            readOnly={isLocked}
-            disabled={isLocked}
-            className="input"
-            type="date"
-            value={formDataState.vic_birth_date || ""}
-            min={minDate}
-            max={today}
-            onChange={handleDateChange}
-          />
+          <div className="flex flex-col">
+            <input
+              readOnly={isLocked}
+              disabled={isLocked}
+              className="input"
+              type="date"
+              required
+              value={formDataState.vic_birth_date || ""}
+              min={minDate}
+              max={today}
+              onChange={handleDateChange}
+            />
+            {/* Show helper text if empty */}
+            {!formDataState.vic_birth_date && (
+              <span className="text-xs text-red-500 mt-1">Required</span>
+            )}
+          </div>
 
-          <input
-            readOnly={isLocked}
-            disabled={isLocked}
-            className="input"
-            type="text"
-            placeholder="Birth Place"
-            value={formDataState.vic_birth_place || ""}
-            onChange={(e) => handleChange("vic_birth_place", e.target.value)}
-          />
+          <div className="flex flex-col">
+            <input
+              readOnly={isLocked}
+              disabled={isLocked}
+              className="input"
+              type="text"
+              placeholder="Birth Place"
+              value={formDataState.vic_birth_place || ""}
+              onChange={(e) => handleChange("vic_birth_place", e.target.value)}
+            />
+            {!formDataState.vic_birth_place && (
+              <span className="text-xs text-red-500 mt-1">Required</span>
+            )}
+          </div>
         </div>
       </div>
 
