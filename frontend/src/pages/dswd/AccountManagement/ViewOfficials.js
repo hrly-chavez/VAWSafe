@@ -138,6 +138,20 @@ export default function ViewOfficials() {
                   <Info label="Place of Birth" value={official.of_pob} icon={<MapPinIcon className="h-4 w-4 text-gray-500" />} />
                   <Info label="Contact" value={official.of_contact} icon={<PhoneIcon className="h-4 w-4 text-gray-500" />} />
                   <Info label="Email" value={official.of_email} icon={<EnvelopeIcon className="h-4 w-4 text-gray-500" />} />
+                  {/* Full Address */}
+                  <Info
+                    label="Full Address"
+                    value={
+                      [
+                        official.address?.street,
+                        official.address?.sitio,
+                        official.address?.barangay_name,
+                        official.address?.municipality_name,
+                        official.address?.province_name,
+                      ].filter(Boolean).join(", ") || "—"
+                    }
+                    icon={<MapPinIcon className="h-4 w-4 text-gray-500" />}
+                  />
                 </div>
               </div>
             </div>

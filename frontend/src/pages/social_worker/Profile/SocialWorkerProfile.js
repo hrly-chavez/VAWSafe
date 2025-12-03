@@ -8,6 +8,7 @@ import {
   PhoneIcon,
   EnvelopeIcon,
   BriefcaseIcon,
+  MapPinIcon,
 } from "@heroicons/react/24/solid";
 
 const iconMap = {
@@ -199,6 +200,20 @@ export default function SocialWorkerProfile() {
                   <Info label="Official Role" value={officialData.of_role} />
                   <Info label="Contact Number" value={officialData.of_contact || "N/A"} />
                   <Info label="Email Address" value={officialData.of_email} />
+                  {/* Full Address */}
+                  <Info
+                    label="Full Address"
+                    value={
+                      [
+                        officialData.address?.street,
+                        officialData.address?.sitio,
+                        officialData.address?.barangay_name,
+                        officialData.address?.municipality_name,
+                        officialData.address?.province_name,
+                      ].filter(Boolean).join(", ") || "—"
+                    }
+                    icon={<MapPinIcon className="h-4 w-4 text-gray-500" />}
+                  />
                 </div>
               </div>
 
