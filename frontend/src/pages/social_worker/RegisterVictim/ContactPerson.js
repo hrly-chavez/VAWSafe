@@ -83,9 +83,9 @@ export default function ContactPerson({
               value={formDataState.cont_birth_date || ""}
               onChange={(e) => handleChange("cont_birth_date", e.target.value)}
             />
-            {!formDataState.cont_birth_date && (
+            {/* {!formDataState.cont_birth_date && (
               <span className="text-xs text-red-500 mt-1">Required</span>
-            )}
+            )} */}
           </div>
 
           <div className="flex flex-col">
@@ -98,9 +98,9 @@ export default function ContactPerson({
               value={formDataState.cont_birth_place || ""}
               onChange={(e) => handleChange("cont_birth_place", e.target.value)}
             />
-            {!formDataState.cont_birth_place && (
+            {/* {!formDataState.cont_birth_place && (
               <span className="text-xs text-red-500 mt-1">Required</span>
-            )}
+            )} */}
           </div>
         </div>
       </div>

@@ -150,49 +150,77 @@ export default function VictimInfo({
           Full Name
         </label>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <input
-            readOnly={isLocked}
-            disabled={isLocked}
-            className="input"
-            type="text"
-            placeholder="First Name"
-            value={formDataState.vic_first_name || ""}
-            onChange={(e) => handleChange("vic_first_name", e.target.value)}
-          />
-          <input
-            readOnly={isLocked}
-            disabled={isLocked}
-            className="input"
-            type="text"
-            placeholder="Middle Name"
-            value={formDataState.vic_middle_name || ""}
-            onChange={(e) => handleChange("vic_middle_name", e.target.value)}
-          />
-          <input
-            readOnly={isLocked}
-            disabled={isLocked}
-            className="input"
-            type="text"
-            placeholder="Last Name"
-            value={formDataState.vic_last_name || ""}
-            onChange={(e) => handleChange("vic_last_name", e.target.value)}
-          />
-          <select
-            readOnly={isLocked}
-            disabled={isLocked}
-            className="input"
-            value={formDataState.vic_extension || ""}
-            onChange={(e) => handleChange("vic_extension", e.target.value)}
-          >
-            <option value="">Select Extension</option>
-            <option value="Jr.">Jr.</option>
-            <option value="Sr.">Sr.</option>
-            <option value="II">II</option>
-            <option value="III">III</option>
-            <option value="IV">IV</option>
-            <option value="V">V</option>
-            <option value="">None</option>
-          </select>
+          {/* First Name */}
+          <div className="flex flex-col">
+            <input
+              readOnly={isLocked}
+              disabled={isLocked}
+              className="input"
+              type="text"
+              placeholder="First Name"
+              value={formDataState.vic_first_name || ""}
+              onChange={(e) => handleChange("vic_first_name", e.target.value)}
+              required
+            />
+            {!formDataState.vic_first_name && (
+              <span className="text-xs text-red-500 mt-1">Required</span>
+            )}
+          </div>
+
+          {/* Middle Name */}
+          <div className="flex flex-col">
+            <input
+              readOnly={isLocked}
+              disabled={isLocked}
+              className="input"
+              type="text"
+              placeholder="Middle Name"
+              value={formDataState.vic_middle_name || ""}
+              onChange={(e) => handleChange("vic_middle_name", e.target.value)}
+              required
+            />
+            {!formDataState.vic_middle_name && (
+              <span className="text-xs text-red-500 mt-1">Required</span>
+            )}
+          </div>
+
+          {/* Last Name */}
+          <div className="flex flex-col">
+            <input
+              readOnly={isLocked}
+              disabled={isLocked}
+              className="input"
+              type="text"
+              placeholder="Last Name"
+              value={formDataState.vic_last_name || ""}
+              onChange={(e) => handleChange("vic_last_name", e.target.value)}
+              required
+            />
+            {!formDataState.vic_last_name && (
+              <span className="text-xs text-red-500 mt-1">Required</span>
+            )}
+          </div>
+
+          {/* Extension (optional) */}
+          <div className="flex flex-col">
+            <select
+              readOnly={isLocked}
+              disabled={isLocked}
+              className="input"
+              value={formDataState.vic_extension || ""}
+              onChange={(e) => handleChange("vic_extension", e.target.value)}
+            >
+              <option value="">Select Extension</option>
+              <option value="Jr.">Jr.</option>
+              <option value="Sr.">Sr.</option>
+              <option value="II">II</option>
+              <option value="III">III</option>
+              <option value="IV">IV</option>
+              <option value="V">V</option>
+              <option value="">None</option>
+            </select>
+            {/* No Required text here since extension is optional */}
+          </div>
         </div>
       </div>
 

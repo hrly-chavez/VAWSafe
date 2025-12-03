@@ -18,58 +18,81 @@ export default function PerpetratorInfo({
       </h2>
 
       {/* Name */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="flex flex-col mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           Full Name
         </label>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <input
-            readOnly={isLocked}
-            disabled={isLocked}
-            className="input"
-            type="text"
-            placeholder="First Name"
-            value={formDataState.per_first_name || ""}
-            onChange={(e) => handleChange("per_first_name", e.target.value)}
-          />
+          {/* First Name */}
+          <div className="flex flex-col">
+            <input
+              readOnly={isLocked}
+              disabled={isLocked}
+              className="input"
+              type="text"
+              placeholder="First Name"
+              value={formDataState.per_first_name || ""}
+              onChange={(e) => handleChange("per_first_name", e.target.value)}
+              required
+            />
+            {!formDataState.per_first_name && (
+              <span className="text-xs text-red-500 mt-1">Required</span>
+            )}
+          </div>
 
-          <input
-            readOnly={isLocked}
-            disabled={isLocked}
-            className="input"
-            type="text"
-            placeholder="Middle Name"
-            value={formDataState.per_middle_name || ""}
-            onChange={(e) => handleChange("per_middle_name", e.target.value)}
-          />
+          {/* Middle Name */}
+          <div className="flex flex-col">
+            <input
+              readOnly={isLocked}
+              disabled={isLocked}
+              className="input"
+              type="text"
+              placeholder="Middle Name"
+              value={formDataState.per_middle_name || ""}
+              onChange={(e) => handleChange("per_middle_name", e.target.value)}
+              required
+            />
+            {!formDataState.per_middle_name && (
+              <span className="text-xs text-red-500 mt-1">Required</span>
+            )}
+          </div>
 
-          <input
-            readOnly={isLocked}
-            disabled={isLocked}
-            className="input"
-            type="text"
-            placeholder="Last Name"
-            value={formDataState.per_last_name || ""}
-            onChange={(e) => handleChange("per_last_name", e.target.value)}
-          />
+          {/* Last Name */}
+          <div className="flex flex-col">
+            <input
+              readOnly={isLocked}
+              disabled={isLocked}
+              className="input"
+              type="text"
+              placeholder="Last Name"
+              value={formDataState.per_last_name || ""}
+              onChange={(e) => handleChange("per_last_name", e.target.value)}
+              required
+            />
+            {!formDataState.per_last_name && (
+              <span className="text-xs text-red-500 mt-1">Required</span>
+            )}
+          </div>
 
-          <select
-            readOnly={isLocked}
-            disabled={isLocked}
-            className="input"
-            placeholder="Extension (e.g. Jr., III)"
-            value={formDataState.per_extension || ""}
-            onChange={(e) => handleChange("per_extension", e.target.value)}
-          >
-            <option value="">Select Extension</option>
-            <option value="Jr.">Jr.</option>
-            <option value="Sr.">Sr.</option>
-            <option value="II">II</option>
-            <option value="III">III</option>
-            <option value="IV">IV</option>
-            <option value="V">V</option>
-            <option value="">None</option>
-          </select>
+          {/* Extension (optional, no Required text) */}
+          <div className="flex flex-col">
+            <select
+              readOnly={isLocked}
+              disabled={isLocked}
+              className="input"
+              value={formDataState.per_extension || ""}
+              onChange={(e) => handleChange("per_extension", e.target.value)}
+            >
+              <option value="">Select Extension</option>
+              <option value="Jr.">Jr.</option>
+              <option value="Sr.">Sr.</option>
+              <option value="II">II</option>
+              <option value="III">III</option>
+              <option value="IV">IV</option>
+              <option value="V">V</option>
+              <option value="">None</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -204,7 +227,9 @@ export default function PerpetratorInfo({
               handleChange("per_educational_attainment", e.target.value)
             }
           >
-            <option value="">Select Educational Level</option>
+            <option value="No Formal Education">
+              Select Educational Level
+            </option>
             <option value="No Formal Education">No Formal Education</option>
             <option value="Elementary Level/Graduate">
               Elementary Level/Graduate

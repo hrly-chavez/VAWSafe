@@ -194,6 +194,7 @@ export default function IncidentInfo({
           className="input"
           value={formDataState.violence_type || ""}
           onChange={(e) => handleChange("violence_type", e.target.value)}
+          required
         >
           <option value="">Select</option>
           {Object.keys(VIOLENCE_OPTIONS).map((type) => (
@@ -202,6 +203,9 @@ export default function IncidentInfo({
             </option>
           ))}
         </select>
+        {!formDataState.violence_type && (
+          <span className="text-xs text-red-500 mt-1">Required</span>
+        )}
       </div>
 
       {/* Violence Subtype */}
@@ -225,6 +229,9 @@ export default function IncidentInfo({
                 </option>
               ))}
             </select>
+            {/* {!formDataState.violence_subtype && (
+              <span className="text-xs text-red-500 mt-1">Required</span>
+            )} */}
           </div>
         )}
 
