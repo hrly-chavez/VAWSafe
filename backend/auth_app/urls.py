@@ -14,7 +14,7 @@ urlpatterns = [
     path("check-dswd/", check_dswd_exists, name="check-dswd"),
     #search face first before createuser
     #later na sa ni i comment out
-    path('search-official/', SearchOfficialFacial.as_view(), name='search_official_facial'),
+    # path('search-official/', SearchOfficialFacial.as_view(), name='search_official_facial'),
 
     #for authentication and authorization
     path('refresh/', CookieTokenRefreshView.as_view()),
