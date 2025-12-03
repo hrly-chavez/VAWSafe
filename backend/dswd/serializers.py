@@ -1,3 +1,4 @@
+from django.urls import reverse
 from rest_framework import serializers, generics, permissions
 from shared_model.models import *
 from datetime import date
@@ -171,13 +172,38 @@ class SessionSerializer(serializers.ModelSerializer):
     def get_official_name(self, obj):
         return [official.full_name for official in obj.assigned_official.all()]
 
+class EvidenceSerializer(serializers.ModelSerializer):
+    file_url = serializers.SerializerMethodField()
+
+    def get_file_url(self, obj):
+        url = reverse("evidence_view", args=[obj.pk])
+        request = self.context.get("request")
+        if request:
+            return request.build_absolute_uri(url)
+        return url  # fallback relative URL
+
+    class Meta:
+        model = Evidence
+        fields = ["id", "description", "uploaded_at", "file_url"]
+
 class IncidentInformationSerializer(serializers.ModelSerializer): #fetch case and session in victim info
     sessions = SessionSerializer(many=True, read_only=True)  #  add sessions
     perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)  
+    evidences = serializers.SerializerMethodField()
+
     class Meta:
         model = IncidentInformation
         fields = "__all__"
         read_only_fields = ["incident_id", "incident_num"]
+
+    def get_evidences(self, obj):
+        qs = Evidence.objects.filter(incident=obj)
+        # ✅ forward the request context so get_file_url works
+        return EvidenceSerializer(
+            qs,
+            many=True,
+            context={"request": self.context.get("request")}
+        ).data
 
 class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
     perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)

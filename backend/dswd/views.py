@@ -1,3 +1,4 @@
+from django.http import FileResponse, Http404
 from shared_model.models import *
 from rest_framework import generics, viewsets, permissions
 import os, tempfile, traceback
@@ -48,6 +49,13 @@ from django.views.decorators.cache import never_cache
 #     permission_classes = [IsAuthenticated, IsRole]
 #     allowed_roles = ['DSWD']  # only users with Official.of_role == 'DSWD' can access
 #     # permission_classes = [AllowAny] #gamita lang ni sya if ganahan mo makakita sa value kay tungod ni sa settingskatung JWTAuthentication 
+
+def evidence_view(request, pk):
+    try:
+        evidence = Evidence.objects.get(pk=pk)
+        return FileResponse(evidence.file.open(), content_type="image/jpeg")
+    except Evidence.DoesNotExist:
+        raise Http404
 
 #===========================================VAWC Victim==========================================
 class ViewVictim(generics.ListAPIView):

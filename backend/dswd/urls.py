@@ -8,6 +8,7 @@ router.register(r"officials", OfficialViewSet, basename='official')
 router.register(r'profile', ProfileViewSet, basename='profile')
 
 urlpatterns = [
+    path("api/evidence/<int:pk>/view/", evidence_view, name="evidence_view"),
     #victim
     path("victims/", ViewVictim.as_view(), name="view_victim"),
     path("victims/<int:vic_id>/", ViewDetail.as_view(), name="view_detail"),
