@@ -660,7 +660,11 @@ export default function VictimDetailPage() {
                   </h2>
 
                   <button
-                    onClick={() => navigate(`/social_worker/create-case/${vic_id}`)}
+                    onClick={() =>
+                      navigate(`/social_worker/add-case/${victim.vic_id}`, {
+                        state: { victim },
+                      })
+                    }
                     className="inline-flex items-center gap-2 rounded-md bg-[#292D96] text-white px-4 py-2 text-sm font-medium shadow-sm hover:bg-[#1f2375] transition"
                   >
                     + Create New Case
