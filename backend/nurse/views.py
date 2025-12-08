@@ -1525,27 +1525,6 @@ class NurseMonthlyReportViewSet(viewsets.ModelViewSet):
         if serializer.instance.prepared_by != official:
             raise PermissionDenied("You can only edit your own nurse reports.")
         serializer.save()
-
-# Read-only proxy for psychometrician comprehensive reports
-class PsychometricianComprehensiveReportReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = ComprehensivePsychReport.objects.all()
-    serializer_class = ComprehensivePsychReportSerializer
-    permission_classes = [permissions.IsAuthenticated]  
-
-    def get_queryset(self):
-        vic_id = self.kwargs.get("vic_id")
-        return self.queryset.filter(victim__pk=vic_id).order_by("-created_at")
-
-
-# Read-only proxy for psychometrician monthly progress reports
-class PsychometricianMonthlyProgressReportReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = MonthlyPsychProgressReport.objects.all()
-    serializer_class = MonthlyPsychProgressReportSerializer
-    permission_classes = [permissions.IsAuthenticated]  
-
-    def get_queryset(self):
-        vic_id = self.kwargs.get("vic_id")
-        return self.queryset.filter(victim__pk=vic_id).order_by("-created_at")
     
 #============================= Nurse Dashboard ======================================
 class NurseDashboardAPIView(APIView):

@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
-import SearchVictimFacial from "./SearchVictimFacial";
 import {
   MagnifyingGlassIcon,
   EyeIcon,
@@ -13,7 +11,6 @@ import api from "../../../api/axios";
 export default function SocialWorkerVictims() {
   const [victims, setVictims] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showFacialModal, setShowFacialModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -81,13 +78,6 @@ export default function SocialWorkerVictims() {
             className="w-full text-sm text-neutral-900 outline-none"
           />
         </div>
-        {/* <button
-          onClick={() => setShowFacialModal(true)}
-          className="h-10 bg-[#10b981] px-4 text-white rounded-[10px] transition duration-200 hover:bg-[#059669] flex items-center gap-2"
-        >
-          <MagnifyingGlassIcon className="h-5 w-5 text-white" />
-          Facial Search
-        </button> */}
       </div>
 
       {/* Table container */}
@@ -206,16 +196,6 @@ export default function SocialWorkerVictims() {
         </div>
       )}
 
-      {/* Modal injected here */}
-      {showFacialModal && (
-        <SearchVictimFacial
-          onClose={() => setShowFacialModal(false)}
-          onFound={(victimId) => {
-            setShowFacialModal(false);
-            navigate(`/dswd/victims/${victimId}`);
-          }}
-        />
-      )}
     </div>
   );
 }
