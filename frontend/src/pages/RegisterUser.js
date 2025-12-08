@@ -759,14 +759,6 @@ const RegisterUser = ({ onClose, defaultRole }) => {
                 <p><strong>Role:</strong> {credentials.role}</p>
               </div>
             )}
-
-            {/* Pending approval message for VAWDesk */}
-            {/* {status && of_role === "VAWDesk" && (
-              <div className="mt-4 p-4 border border-yellow-500 bg-yellow-100 text-yellow-900 rounded-lg shadow">
-                <h4 className="font-bold mb-2">Notice:</h4>
-                <p>{status}</p>
-              </div>
-            )} */}
           </form>
         </div>
       </div>

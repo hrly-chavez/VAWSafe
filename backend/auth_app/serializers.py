@@ -1,20 +1,47 @@
 from rest_framework import serializers
 from shared_model.models import *
 from django.contrib.auth.models import User
+import re
 
-# class AccountSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Account
-#         fields = ['username', 'password']
+HTML_TAG_PATTERN = re.compile(r"[<>]")
+
+def sanitize_text(value: str) -> str:
+    if not isinstance(value, str):
+        return value
+
+    # Remove HTML tags
+    value = re.sub(r"<.*?>", "", value)
+
+    # Remove script-like content
+    value = re.sub(r"(javascript:|script)", "", value, flags=re.IGNORECASE)
+
+    # Trim spaces
+    return value.strip()
+
+def sanitize_text_fields(attrs, fields):
+    for field in fields:
+        if field in attrs and isinstance(attrs[field], str):
+            attrs[field] = sanitize_text(attrs[field])
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "username"]
+    
+    def validate_username(self, value):
+        return sanitize_text(value)
+
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = ["id", "province", "municipality", "barangay", "sitio", "street"]
+
+    def validate(self, attrs):
+        text_fields = ["province", "municipality", "barangay", "sitio", "street"]
+        sanitize_text_fields(attrs, text_fields)
+        return attrs
 
     def to_representation(self, instance):
         parts = []
@@ -30,18 +57,31 @@ class AddressSerializer(serializers.ModelSerializer):
             parts.append(str(instance.province))
         return ", ".join(parts) or "—"
 
-
-# class OfficialSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Official
-#         fields = "__all__"
-
 class OfficialSerializer(serializers.ModelSerializer):
     address = AddressSerializer()
 
     class Meta:
         model = Official
         fields = "__all__"
+
+    # Validate and sanitize before saving
+    def validate(self, attrs):
+
+        text_fields = [
+            "of_fname",
+            "of_lname",
+            "of_email",
+            "of_role",
+            "of_m_initial",
+            "of_suffix",
+            "of_sex",
+            "of_dob",
+            "of_pob",
+            "of_contact",
+        ]
+
+        sanitize_text_fields(attrs, text_fields)
+        return attrs
 
     def create(self, validated_data):
         address_data = validated_data.pop("address")
@@ -54,21 +94,3 @@ class OfficialFaceSampleSerializer(serializers.ModelSerializer):
     class Meta:
         model = OfficialFaceSample
         fields = "_all_"
-
-# class LoginTrackerSerializer(serializers.ModelSerializer):
-#     official_name = serializers.SerializerMethodField()
-
-#     class Meta:
-#         model = LoginTracker
-#         fields = [
-#             'id', 'official_name', 'role', 'ip_address', 'user_agent', 'login_time', 'status'
-#         ]
-
-#     def get_official_name(self, obj):
-#         try:
-#             official = getattr(obj.user, "official", None)
-#             if official:
-#                 return official.full_name  # assuming you already have full_name property
-#             return obj.user.username  # fallback if no linked official
-#         except Exception:
-#             return "Unknown"

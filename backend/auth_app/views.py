@@ -16,7 +16,7 @@ from rest_framework.exceptions import Throttled
 from rest_framework_simplejwt.tokens import RefreshToken
 from shared_model.models import Official, OfficialFaceSample, LoginTracker, AuditLog
 from shared_model.permissions import AllowSetupOrAdmin
-from .serializers import OfficialSerializer
+from .serializers import OfficialSerializer, UserSerializer
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from django.core.mail import send_mail
 from django.conf import settings
@@ -26,6 +26,7 @@ from rest_framework import viewsets
 from .signals import get_client_ip
 from django.http import Http404
 from shared_model.views import serve_encrypted_file
+import re
 
 from .login_protection import (
     increment_ip_fail,
@@ -244,8 +245,24 @@ def generate_strong_password(length=16):
 
     # Return the password as a string
     return ''.join(password)
-    
 
+def sanitize_text(value: str) -> str:
+    if not isinstance(value, str):
+        return value
+
+    # Remove HTML tags
+    value = re.sub(r"<.*?>", "", value)
+
+    # Remove script-like content
+    value = re.sub(r"(javascript:|script)", "", value, flags=re.IGNORECASE)
+
+    # Trim spaces
+    return value.strip()
+
+def clean_username(s):
+    s = sanitize_text(s)  # remove HTML/script
+    return re.sub(r"[^a-zA-Z0-9@.+-_]", "", s)
+    
 class create_official(APIView):
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [AllowSetupOrAdmin]
@@ -261,7 +278,7 @@ class create_official(APIView):
         role = serializer.validated_data.get("of_role", "").strip()
         fname = request.data.get("of_fname", "").strip().lower()
         lname = request.data.get("of_lname", "").strip().lower()
-        base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
+        base_username = clean_username(f"{fname}{lname}") or generate_strong_password(16)
 
         photo_files = request.FILES.getlist("of_photos")
         if not photo_files:
@@ -346,7 +363,15 @@ class create_official(APIView):
             username = f"{base_username}{counter}"
 
         generated_password = generate_strong_password(length=16)
-        user = User.objects.create_user(username=username, password=generated_password)
+        # Pass the username through UserSerializer for sanitization
+        user_serializer = UserSerializer(data={"username": username})
+        user_serializer.is_valid(raise_exception=True)
+
+        # Save sanitized username
+        user = User.objects.create_user(
+            username=user_serializer.validated_data["username"],
+            password=generated_password
+        )
 
         # -----------------------
         # Save Official

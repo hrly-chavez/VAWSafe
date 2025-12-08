@@ -797,6 +797,13 @@ class UpdateUsernamePasswordView(APIView):
         # Basic validation
         if not all([new_username, current_password, new_password, confirm_password]):
             return Response({"error": "All fields are required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # ---- SANITIZE USERNAME ONLY ----
+        new_username = sanitize_text(new_username)
+
+        # Username cannot be empty after sanitization
+        if not new_username.strip():
+            return Response({"error": "Invalid or empty username"}, status=status.HTTP_400_BAD_REQUEST)
 
         if not user.check_password(current_password):
             return Response({"error": "Current password is incorrect"}, status=status.HTTP_400_BAD_REQUEST)
@@ -822,7 +829,7 @@ class UpdateUsernamePasswordView(APIView):
             user.username = new_username
 
         # Password change
-        changes["password"] = ["<old password>", "<new password>"]  # Do NOT log plaintext
+        changes["password"] = ["old password", "new password"]  # Do NOT log plaintext
 
         # Apply updates
         user.set_password(new_password)

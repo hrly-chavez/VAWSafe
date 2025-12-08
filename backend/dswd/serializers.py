@@ -3,6 +3,29 @@ from rest_framework import serializers
 from shared_model.models import *
 from PIL import Image
 
+import re
+
+HTML_TAG_PATTERN = re.compile(r"<.*?>", flags=re.DOTALL)
+
+def sanitize_text(value: str) -> str:
+    if not isinstance(value, str):
+        return value
+
+    # Remove HTML tags
+    value = re.sub(r"<.*?>", "", value)
+
+    # Remove dangerous javascript-like content
+    value = re.sub(r"(javascript:|script)", "", value, flags=re.IGNORECASE)
+
+    # Trim spaces
+    return value.strip()
+
+def sanitize_text_fields(attrs, fields):
+    for field in fields:
+        if field in attrs and isinstance(attrs[field], str):
+            attrs[field] = sanitize_text(attrs[field])
+
+
 #===========================================Address==========================================
 class AddressSerializer(serializers.ModelSerializer):
     province_name = serializers.SerializerMethodField()
@@ -22,6 +45,10 @@ class AddressSerializer(serializers.ModelSerializer):
             "sitio",
             "street",
         ]
+    
+    def validate(self, attrs):
+        sanitize_text_fields(attrs, ["province", "municipality", "barangay", "sitio", "street"])
+        return attrs
 
     def get_province_name(self, obj):
         if not obj.province:
@@ -66,6 +93,23 @@ class OfficialSerializer(serializers.ModelSerializer):
             "of_id", "full_name", "of_role", "of_contact", "of_email", "of_photo", "of_dob", "of_pob", "of_fname", "of_lname", "of_m_initial", "of_sex",
             "address", "user_is_active", "deleted_at"
         ]
+
+    def validate(self, attrs):
+        text_fields = [
+            "of_fname",
+            "of_lname",
+            "of_m_initial",
+            "of_suffix",
+            "of_role",
+            "of_email",
+            "of_contact",
+            "of_pob",
+            "of_sex",
+            "of_dob"
+        ]
+
+        sanitize_text_fields(attrs, text_fields)
+        return attrs
 
     def get_user_is_active(self, obj):
         if obj.user_id:
