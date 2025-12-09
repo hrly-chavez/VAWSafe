@@ -247,6 +247,10 @@ export default function VictimDetailPage() {
     }
   };
 
+  const allCasesDone =
+    incidentList.length > 0 &&
+    incidentList.every((incident) => incident.incident_status === "Done");
+
   useEffect(() => {
     const fetchVictim = async () => {
       try {
@@ -280,13 +284,13 @@ export default function VictimDetailPage() {
 
   const fullName = victim
     ? [
-      get(victim, ["vic_first_name"]),
-      get(victim, ["vic_middle_name"]),
-      get(victim, ["vic_last_name"]),
-      get(victim, ["vic_extension"]),
-    ]
-      .filter(Boolean)
-      .join(" ")
+        get(victim, ["vic_first_name"]),
+        get(victim, ["vic_middle_name"]),
+        get(victim, ["vic_last_name"]),
+        get(victim, ["vic_extension"]),
+      ]
+        .filter(Boolean)
+        .join(" ")
     : "";
 
   if (loading) return <p>Loading victim details...</p>;
@@ -330,10 +334,11 @@ export default function VictimDetailPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-2 text-sm font-semibold rounded-t-md transition-colors duration-200 ${isActive
-                    ? "bg-[#292D96] text-white border border-gray-300 border-b-0"
-                    : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#292D96] border border-gray-300"
-                    }`}
+                  className={`px-6 py-2 text-sm font-semibold rounded-t-md transition-colors duration-200 ${
+                    isActive
+                      ? "bg-[#292D96] text-white border border-gray-300 border-b-0"
+                      : "bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-[#292D96] border border-gray-300"
+                  }`}
                 >
                   {tab === "details" && "Details"}
                   {tab === "case" && "Case Details"}
@@ -658,17 +663,18 @@ export default function VictimDetailPage() {
                   <h2 className="text-lg font-semibold text-gray-800">
                     Case Information
                   </h2>
-
-                  <button
-                    onClick={() =>
-                      navigate(`/social_worker/add-case/${victim.vic_id}`, {
-                        state: { victim },
-                      })
-                    }
-                    className="inline-flex items-center gap-2 rounded-md bg-[#292D96] text-white px-4 py-2 text-sm font-medium shadow-sm hover:bg-[#1f2375] transition"
-                  >
-                    + Create New Case
-                  </button>
+                  {allCasesDone && (
+                    <button
+                      onClick={() =>
+                        navigate(`/social_worker/add-case/${victim.vic_id}`, {
+                          state: { victim },
+                        })
+                      }
+                      className="inline-flex items-center gap-2 rounded-md bg-[#292D96] text-white px-4 py-2 text-sm font-medium shadow-sm hover:bg-[#1f2375] transition"
+                    >
+                      + Create New Case
+                    </button>
+                  )}
                 </div>
 
                 {/* Content */}
@@ -772,8 +778,6 @@ export default function VictimDetailPage() {
                               {incident.incident_num || "—"}
                             </div>
                             <div className="flex gap-3">
-
-
                               {/* Add Report */}
                               {userRole === "Social Worker" && (
                                 <button
@@ -791,14 +795,14 @@ export default function VictimDetailPage() {
                             </div>
                           </div>
 
-
                           <div className="mt-3 space-y-6">
                             {["Social Worker", "Nurse", "Psychometrician"].map(
                               (role) => {
-                                const roleReports = incidentReports.filter((r) =>
-                                  r.report_type
-                                    ?.toLowerCase()
-                                    .includes(role.toLowerCase())
+                                const roleReports = incidentReports.filter(
+                                  (r) =>
+                                    r.report_type
+                                      ?.toLowerCase()
+                                      .includes(role.toLowerCase())
                                 );
                                 return (
                                   <div
@@ -815,7 +819,9 @@ export default function VictimDetailPage() {
                                       className={`w-full flex justify-between items-center font-semibold px-6 py-4 text-base ${roleColors[role]}`}
                                     >
                                       <span>{role} Reports</span>
-                                      <span>{openRole === role ? "−" : "+"}</span>
+                                      <span>
+                                        {openRole === role ? "−" : "+"}
+                                      </span>
                                     </button>
 
                                     {/* Dropdown content */}

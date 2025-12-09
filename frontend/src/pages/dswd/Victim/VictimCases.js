@@ -113,6 +113,24 @@ export default function VictimCases({ selectedIncident, onClose }) {
                 value={selectedIncident.incident_description}
               />
             </div>
+            <div className="p-6">
+              <InfoItem
+                label="Observations"
+                value={selectedIncident.incident_observations_about_survivor}
+              />
+            </div>
+            <div className="p-6">
+              <InfoItem
+                label="Circumstances"
+                value={selectedIncident.incident_circumstances}
+              />
+            </div>
+            <div className="p-6">
+              <InfoItem
+                label="Plan/Recommendation"
+                value={selectedIncident.incident_recommendation}
+              />
+            </div>
           </div>
 
           {/* Perpetrator Info */}

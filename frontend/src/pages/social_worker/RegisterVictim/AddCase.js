@@ -76,7 +76,7 @@ export default function AddCase() {
 
   const cancel = () => {
     alert("Add Case cancelled!");
-    navigate(`/social_worker/victim/${victim.vic_id}`);
+    navigate(-1);
   };
 
   const toggleSection = (section) => {
