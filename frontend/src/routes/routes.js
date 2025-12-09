@@ -48,6 +48,7 @@ export const ROUTES = {
   SOCIAL_WORKER_CREATE_MORE_SESSION: "/social_worker/more-sessions/create/:incident_id",
   SOCIAL_WORKER_START_MORE_SESSION: "/social_worker/more-sessions/:sess_id/start",
   SOCIAL_WORKER_PROFILE: "/social_worker/profile",
+  SOCIAL_WORKER_ADD_CASE: "/social_worker/add-case/:vic_id",
 
   //nurse
   NURSE_DASHBOARD: "nurse/",

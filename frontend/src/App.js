@@ -33,6 +33,7 @@ const Questions = lazy(() => import("./pages/social_worker/Questions/Questions")
 const SocialWorkerCreateMoreSession = lazy(() => import("./pages/social_worker/Sessions/MoreSessions/CreateSession"));
 const SocialWorkerStartMoreSession = lazy(() => import("./pages/social_worker/Sessions/MoreSessions/StartMoreSession"));
 const SocialWorkerProfile = lazy(() => import("./pages/social_worker/Profile/SocialWorkerProfile"));
+const SocialWorkerAddCase = lazy(() => import("./pages/social_worker/RegisterVictim/AddCase"));
 
 //DSWD
 const DSWDDashboard = lazy(() => import("./pages/dswd/Dashboard/DSWDDashboard"));
@@ -137,6 +138,7 @@ export default function App() {
                 <Route path={ROUTES.SOCIAL_WORKER_QUESTIONS} element={<Questions />} />
                 <Route path={ROUTES.SOCIAL_WORKER_CREATE_MORE_SESSION} element={<SocialWorkerCreateMoreSession />} />
                 <Route path={ROUTES.SOCIAL_WORKER_START_MORE_SESSION} element={<SocialWorkerStartMoreSession />} />
+                <Route path={ROUTES.SOCIAL_WORKER_ADD_CASE} element={<SocialWorkerAddCase />} />
               </Route>
 
               {/* Nurse group */}

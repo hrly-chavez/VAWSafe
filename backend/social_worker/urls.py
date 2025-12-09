@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path("register-victim/", register_victim, name="register-victim"),
     path("api/evidence/<int:pk>/view/", evidence_view, name="evidence_view"),
+    path('add-case/',views.add_case_for_victim,name='add-case-for-victim'),
     
 
     # --- Existing endpoints ---

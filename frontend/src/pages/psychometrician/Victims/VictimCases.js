@@ -82,7 +82,10 @@ export default function VictimCases({ selectedIncident, onClose }) {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm p-6">
               <InfoItem label="Case No" value={selectedIncident.incident_num} />
-              <InfoItem label="Status" value={selectedIncident.incident_status} />
+              <InfoItem
+                label="Status"
+                value={selectedIncident.incident_status}
+              />
               <InfoItem
                 label="Created At"
                 value={new Date(selectedIncident.created_at).toLocaleString()}
@@ -108,6 +111,24 @@ export default function VictimCases({ selectedIncident, onClose }) {
               <InfoItem
                 label="Description"
                 value={selectedIncident.incident_description}
+              />
+            </div>
+            <div className="p-6">
+              <InfoItem
+                label="Observations"
+                value={selectedIncident.incident_observations_about_survivor}
+              />
+            </div>
+            <div className="p-6">
+              <InfoItem
+                label="Circumstances"
+                value={selectedIncident.incident_circumstances}
+              />
+            </div>
+            <div className="p-6">
+              <InfoItem
+                label="Plan/Recommendation"
+                value={selectedIncident.incident_recommendation}
               />
             </div>
           </div>

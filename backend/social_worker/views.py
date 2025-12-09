@@ -438,6 +438,108 @@ def register_victim(request):
         return Response({"success": False, "error": str(e)},
                         status=status.HTTP_400_BAD_REQUEST)
 
+from rest_framework.decorators import api_view, parser_classes
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
+from rest_framework import status
+from django.db import transaction
+import json
+import traceback
+
+@api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
+@transaction.atomic
+def add_case_for_victim(request):
+    """
+    Creates a new IncidentInformation for an existing victim.
+    Optional: perpetrator, contact_person, evidences.
+    """
+    def parse_json_field(key):
+        raw = request.data.get(key)
+        if not raw:
+            return None
+        if isinstance(raw, str):
+            try:
+                return json.loads(raw)
+            except:
+                raise ValueError(f"Invalid JSON in '{key}'")
+        return raw
+
+    def to_bool(v):
+        if isinstance(v, bool):
+            return v
+        return str(v).lower() in ("1", "true", "yes", "on")
+
+    try:
+        victim_id = request.data.get("vic_id")
+        if not victim_id:
+            return Response({"success": False, "error": "vic_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            victim = Victim.objects.get(pk=victim_id)
+        except Victim.DoesNotExist:
+            return Response({"success": False, "error": "Victim not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # 1) Optional perpetrator
+        perpetrator_data = parse_json_field("perpetrator")
+        perpetrator = None
+        if perpetrator_data:
+            p_ser = PerpetratorSerializer(data=perpetrator_data)
+            if not p_ser.is_valid():
+                return Response({"success": False, "errors": p_ser.errors}, status=status.HTTP_400_BAD_REQUEST)
+            perpetrator = p_ser.save()
+
+        # 2) IncidentInformation
+        incident_data = parse_json_field("incident") or {}
+        incident_data["vic_id"] = victim.pk
+        if perpetrator:
+            incident_data["perp_id"] = perpetrator.pk
+        # Optional: assign current official if logged in
+        if request.user.is_authenticated:
+            try:
+                incident_data["of_id"] = request.user.official.pk
+            except:
+                pass
+
+        # Convert boolean fields
+        for key in ("is_via_electronic_means", "is_conflict_area", "is_calamity_area"):
+            if key in incident_data:
+                incident_data[key] = to_bool(incident_data[key])
+
+        i_ser = IncidentInformationSerializer(data=incident_data)
+        if not i_ser.is_valid():
+            return Response({"success": False, "errors": i_ser.errors}, status=status.HTTP_400_BAD_REQUEST)
+        incident = i_ser.save()
+
+        # 3) Contact Person (optional)
+        contact_data = parse_json_field("contact_person")
+        contact_person = None
+        if contact_data:
+            contact_data["incident"] = incident.pk
+            c_ser = ContactPersonSerializer(data=contact_data)
+            if not c_ser.is_valid():
+                return Response({"success": False, "errors": c_ser.errors}, status=status.HTTP_400_BAD_REQUEST)
+            contact_person = c_ser.save()
+
+        # 4) Evidences (optional)
+        evidence_files = request.FILES.getlist("evidences")
+        if evidence_files:
+            for file in evidence_files:
+                Evidence.objects.create(incident=incident, file=file)
+
+        return Response({
+            "success": True,
+            "incident": IncidentInformationSerializer(incident).data,
+            "contact_person": ContactPersonSerializer(contact_person).data if contact_person else None,
+            "perpetrator": PerpetratorSerializer(perpetrator).data if perpetrator else None
+        }, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        traceback.print_exc()
+        transaction.set_rollback(True)
+        return Response({"success": False, "error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
 def evidence_view(request, pk):
     try:
         evidence = Evidence.objects.get(pk=pk)
