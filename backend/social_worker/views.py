@@ -33,6 +33,9 @@ from pathlib import Path
 from collections import Counter
 #from win32com import client
 
+# used for choices
+from shared_model.models import CIVIL_STATUS_CHOICES, RELIGION_CHOICES, EDUCATIONAL_ATTAINMENT_CHOICES
+
 # helpers
 def format_abuse_checklist(incident_data):
     lines = []
@@ -136,6 +139,54 @@ def format_physical_observation(data):
             lines.append(f"  {mark} {item}")
 
     return "\n".join(lines)
+
+class SexChoicesView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        choices = [{"value": choice[0], "label": choice[1]} for choice in SEX_CHOICES]
+        return Response(choices)
+
+class ExtensionChoicesView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        choices = [{"value": choice[0], "label": choice[1]} for choice in EXTENSION_CHOICES]
+        return Response(choices)
+    
+class RelationshipChoicesView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        choices = [{"value": choice[0], "label": choice[1]} for choice in RELATIONSHIP_CHOICES]
+        return Response(choices)
+    
+class CivilStatusChoicesView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        choices = [{"value": choice[0], "label": choice[1]} for choice in CIVIL_STATUS_CHOICES]
+        return Response(choices)
+
+class ReligionChoicesView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        choices = [{"value": choice[0], "label": choice[1]} for choice in RELIGION_CHOICES]
+        return Response(choices)
+
+class EducationalAttainmentChoicesView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        choices = [{"value": choice[0], "label": choice[1]} for choice in EDUCATIONAL_ATTAINMENT_CHOICES]
+        return Response(choices)
+
+class SchoolTypeChoicesView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        choices = [{"value": choice[0], "label": choice[1]} for choice in Victim.SCHOOL_TYPE_CHOICES]
+        return Response(choices)
+
+class IncomeChoicesView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request):
+        choices = [{"value": choice[0], "label": choice[1]} for choice in INCOME_CHOICES]
+        return Response(choices)
 
 #helper function para sa password sa docs (OPTIONAL PA)
 # def protect_docx_with_password(file_path, password):

@@ -84,6 +84,62 @@ export default function VictimInfo({
     }
   }, [formDataState.address.municipality]);
 
+  // fetch choices
+  const [civilStatusOptions, setCivilStatusOptions] = useState([]);
+  const [religionOptions, setReligionOptions] = useState([]);
+  const [educationalAttainmentOptions, setEducationalAttainmentOptions] =
+    useState([]);
+  const [schoolTypeOptions, setSchoolTypeOptions] = useState([]);
+  const [incomeOptions, setIncomeOptions] = useState([]);
+  const [extensionOptions, setExtensionOptions] = useState([]);
+
+  useEffect(() => {
+    const fetchChoices = async () => {
+      try {
+        const [
+          civilRes,
+          religionRes,
+          educationRes,
+          schoolTypeRes,
+          incomeRes,
+          extensionRes,
+        ] = await Promise.all([
+          axios.get(
+            "http://localhost:8000/api/social_worker/civil-status-choices/"
+          ),
+          axios.get(
+            "http://localhost:8000/api/social_worker/religion-choices/"
+          ),
+          axios.get(
+            "http://localhost:8000/api/social_worker/educational-attainment-choices/"
+          ),
+          axios.get(
+            "http://localhost:8000/api/social_worker/school-type-choices/"
+          ),
+          axios.get("http://localhost:8000/api/social_worker/income-choices/"),
+          axios.get(
+            "http://localhost:8000/api/social_worker/extension-choices/"
+          ),
+        ]);
+
+        // logs to see if data is passed
+        console.log("CIVIL STATUS:", civilRes.data);
+        console.log("RELIGION:", religionRes.data);
+
+        setCivilStatusOptions(civilRes.data);
+        setReligionOptions(religionRes.data);
+        setEducationalAttainmentOptions(educationRes.data);
+        setSchoolTypeOptions(schoolTypeRes.data);
+        setIncomeOptions(incomeRes.data);
+        setExtensionOptions(extensionRes.data);
+      } catch (err) {
+        console.error("FETCH ERROR:", err);
+      }
+    };
+
+    fetchChoices();
+  }, []);
+
   useEffect(() => {
     const provinceName = provinces.find(
       (c) => c.id === parseInt(selectedProvince)
@@ -211,13 +267,11 @@ export default function VictimInfo({
               onChange={(e) => handleChange("vic_extension", e.target.value)}
             >
               <option value="">Select Extension</option>
-              <option value="Jr.">Jr.</option>
-              <option value="Sr.">Sr.</option>
-              <option value="II">II</option>
-              <option value="III">III</option>
-              <option value="IV">IV</option>
-              <option value="V">V</option>
-              <option value="">None</option>
+              {extensionOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
             {/* No Required text here since extension is optional */}
           </div>
@@ -299,11 +353,11 @@ export default function VictimInfo({
             <option value="" disabled>
               Select Civil Status
             </option>
-            <option value="SINGLE">Single</option>
-            <option value="MARRIED">Married</option>
-            <option value="WIDOWED">Widowed</option>
-            <option value="SEPARATED">Separated</option>
-            <option value="DIVORCED">Divorced</option>
+            {civilStatusOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -324,12 +378,11 @@ export default function VictimInfo({
             <option value="" disabled>
               Select Religion
             </option>
-            <option value="Roman Catholic">Roman Catholic</option>
-            <option value="Protestant">Protestant</option>
-            <option value="Evangelical">Evangelical</option>
-            <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
-            <option value="Islam">Islam</option>
-            <option value="Others">Others</option>
+            {religionOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -353,21 +406,11 @@ export default function VictimInfo({
             <option value="" disabled>
               Select Educational Level
             </option>
-            <option value="No Formal Education">No Formal Education</option>
-            <option value="Elementary Level/Graduate">
-              Elementary Level/Graduate
-            </option>
-            <option value="Junior High School Level/Graduate">
-              Junior High School Level/Graduate
-            </option>
-            <option value="Senior High School Level/Graduate">
-              Senior High School Level/Graduate
-            </option>
-            <option value="Technical/Vocational">Technical/Vocational</option>
-            <option value="College Level/Graduate">
-              College Level/Graduate
-            </option>
-            <option value="Post graduate">Post graduate</option>
+            {educationalAttainmentOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -388,8 +431,11 @@ export default function VictimInfo({
               <option value="" disabled>
                 Select Status
               </option>
-              <option value="SY">SY</option>
-              <option value="OSY">OSY</option>
+              {schoolTypeOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -470,11 +516,11 @@ export default function VictimInfo({
             onChange={(e) => handleChange("vic_income", e.target.value)}
           >
             <option value="">Select Income</option>
-            <option value="0-5000">₱0 - ₱5,000</option>
-            <option value="5001-10000">₱5,001 - ₱10,000</option>
-            <option value="10001-20000">₱10,001 - ₱20,000</option>
-            <option value="20001-50000">₱20,001 - ₱50,000</option>
-            <option value="50001+">₱50,001 and above</option>
+            {incomeOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
 
           <input

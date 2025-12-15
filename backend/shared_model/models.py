@@ -11,13 +11,71 @@ from django.utils import timezone
 #para ni sa file encryption sa mga filepath
 encrypted_storage = EncryptedFileSystemStorage()
 
+# global choices
+SEX_CHOICES = [
+    ('Male','Male'),
+    ('Female','Female'),
+]
+
+EXTENSION_CHOICES = [
+    ("Jr.", "Jr."),
+    ("Sr.", "Sr."),
+    ("II", "II"),
+    ("III", "III"),
+    ("IV", "IV"),
+    ("V", "V"),
+    ("", "None"),
+]
+
+RELATIONSHIP_CHOICES = [
+    ("Mother", "Mother"),
+    ("Father", "Father"),
+    ("Sibling", "Sibling"),
+    ("Son", "Son"),
+    ("Daughter", "Daughter"),
+    ("Spouse", "Spouse"),
+    ("Partner", "Partner"),
+    ("Grandparent", "Grandparent"),
+    ("Aunt", "Aunt"),
+    ("Uncle", "Uncle"),
+    ("Cousin", "Cousin"),
+    ("Other", "Other"),
+]
+
 CIVIL_STATUS_CHOICES = [
-        ('SINGLE', 'Single'),
-        ('MARRIED', 'Married'),
-        ('WIDOWED', 'Widowed'),
-        ('SEPARATED', 'Separated'),
-        ('DIVORCED', 'Divorced'),
-    ]
+    ('SINGLE', 'Single'),
+    ('MARRIED', 'Married'),
+    ('WIDOWED', 'Widowed'),
+    ('SEPARATED', 'Separated'),
+    ('DIVORCED', 'Divorced'),
+]
+
+RELIGION_CHOICES = [
+    ('Roman Catholic', 'Roman Catholic'),
+    ('Islam', 'Islam'),
+    ('Evangelicals', 'Evangelicals'),
+    ('Protestant', 'Protestant'),
+    ('Iglesia ni Cristo', 'Iglesia ni Cristo'),
+    ('Others', 'Others'),
+]
+
+EDUCATIONAL_ATTAINMENT_CHOICES = [
+    ('No Formal Education', 'No Formal Education'),
+    ('Elementary Level/Graduate', 'Elementary Level/Graduate'),
+    ('Junior High School Level/Graduate', 'Junior High School Level/Graduate'),
+    ('Senior High School Level/Graduate', 'Senior High School Level/Graduate'),
+    ('Technical/Vocational', 'Technical/Vocational'),
+    ('College Level/Graduate', 'College Level/Graduate'),
+    ('Post Graduate', 'Post Graduate'),
+]
+
+INCOME_CHOICES = [
+    ("0-5000", "₱0 - ₱5,000"),
+    ("5001-10000", "₱5,001 - ₱10,000"),
+    ("10001-20000", "₱10,001 - ₱20,000"),
+    ("20001-50000", "₱20,001 - ₱50,000"),
+    ("50001+", "₱50,001 and above"),
+]
 
 # for address
 class Province(models.Model):  
@@ -270,24 +328,7 @@ class AuditLog(models.Model):
 #==================================================================================================
 
 # starting here is for forms
-class Victim(models.Model): 
-    CIVIL_STATUS_CHOICES = [
-        ('SINGLE', 'Single'),
-        ('MARRIED', 'Married'),
-        ('WIDOWED', 'Widowed'),
-        ('SEPARATED', 'Separated'),
-        ('DIVORCED', 'Divorced'),
-    ]
-
-    RELIGION_CHOICES = [
-        ('Roman Catholic', 'Roman Catholic'),
-        ('Islam', 'Islam'),
-        ('Evangelicals', 'Evangelicals'),
-        ('Protestant', 'Protestant'),
-        ('Iglesia ni Cristo', 'Iglesia ni Cristo'),
-        ('Others', 'Others'),
-    ]
-    
+class Victim(models.Model):
     SCHOOL_TYPE_CHOICES = [
         ('SY', 'School Youth'),
         ('OSY', 'Out of School Youth'),
@@ -298,7 +339,7 @@ class Victim(models.Model):
     vic_first_name = EncryptedCharField(max_length=512)
     vic_middle_name = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_last_name = EncryptedCharField(max_length=512)
-    vic_extension = EncryptedCharField(max_length=512, blank=True, null=True)
+    vic_extension = EncryptedCharField(max_length=512, choices=EXTENSION_CHOICES, blank=True, null=True)
     vic_alias = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_sex = EncryptedCharField(max_length=512, default='Female')
     vic_birth_date = EncryptedDateField( null=True, blank=True)
@@ -306,13 +347,13 @@ class Victim(models.Model):
 
     vic_civil_status = EncryptedCharField(max_length=512, choices=CIVIL_STATUS_CHOICES, default='SINGLE')
     vic_religion = EncryptedCharField(max_length=512, choices=RELIGION_CHOICES, default='Roman Catholic')
-    vic_educational_attainment = EncryptedCharField(max_length=512, default='No Formal Education')
+    vic_educational_attainment = EncryptedCharField(max_length=512, choices=EDUCATIONAL_ATTAINMENT_CHOICES, default='No Formal Education')
     vic_school_type = EncryptedCharField(max_length=3, choices=SCHOOL_TYPE_CHOICES, null=True, blank=True)
     vic_school_years = models.PositiveSmallIntegerField(null=True, blank=True)
     vic_last_school_attended = EncryptedCharField(max_length=512, null=True, blank=True)
     vic_last_school_address = EncryptedCharField(max_length=512, null=True, blank=True)
     vic_occupation = EncryptedCharField(max_length=512, blank=True, null=True)
-    vic_income = models.CharField(max_length=100, blank=True, null=True)
+    vic_income = models.CharField(max_length=100, choices=INCOME_CHOICES, blank=True, null=True)
     vic_skills = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_contact_number = EncryptedCharField(max_length=512, blank=True, null=True)
     vic_provincial_address = EncryptedCharField(max_length=512, blank=True, null=True)
@@ -455,6 +496,33 @@ class ContactPerson(models.Model):
         return " ".join(filter(None, parts))
 
 class IncidentInformation(models.Model): #Case in the frontend
+    VIOLENCE_TYPE_CHOICES = [
+        ("Physical Violence", "Physical Violence"),
+        ("Physical Abuse", "Physical Abuse"),
+        ("Psychological Violence", "Psychological Violence"),
+        ("Psychological Abuse", "Psychological Abuse"),
+        ("Economic Abuse", "Economic Abuse"),
+        ("Strandee", "Strandee"),
+        ("Sexually Abused", "Sexually Abused"),
+        ("Sexually Exploited", "Sexually Exploited"),
+    ]
+
+    VIOLENCE_SUBTYPE_CHOICES = [
+        ("Rape", "Rape"),
+        ("Acts of Lasciviousness", "Acts of Lasciviousness"),
+        ("Incest", "Incest"),
+        ("Withdrawal of financial support", "Withdrawal of financial support"),
+        ("Threat or deprivation of financial resources", "Threat or deprivation of financial resources"),
+        ("Destroying household property", "Destroying household property"),
+        ("Controlling the victim's own money", "Controlling the victim's own money"),
+        ("Prostituted", "Prostituted"),
+        ("Illegally Recruited", "Illegally Recruited"),
+        ("Pornography", "Pornography"),
+        ("Victim of Human Trafficking", "Victim of Human Trafficking"),
+        ("Sexual Harassment", "Sexual Harassment"),
+        ("Others", "Others"),
+    ]
+    
     INCIDENT_CHOICES = [
         ('Pending','Pending'),
         ('Ongoing','Ongoing'),
@@ -560,7 +628,7 @@ class FamilyMember(models.Model):
     fam_lname = models.CharField(max_length=50, blank=True, null=True)
     fam_extension = models.CharField(max_length=50, blank=True, null=True)
     fam_birth_date = models.DateField( null=True, blank=True)
-    fam_sex = models.CharField(max_length=10, null=True, blank=True)
+    fam_sex = models.CharField(max_length=10, choices=SEX_CHOICES, null=True, blank=True)
     fam_victim_relationship = models.CharField(max_length=50, null=True, blank=True)
     fam_civil_status = models.CharField(max_length=50, null=True, blank=True)
     fam_educational_attainment = models.CharField(max_length=50, null=True, blank=True)

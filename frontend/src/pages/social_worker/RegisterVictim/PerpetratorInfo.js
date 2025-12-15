@@ -1,7 +1,8 @@
 // src/components/PerpetratorInfo.js
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { NATIONALITIES } from "./helpers/Nationalities";
 import { formatPHNumber } from "./helpers/input-validators";
+import axios from "axios";
 
 export default function PerpetratorInfo({
   formDataState,
@@ -10,6 +11,55 @@ export default function PerpetratorInfo({
 }) {
   const handleChange = (field, value) =>
     setFormDataState((prev) => ({ ...prev, [field]: value }));
+
+  // fetch choices
+  const [extensionOptions, setExtensionOptions] = useState([]);
+  const [sexOptions, setSexOptions] = useState([]);
+  const [religionOptions, setReligionOptions] = useState([]);
+  const [educationalAttainmentOptions, setEducationalAttainmentOptions] =
+    useState([]);
+  const [relationshipOptions, setRelationshipOptions] = useState([]);
+
+  useEffect(() => {
+    const fetchChoices = async () => {
+      try {
+        const [
+          religionRes,
+          sexRes,
+          educationRes,
+          extensionRes,
+          relationshipRes,
+        ] = await Promise.all([
+          axios.get(
+            "http://localhost:8000/api/social_worker/religion-choices/"
+          ),
+          axios.get("http://localhost:8000/api/social_worker/sex-choices/"),
+          axios.get(
+            "http://localhost:8000/api/social_worker/educational-attainment-choices/"
+          ),
+          axios.get(
+            "http://localhost:8000/api/social_worker/extension-choices/"
+          ),
+          axios.get(
+            "http://localhost:8000/api/social_worker/relationship-choices/"
+          ),
+        ]);
+
+        // logs to see if data is passed
+        console.log("RELIGION:", religionRes.data);
+
+        setExtensionOptions(extensionRes.data);
+        setSexOptions(sexRes.data);
+        setReligionOptions(religionRes.data);
+        setEducationalAttainmentOptions(educationRes.data);
+        setRelationshipOptions(relationshipRes.data);
+      } catch (err) {
+        console.error("FETCH ERROR:", err);
+      }
+    };
+
+    fetchChoices();
+  }, []);
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-md space-y-6">
@@ -84,13 +134,11 @@ export default function PerpetratorInfo({
               onChange={(e) => handleChange("per_extension", e.target.value)}
             >
               <option value="">Select Extension</option>
-              <option value="Jr.">Jr.</option>
-              <option value="Sr.">Sr.</option>
-              <option value="II">II</option>
-              <option value="III">III</option>
-              <option value="IV">IV</option>
-              <option value="V">V</option>
-              <option value="">None</option>
+              {extensionOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -165,8 +213,11 @@ export default function PerpetratorInfo({
           onChange={(e) => handleChange("per_sex", e.target.value)}
         >
           <option value="">Select Sex</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
+          {sexOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -183,12 +234,11 @@ export default function PerpetratorInfo({
           onChange={(e) => handleChange("per_religion", e.target.value)}
         >
           <option value="">Select Religion</option>
-          <option value="Roman Catholic">Roman Catholic</option>
-          <option value="Islam">Islam</option>
-          <option value="Evangelicals">Evangelicals</option>
-          <option value="Protestant">Protestant</option>
-          <option value="Iglesia ni Cristo">Iglesia ni Cristo</option>
-          <option value="Others">Others</option>
+          {religionOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -198,17 +248,22 @@ export default function PerpetratorInfo({
           Relationship to Victim
         </label>
         <div>
-          <input
+          <select
             readOnly={isLocked}
             disabled={isLocked}
-            className="input"
-            type="text"
-            placeholder="e.g. Siblings"
+            className="input w-full"
             value={formDataState.per_victim_relationship || ""}
             onChange={(e) =>
               handleChange("per_victim_relationship", e.target.value)
             }
-          />
+          >
+            <option value="">Select Relationship</option>
+            {relationshipOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -230,21 +285,11 @@ export default function PerpetratorInfo({
             <option value="No Formal Education">
               Select Educational Level
             </option>
-            <option value="No Formal Education">No Formal Education</option>
-            <option value="Elementary Level/Graduate">
-              Elementary Level/Graduate
-            </option>
-            <option value="Junior High School Level/Graduate">
-              Junior High School Level/Graduate
-            </option>
-            <option value="Senior High School Level/Graduate">
-              Senior High School Level/Graduate
-            </option>
-            <option value="Technical/Vocational">Technical/Vocational</option>
-            <option value="College Level/Graduate">
-              College Level/Graduate
-            </option>
-            <option value="Post graduate">Post graduate</option>
+            {educationalAttainmentOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>

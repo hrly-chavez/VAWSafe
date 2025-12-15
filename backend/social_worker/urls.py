@@ -2,6 +2,16 @@ from django.urls import path
 from .views import *
 from . import views
 urlpatterns = [
+    # helper
+    path("civil-status-choices/", CivilStatusChoicesView.as_view(), name="civil-status-choices"),
+    path("religion-choices/", ReligionChoicesView.as_view(), name="religion-choices"),
+    path("educational-attainment-choices/", EducationalAttainmentChoicesView.as_view(), name="educational-attainment-choices"),
+    path("school-type-choices/", SchoolTypeChoicesView.as_view(), name="school-type-choices"),
+    path("income-choices/", IncomeChoicesView.as_view(), name="income-choices"),
+    path("sex-choices/", SexChoicesView.as_view(), name="sex-choices"),
+    path("extension-choices/", ExtensionChoicesView.as_view(), name="extension-choices"),
+    path("relationship-choices/", RelationshipChoicesView.as_view(), name="relationship-choices"),
+
     path("register-victim/", register_victim, name="register-victim"),
     path("api/evidence/<int:pk>/view/", evidence_view, name="evidence_view"),
     path('add-case/',views.add_case_for_victim,name='add-case-for-victim'),

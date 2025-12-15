@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 const emptyMember = {
   fam_fname: "",
@@ -14,7 +15,19 @@ const emptyMember = {
   fam_income: "",
 };
 
-function FamilyMember({ index, member, updateMember, onRemove, isLocked }) {
+function FamilyMember({
+  index,
+  member,
+  updateMember,
+  onRemove,
+  isLocked,
+  sexOptions,
+  extensionOptions,
+  civilStatusOptions,
+  educationalAttainmentOptions,
+  incomeOptions,
+  relationshipOptions,
+}) {
   return (
     <div className="p-4 border rounded-lg shadow-sm bg-gray-50 my-2">
       <div className="flex justify-between items-center mb-2">
@@ -67,13 +80,11 @@ function FamilyMember({ index, member, updateMember, onRemove, isLocked }) {
           className="border p-2 rounded"
         >
           <option value="">Select Extension</option>
-          <option value="Jr.">Jr.</option>
-          <option value="Sr.">Sr.</option>
-          <option value="II">II</option>
-          <option value="III">III</option>
-          <option value="IV">IV</option>
-          <option value="V">V</option>
-          <option value="">None</option>
+          {extensionOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
 
         <input
@@ -96,8 +107,11 @@ function FamilyMember({ index, member, updateMember, onRemove, isLocked }) {
           className="border p-2 rounded"
         >
           <option value="">Select Sex</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
+          {sexOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
 
         <select
@@ -110,18 +124,11 @@ function FamilyMember({ index, member, updateMember, onRemove, isLocked }) {
           className="border p-2 rounded"
         >
           <option value="">Select Relationship</option>
-          <option value="Mother">Mother</option>
-          <option value="Father">Father</option>
-          <option value="Sibling">Sibling</option>
-          <option value="Son">Son</option>
-          <option value="Daughter">Daughter</option>
-          <option value="Spouse">Spouse</option>
-          <option value="Partner">Partner</option>
-          <option value="Grandparent">Grandparent</option>
-          <option value="Aunt">Aunt</option>
-          <option value="Uncle">Uncle</option>
-          <option value="Cousin">Cousin</option>
-          <option value="Other">Other</option>
+          {relationshipOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
 
         <select
@@ -134,11 +141,11 @@ function FamilyMember({ index, member, updateMember, onRemove, isLocked }) {
           className="border p-2 rounded"
         >
           <option value="">Select Civil Status</option>
-          <option value="Single">Single</option>
-          <option value="Married">Married</option>
-          <option value="Widowed">Widowed</option>
-          <option value="Separated">Separated</option>
-          <option value="Divorced">Divorced</option>
+          {civilStatusOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
 
         <select
@@ -151,21 +158,11 @@ function FamilyMember({ index, member, updateMember, onRemove, isLocked }) {
           className="border p-2 rounded"
         >
           <option value="">Select Educational Attainment</option>
-          <option value="No Formal Education">No Formal Education</option>
-          <option value="Elementary Level">Elementary Level</option>
-          <option value="Elementary Graduate">Elementary Graduate</option>
-          <option value="High School Level">High School Level</option>
-          <option value="High School Graduate">High School Graduate</option>
-          <option value="Senior High School Level">
-            Senior High School Level
-          </option>
-          <option value="Senior High School Graduate">
-            Senior High School Graduate
-          </option>
-          <option value="Vocational/Technical">Vocational/Technical</option>
-          <option value="College Level">College Level</option>
-          <option value="College Graduate">College Graduate</option>
-          <option value="Post-Graduate">Post-Graduate</option>
+          {educationalAttainmentOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
 
         <input
@@ -188,11 +185,11 @@ function FamilyMember({ index, member, updateMember, onRemove, isLocked }) {
           className="border p-2 rounded"
         >
           <option value="">Select Income Range</option>
-          <option value="Below ₱5,000">Below ₱5,000</option>
-          <option value="₱5,000 – ₱10,000">₱5,000 – ₱10,000</option>
-          <option value="₱10,001 – ₱20,000">₱10,001 – ₱20,000</option>
-          <option value="₱20,001 – ₱30,000">₱20,001 – ₱30,000</option>
-          <option value="Above ₱30,000">Above ₱30,000</option>
+          {incomeOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
       </div>
     </div>
@@ -222,6 +219,56 @@ export default function FamilyComposition({
     setFormDataState((prev) => ({ ...prev, familyMembers: newMembers }));
   };
 
+  // for choices
+  const [civilStatusOptions, setCivilStatusOptions] = useState([]);
+  const [educationalAttainmentOptions, setEducationalAttainmentOptions] =
+    useState([]);
+  const [incomeOptions, setIncomeOptions] = useState([]);
+  const [sexOptions, setSexOptions] = useState([]);
+  const [extensionOptions, setExtensionOptions] = useState([]);
+  const [relationshipOptions, setRelationshipOptions] = useState([]);
+
+  useEffect(() => {
+    const fetchChoices = async () => {
+      try {
+        const [
+          civilRes,
+          educationRes,
+          incomeRes,
+          sexRes,
+          extensionRes,
+          relationshipRes,
+        ] = await Promise.all([
+          axios.get(
+            "http://localhost:8000/api/social_worker/civil-status-choices/"
+          ),
+          axios.get(
+            "http://localhost:8000/api/social_worker/educational-attainment-choices/"
+          ),
+          axios.get("http://localhost:8000/api/social_worker/income-choices/"),
+          axios.get("http://localhost:8000/api/social_worker/sex-choices/"),
+          axios.get(
+            "http://localhost:8000/api/social_worker/extension-choices/"
+          ),
+          axios.get(
+            "http://localhost:8000/api/social_worker/relationship-choices/"
+          ),
+        ]);
+
+        setCivilStatusOptions(civilRes.data);
+        setEducationalAttainmentOptions(educationRes.data);
+        setIncomeOptions(incomeRes.data);
+        setSexOptions(sexRes.data);
+        setExtensionOptions(extensionRes.data);
+        setRelationshipOptions(relationshipRes.data);
+      } catch (err) {
+        console.error("Failed to fetch family choices", err);
+      }
+    };
+
+    fetchChoices();
+  }, []);
+
   return (
     <div className="overflow-x-auto p-4">
       {!isLocked && (
@@ -241,6 +288,12 @@ export default function FamilyComposition({
           member={member}
           updateMember={updateMember}
           onRemove={removeMember}
+          civilStatusOptions={civilStatusOptions}
+          educationalAttainmentOptions={educationalAttainmentOptions}
+          incomeOptions={incomeOptions}
+          sexOptions={sexOptions}
+          extensionOptions={extensionOptions}
+          relationshipOptions={relationshipOptions}
         />
       ))}
     </div>

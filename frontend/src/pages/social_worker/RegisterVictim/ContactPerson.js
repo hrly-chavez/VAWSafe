@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import axios from "axios";
 import { formatPHNumber } from "./helpers/input-validators";
 
 export default function ContactPerson({
@@ -11,6 +13,44 @@ export default function ContactPerson({
       [field]: value,
     }));
   };
+
+  // fetch choices
+  const [civilStatusOptions, setCivilStatusOptions] = useState([]);
+  const [extensionOptions, setExtensionOptions] = useState([]);
+  const [sexOptions, setSexOptions] = useState([]);
+  const [relationshipOptions, setRelationshipOptions] = useState([]);
+
+  useEffect(() => {
+    const fetchChoices = async () => {
+      try {
+        const [civilRes, extensionRes, sexRes, relationshipRes] =
+          await Promise.all([
+            axios.get(
+              "http://localhost:8000/api/social_worker/civil-status-choices/"
+            ),
+            axios.get(
+              "http://localhost:8000/api/social_worker/extension-choices/"
+            ),
+            axios.get("http://localhost:8000/api/social_worker/sex-choices/"),
+            axios.get(
+              "http://localhost:8000/api/social_worker/relationship-choices/"
+            ),
+          ]);
+
+        // logs to see if data is passed
+        console.log("CIVIL STATUS:", civilRes.data);
+
+        setCivilStatusOptions(civilRes.data);
+        setExtensionOptions(extensionRes.data);
+        setSexOptions(sexRes.data);
+        setRelationshipOptions(relationshipRes.data);
+      } catch (err) {
+        console.error("FETCH ERROR:", err);
+      }
+    };
+
+    fetchChoices();
+  }, []);
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-md space-y-6">
@@ -56,13 +96,11 @@ export default function ContactPerson({
             onChange={(e) => handleChange("cont_ext", e.target.value)}
           >
             <option value="">Select Extension</option>
-            <option value="Jr.">Jr.</option>
-            <option value="Sr.">Sr.</option>
-            <option value="II">II</option>
-            <option value="III">III</option>
-            <option value="IV">IV</option>
-            <option value="V">V</option>
-            <option value="">None</option>
+            {extensionOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -118,8 +156,11 @@ export default function ContactPerson({
           onChange={(e) => handleChange("cont_sex", e.target.value)}
         >
           <option value="">Select Sex</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
+          {sexOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -137,11 +178,11 @@ export default function ContactPerson({
             onChange={(e) => handleChange("cont_civil_status", e.target.value)}
           >
             <option>Select Civil Status</option>
-            <option value="SINGLE">Single</option>
-            <option value="MARRIED">Married</option>
-            <option value="WIDOWED">Widowed</option>
-            <option value="SEPARATED">Separated</option>
-            <option value="DIVORCED">Divorced</option>
+            {civilStatusOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -152,17 +193,22 @@ export default function ContactPerson({
           Relationship to Victim
         </label>
         <div>
-          <input
+          <select
             readOnly={isLocked}
             disabled={isLocked}
-            className="input"
-            type="text"
-            placeholder="e.g. Siblings"
+            className="input w-full"
             value={formDataState.cont_victim_relationship || ""}
             onChange={(e) =>
               handleChange("cont_victim_relationship", e.target.value)
             }
-          />
+          >
+            <option>Select Relationship</option>
+            {relationshipOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
