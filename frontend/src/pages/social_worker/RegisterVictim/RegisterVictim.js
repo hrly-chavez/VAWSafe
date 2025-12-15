@@ -60,11 +60,11 @@ const REQUIRED_VICTIM_KEYS = [
   "incident_date",
   "incident_time",
 
-  "per_first_name",
-  "per_middle_name",
-  "per_last_name",
-  "per_birth_date",
-  "per_birth_place",
+  // "per_first_name",
+  // "per_middle_name",
+  // "per_last_name",
+  // "per_birth_date",
+  // "per_birth_place",
   // "cont_birth_date",
 ];
 
