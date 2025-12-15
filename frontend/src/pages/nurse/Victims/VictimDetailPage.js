@@ -139,26 +139,37 @@ export default function VictimDetailPage() {
   //Fetch all reports
   const fetchReports = async () => {
     try {
+      let socialWorkerData = [];
       let nurseData = [];
       let psychComData = [];
       let psychMonthlyData = [];
 
+      // Social Worker Reports
       try {
-        const nurseRes = await api.get(`/api/nurse/victims/${vic_id}/monthly-reports/`);
+        const swRes = await api.get(
+          `/api/social_worker/victims/${vic_id}/reports/`
+        );
+        socialWorkerData = Array.isArray(swRes.data) ? swRes.data : [];
+      } catch (err) {
+        console.error("Failed to fetch social worker reports", err);
+      }
+
+      try {
+        const nurseRes = await api.get(`/api/social_worker/victims/${vic_id}/nurse-reports/`);
         nurseData = Array.isArray(nurseRes.data) ? nurseRes.data : [];
       } catch (err) {
         console.error("Failed to fetch nurse reports", err);
       }
 
       try {
-        const psychComRes = await api.get(`/api/nurse/victims/${vic_id}/psych-comprehensive-reports/`);
+        const psychComRes = await api.get(`/api/social_worker/victims/${vic_id}/psych-comprehensive-reports/`);
         psychComData = Array.isArray(psychComRes.data) ? psychComRes.data : [];
       } catch (err) {
         console.error("Failed to fetch psychometrician comprehensive reports", err);
       }
 
       try {
-        const psychMonthlyRes = await api.get(`/api/nurse/victims/${vic_id}/psych-monthly-progress-reports/`);
+        const psychMonthlyRes = await api.get(`/api/social_worker/victims/${vic_id}/psych-monthly-progress-reports/`);
         psychMonthlyData = Array.isArray(psychMonthlyRes.data) ? psychMonthlyRes.data : [];
       } catch (err) {
         console.error("Failed to fetch psychometrician monthly progress reports", err);
@@ -173,6 +184,7 @@ export default function VictimDetailPage() {
       });
 
       const combined = [
+        ...socialWorkerData.map((r) => normalize(r, "Social Worker")),
         ...nurseData.map(r => normalize(r, "Nurse")),
         ...psychComData.map(r => normalize(r, "Psychometrician Comprehensive")),
         ...psychMonthlyData.map(r => normalize(r, "Psychometrician Monthly")),
@@ -189,7 +201,7 @@ export default function VictimDetailPage() {
 
   const fetchIncidents = async () => {
     try {
-      const res = await api.get(`/api/nurse/case/${vic_id}/`);
+      const res = await api.get(`/api/social_worker/case/${vic_id}/`);
       if (Array.isArray(res.data)) setIncidentList(res.data);
     } catch (err) {
       console.error("Failed to fetch incidents", err);

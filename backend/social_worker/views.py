@@ -2270,7 +2270,7 @@ def generate_monthly_consolidated_report(report_instance):
 class SocialWorkerMonthlyReportViewSet(viewsets.ModelViewSet):
     serializer_class = SocialWorkerMonthlyReportSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker", "DSWD"]
+    allowed_roles = ["Social Worker", "DSWD", "Nurse", "Psychometrician"]
 
     def get_queryset(self):
         vic_id = self.kwargs["vic_id"]
@@ -2309,7 +2309,7 @@ class SocialWorkerMonthlyReportViewSet(viewsets.ModelViewSet):
 class NurseMonthlyReportListView(generics.ListAPIView):
     serializer_class = NurseMonthlyReportSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker", "Nurse", "DSWD"]
+    allowed_roles = ["Social Worker", "Nurse", "DSWD", "Psychometrician"]
 
     def get_queryset(self):
         vic_id = self.kwargs["vic_id"]
@@ -2323,7 +2323,7 @@ class NurseMonthlyReportListView(generics.ListAPIView):
 class PsychComprehensiveReportListView(generics.ListAPIView):
     serializer_class = ComprehensivePsychReportSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker", "Psychometrician", "DSWD"]
+    allowed_roles = ["Social Worker", "Psychometrician", "DSWD", "Nurse"]
 
     def get_queryset(self):
         vic_id = self.kwargs["vic_id"]
@@ -2336,7 +2336,7 @@ class PsychComprehensiveReportListView(generics.ListAPIView):
 class PsychMonthlyProgressReportListView(generics.ListAPIView):
     serializer_class = MonthlyPsychProgressReportSerializer
     permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Social Worker", "Psychometrician", "DSWD"]
+    allowed_roles = ["Social Worker", "Psychometrician", "DSWD", "Nurse"]
 
     def get_queryset(self):
         vic_id = self.kwargs["vic_id"]

@@ -171,7 +171,7 @@ export default function VictimDetails() {
     // Consolidated reports (SW, Nurse, Psychometrician) — view-only for DSWD Admin
     const fetchReports = async () => {
       try {
-        let swData = [];
+        let socialWorkerData = [];
         let nurseData = [];
         let psychComData = [];
         let psychMonthlyData = [];
@@ -186,20 +186,19 @@ export default function VictimDetails() {
           incident: report.incident?.id ?? report.incident ?? null,
         });
 
+        // Social Worker Reports
         try {
           const swRes = await api.get(
             `/api/social_worker/victims/${vic_id}/reports/`
           );
-          swData = (Array.isArray(swRes.data) ? swRes.data : []).map((r) =>
-            normalize(r, "Social Worker")
-          );
+          socialWorkerData = Array.isArray(swRes.data) ? swRes.data : [];
         } catch (err) {
-          console.error("SW reports error", err);
+          console.error("Failed to fetch social worker reports", err);
         }
 
         try {
           const nurseRes = await api.get(
-            `/api/nurse/victims/${vic_id}/monthly-reports/`
+            `/api/social_worker/victims/${vic_id}/nurse-reports/`
           );
           nurseData = (Array.isArray(nurseRes.data) ? nurseRes.data : []).map(
             (r) => normalize(r, "Nurse")
@@ -210,7 +209,7 @@ export default function VictimDetails() {
 
         try {
           const psychComRes = await api.get(
-            `/api/nurse/victims/${vic_id}/psych-comprehensive-reports/`
+            `/api/social_worker/victims/${vic_id}/psych-comprehensive-reports/`
           );
           psychComData = (
             Array.isArray(psychComRes.data) ? psychComRes.data : []
@@ -221,7 +220,7 @@ export default function VictimDetails() {
 
         try {
           const psychMonthlyRes = await api.get(
-            `/api/nurse/victims/${vic_id}/psych-monthly-progress-reports/`
+            `/api/social_worker/victims/${vic_id}/psych-monthly-progress-reports/`
           );
           psychMonthlyData = (
             Array.isArray(psychMonthlyRes.data) ? psychMonthlyRes.data : []
@@ -231,7 +230,7 @@ export default function VictimDetails() {
         }
 
         const combined = [
-          ...swData,
+          ...socialWorkerData,
           ...nurseData,
           ...psychComData,
           ...psychMonthlyData,

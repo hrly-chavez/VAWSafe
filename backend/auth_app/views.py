@@ -16,7 +16,7 @@ from rest_framework.exceptions import Throttled
 from rest_framework_simplejwt.tokens import RefreshToken
 from shared_model.models import Official, OfficialFaceSample, LoginTracker, AuditLog
 from shared_model.permissions import AllowSetupOrAdmin
-from .serializers import OfficialSerializer
+from .serializers import OfficialSerializer, UserSerializer
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from django.core.mail import send_mail
 from django.conf import settings
@@ -26,6 +26,7 @@ from rest_framework import viewsets
 from .signals import get_client_ip
 from django.http import Http404
 from shared_model.views import serve_encrypted_file
+import re
 
 from .login_protection import (
     increment_ip_fail,
@@ -244,8 +245,24 @@ def generate_strong_password(length=16):
 
     # Return the password as a string
     return ''.join(password)
-    
 
+def sanitize_text(value: str) -> str:
+    if not isinstance(value, str):
+        return value
+
+    # Remove HTML tags
+    value = re.sub(r"<.*?>", "", value)
+
+    # Remove script-like content
+    value = re.sub(r"(javascript:|script)", "", value, flags=re.IGNORECASE)
+
+    # Trim spaces
+    return value.strip()
+
+def clean_username(s):
+    s = sanitize_text(s)  # remove HTML/script
+    return re.sub(r"[^a-zA-Z0-9@.+-_]", "", s)
+    
 class create_official(APIView):
     parser_classes = [MultiPartParser, FormParser]
     permission_classes = [AllowSetupOrAdmin]
@@ -261,7 +278,7 @@ class create_official(APIView):
         role = serializer.validated_data.get("of_role", "").strip()
         fname = request.data.get("of_fname", "").strip().lower()
         lname = request.data.get("of_lname", "").strip().lower()
-        base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
+        base_username = clean_username(f"{fname}{lname}") or generate_strong_password(16)
 
         photo_files = request.FILES.getlist("of_photos")
         if not photo_files:
@@ -346,7 +363,15 @@ class create_official(APIView):
             username = f"{base_username}{counter}"
 
         generated_password = generate_strong_password(length=16)
-        user = User.objects.create_user(username=username, password=generated_password)
+        # Pass the username through UserSerializer for sanitization
+        user_serializer = UserSerializer(data={"username": username})
+        user_serializer.is_valid(raise_exception=True)
+
+        # Save sanitized username
+        user = User.objects.create_user(
+            username=user_serializer.validated_data["username"],
+            password=generated_password
+        )
 
         # -----------------------
         # Save Official
@@ -412,201 +437,6 @@ class create_official(APIView):
             "role": official.of_role,
             "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
         }, status=status.HTTP_201_CREATED)
-
-# class create_official(APIView):
-#     parser_classes = [MultiPartParser, FormParser]
-#     permission_classes = [AllowAny]
-
-#     def post(self, request):
-#         # -----------------------
-#         # Validate data
-#         # -----------------------
-#         serializer = OfficialSerializer(data=request.data)
-#         if not serializer.is_valid():
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-#         role = serializer.validated_data.get("of_role", "").strip()
-#         user = None
-#         username = None
-#         generated_password = None
-#         status_value = "pending"
-
-#         # -----------------------
-#         # Account creation logic
-#         # -----------------------
-#         if role == "DSWD":
-#             if Official.objects.filter(of_role="DSWD").exists():
-#                 return Response(
-#                     {"error": "A DSWD account already exists. Cannot create another."},
-#                     status=status.HTTP_400_BAD_REQUEST,
-#                 )
-
-#             fname = request.data.get("of_fname", "").strip().lower()
-#             lname = request.data.get("of_lname", "").strip().lower()
-#             base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
-
-#             # Ensure unique username
-#             username = base_username
-#             counter = 0
-#             while User.objects.filter(username=username).exists():
-#                 counter += 1
-#                 username = f"{base_username}{counter}"
-
-#             generated_password = generate_strong_password(length=16)
-#             user = User.objects.create_user(username=username, password=generated_password)
-#             status_value = "approved"
-
-#         elif role == "Social Worker":
-#             fname = request.data.get("of_fname", "").strip().lower()
-#             lname = request.data.get("of_lname", "").strip().lower()
-#             base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
-
-#             username = base_username
-#             counter = 0
-#             while User.objects.filter(username=username).exists():
-#                 counter += 1
-#                 username = f"{base_username}{counter}"
-
-#             generated_password = generate_strong_password(length=16)
-#             user = User.objects.create_user(username=username, password=generated_password)
-#             status_value = "approved"
-
-#         elif role == "Nurse":
-#             fname = request.data.get("of_fname", "").strip().lower()
-#             lname = request.data.get("of_lname", "").strip().lower()
-#             base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
-
-#             username = base_username
-#             counter = 0
-#             while User.objects.filter(username=username).exists():
-#                 counter += 1
-#                 username = f"{base_username}{counter}"
-
-#             generated_password = generate_strong_password(length=16)
-#             user = User.objects.create_user(username=username, password=generated_password)
-#             status_value = "approved"
-
-#         elif role == "Psychometrician":
-#             fname = request.data.get("of_fname", "").strip().lower()
-#             lname = request.data.get("of_lname", "").strip().lower()
-#             base_username = f"{fname}{lname}".replace(" ", "") or generate_strong_password(16)
-
-#             username = base_username
-#             counter = 0
-#             while User.objects.filter(username=username).exists():
-#                 counter += 1
-#                 username = f"{base_username}{counter}"
-
-#             generated_password = generate_strong_password(length=16)
-#             user = User.objects.create_user(username=username, password=generated_password)
-#             status_value = "approved"
-#         else:
-#             return Response({"error": f"Invalid role: {role}"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         # -----------------------
-#         # Create Official with serializer.save()
-#         # -----------------------
-#         official = serializer.save(
-#             user=user,
-#             status=status_value
-#         )
-
-#         if not official:
-#             return Response({"error": "Failed to create official."}, status=status.HTTP_400_BAD_REQUEST)
-
-#         # -----------------------
-#         # Handle uploaded photos
-#         # -----------------------
-#         photo_files = request.FILES.getlist("of_photos")
-#         if not photo_files:
-#             single_photo = request.FILES.get("of_photo")
-#             if single_photo:
-#                 photo_files = [single_photo]
-
-#         if photo_files:
-#             # store first photo in of_photo field
-#             official.of_photo = photo_files[0]
-#             official.save()
-
-#         # -----------------------
-#         # Face Embeddings (Social Worker / DSWD / Nurse / Psychometrician only)
-#         # -----------------------
-#         if role in ["Social Worker", "DSWD", "Nurse", "Psychometrician"]:
-#             created_count = 0
-#             for file in photo_files:
-#                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
-#                 try:
-#                     image = Image.open(file).convert("RGB")
-#                     image.save(temp_image, format="JPEG")
-#                     temp_image.flush()
-#                     temp_image.close()
-
-#                     embeddings = DeepFace.represent(
-#                         img_path=temp_image.name,
-#                         model_name="ArcFace",
-#                         enforce_detection=True
-#                     )
-
-#                     # normalize output
-#                     if isinstance(embeddings, list):
-#                         if isinstance(embeddings[0], dict) and "embedding" in embeddings[0]:
-#                             embedding_vector = embeddings[0]["embedding"]
-#                         elif all(isinstance(x, float) for x in embeddings):
-#                             embedding_vector = embeddings
-#                         else:
-#                             raise ValueError("Unexpected list format from DeepFace.")
-#                     elif isinstance(embeddings, dict) and "embedding" in embeddings:
-#                         embedding_vector = embeddings["embedding"]
-#                     else:
-#                         raise ValueError("Unexpected format from DeepFace.represent()")
-
-#                     OfficialFaceSample.objects.create(
-#                         official=official,
-#                         photo=file,
-#                         embedding=embedding_vector
-#                     )
-#                     created_count += 1
-
-#                 except Exception as e:
-#                     traceback.print_exc()
-#                 finally:
-#                     if os.path.exists(temp_image.name):
-#                         os.remove(temp_image.name)
-
-#             if created_count == 0:
-#                 return Response(
-#                     {"error": "Face registration failed. Please upload clearer photos."},
-#                     status=status.HTTP_400_BAD_REQUEST
-#                 )
-
-#             # Send credentials by email
-#             email_address = serializer.validated_data.get("of_email")
-#             if email_address:
-#                 subject = f"Your {role} Account Credentials"
-#                 message = (
-#                     f"Hello {official.of_fname} {official.of_lname},\n\n"
-#                     f"Your {role} account has been created and approved.\n\n"
-#                     f"Username: {username}\n"
-#                     f"Password: {generated_password}\n\n"
-#                     f"Please log in and change your password immediately."
-#                 )
-#                 send_mail(
-#                     subject,
-#                     message,
-#                     settings.DEFAULT_FROM_EMAIL,
-#                     [email_address],
-#                     fail_silently=False,
-#                 )
-
-#             return Response({
-#                 "message": f"{role} registered. {created_count} face sample(s) saved.",
-#                 "official_id": official.of_id,
-#                 "username": username,
-#                 "password": generated_password,
-#                 "role": official.of_role,
-#                 "photo_url": request.build_absolute_uri(official.of_photo.url) if official.of_photo else None,
-#             }, status=status.HTTP_201_CREATED)
-
 
 
 logger = logging.getLogger(__name__)
@@ -895,53 +725,6 @@ class blick_check(APIView):
             "message": "No blink detected. Please blink clearly."
         }, status=200)
 
-
-# class blick_check(APIView):
-#     parser_classes = [MultiPartParser, FormParser]
-#     permission_classes = [AllowAny]
-
-#     def post(self, request):
-#         uploaded_frames = [file for name, file in request.FILES.items() if name.startswith("frame")]
-#         if not uploaded_frames:
-#             return Response({"error": "No frames received"}, status=400)
-
-#         for i, file in enumerate(uploaded_frames):
-#             try:
-#                 temp_image = tempfile.NamedTemporaryFile(delete=False, suffix=".jpg")
-#                 image = Image.open(file).convert("RGB")
-#                 image.save(temp_image, format="JPEG")
-#                 temp_image.flush()
-#                 temp_image.close()
-
-#                 with open(temp_image.name, "rb") as f:
-#                     image_bytes = f.read()
-
-#                 if detect_blink(image_bytes):
-#                     os.remove(temp_image.name) # cleanup temp
-                        
-#                     #  Return blink index + candidate indices
-#                     candidate_indices = [i]
-#                     if i > 0:
-#                         candidate_indices.insert(0, i - 1)
-#                     if i < len(uploaded_frames) - 1:
-#                         candidate_indices.append(i + 1)
-
-#                     return Response({
-#                         "blink": True,
-#                         "frame_index": i,
-#                         "candidate_indices": candidate_indices
-#                     }, status=200)
-#                 else:
-#                     os.remove(temp_image.name)
-#             except Exception as e:
-#                 print(f"[WARN] Blink check failed: {e}")
-#                 continue
-
-#         return Response({
-#             "blink": False,
-#             "message": "No blink detected. Please blink clearly."
-#         }, status=403)
-
     
 #manual login ni sya para sa cookie instead of localstorage
 logger = logging.getLogger(__name__)
@@ -1062,69 +845,6 @@ class CookieTokenObtainPairView(APIView):
 
         return resp
     
-    
-# class CookieTokenObtainPairView(APIView):
-#     permission_classes = [permissions.AllowAny]
-
-#     @method_decorator(csrf_protect)
-#     def post(self, request):
-#         serializer = TokenObtainPairSerializer(data=request.data)
-#         try:
-#             serializer.is_valid(raise_exception=True)
-#         except Exception:
-#             return Response(
-#                 {"match": False, "message": "Incorrect username or password."},
-#                 status=status.HTTP_401_UNAUTHORIZED
-#             )
-
-#         tokens = serializer.validated_data
-#         user = serializer.user
-
-#         official = getattr(user, "official", None)
-#         role = getattr(official, "of_role", None)
-#         name = getattr(official, "full_name", f"{getattr(official, 'of_fname', '')} {getattr(official, 'of_lname', '')}".strip())
-#         official_id = getattr(official, "of_id", None)
-#         photo_url = request.build_absolute_uri(getattr(official, "of_photo").url) if getattr(official, "of_photo", None) else None
-
-#         resp = Response({
-#             "match": True,
-#             "official_id": official_id,
-#             "name": name,
-#             "username": user.username,
-#             "role": role,
-#             "profile_photo_url": photo_url,
-#         }, status=status.HTTP_200_OK)
-
-#         # Set cookies
-#         set_auth_cookies(resp, tokens["access"], tokens.get("refresh"))
-
-#         #Track successful login
-#         ip = get_client_ip(request)
-#         user_agent = request.META.get('HTTP_USER_AGENT', '')
-#         LoginTracker.objects.create(
-#             user=user,
-#             role=role,
-#             ip_address=ip,
-#             user_agent=user_agent,
-#             status="Success"
-#         )
-
-#         return resp
-
-#=================================Login Tracker=====================================
-# class LoginTrackerViewSet(viewsets.ReadOnlyModelViewSet):
-#     queryset = LoginTracker.objects.all().order_by('-login_time')
-#     serializer_class = LoginTrackerSerializer
-#     # permission_classes = [IsAuthenticated, IsRole]
-#     # allowed_roles = ['DSWD']
-#     permission_classes = [AllowAny]
-
-#     def get_queryset(self):
-#         user = self.request.user
-#         if hasattr(user, 'official') and user.official.of_role != 'DSWD':
-#             return self.queryset.filter(user=user)
-#         return self.queryset  # DSWD sees all
-
 # 4) Refresh -> read refresh from cookie; set new cookies; return 204
 class CookieTokenRefreshView(views.APIView):
     permission_classes = [permissions.AllowAny]

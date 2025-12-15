@@ -121,7 +121,7 @@ export default function VictimDetailPage() {
   // Fetch incidents
   const fetchIncidents = async () => {
     try {
-      const res = await api.get(`/api/psychometrician/case/${vic_id}/`);
+      const res = await api.get(`/api/social_worker/case/${vic_id}/`);
       if (Array.isArray(res.data)) setIncidentList(res.data);
     } catch (err) {
       console.error("Failed to fetch incidents", err);
@@ -131,9 +131,10 @@ export default function VictimDetailPage() {
   // Fetch reports
   const fetchReports = async () => {
     try {
-      const nurseRes = await api.get(`/api/nurse/victims/${vic_id}/monthly-reports/`);
-      const psychComRes = await api.get(`/api/psychometrician/victims/${vic_id}/comprehensive-reports/`);
-      const psychMonthlyRes = await api.get(`/api/psychometrician/victims/${vic_id}/monthly-progress-reports/`);
+      const socialworkerRes = await api.get(`/api/social_worker/victims/${vic_id}/reports/`);
+      const nurseRes = await api.get(`/api/social_worker/victims/${vic_id}/nurse-reports/`);
+      const psychComRes = await api.get(`/api/social_worker/victims/${vic_id}/psych-comprehensive-reports/`);
+      const psychMonthlyRes = await api.get(`/api/social_worker/victims/${vic_id}/psych-monthly-progress-reports/`);
 
       const normalize = (report, type) => ({
         ...report,
@@ -143,6 +144,7 @@ export default function VictimDetailPage() {
       });
 
       const combined = [
+        ...(Array.isArray(socialworkerRes.data) ? socialworkerRes.data.map(r => normalize(r, "Social Worker")) : []),
         ...(Array.isArray(nurseRes.data) ? nurseRes.data.map(r => normalize(r, "Nurse")) : []),
         ...(Array.isArray(psychComRes.data) ? psychComRes.data.map(r => normalize(r, "Psychometrician Comprehensive")) : []),
         ...(Array.isArray(psychMonthlyRes.data) ? psychMonthlyRes.data.map(r => normalize(r, "Psychometrician Monthly")) : []),

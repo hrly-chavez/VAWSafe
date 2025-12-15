@@ -39,17 +39,8 @@ const SocialWorkerAddCase = lazy(() => import("./pages/social_worker/RegisterVic
 const DSWDDashboard = lazy(() => import("./pages/dswd/Dashboard/DSWDDashboard"));
 const DSWDVAWCVictims = lazy(() => import("./pages/dswd/Victim/Victim"));
 const DSWDVictimDetail = lazy(() => import("./pages/dswd/Victim/VictimDetailPage"));
-const DSWDSearchVictim = lazy(() => import("./pages/dswd/Victim/SearchVictimFacial"));
 const DSWDViewOfficials = lazy(() => import("./pages/dswd/AccountManagement/ViewOfficials"));
-const DSWDPendingAccount = lazy(() => import("./pages/dswd/AccountManagement/PendingAccount"));
-const DSWDSocialWorkers = lazy(() => import("./pages/dswd/SocialWorker/DSWDSocialWorkers"));
-const DSWDSocialWorkerDetail = lazy(() =>
-  import("./pages/dswd/SocialWorker/SocialWorkerDetails"));
-const DSWD_VAWDESK_OFFICER = lazy(() => import("./pages/dswd/VawDeskOfficer/DSWDVawDeskOfficer"));
-const DSWD_VAWDESK_OFFICER_Detail = lazy(() => import("./pages/dswd/VawDeskOfficer/VAWDeskOfficerDetail"));
-const DSWDServices = lazy(() => import("./pages/dswd/ServiceDSWD/DSWDServices"));
 const DSWDAccountManagement = lazy(() => import("./pages/dswd/AccountManagement/DSWDAccountManagement"));
-const DSWDQuestions = lazy(() => import("./pages/dswd/Questions/Questions"));
 const DSWDProfile = lazy(() => import("./pages/dswd/Profile/DSWDProfile"));
 const DSWDLoginTracker = lazy(() => import("./pages/dswd/LoginTracker/LoginTracker"));
 
@@ -121,16 +112,8 @@ export default function App() {
                 <Route path={ROUTES.DSWD_PROFILE} element={<DSWDProfile />} />
                 <Route path={ROUTES.DSWD_VAWC_VICTIMS} element={<DSWDVAWCVictims />} />
                 <Route path={ROUTES.DSWD_VICTIM_DETAIL} element={<DSWDVictimDetail />} />
-                <Route path={ROUTES.DSWD_SEARCH_VICTIM} element={<DSWDSearchVictim />} />
-                <Route path={ROUTES.DSWD_SOCIAL_WORKERS} element={<DSWDSocialWorkers />} />
-                <Route path={ROUTES.DSWD_SOCIAL_WORKERS_DETAILS} element={<DSWDSocialWorkerDetail />} />
-                <Route path={ROUTES.DSWD_VAWDESK_OFFICER} element={<DSWD_VAWDESK_OFFICER />} />
-                <Route path={ROUTES.DSWD_VAWDESK_OFFICER_DETAILS} element={<DSWD_VAWDESK_OFFICER_Detail />} />
-                <Route path={ROUTES.DSWD_SERVICES} element={<DSWDServices />} />
                 <Route path={ROUTES.DSWD_ACCOUNT_MANAGEMENT} element={<DSWDAccountManagement />} />
-                <Route path={ROUTES.DSWD_QUESTIONS} element={<DSWDQuestions />} />
                 <Route path={ROUTES.DSWD_VIEW_OFFICIALS} element={<DSWDViewOfficials />} />
-                <Route path={ROUTES.DSWD_PENDING_ACCOUNT} element={<DSWDPendingAccount />} />
                 <Route path={ROUTES.DSWD_LOGIN_TRACKER} element={<DSWDLoginTracker />} />
               </Route>
 

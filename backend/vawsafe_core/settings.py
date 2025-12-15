@@ -15,6 +15,7 @@ from pathlib import Path
 import environ
 import os
 from cryptography.fernet import Fernet
+from datetime import timedelta
 
 #para ni sya sa encryption para ma migrate ang attribute nga encryptedcharfield etc
 import django.utils.encoding
@@ -32,26 +33,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure--n8q#^8nc-n(=ww(*d4frzqy=q2eno_w!ek5=4msh6ct(ryrb!'
 
-
-# # Initialize env // para ni sa encryption
-# env = environ.Env()
-# environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
-
 # #pag load ug new fernetkey
 # #python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-
-
-# #kuhaon ang fernet key sa backend/.env
-# FERNET_KEYS = env.list("FERNET_KEYS", default=[])
-
-# # Primary key for file encryption (EncryptedFileSystemStorage)
-# # Reuse first FERNET_KEYS entry if available, or generate a fallback
-# if FERNET_KEYS:
-#     FERNET_KEY = FERNET_KEYS[0].encode()
-# else:
-#     # fallback key (only used if .env is missing)
-#      # fallback only for dev (avoid in production)
-#     FERNET_KEY = Fernet.generate_key()
 
 
 #practice
@@ -141,8 +124,6 @@ ROOT_URLCONF = 'vawsafe_core.urls'
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "auth_app.authentication.CookieJWTAuthentication",
-        #tangtangon ni kay gigamit ang authentication.py sa auth_app
-        # "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -189,7 +170,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'vawsafe',
         'USER': 'postgres',
-        'PASSWORD': 'postgres', 
+        'PASSWORD': 'Caratao123', 
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -292,18 +273,6 @@ SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
-
-
-
-from datetime import timedelta
-#KANI PARA SA LOCALSTORAGE
-# SIMPLE_JWT = {
-#     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
-#     # "ACCESS_TOKEN_LIFETIME": timedelta(seconds=30),  # just for test
-#     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
-#     "ROTATE_REFRESH_TOKENS": True, # kani kay basta ma expire ang access mo renew both access ug refresh more secure
-#     # "ROTATE_REFRESH_TOKENS": False, #kani sya kay basta ma expire ang access kay mo renew new access pero same refresh less secure
-# }
 
 #KANI KAY PARA SA HTTPONLY
 SIMPLE_JWT = {

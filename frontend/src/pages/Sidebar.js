@@ -31,16 +31,6 @@ export default function Sidebar({ sidebarOpen, toggleSidebar, notificationCount 
         { icon: "/images/heart.png", label: "Women Survivors", path: "/dswd/victims", },
         { icon: "/images/account-settings.png", label: "Account Management", path: "/dswd/account-management", },
         { icon: "/images/history.png", label: "Login Tracker", path: "/dswd/login-tracker", },
-        // { icon: "/images/customer.png", label: "Social Workers", path: "/dswd/social-workers" },
-        // { icon: "/images/founder.png", label: "VAW Desk Officer", path: "/dswd/vawdesk-officer" },
-        // { icon: "/images/peace.png", label: "Services",path: "/dswd/services",},
-        // { icon: "/images/peace.png",label: "Questions Management",path: "/dswd/questions",},
-        // { icon: "/images/account-settings.png",label: "Account Management",
-        //   children: [
-        //     { label: "User Management", path: "/dswd/account-management" },
-        //     { label: "Pending Account",path: "/dswd/account-management/pending",},
-        //   ],
-        // },
       ];
     }
 
@@ -64,7 +54,6 @@ export default function Sidebar({ sidebarOpen, toggleSidebar, notificationCount 
         { icon: "/images/meeting.png", label: "Scheduled Sessions", path: "/social_worker/sessions", },
         { icon: "/images/question_mark.png", label: "Questions", path: "/social_worker/questions" },
         // { icon: "/images/case.png", label: "Case Records",path: "/social_worker/case-records",},
-
         // { icon: "/images/calendar.png", label: "My Schedule",path: "/social_worker/schedule",},
         // { icon: "/images/peace.png", label: "Services", path: "/social_worker/services",},
       ];

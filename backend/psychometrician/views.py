@@ -1491,8 +1491,7 @@ def generate_comprehensive_psych_report(report_instance):
 class ComprehensivePsychReportViewSet(viewsets.ModelViewSet):
     queryset = ComprehensivePsychReport.objects.all()
     serializer_class = ComprehensivePsychReportSerializer
-    permission_classes = [IsAuthenticated, IsRole]
-    allowed_roles = ["Psychometrician"]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         vic_id = self.kwargs.get("vic_id")
