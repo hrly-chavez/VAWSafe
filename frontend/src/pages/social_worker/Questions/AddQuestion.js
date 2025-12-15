@@ -29,6 +29,21 @@ export default function AddQuestion({ onClose }) {
   const [sessionTypes, setSessionTypes] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const questionRefs = useRef({});
+  const INTAKE_LABEL = "Intake / Initial Assessment";
+
+
+
+  const isIntakeSelected = selectedTypes.some(
+    (t) => t.label === INTAKE_LABEL
+  );
+  // AUTO-ASSIGN SESSION 1 FOR INTAKE
+  useEffect(() => {
+    if (isIntakeSelected) {
+      setSelectedNumbers([{ value: 1, label: "Session 1" }]);
+    } else {
+      setSelectedNumbers([]);
+    }
+  }, [isIntakeSelected]);
 
 
   // Load category + answer type
@@ -354,19 +369,6 @@ export default function AddQuestion({ onClose }) {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm text-gray-600">
-                    Session Numbers
-                  </label>
-                  <Select
-                    isMulti
-                    options={sessionNumbers}
-                    value={selectedNumbers}
-                    onChange={setSelectedNumbers}
-                    placeholder="Select session numbers..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm text-gray-600">
                     Session Types
                   </label>
                   <Select
@@ -376,6 +378,25 @@ export default function AddQuestion({ onClose }) {
                     onChange={setSelectedTypes}
                     placeholder="Select session types..."
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm text-gray-600">
+                    Session Numbers
+                  </label>
+                  <Select
+                    isMulti
+                    options={sessionNumbers}
+                    value={selectedNumbers}
+                    onChange={setSelectedNumbers}
+                    isDisabled={isIntakeSelected}
+                    placeholder={
+                      isIntakeSelected
+                        ? "Session 1 (locked for Intake)"
+                        : "Select session numbers..."
+                    }
+                  />
+
                 </div>
 
                 <div className="flex justify-end gap-3 mt-4">
