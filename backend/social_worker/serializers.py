@@ -9,6 +9,22 @@ from rest_framework.exceptions import ValidationError
 from dswd.utils.logging import log_change
 from django.db.models import Q
 
+import bleach
+
+ALLOWED_TAGS = []  # no HTML allowed
+ALLOWED_ATTRIBUTES = {}
+
+def sanitize_text(value):
+    if not isinstance(value, str):
+        return value
+
+    return bleach.clean(
+        value,
+        tags=ALLOWED_TAGS,
+        attributes=ALLOWED_ATTRIBUTES,
+        strip=True
+    )
+
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
@@ -54,6 +70,11 @@ class VictimSerializer(serializers.ModelSerializer):
         address = Address.objects.create(**address_data)
         victim = Victim.objects.create(address=address, **validated_data)
         return victim
+    
+    def validate(self, data):
+        for field, value in data.items():
+            data[field] = sanitize_text(value)
+        return data
 
 class FamilyMemberSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
