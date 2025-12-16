@@ -175,13 +175,17 @@ export default function RegisterVictim() {
         const v = formDataState[k];
         if (v !== undefined && v !== null && v !== "") victimPayload[k] = v;
       });
+
       victimPayload.address = formDataState.address;
       if (formDataState.vic_current_address)
         victimPayload.vic_current_address = formDataState.vic_current_address;
 
       const contactPersonPayload = hasAny(formDataState, CONTACT_PERSON_FIELDS)
         ? Object.fromEntries(
-            CONTACT_PERSON_FIELDS.map((k) => [k, formDataState[k] ?? ""])
+            CONTACT_PERSON_FIELDS.map((k) => [
+              k,
+              formDataState[k] === "" ? null : formDataState[k],
+            ])
           )
         : null;
 
@@ -204,7 +208,12 @@ export default function RegisterVictim() {
       }
 
       const perpetratorPayload = hasAny(formDataState, PERP_KEYS)
-        ? Object.fromEntries(PERP_KEYS.map((k) => [k, formDataState[k] ?? ""]))
+        ? Object.fromEntries(
+            PERP_KEYS.map((k) => [
+              k,
+              formDataState[k] === "" ? null : formDataState[k],
+            ])
+          )
         : null;
 
       const fd = new FormData();

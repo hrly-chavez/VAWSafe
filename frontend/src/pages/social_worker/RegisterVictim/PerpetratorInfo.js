@@ -85,9 +85,9 @@ export default function PerpetratorInfo({
               onChange={(e) => handleChange("per_first_name", e.target.value)}
               required
             />
-            {!formDataState.per_first_name && (
+            {/* {!formDataState.per_first_name && (
               <span className="text-xs text-red-500 mt-1">Required</span>
-            )}
+            )} */}
           </div>
 
           {/* Middle Name */}
@@ -102,9 +102,9 @@ export default function PerpetratorInfo({
               onChange={(e) => handleChange("per_middle_name", e.target.value)}
               required
             />
-            {!formDataState.per_middle_name && (
+            {/* {!formDataState.per_middle_name && (
               <span className="text-xs text-red-500 mt-1">Required</span>
-            )}
+            )} */}
           </div>
 
           {/* Last Name */}
@@ -119,9 +119,9 @@ export default function PerpetratorInfo({
               onChange={(e) => handleChange("per_last_name", e.target.value)}
               required
             />
-            {!formDataState.per_last_name && (
+            {/* {!formDataState.per_last_name && (
               <span className="text-xs text-red-500 mt-1">Required</span>
-            )}
+            )} */}
           </div>
 
           {/* Extension (optional, no Required text) */}
@@ -178,9 +178,9 @@ export default function PerpetratorInfo({
               value={formDataState.per_birth_date || ""}
               onChange={(e) => handleChange("per_birth_date", e.target.value)}
             />
-            {!formDataState.per_birth_date && (
+            {/* {!formDataState.per_birth_date && (
               <span className="text-xs text-red-500 mt-1">Required</span>
-            )}
+            )} */}
           </div>
 
           <div className="flex flex-col">
@@ -193,9 +193,9 @@ export default function PerpetratorInfo({
               value={formDataState.per_birth_place || ""}
               onChange={(e) => handleChange("per_birth_place", e.target.value)}
             />
-            {!formDataState.per_birth_place && (
+            {/* {!formDataState.per_birth_place && (
               <span className="text-xs text-red-500 mt-1">Required</span>
-            )}
+            )} */}
           </div>
         </div>
       </div>

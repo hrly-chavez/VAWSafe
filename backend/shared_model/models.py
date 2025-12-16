@@ -469,7 +469,7 @@ class ContactPerson(models.Model):
     ], blank=True, null=True)
     cont_birth_date = EncryptedDateField(blank=True, null=True)
     cont_birth_place = EncryptedCharField(max_length=512, blank=True, null=True)
-    cont_civil_status = EncryptedCharField(max_length=512, choices=CIVIL_STATUS_CHOICES, default='SINGLE')
+    cont_civil_status = EncryptedCharField(max_length=512, choices=CIVIL_STATUS_CHOICES, default='SINGLE', blank=True, null=True)
     cont_victim_relationship = EncryptedCharField(max_length=255, blank=True, null=True)
     cont_contact_number = EncryptedCharField(max_length=512, blank=True, null=True)
     cont_prov_address = EncryptedCharField(max_length=512, blank=True, null=True)
