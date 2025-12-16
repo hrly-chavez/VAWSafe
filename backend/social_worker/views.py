@@ -31,7 +31,7 @@ from docxtpl import DocxTemplate
 from calendar import month_name
 from pathlib import Path
 from collections import Counter
-#from win32com import client
+from win32com import client
 
 # used for choices
 from shared_model.models import CIVIL_STATUS_CHOICES, RELIGION_CHOICES, EDUCATIONAL_ATTAINMENT_CHOICES
@@ -189,18 +189,18 @@ class IncomeChoicesView(APIView):
         return Response(choices)
 
 #helper function para sa password sa docs (OPTIONAL PA)
-# def protect_docx_with_password(file_path, password):
-#     """
-#     Opens a Word document and sets a password for opening it.
-#     Windows only, requires MS Word installed.
-#     """
-#     word = client.Dispatch("Word.Application")
-#     word.Visible = False
-#     doc = word.Documents.Open(file_path)
-#     doc.Password = password  # Set password to open
-#     doc.Save()
-#     doc.Close()
-#     word.Quit()
+def protect_docx_with_password(file_path, password):
+    """
+    Opens a Word document and sets a password for opening it.
+    Windows only, requires MS Word installed.
+    """
+    word = client.Dispatch("Word.Application")
+    word.Visible = False
+    doc = word.Documents.Open(file_path)
+    doc.Password = password  # Set password to open
+    doc.Save()
+    doc.Close()
+    word.Quit()
 
 def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=None, incident_data=None, perpetrator_data=None, contact_person_data=None, family_members=None):
     """
@@ -211,7 +211,7 @@ def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=
 
     desktop = os.path.join(os.path.expanduser("~"), "Desktop")
     root_templates = os.path.join(desktop, "Templates")
-    #PASSWORD = "VAWSafe123!"  # Choose a secure password
+    PASSWORD = "VAWSafe123!"  # Choose a secure password
 
 
     # Construct full name for folder
@@ -269,7 +269,7 @@ def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=
         generated_files.append(save_path)
         
         # Protect the file
-        #protect_docx_with_password(save_path, PASSWORD)
+        protect_docx_with_password(save_path, PASSWORD)
 
     # 6. Render intake form (separate folder)
     if os.path.exists(intake_template):
@@ -282,7 +282,7 @@ def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=
 
         
         # Protect the file
-        #protect_docx_with_password(save_path, PASSWORD)
+        protect_docx_with_password(save_path, PASSWORD)
     else:
         print(f"Intake template not found: {intake_template}")
 
