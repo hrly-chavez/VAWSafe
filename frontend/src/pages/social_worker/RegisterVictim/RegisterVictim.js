@@ -225,8 +225,18 @@ export default function RegisterVictim() {
       if (contactPersonPayload)
         fd.append("contact_person", JSON.stringify(contactPersonPayload));
 
+      const cleanedFamilyMembers = formDataState.familyMembers.map((member) => {
+        const cleaned = { ...member };
+
+        if (cleaned.fam_birth_date === "") {
+          cleaned.fam_birth_date = null;
+        }
+
+        return cleaned;
+      });
+
       if (formDataState.familyMembers?.length) {
-        fd.append("familyMembers", JSON.stringify(formDataState.familyMembers));
+        fd.append("familyMembers", JSON.stringify(cleanedFamilyMembers));
       }
 
       victimPhotos.forEach((file) => fd.append("photos", file));
