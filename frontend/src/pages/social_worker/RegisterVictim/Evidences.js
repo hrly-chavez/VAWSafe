@@ -12,7 +12,7 @@ export default function Evidences({ files, setFiles, isLocked }) {
     try {
       setIsCameraOpen(true);
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: { facingMode: "environment" }, // rear camera on mobile
       });
       streamRef.current = stream;
       if (videoRef.current) {
@@ -65,16 +65,9 @@ export default function Evidences({ files, setFiles, isLocked }) {
     stopCamera();
   };
 
-  // --- File upload function ---
-  const handleFileUpload = (event) => {
-    const selectedFiles = Array.from(event.target.files);
-    const newFiles = selectedFiles.map((file) => ({
-      id: `${file.name}-${Date.now()}`,
-      file,
-      preview: URL.createObjectURL(file),
-    }));
-    setFiles((prev) => [...prev, ...newFiles]);
-  };
+  useEffect(() => {
+    return () => stopCamera();
+  }, []);
 
   const handleRemove = (id) => {
     setFiles((prev) => {
@@ -84,29 +77,18 @@ export default function Evidences({ files, setFiles, isLocked }) {
     });
   };
 
-  useEffect(() => () => stopCamera(), []);
-
   return (
     <div className="p-4 bg-white rounded-lg shadow w-full">
-      <h2 className="text-lg font-semibold mb-3">Evidences (Photo & Files)</h2>
+      <h2 className="text-lg font-semibold mb-3">Capture Evidence Photo</h2>
 
-      {!isLocked && (
-        <div className="flex flex-col sm:flex-row gap-2 mb-3">
+      {!isCameraOpen && !isLocked && (
+        <div className="flex gap-2 mb-3">
           <button
             onClick={startCamera}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             📸 Open Camera
           </button>
-          <label className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 cursor-pointer">
-            📁 Upload Files
-            <input
-              type="file"
-              multiple
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-          </label>
         </div>
       )}
 
@@ -121,7 +103,10 @@ export default function Evidences({ files, setFiles, isLocked }) {
               ✔ Capture
             </button>
             <button
-              onClick={stopCamera}
+              onClick={() => {
+                stopCamera();
+                setIsCameraOpen(false);
+              }}
               className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
             >
               ✖ Cancel
@@ -131,25 +116,19 @@ export default function Evidences({ files, setFiles, isLocked }) {
       )}
 
       <canvas ref={canvasRef} className="hidden" />
+
       {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
 
-      {/* Display uploaded/captured files */}
+      {/* Display captured photos */}
       {files.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
           {files.map((f) => (
             <div key={f.id} className="relative">
-              {/* Show image preview if available, else generic file icon */}
-              {f.preview ? (
-                <img
-                  src={f.preview}
-                  alt={f.file.name}
-                  className="w-full h-24 object-cover rounded border"
-                />
-              ) : (
-                <div className="w-full h-24 flex items-center justify-center border rounded bg-gray-100 text-sm">
-                  {f.file.name}
-                </div>
-              )}
+              <img
+                src={f.preview}
+                alt={f.file.name}
+                className="w-full h-24 object-cover rounded border"
+              />
               {!isLocked && (
                 <button
                   type="button"
