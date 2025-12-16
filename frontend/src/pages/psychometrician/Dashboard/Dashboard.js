@@ -18,8 +18,6 @@ export default function PsychometricianDashboard() {
     const [notifications, setNotifications] = useState([]);
     const [overdueSessions, setOverdueSessions] = useState([]);
     const { setCount } = useContext(NotificationContext);
-    const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 10;
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -93,15 +91,6 @@ export default function PsychometricianDashboard() {
         },
     ];
 
-    const allNotifications = [
-        ...notifications.map(n => ({ ...n, typeLabel: "Upcoming", color: "blue" })),
-        ...overdueSessions.map(n => ({ ...n, typeLabel: "Overdue", color: "red" }))
-    ];
-
-    const totalPages = Math.ceil(allNotifications.length / pageSize);
-    const startIndex = (currentPage - 1) * pageSize;
-    const currentNotifications = allNotifications.slice(startIndex, startIndex + pageSize);
-
     return (
         <div className="p-4 md:p-8 space-y-8 font-inter bg-[#f7f9fc]">
             {/* Header */}
@@ -112,8 +101,10 @@ export default function PsychometricianDashboard() {
                 </p>
             </header>
 
-            <style>
-                {`
+            <div className="min-h-screen text-white font-inter space-y-10">
+
+                <style>
+                    {`
     @keyframes waveFlow {
       0%   { transform: translateX(0) scaleY(1); }
       25%  { transform: translateX(-20px) scaleY(1.3); }
@@ -126,129 +117,142 @@ export default function PsychometricianDashboard() {
       transform-origin: center;
     }
   `}
-            </style>
+                </style>
 
-            {/* KPI CARDS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {kpiCards.map((kpi, idx) => {
-                    const isPositive = kpi.changeDirection === "up";
-                    const percentageColor =
-                        isPositive ? "text-green-500" : kpi.changeDirection === "down" ? "text-red-500" : "text-gray-400";
+                {/* KPI CARDS */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {kpiCards.map((kpi, idx) => {
+                        const isPositive = kpi.changeDirection === "up";
+                        const percentageColor =
+                            isPositive ? "text-green-500" : kpi.changeDirection === "down" ? "text-red-500" : "text-gray-400";
 
-                    const formattedValue =
-                        typeof kpi.value === "string"
-                            ? kpi.value
-                            : kpi.label.toLowerCase().includes("revenue")
-                                ? `$${kpi.value.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
-                                : kpi.value.toLocaleString("en-US");
+                        const formattedValue =
+                            typeof kpi.value === "string"
+                                ? kpi.value
+                                : kpi.label.toLowerCase().includes("revenue")
+                                    ? `$${kpi.value.toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+                                    : kpi.value.toLocaleString("en-US");
 
-                    const sparklineColor =
-                        kpi.changeDirection === "up"
-                            ? "#10B981"   // green
-                            : kpi.changeDirection === "down"
-                                ? "#EF4444"   // red
-                                : "#9CA3AF";  // gray
+                        const sparklineColor =
+                            kpi.changeDirection === "up"
+                                ? "#10B981"   // green
+                                : kpi.changeDirection === "down"
+                                    ? "#EF4444"   // red
+                                    : "#9CA3AF";  // gray
 
-                    return (
-                        <div key={idx} className="bg-white p-4 rounded-lg shadow-md border border-gray-200 w-full">
-                            {/* Top row: icon + label on left, percentage on right */}
-                            <div className="flex justify-between items-center">
-                                <div className="flex items-center gap-2">
-                                    {kpi.icon}
-                                    <h3 className="text-gray-600 text-sm font-semibold tracking-wide">{kpi.label}</h3>
-                                </div>
-                                {kpi.change && (
-                                    <div className={`flex items-center gap-1 text-sm font-medium ${percentageColor}`}>
-                                        {kpi.changeDirection === "up" && (
-                                            <img src="/images/up.png" alt="Up" className="w-4 h-4" />
-                                        )}
-                                        {kpi.changeDirection === "down" && (
-                                            <img src="/images/down.png" alt="Down" className="w-4 h-4" />
-                                        )}
-                                        {kpi.changeDirection === "neutral" && (
-                                            <img src="/images/neutral.png" alt="Neutral" className="w-4 h-4" />
-                                        )}
-                                        <span>{kpi.change}</span>
+                        return (
+                            <div key={idx} className="bg-white p-4 rounded-lg shadow-md border border-gray-200 w-full">
+                                {/* Top row: icon + label on left, percentage on right */}
+                                <div className="flex justify-between items-center">
+                                    <div className="flex items-center gap-2">
+                                        {kpi.icon}
+                                        <h3 className="text-gray-600 text-sm font-semibold tracking-wide">{kpi.label}</h3>
                                     </div>
-                                )}
-                            </div>
+                                    {kpi.change && (
+                                        <div className={`flex items-center gap-1 text-sm font-medium ${percentageColor}`}>
+                                            {kpi.changeDirection === "up" && (
+                                                <img src="/images/up.png" alt="Up" className="w-4 h-4" />
+                                            )}
+                                            {kpi.changeDirection === "down" && (
+                                                <img src="/images/down.png" alt="Down" className="w-4 h-4" />
+                                            )}
+                                            {kpi.changeDirection === "neutral" && (
+                                                <img src="/images/neutral.png" alt="Neutral" className="w-4 h-4" />
+                                            )}
+                                            <span>{kpi.change}</span>
+                                        </div>
+                                    )}
+                                </div>
 
-                            {/* Value centered */}
-                            <div className="text-center mt-2">
-                                <div className="text-lg font-bold text-gray-900">{formattedValue}</div>
-                            </div>
+                                {/* Value centered */}
+                                <div className="text-center mt-2">
+                                    <div className="text-lg font-bold text-gray-900">{formattedValue}</div>
+                                </div>
 
-                            {/* Sparkline */}
-                            <div className="h-24 w-full mt-2">
-                                <svg viewBox="0 0 200 80" className="w-full h-full" preserveAspectRatio="none">
-                                    <defs>
-                                        <linearGradient id={`sparkline-fill-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                                            <stop offset="0%" stopColor={sparklineColor} stopOpacity="0.4" />
-                                            <stop offset="100%" stopColor={sparklineColor} stopOpacity="0" />
-                                        </linearGradient>
-                                    </defs>
-                                    <g className="wave-animated" style={{ animationDuration: `${4 + idx}s` }}>
-                                        <path
-                                            d={`${kpi.chartData} L500 80 L0 80 Z`}
-                                            fill={`url(#sparkline-fill-${idx})`}
-                                            stroke="none"
-                                        />
-                                        <path
-                                            d={kpi.chartData}
-                                            fill="none"
-                                            stroke={sparklineColor}
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        />
-                                    </g>
-                                </svg>
+                                {/* Sparkline */}
+                                <div className="h-24 w-full mt-2">
+                                    <svg viewBox="0 0 200 80" className="w-full h-full" preserveAspectRatio="none">
+                                        <defs>
+                                            <linearGradient id={`sparkline-fill-${idx}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                                                <stop offset="0%" stopColor={sparklineColor} stopOpacity="0.4" />
+                                                <stop offset="100%" stopColor={sparklineColor} stopOpacity="0" />
+                                            </linearGradient>
+                                        </defs>
+                                        <g className="wave-animated" style={{ animationDuration: `${4 + idx}s` }}>
+                                            <path
+                                                d={`${kpi.chartData} L500 80 L0 80 Z`}
+                                                fill={`url(#sparkline-fill-${idx})`}
+                                                stroke="none"
+                                            />
+                                            <path
+                                                d={kpi.chartData}
+                                                fill="none"
+                                                stroke={sparklineColor}
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            />
+                                        </g>
+                                    </svg>
+                                </div>
                             </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            {/* Unified Notifications */}
-            <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-                <div className="flex items-center mb-4">
-                    <BellIcon className="w-6 h-6 text-blue-600 mr-2 animate-pulse" />
-                    <h2 className="text-2xl font-bold text-gray-800">Notifications</h2>
+                        );
+                    })}
                 </div>
-                <p className="text-sm text-gray-600 mb-4 border-b border-gray-200 pb-3">
-                    These sessions require attention based on schedule status.
-                </p>
 
-                <div className="space-y-4 pr-2">
-                    {[...notifications.map(n => ({ ...n, typeLabel: "Upcoming", color: "blue" })),
-                    ...overdueSessions.map(n => ({ ...n, typeLabel: "Overdue", color: "red" }))
-                    ].map((n, idx) => (
-                        <Link key={idx} to={`/psychometrician/sessions/${n.id}`} className="block">
-                            <div className="flex justify-between items-start bg-white border border-gray-300 p-4 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer">
-                                <div className="flex flex-col gap-2">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold text-white bg-${n.color}-500 w-fit`}>
-                                        {n.typeLabel}
-                                    </span>
-                                    <div>
-                                        <p className="text-sm font-semibold text-gray-800">
-                                            Session {n.sess_num} – {n.victim}
-                                        </p>
-                                        <p className="text-xs text-gray-600">{n.type}</p>
+                {/* Unified Notifications */}
+                <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+                    <div className="flex items-center mb-4">
+                        <BellIcon className="w-6 h-6 text-blue-600 mr-2 animate-pulse" />
+                        <h2 className="text-2xl font-bold text-gray-800">Notifications</h2>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-4 border-b border-gray-200 pb-3">
+                        These sessions require attention based on schedule status.
+                    </p>
+
+                    <div className="space-y-4 pr-2">
+                        {[...notifications.map(n => ({ ...n, typeLabel: "Upcoming", color: "blue" })),
+                        ...overdueSessions.map(n => ({ ...n, typeLabel: "Overdue", color: "red" }))
+                        ].map((n, idx) => (
+                            <Link
+                                key={idx}
+                                to={`/psychometrician/sessions/${n.id}`}
+                                className="block"
+                            >
+                                <div
+                                    className="flex justify-between items-start bg-white border border-gray-300 p-4 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer"
+                                >
+                                    {/* Left side: label + content */}
+                                    <div className="flex flex-col gap-2">
+                                        {/* Type Label */}
+                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold text-white bg-${n.color}-500 w-fit`}>
+                                            {n.typeLabel}
+                                        </span>
+
+                                        {/* Notification Content */}
+                                        <div>
+                                            <p className="text-sm font-semibold text-gray-800">
+                                                Session {n.sess_num} – {n.victim}
+                                            </p>
+                                            <p className="text-xs text-gray-600">{n.type}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Right side: timestamp with icon */}
+                                    <div className="flex items-center gap-2 text-xs text-gray-500 whitespace-nowrap">
+                                        <ClockIcon className="w-4 h-4 text-gray-400" />
+                                        <span>
+                                            {new Date(n.date).toLocaleDateString("en-US")}{" "}
+                                            {new Date(n.date).toLocaleTimeString("en-US", {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            })}
+                                        </span>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-gray-500 whitespace-nowrap">
-                                    <ClockIcon className="w-4 h-4 text-gray-400" />
-                                    <span>
-                                        {new Date(n.date).toLocaleDateString("en-US")}{" "}
-                                        {new Date(n.date).toLocaleTimeString("en-US", {
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                        })}
-                                    </span>
-                                </div>
-                            </div>
-                        </Link>
-                    ))}
+                            </Link>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>

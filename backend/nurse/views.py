@@ -1525,6 +1525,50 @@ class NurseMonthlyReportViewSet(viewsets.ModelViewSet):
         if serializer.instance.prepared_by != official:
             raise PermissionDenied("You can only edit your own nurse reports.")
         serializer.save()
+
+    def _check_nurse_permission(self, request, report):
+        official = getattr(request.user, "official", None)
+
+        if not official or official.of_role != "Nurse":
+            raise PermissionDenied("Only nurses can perform this action.")
+
+        if report.report_type != "Nurse":
+            raise PermissionDenied("You can only modify nurse reports.")
+
+        if report.prepared_by != official:
+            raise PermissionDenied("You can only modify your own reports.")
+
+    @action(detail=True, methods=["post"])
+    def archive(self, request, pk=None):
+        try:
+            report = self.get_object()
+            self._check_nurse_permission(request, report)
+
+            report.is_archived = True
+            report.save(update_fields=["is_archived"])
+
+            return Response({"status": "report archived"}, status=status.HTTP_200_OK)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            logger.exception("Failed to archive nurse report")
+            return Response({"detail": "Server error while archiving report."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=["post"])
+    def restore(self, request, pk=None):
+        try:
+            report = self.get_object()
+            self._check_nurse_permission(request, report)
+
+            report.is_archived = False
+            report.save(update_fields=["is_archived"])
+
+            return Response({"status": "report restored"}, status=status.HTTP_200_OK)
+        except PermissionDenied as e:
+            return Response({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            logger.exception("Failed to restore nurse report")
+            return Response({"detail": "Server error while restoring report."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 #============================= Nurse Dashboard ======================================
 class NurseDashboardAPIView(APIView):

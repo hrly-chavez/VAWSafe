@@ -181,6 +181,7 @@ export default function VictimDetailPage() {
         prepared_by_id: report.prepared_by_id ?? report.prepared_by?.id ?? null,
         prepared_by_name: report.prepared_by_name ?? report.prepared_by?.full_name ?? "—",
         incident: report.incident?.id ?? report.incident ?? null,
+        is_archived: report.is_archived ?? false,
       });
 
       const combined = [
@@ -205,6 +206,40 @@ export default function VictimDetailPage() {
       if (Array.isArray(res.data)) setIncidentList(res.data);
     } catch (err) {
       console.error("Failed to fetch incidents", err);
+    }
+  };
+
+  //Archive Report
+  const handleArchiveReport = async (report) => {
+    if (userRole !== "Nurse") return;
+
+    // Optimistic UI: immediately mark report archived locally so it becomes disabled
+    setReportsList((prev) => prev.map((r) => (r.id === report.id ? { ...r, is_archived: true } : r)));
+    // Close modal quickly
+    setShowReportModal(false);
+    setSelectedReport(null);
+
+    // Still attempt server call, but ignore failure (UI already updated)
+    try {
+      await api.post(`/api/nurse/victims/${vic_id}/monthly-reports/${report.id}/archive/`);
+    } catch (err) {
+      console.error("Failed to archive report on server, keeping local state", err);
+    }
+  };
+
+  //Restore Report
+  const handleRestoreReport = async (report) => {
+    if (userRole !== "Nurse") return;
+
+    // Optimistic UI: immediately mark report un-archived locally so it becomes clickable
+    setReportsList((prev) => prev.map((r) => (r.id === report.id ? { ...r, is_archived: false } : r)));
+    setShowReportModal(false);
+    setSelectedReport(null);
+
+    try {
+      await api.post(`/api/nurse/victims/${vic_id}/monthly-reports/${report.id}/restore/`);
+    } catch (err) {
+      console.error("Failed to restore report on server, keeping local state", err);
     }
   };
 
@@ -677,11 +712,14 @@ export default function VictimDetailPage() {
                                         roleReports.map((report) => (
                                           <div
                                             key={report.id}
+                                            className={`bg-white border border-gray-300 rounded-lg shadow-sm p-4 transition ${report.is_archived ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:shadow-md"
+                                              }`}
                                             onClick={() => {
-                                              setSelectedReport(report);
-                                              setShowReportModal(true);
+                                              if (!report.is_archived) {
+                                                setSelectedReport(report);
+                                                setShowReportModal(true);
+                                              }
                                             }}
-                                            className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition"
                                           >
                                             <h4 className="text-sm font-semibold text-gray-800 mb-1">
                                               {report.report_type} —{" "}
@@ -692,6 +730,33 @@ export default function VictimDetailPage() {
                                               })}
                                             </h4>
                                             <p className="text-xs text-gray-500">Prepared by: {report.prepared_by_name}</p>
+
+                                            {userRole === "Nurse" &&
+                                              report.report_type?.toLowerCase().includes("nurse") && (
+                                                <div className="flex gap-2 mt-2">
+                                                  {!report.is_archived ? (
+                                                    <button
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleArchiveReport(report);
+                                                      }}
+                                                      className="px-3 py-1 text-xs rounded-md border border-red-600 text-red-600 hover:bg-red-600 hover:text-white transition"
+                                                    >
+                                                      Archive
+                                                    </button>
+                                                  ) : (
+                                                    <button
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRestoreReport(report);
+                                                      }}
+                                                      className="px-3 py-1 text-xs rounded-md border border-green-600 text-green-600 hover:bg-green-600 hover:text-white transition"
+                                                    >
+                                                      Restore
+                                                    </button>
+                                                  )}
+                                                </div>
+                                              )}
                                           </div>
                                         ))
                                       )}

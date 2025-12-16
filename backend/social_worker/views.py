@@ -2262,10 +2262,18 @@ class NurseMonthlyReportListView(generics.ListAPIView):
 
     def get_queryset(self):
         vic_id = self.kwargs["vic_id"]
-        return MonthlyProgressReport.objects.filter(
+        qs = MonthlyProgressReport.objects.filter(
             victim__vic_id=vic_id,
             report_type="Nurse"
         ).order_by("-report_month")
+
+        # Only nurses should see archived nurse reports.
+        user = getattr(self.request, "user", None)
+        official = getattr(user, "official", None) if user else None
+        if not official or official.of_role != "Nurse":
+            qs = qs.filter(is_archived=False)
+
+        return qs
 
 
 # Psychometrician Comprehensive Reports (read-only)

@@ -54,4 +54,7 @@ urlpatterns = [
     # --- Report ---
     path("victims/<int:vic_id>/monthly-reports/", NurseMonthlyReportViewSet.as_view({"get": "list", "post": "create"}), name="nurse-monthly-reports"),
     path("victims/<int:vic_id>/monthly-reports/<int:pk>/", NurseMonthlyReportViewSet.as_view({ "get": "retrieve", "put": "update", "patch": "partial_update"}),name="nurse-monthly-report-detail"),
+    # Detail actions for archive/restore on nurse monthly reports
+    path("victims/<int:vic_id>/monthly-reports/<int:pk>/archive/", NurseMonthlyReportViewSet.as_view({"post": "archive"}), name="nurse-monthly-report-archive"),
+    path("victims/<int:vic_id>/monthly-reports/<int:pk>/restore/", NurseMonthlyReportViewSet.as_view({"post": "restore"}), name="nurse-monthly-report-restore"),
 ]

@@ -253,9 +253,6 @@ export default function NurseDashboard() {
                             </Link>
                         ))}
                     </div>
-
-                    {/* Optional Close Button */}
-                    {/* <button className="text-gray-400 hover:text-red-500 text-sm font-bold">×</button> */}
                 </div>
             </div >
         </div >

@@ -630,6 +630,8 @@ class MonthlyProgressReport(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    is_archived = models.BooleanField(default=False)
+
     def save(self, *args, **kwargs):
         if self.victim:
             self.name = self.victim.full_name
