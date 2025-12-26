@@ -8,22 +8,9 @@ from datetime import datetime, time
 from rest_framework.exceptions import ValidationError
 from dswd.utils.logging import log_change
 from django.db.models import Q
+from .sanitize import sanitize_text
 
-import bleach
-
-ALLOWED_TAGS = []  # no HTML allowed
-ALLOWED_ATTRIBUTES = {}
-
-def sanitize_text(value):
-    if not isinstance(value, str):
-        return value
-
-    return bleach.clean(
-        value,
-        tags=ALLOWED_TAGS,
-        attributes=ALLOWED_ATTRIBUTES,
-        strip=True
-    )
+# wait
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
@@ -95,6 +82,11 @@ class FamilyMemberSerializer(serializers.ModelSerializer):
         parts = [obj.fam_fname, obj.fam_mname, obj.fam_lname, obj.fam_extension]
         # Join non-empty parts with space
         return " ".join(filter(None, parts))
+    
+    def validate(self, data):
+        for field, value in data.items():
+            data[field] = sanitize_text(value)
+        return data
 
 class ContactPersonSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
@@ -116,6 +108,11 @@ class ContactPersonSerializer(serializers.ModelSerializer):
     
     def get_full_name(self, obj):
         return obj.full_name  # uses your model property
+    
+    def validate(self, data):
+        for field, value in data.items():
+            data[field] = sanitize_text(value)
+        return data
 
 class PerpetratorSerializer(serializers.ModelSerializer):
     age = serializers.SerializerMethodField()
@@ -133,6 +130,11 @@ class PerpetratorSerializer(serializers.ModelSerializer):
                 - ((today.month, today.day) < (obj.per_birth_date.month, obj.per_birth_date.day))
             )
         return None
+    
+    def validate(self, data):
+        for field, value in data.items():
+            data[field] = sanitize_text(value)
+        return data
         
 class IncidentWithPerpetratorSerializer(serializers.ModelSerializer):
     perpetrator = PerpetratorSerializer(source="perp_id", read_only=True)
@@ -186,6 +188,11 @@ class VictimDetailSerializer(serializers.ModelSerializer):
         ]
 
         return ", ".join([p for p in parts if p])
+    
+    def validate(self, data):
+        for field, value in data.items():
+            data[field] = sanitize_text(value)
+        return data
 #=====================================SESSIONS=============================================
 class SessionCRUDSerializer(serializers.ModelSerializer):
     """

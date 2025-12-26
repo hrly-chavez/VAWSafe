@@ -9,8 +9,12 @@ export default function PerpetratorInfo({
   setFormDataState,
   isLocked,
 }) {
-  const handleChange = (field, value) =>
-    setFormDataState((prev) => ({ ...prev, [field]: value }));
+  const handleChange = (field, value) => {
+    // Strip out < and > characters
+    const sanitizedValue = value.replace(/[<>]/g, "");
+
+    setFormDataState((prev) => ({ ...prev, [field]: sanitizedValue }));
+  };
 
   // fetch choices
   const [extensionOptions, setExtensionOptions] = useState([]);

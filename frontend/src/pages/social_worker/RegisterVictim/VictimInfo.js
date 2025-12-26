@@ -8,20 +8,44 @@ export default function VictimInfo({
   setFormDataState,
   isLocked,
 }) {
+  // const handleChange = (key, value) => {
+  //   if (value.contains(""))
+  //     if (key.includes(".")) {
+  //       const [outerKey, innerKey] = key.split(".");
+  //       setFormDataState((prev) => ({
+  //         ...prev,
+  //         [outerKey]: {
+  //           ...prev[outerKey],
+  //           [innerKey]: value,
+  //         },
+  //       }));
+  //     } else {
+  //       setFormDataState((prev) => ({
+  //         ...prev,
+  //         [key]: value,
+  //       }));
+  //     }
+  // };
+
   const handleChange = (key, value) => {
+    if (!key) return;
+
+    // Strip out < and > characters
+    const sanitizedValue = value.replace(/[<>]/g, "");
+
     if (key.includes(".")) {
       const [outerKey, innerKey] = key.split(".");
       setFormDataState((prev) => ({
         ...prev,
         [outerKey]: {
           ...prev[outerKey],
-          [innerKey]: value,
+          [innerKey]: sanitizedValue,
         },
       }));
     } else {
       setFormDataState((prev) => ({
         ...prev,
-        [key]: value,
+        [key]: sanitizedValue,
       }));
     }
   };

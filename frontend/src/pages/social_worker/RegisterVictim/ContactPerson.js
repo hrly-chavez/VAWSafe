@@ -8,9 +8,12 @@ export default function ContactPerson({
   isLocked,
 }) {
   const handleChange = (field, value) => {
+    // Strip out < and > characters
+    const sanitizedValue = value.replace(/[<>]/g, "");
+
     setFormDataState((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: sanitizedValue,
     }));
   };
 

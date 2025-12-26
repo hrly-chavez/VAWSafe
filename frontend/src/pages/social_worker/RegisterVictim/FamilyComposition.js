@@ -214,8 +214,11 @@ export default function FamilyComposition({
   };
 
   const updateMember = (index, field, value) => {
+    // Strip out < and > characters
+    const sanitizedValue = value.replace(/[<>]/g, "");
+
     const newMembers = [...members];
-    newMembers[index][field] = value;
+    newMembers[index][field] = sanitizedValue;
     setFormDataState((prev) => ({ ...prev, familyMembers: newMembers }));
   };
 

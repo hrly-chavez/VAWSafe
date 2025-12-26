@@ -160,6 +160,7 @@ export default function RegisterVictim() {
         if (!formDataState[k]) {
           const label = FIELD_LABELS[k] || k;
           setStatusMessage(`❌ Missing required field: ${label}`);
+          alert(`Missing required field: ${label}`);
           setLoading(false);
           return;
         }
