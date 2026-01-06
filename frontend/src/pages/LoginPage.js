@@ -226,7 +226,7 @@ const LoginPage = () => {
 
     try {
       const blinkRes = await apiFetch(
-        "http://localhost:8000/api/auth/blink-check/",
+        "http://10.187.161.66:8000/api/auth/blink-check/",
         // "http://192.168.254.199:8000/api/auth/blink-check/",
         {
           method: "POST",
@@ -263,7 +263,7 @@ const LoginPage = () => {
       });
 
       const loginRes = await apiFetch(
-        "http://localhost:8000/api/auth/face-login/",
+        "http://10.187.161.66:8000/api/auth/face-login/",
         // "http://192.168.254.199:8000/api/auth/face-login/",
         {
           method: "POST",
@@ -363,7 +363,7 @@ const LoginPage = () => {
     }
 
     try {
-      const response = await apiFetch("http://localhost:8000/api/auth/manual-login/", {
+      const response = await apiFetch("http://10.187.161.66:8000/api/auth/manual-login/", {
         // const response = await apiFetch("http://192.168.254.199:8000/api/auth/manual-login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -450,7 +450,7 @@ const LoginPage = () => {
   useEffect(() => {
     const checkDSWD = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/auth/check-dswd/");
+        const res = await fetch("http://10.187.161.66:8000/api/auth/check-dswd/");
         // const res = await fetch("http://192.168.254.199:8000/api/auth/check-dswd/");
         const data = await res.json();
         if (!data.dswd_exists) {

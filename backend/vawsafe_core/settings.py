@@ -66,7 +66,7 @@ else:
 DEBUG = True
 
 ALLOWED_HOSTS = []
-# ALLOWED_HOSTS = ['192.168.254.199']
+# ALLOWED_HOSTS = ['10.187.161.66']
 
 
 
@@ -170,7 +170,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'vawsafe',
         'USER': 'postgres',
-        'PASSWORD': 'Caratao123', 
+        'PASSWORD': 'postgres', 
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -235,7 +235,7 @@ STATICFILES_DIRS = [BASE_DIR / "frontend/build/static"]
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -260,10 +260,10 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 # CORS_ALLOWED_ORIGINS = [
-#     "http://192.168.254.199:3000",
+#     "http://10.187.161.66:3000",
 # ]
 # CSRF_TRUSTED_ORIGINS = [
-#     "http://192.168.254.199:3000",
+#     "http://10.187.161.66:3000",
 # ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -293,7 +293,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 # settings.py PARA NI SA KATUNG FORGOT PASS
-FRONTEND_URL = "http://localhost:3000"  # or your deployed React frontend URL
+FRONTEND_URL = "http://10.187.161.66:3000"  # or your deployed React frontend URL
 DEFAULT_FROM_EMAIL = "carataojoegie@gmail.com"  # or your system email
 
 # Expiration time in seconds para nis change password sa admin side
