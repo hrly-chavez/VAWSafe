@@ -67,7 +67,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
   useEffect(() => {
     const checkDSWD = async () => {
       try {
-        const res = await axios.get("http://10.187.161.66:8000/api/auth/check-dswd/");
+        const res = await axios.get("http://localhost:8000/api/auth/check-dswd/");
         // const res = await axios.get("http://192.168.254.199:8000/api/auth/check-dswd/");
         if (!res.data.dswd_exists) {
           setRole("DSWD");
@@ -82,7 +82,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
 
   // Fetch provinces
   useEffect(() => {
-    axios.get("http://10.187.161.66:8000/api/desk_officer/provinces/")
+    axios.get("http://localhost:8000/api/desk_officer/provinces/")
     // axios.get("http://192.168.254.199:8000/api/desk_officer/provinces/")
       .then((res) => setProvinces(res.data))   // <-- store provinces
       .catch((err) => console.error("Failed to load provinces:", err));
@@ -91,7 +91,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
   // Fetch municipalities based on selected province
   useEffect(() => {
     if (selectedProvince) {
-      axios.get(`http://10.187.161.66:8000/api/desk_officer/provinces/${selectedProvince}/municipalities/`)
+      axios.get(`http://localhost:8000/api/desk_officer/provinces/${selectedProvince}/municipalities/`)
       // axios.get(`http://192.168.254.199:8000/api/desk_officer/provinces/${selectedProvince}/municipalities/`)
         .then((res) => setMunicipalities(res.data))
         .catch((err) => console.error("Failed to load municipalities:", err));
@@ -104,7 +104,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
   // Fetch barangays based on selected municipality
   useEffect(() => {
     if (selectedMunicipality) {
-      axios.get(`http://10.187.161.66:8000/api/desk_officer/municipalities/${selectedMunicipality}/barangays/`)
+      axios.get(`http://localhost:8000/api/desk_officer/municipalities/${selectedMunicipality}/barangays/`)
       // axios.get(`http://192.168.254.199:8000/api/desk_officer/municipalities/${selectedMunicipality}/barangays/`)
         .then((res) => setBarangays(res.data))
         .catch((err) => console.error("Failed to load barangays:", err));
@@ -324,7 +324,7 @@ const RegisterUser = ({ onClose, defaultRole }) => {
       // }
 
       // Step 2: Proceed to register the user if no match is found
-      const response = await fetch("http://10.187.161.66:8000/api/auth/add-user/", {
+      const response = await fetch("http://localhost:8000/api/auth/add-user/", {
         method: "POST",
         credentials: "include",   // <-- VERY IMPORTANT
         body: formData,
