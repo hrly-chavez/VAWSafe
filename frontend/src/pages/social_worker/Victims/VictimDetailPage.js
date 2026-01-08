@@ -104,6 +104,13 @@ export default function VictimDetailPage() {
   const [reportType, setReportType] = useState(null);
   const [currentOfficialId, setCurrentOfficialId] = useState(null);
 
+  useEffect(() => {
+    if (victim) {
+      console.log("Victim object:", victim);
+      console.log("Full body photo:", victim.vic_full_body_photo);
+    }
+  }, [victim]);
+
   const groupedReports = {
     "Social Worker": reportsList.filter((r) =>
       r.report_type?.toLowerCase().includes("social worker")
@@ -322,6 +329,27 @@ export default function VictimDetailPage() {
             <p className="text-sm text-gray-600 mt-2">
               Victim Code: {get(victim, ["code"])}
             </p>
+          </div>
+        </section>
+
+        {/* Full Body Photo Section */}
+        <section className="px-6 md:px-8 mt-6">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl shadow-sm p-4">
+            <h2 className="text-sm font-semibold text-gray-700 mb-3">
+              Full Body Photo
+            </h2>
+
+            {victim.vic_full_body_photo ? (
+              <img
+                src={`http://localhost:8000/api/social_worker/victims/367/full-body-photo/`}
+                alt="Full Body"
+                className="max-w-xs w-full rounded-lg border border-gray-300 shadow-md object-contain"
+              />
+            ) : (
+              <p className="text-sm text-gray-500 italic">
+                No full body photo available.
+              </p>
+            )}
           </div>
         </section>
 

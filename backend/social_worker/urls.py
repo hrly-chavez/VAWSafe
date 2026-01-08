@@ -2,6 +2,8 @@ from django.urls import path
 from .views import *
 from . import views
 urlpatterns = [
+    path("victims/<int:victim_id>/full-body-photo/", view_full_body_photo, name="victim-full-body-photo"),
+
     # helper
     path("civil-status-choices/", CivilStatusChoicesView.as_view(), name="civil-status-choices"),
     path("religion-choices/", ReligionChoicesView.as_view(), name="religion-choices"),

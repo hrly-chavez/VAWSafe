@@ -507,6 +507,35 @@ def add_custom_question(request, sess_id):
 
     return Response(SessionQuestionSerializer(created, many=True).data, status=201)
 
+from win32com import client
+from win32com.client import constants
+
+def protect_docx_with_password(file_path, password):
+    """
+    Protects DOCX so that:
+    - Password is required to open
+    - Editing is RESTRICTED (read-only)
+    Requires Windows + MS Word installed
+    """
+    word = client.Dispatch("Word.Application")
+    word.Visible = False
+
+    doc = word.Documents.Open(file_path)
+
+    # 1. Password to OPEN
+    doc.Password = password
+
+    # 2. Restrict editing (Read-only)
+    doc.Protect(
+        Type=3,
+        NoReset=True,
+        Password=password
+    )
+
+    doc.Save()
+    doc.Close()
+    word.Quit()
+
 def generate_session_docx(session, current_official=None):
     """
     Safe version:
@@ -600,6 +629,15 @@ def generate_session_docx(session, current_official=None):
 
         output_path = os.path.join(out_dir, output_file_name)
         doc.save(output_path)
+
+        # -----------------------------
+        # 6. Protect DOCX (non-blocking)
+        # -----------------------------
+        try:
+            PASSWORD = "VAWSafe123!"
+            protect_docx_with_password(output_path, PASSWORD)
+        except Exception as e:
+            print(f"[WARNING] Psychometrician DOCX protection failed: {e}")
 
         return output_path
 
@@ -1486,6 +1524,15 @@ def generate_comprehensive_psych_report(report_instance):
     output_file = os.path.join(output_folder, f"Comprehensive-Psych-Report-RHW_{timestamp}.docx")
     tpl.save(output_file)
 
+    # -----------------------------
+    # 5. Protect DOCX (non-blocking)
+    # -----------------------------
+    try:
+        PASSWORD = "VAWSafe123!"
+        protect_docx_with_password(output_file, PASSWORD)
+    except Exception as e:
+        print(f"[WARNING] Comprehensive psych report protection failed: {e}")
+
     return [output_file]
 
 class ComprehensivePsychReportViewSet(viewsets.ModelViewSet):
@@ -1603,6 +1650,15 @@ def generate_monthly_psych_report_forms(report_instance):
     timestamp = now.strftime("%d-%b-%Y_%H-%M")
     output_file = os.path.join(output_folder, f"MONTHLY-PROGRESS-RHW_{timestamp}.docx")
     tpl.save(output_file)
+
+    # -----------------------------
+    # 5. Protect DOCX (non-blocking)
+    # -----------------------------
+    try:
+        PASSWORD = "VAWSafe123!"
+        protect_docx_with_password(output_file, PASSWORD)
+    except Exception as e:
+        print(f"[WARNING] Comprehensive psych report protection failed: {e}")
 
     return [output_file]
 

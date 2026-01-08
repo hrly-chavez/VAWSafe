@@ -368,6 +368,13 @@ class Victim(models.Model):
     training_when = EncryptedCharField(max_length=512, blank=True, null=True)
     employment_experience = EncryptedCharField(max_length=512, blank=True, null=True)
     code = models.CharField(max_length=20, unique=True, blank=True, null=True)
+    # NEW: Full body photo
+    vic_full_body_photo = models.ImageField(
+        upload_to='victim_full_body/',
+        null=True,
+        blank=True,
+        storage=encrypted_storage
+    )
 
     def save(self, *args, **kwargs):
         if not self.code:

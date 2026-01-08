@@ -15,6 +15,8 @@ import CaptureVictimFacial from "./VictimFacial";
 import SchedulePage from "../Sessions/Schedule";
 import Evidences from "./Evidences";
 import LegalAgreement from "./LegalAgreementGate";
+import VictimFullBody from "./VictimFullBody";
+
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
@@ -98,6 +100,7 @@ export default function RegisterVictim() {
     vic_sex: "Female",
     address: { province: "", municipality: "", barangay: "" },
     familyMembers: [],
+    victimFullBodyPhoto: null,
   });
 
   const victimPhotos = formDataState.victimPhotos || [];
@@ -112,6 +115,7 @@ export default function RegisterVictim() {
     evidenceRecords: false,
     barangayNote: false,
     evidences: false,
+    fullBodyCapture: false,
   });
   const [statusMessage, setStatusMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -170,6 +174,13 @@ export default function RegisterVictim() {
         setLoading(false);
         return;
       }
+
+      // Full body photo
+      // if (!formDataState.victimFullBodyPhoto) {
+      //   setStatusMessage("❌ Please capture a full body photo.");
+      //   setLoading(false);
+      //   return;
+      // }
 
       const victimPayload = {};
       VICTIM_FIELDS.forEach((k) => {
@@ -241,6 +252,8 @@ export default function RegisterVictim() {
       }
 
       victimPhotos.forEach((file) => fd.append("photos", file));
+      fd.append("full_body_photo", formDataState.victimFullBodyPhoto);
+
       evidenceFiles.forEach((f) => fd.append("evidences", f.file));
 
       const res = await api.post("/api/social_worker/register-victim/", fd);
@@ -340,6 +353,11 @@ export default function RegisterVictim() {
                 Component: PerpetratorInfo,
               },
               { key: "evidences", label: "Evidences", Component: Evidences },
+              {
+                key: "fullBodyCapture",
+                label: "Capture Full Body Photo",
+                Component: VictimFullBody,
+              },
             ].map(({ key, label, Component }) => (
               <div key={key} className="mb-4">
                 <button

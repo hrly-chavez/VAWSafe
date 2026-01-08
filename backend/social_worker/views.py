@@ -189,15 +189,31 @@ class IncomeChoicesView(APIView):
         return Response(choices)
 
 #helper function para sa password sa docs (OPTIONAL PA)
+from win32com import client
+from win32com.client import constants
+
 def protect_docx_with_password(file_path, password):
     """
-    Opens a Word document and sets a password for opening it.
-    Windows only, requires MS Word installed.
+    Protects DOCX so that:
+    - Password is required to open
+    - Editing is RESTRICTED (read-only)
+    Requires Windows + MS Word installed
     """
     word = client.Dispatch("Word.Application")
     word.Visible = False
+
     doc = word.Documents.Open(file_path)
-    doc.Password = password  # Set password to open
+
+    # 1. Password to OPEN
+    doc.Password = password
+
+    # 2. Restrict editing (Read-only)
+    doc.Protect(
+        Type=3,
+        NoReset=True,
+        Password=password
+    )
+
     doc.Save()
     doc.Close()
     word.Quit()
@@ -287,6 +303,30 @@ def generate_initial_forms(victim_serializer_data, victim_id, assigned_official=
         print(f"Intake template not found: {intake_template}")
 
     return generated_files
+
+from django.http import HttpResponse, Http404
+import mimetypes
+
+def view_full_body_photo(request, victim_id):
+    try:
+        victim = Victim.objects.get(pk=victim_id)
+    except Victim.DoesNotExist:
+        raise Http404()
+
+    if not victim.vic_full_body_photo:
+        raise Http404()
+
+    encrypted_file = victim.vic_full_body_photo
+
+    # IMPORTANT: open() decrypts when using encrypted_storage
+    with encrypted_file.open("rb") as f:
+        decrypted_bytes = f.read()
+
+    response = HttpResponse(decrypted_bytes, content_type="image/jpeg")
+    response["Content-Disposition"] = "inline; filename=full_body.jpg"
+    response["Cache-Control"] = "no-store"
+
+    return response
 
 @api_view(['POST'])
 @parser_classes([MultiPartParser, FormParser])
@@ -396,6 +436,14 @@ def register_victim(request):
                 transaction.set_rollback(True)
                 return Response({"success": False, "error": "No photos could be saved."},
                                 status=status.HTTP_400_BAD_REQUEST)
+            
+        # ---------------------------------------------------------------------
+        # ✅ 2b) FULL BODY PHOTO (NEW – SINGLE FILE)
+        # ---------------------------------------------------------------------
+        full_body_photo = request.FILES.get("full_body_photo")
+        if full_body_photo:
+            victim.vic_full_body_photo = full_body_photo
+            victim.save()
 
         # 3) Perpetrator (optional)
         perpetrator = None
@@ -1186,6 +1234,15 @@ def generate_session_docx(session, current_official=None):
 
         output_path = os.path.join(out_dir, output_file_name)
         doc.save(output_path)
+        
+        # -----------------------------
+        # 6. Protect DOCX (non-blocking)
+        # -----------------------------
+        try:
+            PASSWORD = "VAWSafe123!"
+            protect_docx_with_password(output_path, PASSWORD)
+        except Exception as e:
+            print(f"[WARNING] DOCX protection failed: {e}")
 
         return output_path
 
@@ -2264,6 +2321,15 @@ def generate_monthly_consolidated_report(report_instance):
     # 5. Render and save
     doc.render(context)
     doc.save(output_file)
+
+    # -----------------------------
+    # 6. Protect DOCX (non-blocking)
+    # -----------------------------
+    try:
+        PASSWORD = "VAWSafe123!"
+        protect_docx_with_password(output_file, PASSWORD)
+    except Exception as e:
+        print(f"[WARNING] Monthly report protection failed: {e}")
 
     return output_file
 
