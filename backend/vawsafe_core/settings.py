@@ -65,8 +65,8 @@ else:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ['10.178.136.238']
+ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = ['192.168.254.199']
 
 
 
@@ -170,7 +170,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'vawsafe',
         'USER': 'postgres',
-        'PASSWORD': 'postgres', 
+        'PASSWORD': 'Caratao123', 
         'HOST': 'localhost',
         'PORT': '5432',
     }
@@ -249,22 +249,22 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# CSRF_TRUSTED_ORIGINS = [
-#     "http://localhost:3000",
-#     "http://127.0.0.1:3000",
-# ]
-
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",
-#     "http://127.0.0.1:3000",
-# ]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://10.178.136.238:3000",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
-CSRF_TRUSTED_ORIGINS = [
-    "http://10.178.136.238:3000",
-]
+
+# CORS_ALLOWED_ORIGINS = [
+#     "http://192.168.254.199:3000",
+# ]
+# CSRF_TRUSTED_ORIGINS = [
+#     "http://192.168.254.199:3000",
+# ]
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -293,7 +293,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 
 # settings.py PARA NI SA KATUNG FORGOT PASS
-FRONTEND_URL = "http://10.178.136.238:3000"  # or your deployed React frontend URL
+FRONTEND_URL = "http://localhost:3000"  # or your deployed React frontend URL
 DEFAULT_FROM_EMAIL = "carataojoegie@gmail.com"  # or your system email
 
 # Expiration time in seconds para nis change password sa admin side
