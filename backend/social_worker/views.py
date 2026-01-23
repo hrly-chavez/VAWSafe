@@ -1703,11 +1703,17 @@ class QuestionListCreateView(generics.ListCreateAPIView):
         if not official:
             return Question.objects.none()
 
-        queryset = Question.objects.filter(role=official.of_role).order_by("-created_at")
+        queryset = Question.objects.filter(
+            role=official.of_role
+        ).order_by("-created_at")
 
         category_id = self.request.query_params.get("category")
         if category_id:
             queryset = queryset.filter(ques_category_id=category_id)
+
+        year = self.request.query_params.get("year")
+        if year:
+            queryset = queryset.filter(created_at__year=year)
 
         return queryset
 

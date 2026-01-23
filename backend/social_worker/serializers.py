@@ -308,6 +308,7 @@ class SessionCRUDSerializer(serializers.ModelSerializer):
                         "assigned_official":
                             "One of the assigned officials has another session within 30 minutes."
                     })
+                
 
         return data
 

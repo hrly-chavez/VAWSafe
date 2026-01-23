@@ -1,8 +1,6 @@
 # VAWSafe
 
-(SET UP RANI WAPANI MGA MODEL OR WHATNOT)
-
-#NOTE: if naa moy I install na package I sud lang sa venv(cd VAWSafe) nya ayaw kalimot I sud sa requirments.txt  
+required python version:Python 3.10.9
 
 To do List after cloning
 
@@ -39,5 +37,8 @@ https://psa.gov.ph/system/files/scd/PSGC-1Q-2025-Publication-Datafile.xlsx
 4. if wala pa naka makemigrate and migrate buhata sa na
 5. if naay existing data sa official sa imong db i delete sa na kay mag conflict na sa updated nga datatype sa of_email ditso dayon sa 3.
 6. runserver na
+
+
+
 
 

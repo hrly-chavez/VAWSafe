@@ -233,12 +233,17 @@ export default function AccountManagement() {
                                   });
                                   const res = await api.get("/api/dswd/officials/?include_archived=1");
                                   setOfficials(res.data || []);
-                                } catch {
-                                  toast.error("Failed to archive.", {
-                                    position: "top-right",
-                                    autoClose: 4000,
-                                  });
-                                }
+                                } catch (err) {
+                                const message =
+                                  err.response?.data?.detail ||
+                                  "This official still has unfinished assigned sessions. Please ensure all sessions are completed before archiving.";
+
+                                toast.error(message, {
+                                  position: "top-right",
+                                  autoClose: 4000,
+                                });
+                              }
+                                
                               });
                               setReasonType("archive");
                               setShowReasonModal(true);

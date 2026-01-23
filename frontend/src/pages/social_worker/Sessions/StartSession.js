@@ -25,9 +25,10 @@ export default function StartSession() {
   const [isDone, setIsDone] = useState(false);
   const [myFeedback, setMyFeedback] = useState("");
   const [openRoles, setOpenRoles] = useState([]);
+  const [openCategories, setOpenCategories] = useState({});
   const roleRefs = useRef({});
   const startedRef = React.useRef(false);
-
+  
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -64,6 +65,23 @@ export default function StartSession() {
 
               // Open ONLY my role
               setOpenRoles(myRole ? [myRole] : []);
+
+              // AUTO-OPEN ALL CATEGORIES UNDER MY ROLE
+              const myRoleQuestions = (data.questions || []).filter(
+                (q) => q.assigned_role === myRole || q.question_category_name === myRole
+              );
+
+              const myCategories = [
+                ...new Set(
+                  myRoleQuestions.map((q) => q.question_category_name || "Uncategorized")
+                ),
+              ];
+
+              setOpenCategories((prev) => ({
+                ...prev,
+                [myRole]: myCategories,
+              }));
+
               return
             }
           }
@@ -86,7 +104,25 @@ export default function StartSession() {
 
             // Open ONLY my role
             setOpenRoles(myRole ? [myRole] : []);
+
+            // AUTO-OPEN ALL CATEGORIES UNDER MY ROLE
+            const myRoleQuestions = (sess.questions || []).filter(
+              (q) => q.assigned_role === myRole || q.question_category_name === myRole
+            );
+
+            const myCategories = [
+              ...new Set(
+                myRoleQuestions.map((q) => q.question_category_name || "Uncategorized")
+              ),
+            ];
+
+            setOpenCategories((prev) => ({
+              ...prev,
+              [myRole]: myCategories,
+            }));
+
             return;
+
           }
 
           // === FINISHED ===
@@ -132,6 +168,18 @@ export default function StartSession() {
     return normalizedAssigned === normalizedMyRole;
   };
 
+  const toggleCategory = (roleName, categoryName) => {
+    setOpenCategories((prev) => {
+      const current = prev[roleName] || [];
+      return {
+        ...prev,
+        [roleName]: current.includes(categoryName)
+          ? current.filter((c) => c !== categoryName)
+          : [...current, categoryName],
+      };
+    });
+  };
+
   const handleFinishSession = async () => {
   try {
     const answersPayload = questions
@@ -168,11 +216,21 @@ export default function StartSession() {
         null;
 
       // 1. Auto-open that role section
-      if (missingRole) {
-        setOpenRoles((prev) =>
-          prev.includes(missingRole) ? prev : [...prev, missingRole]
-        );
-      }
+        if (missingRole) {
+          setOpenRoles((prev) =>
+            prev.includes(missingRole) ? prev : [...prev, missingRole]
+          );
+
+          const missingCategory =
+            firstMissing.question_category_name || "Uncategorized";
+
+          setOpenCategories((prev) => ({
+            ...prev,
+            [missingRole]: prev[missingRole]?.includes(missingCategory)
+              ? prev[missingRole]
+              : [...(prev[missingRole] || []), missingCategory],
+          }));
+        }
 
       // 2. Scroll to the missing question (use sq_id data attribute)
       setTimeout(() => {
@@ -402,7 +460,10 @@ useEffect(() => {
 
 
                   {/* Group questions by category within this role */}
-                  <div
+                  
+                  {/* ANIMATED */}
+                  
+                  {/* <div
                     ref={(el) => (roleRefs.current[r] = el)}
                     style={{
                       height: openRoles.includes(r)
@@ -411,6 +472,13 @@ useEffect(() => {
                       opacity: openRoles.includes(r) ? 1 : 0,
                     }}
                     className="overflow-hidden transition-all duration-500 ease-in-out"
+                  > */}
+                  <div
+                    className={`overflow-hidden transition-opacity duration-300 ${
+                      openRoles.includes(r)
+                        ? "opacity-100 pointer-events-auto"
+                        : "opacity-0 pointer-events-none hidden"
+                    }`}
                   >
 
 
@@ -421,20 +489,36 @@ useEffect(() => {
                       acc[category].push(q);
                       return acc;
                     }, {})
-                  ).map(([category, catQuestions]) => (
-                    <div key={category} className="mb-6">
-                      {/* Category Header */}
-                    
-                    <div className="px-4 py-2 rounded-t-md border-l-4 border-blue-600 bg-gray-50 shadow-sm">
-                    
-                    <h5 className="text-md font-semibold text-gray-900 tracking-wide">
-                      {category}
-                    </h5>
-                  </div>
+                  ).map(([category, catQuestions]) => {
+
+                  return (
+                    <div key={category} className="mb-5">
+                      {/* CATEGORY HEADER */}
+                      <button
+                        onClick={() => toggleCategory(r, category)}
+                        className="w-full flex items-center justify-between px-4 py-2 bg-gray-50 border-l-4 border-blue-600 rounded-t-md"
+                      >
+                        <h5 className="text-md font-semibold text-gray-900">
+                          {category}
+                        </h5>
+
+                        <span className="text-xl text-gray-700">
+                          {(openCategories[r] || []).includes(category) ? "−" : "+"}
+                        </span>
+                      </button>
 
 
                       {/* Category Question List */}
-                      <div className="border border-t-0 rounded-b-md p-3 bg-white shadow-sm">
+                      <div
+                        className={`border border-t-0 rounded-b-md bg-white transition-opacity duration-200 ${
+                          (openCategories[r] || []).includes(category)
+                            ? "opacity-100 pointer-events-auto"
+                            : "opacity-0 pointer-events-none hidden"
+                        }`}
+                      >
+                        <div className="p-3">
+
+
                         <AnimatePresence>
                           {catQuestions.map((q, index) => {
                             const editable = isQuestionEditable(q);
@@ -517,9 +601,11 @@ useEffect(() => {
                             );
                           })}
                         </AnimatePresence>
+                        </div>
                       </div>
                     </div>
-                  ))}
+                  )
+            })}
 
                   {/* Per-role feedback box (appears after the role's questions) */}
                   <div className="mt-3">

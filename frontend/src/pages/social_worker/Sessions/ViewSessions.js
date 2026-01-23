@@ -226,9 +226,15 @@ export default function ViewSessions() {
             {!isDone && session.sess_status === "Pending" && (
               <button
                 disabled={starting}
-                onClick={async () => {
-                  setStarting(true);
 
+                onClick={async () => {
+                  const confirmStart = window.confirm(
+                    "Are you sure you want to start this session?\n\nOnce started, the session status will change to Ongoing."
+                  );
+
+                  if (!confirmStart) return;
+
+                  setStarting(true);
                   try {
                     // Step 1 — Start session (hydrate questions, set ongoing, etc.)
                     await api.post(`/api/social_worker/sessions/${sess_id}/start/`);
@@ -245,6 +251,7 @@ export default function ViewSessions() {
                     setStarting(false);
                   }
                 }}
+
                 className={`px-5 py-2 rounded-md font-medium text-white flex items-center gap-2 transition ${
                   starting
                     ? "bg-green-400 cursor-not-allowed"
@@ -279,14 +286,32 @@ export default function ViewSessions() {
             )}
 
 
-            {!isDone && session.sess_status === "Ongoing" && (
+            {/* {!isDone && session.sess_status === "Ongoing" && (
               <button
                 onClick={() => navigate(`/social_worker/sessions/${sess_id}/start`)}
                 className="px-5 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition"
               >
                 Continue Session
               </button>
+            )} */}
+
+            {!isDone && session.sess_status === "Ongoing" && (
+              <button
+                onClick={() => {
+                  const confirmContinue = window.confirm(
+                    "Do you want to continue this session?\n\nYou will resume where you last left off."
+                  );
+
+                  if (!confirmContinue) return;
+
+                  navigate(`/social_worker/sessions/${sess_id}/start`);
+                }}
+                className="px-5 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 transition"
+              >
+                Continue Session
+              </button>
             )}
+
 
             {isDone && (
               <button

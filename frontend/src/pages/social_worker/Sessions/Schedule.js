@@ -27,14 +27,42 @@ export default function Schedule({ victim, incident, back, next }) {
 
   const handleSubmitSchedule = async () => {
     if (isSubmitting) return; // Prevent multiple rapid clicks
+
+    // Ask for confirmation before scheduling
+    const readableDateTime = new Date(`${date}T${time}:00`).toLocaleString(
+      "en-US",
+      { dateStyle: "medium", timeStyle: "short" }
+    );
+    const confirmed = window.confirm(
+      `Schedule this session on ${readableDateTime} with the selected officials?`
+    );
+    if (!confirmed) return;
+
     setIsSubmitting(true);
     try {
       // Combine selected date & time into one Date object
       const selectedDateTime = new Date(`${date}T${time}:00`);
       const now = new Date();
 
+      // --- 8am to 5pm only trap ---
+      const [selectedHour, selectedMin] = time.split(":").map(Number);
+      // 8am = 8:00 (inclusive), 5pm = 17:00 (exclusive: last slot is 16:59)
+      // So valid hours: 8 <= hour < 17
+      if (
+        selectedHour < 8 ||
+        selectedHour > 17 ||
+        (selectedHour === 17 && selectedMin > 0)
+      ) {
+        toast.error("You can only schedule a session between 8:00 AM and 5:00 PM!", {
+          position: "top-right",
+          autoClose: 2000,
+        });
+        setIsSubmitting(false);
+        return; // Stop execution
+      }
+
       // Validate that selected schedule is not in the past
-      if (selectedDateTime < now) {
+      if (selectedDateTime < now )   {
         toast.error("You cannot schedule a session in the past!", {
           position: "top-right",
           autoClose: 2000,
@@ -241,6 +269,7 @@ export default function Schedule({ victim, incident, back, next }) {
               onChange={(e) => setDate(e.target.value)}
             />
           </div>
+
           <div>
             <label className="text-xs text-gray-600">Time</label>
             <input

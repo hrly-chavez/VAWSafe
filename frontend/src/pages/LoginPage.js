@@ -15,6 +15,7 @@ import {
 } from "@heroicons/react/24/solid";
 import { AuthContext } from "../context/AuthContext";
 import api from "../api/axios";
+import * as faceapi from "face-api.js";
 import CryptoJS from "crypto-js";
 
 
@@ -57,6 +58,10 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const [showCounter, setShowCounter] = useState(false);
+  const [faceReady, setFaceReady] = useState(false);   // face is centered enough
+  const [checkingFace, setCheckingFace] = useState(false); // pre-countdown phase
+  const faceStableSinceRef = useRef(null);
+  const lastFaceSeenRef = useRef(0);
   const [blinkCaptured, setBlinkCaptured] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [username, setUsername] = useState("");
@@ -118,6 +123,14 @@ const LoginPage = () => {
   const slideTimerRef = useRef(null);
 
   useEffect(() => {
+    const loadModels = async () => {
+      const MODEL_URL = "/models"; 
+      await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+    };
+    loadModels();
+  }, []);
+
+  useEffect(() => {
     slideTimerRef.current = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 5000); // every 5 seconds
@@ -135,8 +148,19 @@ const LoginPage = () => {
       setRememberMe(true);
     }
   }, []);
+  const setMessageSafe = (text) => {
+        setMessage(prev => (prev === text ? prev : text));
+      };
 
-
+  const resetFaceLoginForRetry = () => {
+    faceStableSinceRef.current = null;
+    setFaceReady(false);
+    setCheckingFace(false);
+    setShowCounter(false);
+    setBlinkCaptured(false);
+    setCountdown(3);
+    setLoading(false);
+  };
   const MAX_FRAMES = 10;
   const INTERVAL = 200;
 
@@ -151,6 +175,7 @@ const LoginPage = () => {
   };
 
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+
 
   // Utility Functions for Login with Face
   const captureBurstFrames = async () => {
@@ -178,168 +203,265 @@ const LoginPage = () => {
     return frames;
   };
 
-  const handleFaceLogin = async () => {
-    loginCancelledRef.current = false; // reset on new attempt
+
+  const handleFaceLogin = () => {
+    loginCancelledRef.current = false;
+
     setShowCamera(true);
-    setShowCounter(true);
-    setLoading(true);
-    setMessage(
-      <div className="flex items-center gap-2 text-blue-700 text-lg">
-        <CameraIcon className="w-5 h-5 text-blue-700" />
-        <span>Please look at the camera to log in.</span>
-      </div>
-    );
+
+    // start face positioning phase
+    setCheckingFace(true);
+    setFaceReady(false);
+
+    // reset UI state
+    setShowCounter(false);
+    setLoading(false);
     setBlinkCaptured(false);
+    setCountdown(3);
 
-    // countdown
-    for (let i = 3; i > 0; i--) {
-      if (loginCancelledRef.current) return; // stop if cancelled
-      setCountdown(i);
-      await delay(1000);
-    }
-    if (loginCancelledRef.current) return;
+    setMessage("Position your face properly in front of the camera.");
+  };
+  
+  useEffect(() => {
+    if (!showCamera || !checkingFace) return;
 
-    setCountdown(null);
-    setMessage(
-      <div className="flex items-center gap-2 text-blue-700 text-lg">
-        <EyeIcon className="w-5 h-5 text-blue-700" />
-        <span>Capturing frames... Please blink now!</span>
-      </div>
-    );
+    const interval = setInterval(async () => {
+      const video = webcamRef.current?.video;
+      if (!video || video.readyState !== 4) return;
 
-    const frames = await captureBurstFrames();
-    if (loginCancelledRef.current) return;
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
 
-    // 🔹 If no frames captured, assume no face detected
-    if (!frames || frames.length === 0) {
-      setMessage("No face detected. Please position your face clearly in front of the camera.");
-      setLoading(false);
-      return;
-    }
-
-    // Step 1: Blink check
-    const blinkForm = new FormData();
-    frames.forEach((frame, i) => {
-      const blob = base64ToBlob(frame);
-      blinkForm.append(`frame${i + 1}`, blob, `frame${i + 1}.jpg`);
-    });
-
-    try {
-      const blinkRes = await apiFetch(
-        "http://localhost:8000/api/auth/blink-check/",
-        // "http://192.168.254.199:8000/api/auth/blink-check/",
-        {
-          method: "POST",
-          body: blinkForm,
-          // credentials: "include", // send cookies if your blink-check is CSRF-protected
-          // headers: { "X-CSRFToken": getCookie("csrftoken") }, // safe to include
-        }
+      const detection = await faceapi.detectSingleFace(
+        video,
+        new faceapi.TinyFaceDetectorOptions()
       );
-      if (loginCancelledRef.current) return;
-      const blinkData = await blinkRes.json();
 
-      // 🔹 If blink not detected, assume no face detected
-      if (!blinkRes.ok || !blinkData.blink) {
-        setMessage(
-          blinkData.message || "No face or blink detected. Please try again."
-        );
-        setLoading(false);
+      //  NO FACE
+      if (!detection) {
+        const now = Date.now();
+
+        // allow brief detection drops (e.g. head turn)
+        if (now - lastFaceSeenRef.current < 800) {
+          return;
+        }
+
+        faceStableSinceRef.current = null;
+        setFaceReady(false);
+        setMessageSafe ("No face detected. Please look at the camera.");
+        return;
+      }
+      lastFaceSeenRef.current = Date.now();
+      const { x, y, width, height } = detection.box;
+      
+      // FACE CENTER CHECK (with direction hints)
+      const faceCenterX = x + width / 2;
+      const faceCenterY = y + height / 2;
+
+      const dx = faceCenterX - vw / 2;
+      const dy = faceCenterY - vh / 2;
+
+      const toleranceX = vw * 0.2; // 20%
+      const toleranceY = vh * 0.2;
+
+      if (Math.abs(dx) > toleranceX || Math.abs(dy) > toleranceY) {
+        faceStableSinceRef.current = null;
+        setFaceReady(false);
+
+        // Horizontal guidance
+        if (Math.abs(dx) > toleranceX) {
+          if (dx > 0) {
+            setMessageSafe("Move your face slightly to the left.");
+          } else {
+            setMessageSafe("Move your face slightly to the right.");
+          }
+          return;
+        }
+
+        // Vertical guidance
+        if (Math.abs(dy) > toleranceY) {
+          if (dy > 0) {
+            setMessageSafe("Move your face slightly up.");
+          } else {
+            setMessageSafe("Move your face slightly down.");
+          }
+          return;
+        }
+      }
+
+      //  FACE SIZE CHECK (distance)
+      const faceWidthRatio = width / vw;
+
+      if (faceWidthRatio < 0.25) {
+        faceStableSinceRef.current = null;
+        setFaceReady(false);
+        setMessageSafe("Move closer to the camera.");
         return;
       }
 
-      setBlinkCaptured(true);
+      //  FACE OK → START STABILITY TIMER
+      if (!faceStableSinceRef.current) {
+        faceStableSinceRef.current = Date.now();
+        setMessageSafe("Face detected. Please hold still.");
+        return;
+      }
+
+      const elapsed = Date.now() - faceStableSinceRef.current;
+      if (elapsed >= 1500 && !faceReady) {
+        setFaceReady(true);
+        setMessageSafe("Face positioned correctly. Preparing scan...");
+      }
+
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, [showCamera, checkingFace, faceReady]);
+
+  useEffect(() => {
+    if (!faceReady || !checkingFace) return;
+
+    const startCountdown = async () => {
+      setCheckingFace(false);
+      setShowCounter(true);
+      setLoading(true);
+
+      //  Countdown 3 → 2 → 1
+      for (let i = 3; i > 0; i--) {
+        if (loginCancelledRef.current) return;
+        setCountdown(i);
+        await delay(1000);
+      }
+
+      setCountdown(null);
       setMessage(
-        <div className="flex items-center gap-2 text-green-600 text-lg">
-          <CheckCircleIcon className="w-5 h-5" />
-          <span>Blink captured. Now verifying face...</span>
+        <div className="flex items-center gap-2 text-blue-700 text-lg">
+          <EyeIcon className="w-5 h-5 text-blue-700" />
+          <span>Capturing frames... Please blink now!</span>
         </div>
       );
 
-      // Step 2: Send candidate frames to face-login
-      const loginForm = new FormData();
-      blinkData.candidate_indices.forEach((idx, j) => {
-        const chosenBlob = base64ToBlob(frames[idx]);
-        loginForm.append(`frame${j + 1}`, chosenBlob, `frame${j + 1}.jpg`);
-      });
-
-      const loginRes = await apiFetch(
-        "http://localhost:8000/api/auth/face-login/",
-        // "http://192.168.254.199:8000/api/auth/face-login/",
-        {
-          method: "POST",
-          body: loginForm,
-          // credentials: "include",                            // cookies set by server
-          // headers: { "X-CSRFToken": getCookie("csrftoken") } // CSRF for POST
-        }
-      );
-
-      // 🔹 Handle blocked IP or locked user
-      if (loginRes.status === 429) {
-        setMessage("Too many attempts. Please wait and try again.");
-        setLoading(false);
-        return;
-      }
-      if (loginRes.status === 423) {
-        setMessage("Account temporarily locked. Contact administrator.");
-        setLoading(false);
-        return;
-      }
-
+      //  Capture frames
+      const frames = await captureBurstFrames();
       if (loginCancelledRef.current) return;
 
-      // Only parse JSON if not blocked
-      const loginData = await loginRes.json();
-      console.log("Face login response:", loginData);
-      setLoading(false);
+      if (!frames || frames.length === 0) {
+        setMessage("No face detected. Please position your face clearly in front of the camera.");
+        setLoading(false);
+        return;
+      }
 
-      if (loginRes.ok && loginData.match) {
-        // ✅ Cookies already contain tokens; just set user in context
-        authLogin({
-          username: loginData.username,
-          role: loginData.role,
-          name: loginData.name,
-          official_id: loginData.official_id,
-        });
+      //  Blink check
+      const blinkForm = new FormData();
+      frames.forEach((frame, i) => {
+        const blob = base64ToBlob(frame);
+        blinkForm.append(`frame${i + 1}`, blob, `frame${i + 1}.jpg`);
+      });
 
-
-
-        // ✅ Fetch full user info including profile photo
-        try {
-          const meRes = await api.get("/api/auth/me/"); // ensure CSRF token if needed
-          if (meRes.data?.authenticated && meRes.data.user) {
-            authLogin(meRes.data.user); // update context with full user object including of_photo
+      try {
+        const blinkRes = await apiFetch(
+          "http://localhost:8000/api/auth/blink-check/",
+          {
+            method: "POST",
+            body: blinkForm,
           }
-        } catch (err) {
-          console.error("Failed to fetch full user info:", err);
+        );
+
+        if (loginCancelledRef.current) return;
+        const blinkData = await blinkRes.json();
+
+        if (!blinkRes.ok || !blinkData.blink) {
+          setMessage(blinkData.message || "No blink detected. Please try again.");
+          resetFaceLoginForRetry();
+          return;
         }
 
-        // ✅ Welcome card
-        setWelcomeData({
-          name: loginData.name,
-          role: loginData.role,
-          username: loginData.username,
-          official_id: loginData.official_id,
-        });
-        setShowWelcomeCard(true);
+        setBlinkCaptured(true);
+        setMessage(
+          <div className="flex items-center gap-2 text-green-600 text-lg">
+            <CheckCircleIcon className="w-5 h-5" />
+            <span>Blink captured. Now verifying face...</span>
+          </div>
+        );
 
-        // ✅ Redirect based on role
-        const role = (loginData.role || "").toLowerCase();
-        setTimeout(() => {
-          if (role === "dswd") navigate("/dswd");
-          else if (role === "social worker") navigate("/social_worker");
-          else if (role === "nurse") navigate("/nurse");
-          else if (role === "psychometrician") navigate("/psychometrician");
-          else navigate("/login");
-        }, 5000);
-      } else {
-        setMessage(loginData.message || " Face verification failed.");
+        //  Face login
+        const loginForm = new FormData();
+        blinkData.candidate_indices.forEach((idx, j) => {
+          const chosenBlob = base64ToBlob(frames[idx]);
+          loginForm.append(`frame${j + 1}`, chosenBlob, `frame${j + 1}.jpg`);
+        });
+
+        const loginRes = await apiFetch(
+          "http://localhost:8000/api/auth/face-login/",
+          {
+            method: "POST",
+            body: loginForm,
+          }
+        );
+
+        if (loginRes.status === 429) {
+          setMessage("Too many attempts. Please wait and try again.");
+          setLoading(false);
+          return;
+        }
+
+        if (loginRes.status === 423) {
+          setMessage("Account temporarily locked. Contact administrator.");
+          setLoading(false);
+          return;
+        }
+
+        if (loginCancelledRef.current) return;
+
+        const loginData = await loginRes.json();
+        setLoading(false);
+
+        if (loginRes.ok && loginData.match) {
+          authLogin({
+            username: loginData.username,
+            role: loginData.role,
+            name: loginData.name,
+            official_id: loginData.official_id,
+          });
+
+          try {
+            const meRes = await api.get("/api/auth/me/");
+            if (meRes.data?.authenticated && meRes.data.user) {
+              authLogin(meRes.data.user);
+            }
+          } catch (err) {
+            console.error("Failed to fetch full user info:", err);
+          }
+
+          setWelcomeData({
+            name: loginData.name,
+            role: loginData.role,
+            username: loginData.username,
+            official_id: loginData.official_id,
+          });
+          setShowWelcomeCard(true);
+
+          const role = (loginData.role || "").toLowerCase();
+          setTimeout(() => {
+            if (role === "dswd") navigate("/dswd");
+            else if (role === "social worker") navigate("/social_worker");
+            else if (role === "nurse") navigate("/nurse");
+            else if (role === "psychometrician") navigate("/psychometrician");
+            else navigate("/login");
+          }, 5000);
+        } else {
+          setMessage(loginData.message || "Face verification failed.");
+        }
+      } catch (err) {
+        console.error(err);
+        setMessage("Server error. Please try again.");
+        setLoading(false);
       }
-    } catch (err) {
-      console.error(err);
-      setMessage("Server error. Please try again.");
-      setLoading(false);
-    }
-  };
+    };
+
+    startCountdown();
+  }, [faceReady, checkingFace]);
+
+
 
   const handleManualLogin = async () => {
     setLoginErrors({ username: "", password: "" });
@@ -683,62 +805,71 @@ const LoginPage = () => {
               // CAMERA SECTION 
               <div className="flex flex-col items-center text-center">
                 <div className="relative h-[300px] w-[300px] rounded-2xl overflow-hidden shadow-xl border-4 border-orange-400">
-                  <Webcam
-                    ref={webcamRef}
-                    screenshotFormat="image/jpeg"
-                    className="h-full w-full object-cover"
-                  />
-                  {showCounter && countdown !== null && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <h1 className="text-white text-[64px] font-bold drop-shadow-md animate-pulse">
-                        {countdown}
-                      </h1>
-                    </div>
-                  )}
-                </div>
+                <Webcam
+                  ref={webcamRef}
+                  screenshotFormat="image/jpeg"
+                  className="h-full w-full object-cover"
+                />
+
+                {/* Countdown overlay */}
+                {showCounter && countdown !== null && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none bg-black/30">
+                    <h1 className="text-white text-[64px] font-bold drop-shadow-md animate-pulse">
+                      {countdown}
+                    </h1>
+                  </div>
+                )}
+              </div>
+
 
 
                 {message && (
-                  <p
-                    className={`mt-4 text-sm font-medium ${loading
+                <p
+                  className={`mt-4 text-sm font-medium ${
+                    loading
                       ? "text-white animate-pulse"
-                      : blinkCaptured ||
-                        (typeof message === "string" && message.includes("✅"))
-                        ? "text-green-400"
-                        : message === "No blink detected. Please blink clearly." ||
-                          message === "No face detected. Please position your face clearly in front of the camera."
-                          ? "text-red-400"
-                          : "text-white"
-                      }`}
-                  >
-                    {message}
-                  </p>
-                )}
+                      : blinkCaptured
+                      ? "text-green-400"
+                      : message.toString().toLowerCase().includes("no")
+                      ? "text-red-400"
+                      : message.toString().toLowerCase().includes("move") ||
+                        message.toString().toLowerCase().includes("center")
+                      ? "text-yellow-400"
+                      : "text-white"
+                  }`}
+                >
+                  {message}
+                </p>
+              )}
+
 
                 <div className="mt-6 flex flex-col sm:flex-row sm:gap-6 gap-4 items-center">
-                  {!loading &&
-                    (message === "No blink detected. Please blink clearly." ||
-                      message === "No face detected. Please position your face clearly in front of the camera." ||
-                      (typeof message === "string" && message.includes(""))) && (
-                      <button
-                        onClick={handleFaceLogin}
-                        className="w-44 py-2 bg-red-500 text-white font-semibold rounded-full shadow hover:bg-red-600 transition"
-                      >
-                        Retry
-                      </button>
-                    )}
+                  {!loading && !checkingFace && !showCounter && (
+                    <button
+                      onClick={handleFaceLogin}
+                      className="w-44 py-2 bg-red-500 text-white font-semibold rounded-full shadow hover:bg-red-600 transition"
+                    >
+                      Retry
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       loginCancelledRef.current = true;
+                      faceStableSinceRef.current = null;
                       setShowCamera(false);
-                      setMessage("");
+                      setCheckingFace(false);
+                      setFaceReady(false);
+                      setShowCounter(false);
+                      setBlinkCaptured(false);
                       setCountdown(3);
                       setLoading(false);
+                      setMessage("");
                     }}
                     className="w-44 py-2 bg-gray-500 text-white font-semibold rounded-full shadow hover:bg-gray-600 transition"
                   >
                     Go Back
                   </button>
+
                 </div>
 
                 {/* Welcome Card */}

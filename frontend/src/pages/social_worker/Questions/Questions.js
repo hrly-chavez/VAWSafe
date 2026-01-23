@@ -30,8 +30,22 @@ export default function Questions() {
   const [selectedQuestionId, setSelectedQuestionId] = useState(null);
   const [requiredFilter, setRequiredFilter] = useState(null);
   const [sessionFilter, setSessionFilter] = useState(null);
+  const [yearFilter, setYearFilter] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  
+  // Generate year options dynamically (future-proof)
+  const generateYearOptions = (startYear = 2022) => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+
+    for (let y = currentYear + 1; y >= startYear; y--) {
+      years.push({ value: y, label: String(y) });
+    }
+
+    return years;
+  };
+
 
   const fetchCategories = async () => {
     try {
@@ -42,11 +56,18 @@ export default function Questions() {
     }
   };
 
-  const fetchQuestions = async (categoryId = null) => {
+  const fetchQuestions = async (categoryId = null, year = null) => {
     try {
       setLoading(true);
-      let url = "/api/social_worker/questions/";
-      if (categoryId) url += `?category=${categoryId}`;
+      let params = [];
+
+      if (categoryId) params.push(`category=${categoryId}`);
+      if (year) params.push(`year=${year}`);
+
+      const url =
+        "/api/social_worker/questions/" +
+        (params.length ? `?${params.join("&")}` : "");
+
       const res = await api.get(url);
       setQuestions(res.data);
     } catch (err) {
@@ -62,8 +83,11 @@ export default function Questions() {
   }, []);
 
   useEffect(() => {
-    fetchQuestions(selectedCategory?.value || null);
-  }, [selectedCategory]);
+    fetchQuestions(
+      selectedCategory?.value || null,
+      yearFilter
+    );
+  }, [selectedCategory, yearFilter]);
 
 
   const filteredQuestions = questions
@@ -249,6 +273,34 @@ export default function Questions() {
               }}
             />
           </div>
+
+          {/* FILTER BY YEAR */}
+          <div className="flex flex-col text-sm w-full md:w-32">
+            <label className="text-gray-600 mb-1">Year</label>
+            <Select
+              options={generateYearOptions(2022)}
+              value={
+                yearFilter
+                  ? { value: yearFilter, label: String(yearFilter) }
+                  : null
+              }
+              onChange={(opt) => setYearFilter(opt?.value || null)}
+              isClearable
+              placeholder="All"
+              menuPortalTarget={document.body}
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  borderColor: "#d1d5db",
+                  boxShadow: "none",
+                  "&:hover": { borderColor: "#9ca3af" },
+                }),
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              }}
+            />
+
+          </div>
+
 
           {/* Add Question Button */}
           <div className="w-full md:w-auto ml-auto">

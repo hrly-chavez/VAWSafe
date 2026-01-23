@@ -26,6 +26,7 @@ from collections import Counter
 import json
 from dswd.utils.logging import log_change
 
+
 #change password
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from cryptography.fernet import Fernet
@@ -174,10 +175,52 @@ class OfficialViewSet(ModelViewSet):
     # ---------------------------------------------------
     #  COMBINED ACTION 1 — ARCHIVE + DEACTIVATE
     # ---------------------------------------------------
+    # @action(detail=True, methods=["post"])
+    # def archive_or_deactivate(self, request, pk=None):
+    #     official = self.get_object()
+    #     reason = request.data.get("reason")
+
+    #     # CASE A — archive + deactivate
+    #     if not official.deleted_at:
+    #         official.deleted_at = timezone.now()
+    #         official.save(update_fields=["deleted_at"])
+
+    #         if official.user_id and official.user.is_active:
+    #             official.user.is_active = False
+    #             official.user.save(update_fields=["is_active"])
+
+    #         _audit(request.user, "archive", official, reason=reason, changes={"archived_at": [None, str(official.deleted_at)]})
+    #         return Response({
+    #             "status": "archived_and_deactivated",
+    #             "deleted_at": official.deleted_at
+    #         })
+
+    #     # CASE B — archived already → deactivate only
+    #     if official.user_id and official.user.is_active:
+    #         official.user.is_active = False
+    #         official.user.save(update_fields=["is_active"])
+
+    #         _audit(request.user, "deactivate", official, reason=reason, changes={"archived_at": [None, str(official.deleted_at)]})
+    #         return Response({"status": "deactivated"})
+
+    #     return Response({"detail": "Already archived & deactivated."}, status=400)
+    
     @action(detail=True, methods=["post"])
     def archive_or_deactivate(self, request, pk=None):
         official = self.get_object()
         reason = request.data.get("reason")
+
+        # 🔴 HARD RULE: block if unfinished sessions exist
+        has_unfinished_sessions = SessionProgress.objects.filter(
+            official=official,
+            is_done=False
+        ).exists()
+
+        if has_unfinished_sessions:
+            raise ValidationError(
+            "This official still has unfinished assigned sessions. Please ensure all sessions are completed before archiving."
+        )
+
 
         # CASE A — archive + deactivate
         if not official.deleted_at:
@@ -188,21 +231,18 @@ class OfficialViewSet(ModelViewSet):
                 official.user.is_active = False
                 official.user.save(update_fields=["is_active"])
 
-            _audit(request.user, "archive", official, reason=reason, changes={"archived_at": [None, str(official.deleted_at)]})
+            _audit(
+                request.user,
+                "archive",
+                official,
+                reason=reason,
+                changes={"archived_at": [None, str(official.deleted_at)]}
+            )
+
             return Response({
                 "status": "archived_and_deactivated",
                 "deleted_at": official.deleted_at
             })
-
-        # CASE B — archived already → deactivate only
-        if official.user_id and official.user.is_active:
-            official.user.is_active = False
-            official.user.save(update_fields=["is_active"])
-
-            _audit(request.user, "deactivate", official, reason=reason, changes={"archived_at": [None, str(official.deleted_at)]})
-            return Response({"status": "deactivated"})
-
-        return Response({"detail": "Already archived & deactivated."}, status=400)
 
     # ---------------------------------------------------
     #  COMBINED ACTION 2 — UNARCHIVE + REACTIVATE
